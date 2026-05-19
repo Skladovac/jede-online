@@ -1,0 +1,31 @@
+# Next.js
+.next/
+out/
+
+# Dependencies
+node_modules/
+
+# Environment (secrets)
+.env
+.env.local
+.env*.local
+
+# Ostatní projekty ve složce (mají vlastní git)
+kasino/
+jede-starter/
+
+# Claude interní soubory (obsahují přihlašovací údaje)
+.claude/
+CLAUDE.md
+POKRACOVANI.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Prisma migrations (generuje Vercel při buildu)
+prisma/migrations/
