@@ -1,14 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { openModal } from '@/lib/openModal'
 
 export function Hero() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [error, setError] = useState('')
-  const [focused, setFocused] = useState(false)
   const [btnHovered, setBtnHovered] = useState(false)
 
   // Three.js particle network
@@ -188,33 +184,6 @@ export function Hero() {
     })
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email.includes('@')) {
-      setError('Zadejte platnou e-mailovou adresu.')
-      return
-    }
-    setError('')
-    setLoading(true)
-    try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'hero' }),
-      })
-      if (res.ok) {
-        setSubmitted(true)
-      } else {
-        const data = await res.json()
-        setError(data.error ?? 'Něco se pokazilo. Zkuste to znovu.')
-      }
-    } catch {
-      setError('Nepodařilo se připojit. Zkuste to znovu.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
     <section
       style={{
@@ -359,7 +328,7 @@ export function Hero() {
               letterSpacing: '0.1em',
             }}
           >
-            Beta · Brzy pro první klienty
+            • Komplexní digitální řešení •
           </span>
         </div>
 
@@ -375,9 +344,9 @@ export function Hero() {
             letterSpacing: '-0.03em',
           }}
         >
-          Váš Excel.
+          Váš Excel jako aplikace.
           <br />
-          Jako webová aplikace.
+          Nebo rovnou celý nový web.
         </h1>
 
         {/* Gold accent line */}
@@ -403,151 +372,31 @@ export function Hero() {
             margin: '0 auto 2.75rem',
           }}
         >
-          Pracujete s tabulkami, které se rozrůstají mimo kontrolu?
-          <br />
-          Proměníme je v aplikaci — přesně pro váš byznys.
+          Dáme vašim datům i nápadům digitální tvář. Bez kompromisů,
+          bleskově rychle a přesně pro váš byznys.
         </p>
 
-        {/* Form / success */}
-        {submitted ? (
-          <div
-            className="hero-animate"
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}
-          >
-            <div
-              style={{
-                width: '2.5rem',
-                height: '2.5rem',
-                borderRadius: '50%',
-                border: '1px solid var(--accent-gold)',
-                boxShadow: '0 0 16px rgba(201,169,97,0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--accent-gold)',
-              }}
-            >
-              ✓
-            </div>
-            <p
-              style={{
-                fontFamily: '"Clash Display", system-ui, sans-serif',
-                fontSize: '1.25rem',
-                fontWeight: 500,
-                color: 'var(--text-primary)',
-              }}
-            >
-              Děkujeme. Ozveme se do 48 hodin.
-            </p>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-              Zkontrolujte inbox — poslali jsme vám potvrzovací email.
-            </p>
-          </div>
-        ) : (
-          <form
-            className="hero-animate"
-            onSubmit={handleSubmit}
-            style={{
-              display: 'flex',
-              gap: '1rem',
-              maxWidth: '480px',
-              margin: '0 auto',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              alignItems: 'flex-end',
-            }}
-          >
-            {/* Underline input with grow-from-center animation */}
-            <div style={{ position: 'relative', flex: '1 1 220px', minWidth: '200px' }}>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
-                placeholder="váš@email.cz"
-                required
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  width: '100%',
-                  color: 'var(--text-primary)',
-                  fontSize: '1rem',
-                  padding: '0.75rem 0',
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                  caretColor: 'var(--accent-gold)',
-                }}
-              />
-              {/* Static base line */}
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: '1px',
-                  background: 'var(--border-default)',
-                }}
-              />
-              {/* Animated gold line — grows from center */}
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: focused ? '0%' : '50%',
-                  right: focused ? '0%' : '50%',
-                  height: '1px',
-                  background: 'var(--accent-gold)',
-                  boxShadow: focused ? '0 0 10px rgba(201,169,97,0.55), 0 0 20px rgba(201,169,97,0.2)' : 'none',
-                  transition:
-                    'left 0.45s cubic-bezier(0.4,0,0.2,1), right 0.45s cubic-bezier(0.4,0,0.2,1), box-shadow 0.45s cubic-bezier(0.4,0,0.2,1)',
-                }}
-              />
-              {/* Placeholder style override */}
-              <style>{`input::placeholder { color: #475569; }`}</style>
-            </div>
-
-            {/* CTA button with living glow */}
-            <button
-              type="submit"
-              disabled={loading}
-              onMouseEnter={() => setBtnHovered(true)}
-              onMouseLeave={() => setBtnHovered(false)}
-              style={{
-                flex: '0 0 auto',
-                background: loading ? 'rgba(201,169,97,0.55)' : 'var(--accent-gold)',
-                color: '#050508',
-                border: 'none',
-                outline: 'none',
-                padding: '0.75rem 1.5rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                fontFamily: 'Inter, system-ui, sans-serif',
-                letterSpacing: '0.025em',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                whiteSpace: 'nowrap',
-                transform: btnHovered && !loading ? 'translateY(-1px)' : 'translateY(0)',
-                boxShadow: btnHovered && !loading
-                  ? '0 0 0 1px rgba(201,169,97,0.3), 0 0 20px rgba(201,169,97,0.45), 0 0 48px rgba(201,169,97,0.2), 0 0 80px rgba(201,169,97,0.08)'
-                  : '0 0 0 1px rgba(201,169,97,0.15), 0 0 12px rgba(201,169,97,0.2)',
-                transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1), box-shadow 0.35s cubic-bezier(0.4,0,0.2,1), background 0.2s',
-              }}
-            >
-              {loading ? 'Odesílám…' : 'Konzultace zdarma →'}
-            </button>
-          </form>
-        )}
-
-        {error && (
-          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#F87171' }}>
-            {error}
-          </p>
-        )}
+        {/* CTA — otevře modal */}
+        <button
+          className="hero-animate btn-gold"
+          onClick={() => openModal()}
+          onMouseEnter={() => setBtnHovered(true)}
+          onMouseLeave={() => setBtnHovered(false)}
+          style={{
+            fontSize: '0.9375rem',
+            padding: '0.875rem 2rem',
+            transform: btnHovered ? 'translateY(-1px)' : 'translateY(0)',
+            boxShadow: btnHovered
+              ? '0 0 0 1px rgba(201,169,97,0.3), 0 0 20px rgba(201,169,97,0.45), 0 0 48px rgba(201,169,97,0.2)'
+              : '0 0 0 1px rgba(201,169,97,0.15), 0 0 12px rgba(201,169,97,0.2)',
+            transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1), box-shadow 0.35s cubic-bezier(0.4,0,0.2,1)',
+          }}
+        >
+          Konzultace zdarma →
+        </button>
 
         {/* Scroll indicator */}
-        {!submitted && (
-          <div
+        <div
             className="hero-animate"
             style={{
               marginTop: '5.5rem',
@@ -575,7 +424,6 @@ export function Hero() {
               </svg>
             </div>
           </div>
-        )}
       </div>
     </section>
   )

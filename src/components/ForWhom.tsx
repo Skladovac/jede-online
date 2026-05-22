@@ -3,12 +3,10 @@
 import { useEffect, useRef } from 'react'
 
 const SEGMENTS = [
-  'Freelanceři a OSVČ',
-  'Účetní a finanční poradci',
-  'Realitní kanceláře',
-  'Výrobní a obchodní firmy',
-  'Půjčovny a sklady',
-  'Malé týmy bez IT oddělení',
+  'Manažeři a majitelé firem, co chtějí zefektivnit procesy',
+  'Účetní, finanční poradci a realitní kanceláře',
+  'Výrobní, obchodní firmy a půjčovny',
+  'Startupy a živnostníci, kteří potřebují rychle a dravě uvést produkt na trh',
 ]
 
 export function ForWhom() {
@@ -78,9 +76,11 @@ export function ForWhom() {
                 marginBottom: '1.5rem',
               }}
             >
-              Každý, kdo řídí
+              Pro každého, kdo chce
               <br />
-              byznys v Excelu.
+              v online světě fungovat
+              <br />
+              profesionálně.
             </h2>
             <p
               style={{
@@ -89,7 +89,7 @@ export function ForWhom() {
                 lineHeight: 1.75,
               }}
             >
-              Nemusíte rozumět programování. Stačí vědět, co vaše tabulka dělá — zbytek je na nás.
+              Nemusíte rozumět programování ani webdesignu. Stačí říct, co potřebujete — zbytek je na nás.
             </p>
           </div>
 
