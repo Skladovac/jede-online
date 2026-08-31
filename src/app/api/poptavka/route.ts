@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   /* ── Notifikace — KRITICKÁ. Tímto se k nám lead dostane. ──
      Pozor: doména jede.online nemá MX záznam, takže info@jede.online
      NENÍ doručitelná schránka. Cíl se nastavuje přes LEAD_NOTIFY_TO. */
-  const notifyTo = process.env.LEAD_NOTIFY_TO || 'info@skladovac.cz'
+  const notifyTo = process.env.LEAD_NOTIFY_TO || 'tomasnovosad@icloud.com'
 
   try {
     await resend.emails.send({
