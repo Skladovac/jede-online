@@ -11,7 +11,8 @@ name: jede
 
 services:
   db:
-    image: postgres:16-alpine
+    # Verze musí sedět s Neonem (17.11) — dump z 17 se do 16 neobnoví.
+    image: postgres:17-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -65,13 +66,12 @@ services:
     command: ["npx", "prisma", "migrate", "status"]
 
   # ── CVMS (kasino.jede.online) ──────────────────────────────────────
-  # Vlastník: Codex, VLASTNÍ compose projekt z repa kasino.
+  # Běží jako VLASTNÍ compose projekt z repa kasino (deploy/docker-compose.yml),
+  # protože je to jiné repo s vlastním životním cyklem.
   # Kontrakt vůči téhle infrastruktuře:
   #   • publikuje na 127.0.0.1:3100 (nginx tam už míří)
-  #   • do Postgresu se připojí buď přes host 127.0.0.1:5432,
-  #     nebo připojením k síti `jede_default` (external) a hostem `db`
+  #   • připojí se k síti `jede_default` jako external a sahá na hosta `db`
   #   • databáze `cvms` je předpřipravená v initdb/01-databases.sql
-  # Do nginx configu Codex nesahá — předá jen hostname a port.
 
 volumes:
   pgdata:
