@@ -27,5 +27,3 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Prisma migrations (generuje Vercel při buildu)
-prisma/migrations/

@@ -1,0 +1,13 @@
+* text=auto
+
+# Soubory, které běží na Linuxu, musí mít LF i když se editují na Windows.
+# S CRLF umře skript na `bad interpreter: /usr/bin/env bash^M` ještě před
+# prvním řádkem logu — stejná třída pasti jako `chmod +x`, který na serveru nedrží.
+*.sh            text eol=lf
+*.conf          text eol=lf
+*.sql           text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+Dockerfile      text eol=lf
+.dockerignore   text eol=lf
+.env.example    text eol=lf
