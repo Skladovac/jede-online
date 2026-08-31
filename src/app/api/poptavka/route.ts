@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
+import { getResend } from '@/lib/resend'
 import { prisma } from '@/lib/prisma'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
   let body: Record<string, string>
@@ -31,7 +29,7 @@ export async function POST(req: NextRequest) {
   /* ── Emaily — hlavní operace ── */
   try {
     /* Notifikace na info@jede.online */
-    await resend.emails.send({
+    await getResend().emails.send({
       from: 'jede.online <info@jede.online>',
       to: 'info@jede.online',
       subject: `Nová poptávka — ${jmeno} ${prijmeni}`,
@@ -44,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   try {
     /* Potvrzení klientovi */
-    await resend.emails.send({
+    await getResend().emails.send({
       from: 'jede.online <info@jede.online>',
       to: email,
       subject: 'Poptávku jsme přijali — ozveme se do 24 hodin',

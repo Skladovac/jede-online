@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { Resend } from 'resend'
+import { getResend } from '@/lib/resend'
 import { getConfirmationEmail } from '@/lib/email'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
   let body: { email?: string; source?: string }
@@ -25,7 +23,7 @@ export async function POST(req: NextRequest) {
       create: { email, source: body.source ?? 'hero' },
     })
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: 'jede.online <info@jede.online>',
       to: email,
       subject: 'Váš dotaz byl přijat — jede.online',
