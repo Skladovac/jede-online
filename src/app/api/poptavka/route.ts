@@ -28,22 +28,29 @@ export async function POST(req: NextRequest) {
     create: { email, source: 'poptavka' },
   }).catch(err => console.error('[poptavka] DB error:', err))
 
-  /* ── Emaily — hlavní operace ── */
+  /* ── Notifikace — KRITICKÁ. Tímto se k nám lead dostane. ──
+     Pozor: doména jede.online nemá MX záznam, takže info@jede.online
+     NENÍ doručitelná schránka. Cíl se nastavuje přes LEAD_NOTIFY_TO. */
+  const notifyTo = process.env.LEAD_NOTIFY_TO || 'info@skladovac.cz'
+
   try {
-    /* Notifikace na info@jede.online */
     await resend.emails.send({
       from: 'jede.online <info@jede.online>',
-      to: 'info@jede.online',
+      to: notifyTo,
+      replyTo: email,
       subject: `Nová poptávka — ${jmeno} ${prijmeni}`,
       html: notificationHtml({ jmeno, prijmeni, firma, web, email, telefon, zprava }),
     })
   } catch (err) {
-    /* Notifikace není kritická — pokračujeme */
-    console.error('[poptavka] notification email error:', err)
+    console.error('[poptavka] KRITICKÁ CHYBA — notifikace neodešla:', err)
+    return NextResponse.json(
+      { error: 'Poptávku se nepodařilo odeslat. Zkuste to prosím znovu, nebo nám napište na info@skladovac.cz.' },
+      { status: 500 }
+    )
   }
 
+  /* ── Potvrzení klientovi — nekritické. Lead už máme. ── */
   try {
-    /* Potvrzení klientovi */
     await resend.emails.send({
       from: 'jede.online <info@jede.online>',
       to: email,
@@ -51,8 +58,7 @@ export async function POST(req: NextRequest) {
       html: confirmationHtml({ jmeno, zprava }),
     })
   } catch (err) {
-    console.error('[poptavka] confirmation email error:', err)
-    return NextResponse.json({ error: 'Nepodařilo se odeslat potvrzení. Zkuste to prosím znovu.' }, { status: 500 })
+    console.error('[poptavka] potvrzení klientovi neodešlo:', err)
   }
 
   return NextResponse.json({ success: true })

@@ -149,7 +149,8 @@ export function PoptavkaModal() {
           ×
         </button>
 
-        {/* Záhlaví */}
+        {/* Záhlaví — po odeslání se skryje */}
+        {!sent && (
         <div style={{ marginBottom: '2rem' }}>
           <span style={{
             fontFamily: '"JetBrains Mono", monospace',
@@ -172,10 +173,11 @@ export function PoptavkaModal() {
             Nechte nám na sebe kontakt. Ozveme se vám zpět do 24 hodin a společně vymyslíme nejlepší řešení pro váš byznys. Neformálně a bez závazků.
           </p>
         </div>
+        )}
 
         {sent ? (
           /* Úspěch */
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem 0', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '3.5rem 0 2.5rem', textAlign: 'center' }}>
             <div style={{
               width: '3.25rem', height: '3.25rem', borderRadius: '50%',
               border: '1px solid var(--accent-gold)',
@@ -191,7 +193,7 @@ export function PoptavkaModal() {
               Poptávka odeslána.
             </h3>
             <p style={{ fontSize: '0.9375rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
-              Ozveme se vám zpět do 24 hodin.
+              Potvrzení jsme vám poslali na e-mail. Ozveme se do 24 hodin.
             </p>
           </div>
         ) : (
