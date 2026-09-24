@@ -1,0 +1,2 @@
+# Skripty musí mít unixové konce řádků, jinak je bash na serveru i lokálně neprovede.
+*.sh text eol=lf
