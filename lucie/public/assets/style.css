@@ -257,7 +257,6 @@ html.menu-open { overflow: hidden; }
 .gift-copy h2 { margin-bottom: 1.4rem; }
 .gift-copy > p:not(.eyebrow) { max-width: 30rem; color: var(--ink-soft); }
 .arch-gift { width: min(100%, 420px); aspect-ratio: 4 / 5; justify-self: center; }
-.arch-gift img { object-position: 62% 50%; }
 
 /* ---------- Poctivé reference ---------- */
 
