@@ -405,6 +405,9 @@ details[open] .plus::after { transform: translate(-50%, -50%) rotate(0deg); }
 .footer-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 28px; margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--line-dark); color: var(--on-dark-soft); font-size: .8rem; }
 .footer-bottom a { text-decoration: none; }
 .footer-bottom a:hover { color: var(--champagne); }
+/* Podpis agentury: jede.online vždy zlatě s odkazem */
+.footer-bottom .footer-credit { color: #CA9E5A; transition: color .3s; }
+.footer-bottom .footer-credit:hover { color: #FFD700; }
 
 /* ---------- Mobilní lišta pro objednání ---------- */
 
