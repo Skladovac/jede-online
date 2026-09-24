@@ -314,7 +314,7 @@ details[open] .plus::after { transform: translate(-50%, -50%) rotate(0deg); }
 
 /* ---------- Podstránky ---------- */
 
-.page-hero { z-index: 2; padding: clamp(26px, 4vw, 44px) 0 calc(clamp(72px, 9vw, 120px) + var(--dome)); border-radius: 0 0 50% 50% / 0 0 var(--dome) var(--dome); }
+.page-hero { --hero-pad: clamp(72px, 9vw, 120px); --hang: 36px; z-index: 2; padding: clamp(26px, 4vw, 44px) 0 calc(var(--hero-pad) + var(--dome)); border-radius: 0 0 50% 50% / 0 0 var(--dome) var(--dome); }
 .page-hero + section { margin-top: calc(-1 * var(--dome)); padding-top: calc(var(--section) + var(--dome)); }
 .page-hero-grid { position: relative; z-index: 1; display: grid; gap: 40px; align-items: end; }
 .breadcrumb { display: flex; flex-wrap: wrap; gap: .7rem; margin-bottom: clamp(44px, 7vw, 84px); color: var(--on-dark-soft); font: 600 .64rem/1.4 var(--sans); letter-spacing: .24em; text-transform: uppercase; }
@@ -326,7 +326,7 @@ details[open] .plus::after { transform: translate(-50%, -50%) rotate(0deg); }
 .page-hero .lead { max-width: 34rem; }
 .hero-ornament { display: none; }
 .arch-page figcaption { right: 10px; bottom: 10px; white-space: nowrap; font-size: .5rem; letter-spacing: .1em; }
-.arch-page { width: 46%; max-width: 230px; aspect-ratio: 3 / 4; justify-self: end; margin-bottom: calc(-1 * var(--dome) - 44px); box-shadow: 0 30px 60px -30px rgba(2, 30, 22, .5); }
+.arch-page { width: 46%; max-width: 230px; aspect-ratio: 3 / 4; justify-self: end; margin-bottom: calc(-1 * (var(--hero-pad) + var(--dome) + var(--hang))); box-shadow: 0 30px 60px -30px rgba(2, 30, 22, .5); }
 
 .cta { padding-block: calc(var(--section) + 10px) var(--section); text-align: center; overflow: clip; }
 .cta-inner { position: relative; z-index: 1; max-width: calc(860px + 2 * var(--gutter)); }
@@ -510,7 +510,8 @@ details[open] .plus::after { transform: translate(-50%, -50%) rotate(0deg); }
 
   .page-hero-grid.has-aside { grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr); }
   .hero-ornament { display: block; width: min(100%, 360px); height: auto; aspect-ratio: 120 / 48; margin: 0 0 0 auto; align-self: center; stroke: var(--gold); opacity: .55; transform: rotate(-12deg); }
-  .arch-page { width: min(100%, 340px); margin-bottom: calc(-1 * var(--dome) - 64px); }
+  .page-hero { --hang: 56px; }
+  .arch-page { width: min(100%, 340px); }
   .split { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(56px, 8vw, 128px); }
   .split-reverse .arch-split { order: 2; }
   .editorial { grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 9%; align-items: start; }
