@@ -39,7 +39,7 @@ test('SEO files and map privacy are ready', () => {
 });
 test('Nested 404 pages can recover to the root and load their stylesheet', () => {
   const html=readFileSync(resolve(root,'404.html'),'utf8');
-  assert.match(html,/href="\/assets\/style.css"/);
+  assert.match(html,/href="\/assets\/style\.css(?:\?v=[0-9a-f]+)?"/);
   assert.match(html,/href="\/">Zpět na úvod/);
 });
 test('Dark map panels keep readable light button text even inside light sections', () => {

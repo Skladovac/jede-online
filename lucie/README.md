@@ -1,6 +1,6 @@
 # Lucie Krampotová — Masáže Vsetín
 
-Responzivní český web s devíti stránkami. Hotové soubory pro běžný hosting jsou ve složce `dist`. Nevyžadují Node.js ani databázi na serveru. Node.js 20+ je potřeba pouze při úpravách a novém sestavení.
+Responzivní český web s devíti stránkami. Hotové soubory pro hosting jsou ve složce `dist`. Nevyžadují Node.js ani databázi na serveru. Node.js 20+ je potřeba pouze při úpravách a novém sestavení.
 
 ## Náhled a úpravy
 
@@ -13,11 +13,17 @@ npm start
 Náhled: http://127.0.0.1:4173/. Bez instalace balíčků.
 
 - `src/site.mjs`: kontakty, firemní údaje, obě ceny, služby, FAQ, doména a testovací režim.
-- `src/build.mjs`: obsah, šablony, metadata a generování stránek.
-- `public/assets/style.css`: responzivní vzhled.
-- `public/assets/app.js`: mobilní menu a mapa na vyžádání.
-- `public/assets/`: optimalizované místní obrázky a favicon.
+- `src/build.mjs`: obsah, šablony, metadata a generování stránek. Při sestavení také zmenší CSS a doplní českou sazbu (nezlomitelné mezery po jednopísmenných předložkách a spojkách, v číslech).
+- `public/assets/style.css`: vzhled v čitelné podobě. Do `dist` se ukládá zmenšený.
+- `public/assets/app.js`: celostránkové mobilní menu, mapa na vyžádání a jemné objevování obsahu při posouvání.
+- `public/assets/`: obrázky, favicon a písma.
 - `dist/`: kompletní sestavená verze. Úpravy dělejte ve zdrojích, pak spusťte build.
+
+## Vzhled
+
+Klidný luxusní wellness: smaragd `#064E3B` a šampaň `#F8E7C9` (potvrzené barvy), písma Cormorant Garamond a Manrope. Opakujícím se motivem je oblouk: fotografie, karty služeb, ceník i mapa mají klenutý horní okraj. Tmavé sekce navazují zaobleným předělem. Podpisem je ornament olivové větvičky.
+
+Pohyb je nenápadný a vypíná se při nastavení „omezit pohyb“. Bez JavaScriptu je obsah i navigace plně dostupná.
 
 ## Obsah
 
@@ -25,28 +31,30 @@ Náhled: http://127.0.0.1:4173/. Bez instalace balíčků.
 
 ## Testovací režim
 
-`staging: true` ponechává všechny stránky jako `noindex, follow`, aby se testovací telefon a provozovatel nedostaly do výsledků vyhledávání. Robots umožňuje načtení stránek, aby vyhledávač mohl noindex přečíst. To není ochrana přístupu; citlivé testovací nasazení chraňte autentizací hostingu.
+`staging: true` ponechává všechny stránky jako `noindex, follow`, aby se testovací telefon a provozovatel nedostaly do výsledků vyhledávání. Robots umožňuje načtení stránek, aby vyhledávač mohl noindex přečíst. To není ochrana přístupu.
 
 Telefon 123 456 789, DUKE test a IČO 111111111 jsou zadané placeholdery. Před ostrým spuštěním doplňte skutečné údaje, případnou novou doménu a ověřte informace o vzdělání, poukazech a zpracování osobních údajů. Změna `staging` na false je blokována generátorem, dokud zůstávají původní testovací firemní údaje nebo telefon. Potom znovu spusťte build a testy přizpůsobte ostrému režimu.
 
-## Nasazení na lucie.jede.online
+## Nasazení
 
-Při prvotní čtecí kontrole 22. 9. 2026 doména mířila na 185.8.237.22. HTTP vracelo parkovací stránku VEDOS. HTTPS neprošlo ověřením certifikátu a diagnostická odpověď bez jeho kontroly měla stav 401. Na původním serveru nebylo nic změněno.
+Web běží na vlastním serveru jede.online (Hetzner) jako statické soubory servírované nginxem ze složky `/opt/jede/lucie/public`. DNS: A záznam `lucie` → `178.104.231.220` ve WEDOSu. HTTPS: certifikát Let's Encrypt s automatickou obnovou, HTTP přesměrovává na HTTPS, neexistující adresa vrací skutečnou 404. Nginx posílá hlavičku `X-Robots-Tag: noindex`.
 
-1. V administraci hostingu ověřte cílový adresář subdomény. Nejdřív zálohujte jeho současný obsah a nastavení.
-2. Nahrajte **obsah dist**, včetně `.htaccess`, do tohoto ověřeného adresáře. Nenahrávejte zdroje, testy ani `.openai` do veřejného adresáře. Zachovejte existující ochranu přístupu a konfiguraci, případné direktivy slučte.
-3. Zajistěte platný TLS certifikát pro lucie.jede.online. Teprve po ověření HTTPS nastavte přesměrování HTTP → HTTPS v administraci hostingu.
-4. Zkontrolujte /, /masaze/, /cenik/, /kontakt/, /sitemap.xml, /robots.txt a neexistující adresu. Neexistující stránka má vracet skutečný HTTP 404.
-5. Otestujte mobilní menu, telefon/SMS na mobilním zařízení a načtení mapy po kliknutí.
+Nová verze: `sh deploy.sh`. Skript web sestaví a otestuje (při chybě nic nenahraje), ověří identitu serveru, zazálohuje předchozí verzi do `/opt/jede/lucie/backup`, novou vymění najednou a zkontroluje všechny adresy ostrého webu. Na server jde jen obsah `dist`; zdroje, testy ani `.openai` ne.
 
-Pro Apache je přiložena samostatná minimální `.htaccess` s cache, kompresí a 404; nenahrazujte jí bez kontroly existující nastavení. Soubor `_headers` je alternativa pro podporované statické hostingy. Žádné automatické změny DNS ani certifikátů nebyly provedeny.
+Mezipaměť: HTML se při každé návštěvě ověří u serveru (`no-cache`). Styl, skript, písma a obrázky mají v adrese otisk obsahu (`?v=…`), takže je prohlížeč smí držet rok a každá změna se přesto projeví hned.
 
-Soukromý náhled přes Sites je oddělený od cílového hostingu. Jeho `.openai/hosting.json` slouží pouze tomuto náhledu. Canonical a OpenGraph URL jsou připravené pro cílovou doménu; před nasazením na ni její obrázek při sdílení ještě nebude dostupný.
+Soubory `.htaccess` a `_headers` jsou alternativy pro Apache a statické hostingy; na současném nginx serveru se nepoužívají.
 
-## Soukromí a fotografie
+## Soukromí, fotografie a písma
 
-Žádná analytika, reklamní skripty, vlastní cookies ani požadavky na externí fontové servery. Písma Cormorant Garamond a Manrope z oficiálního repozitáře Google Fonts jsou optimalizovaná do místních WOFF2 souborů; licence OFL jsou v assets/fonts. Mapa Google se vloží až po kliknutí. Objednání vede pouze do telefonní nebo SMS aplikace. Zátiší bylo vytvořeno nástrojem imagegen a je označeno jako ilustrační; nezobrazuje Lucii ani skutečnou provozovnu.
+Žádná analytika, reklamní skripty, vlastní cookies ani požadavky na externí fontové servery. Mapa Google se vloží až po kliknutí. Objednání vede pouze do telefonní nebo SMS aplikace.
+
+Všechny fotografie jsou výřezy jednoho ilustračního zátiší vytvořeného nástrojem imagegen (`crop-*.webp`). Jsou označené jako ilustrační a nezobrazují Lucii ani skutečnou provozovnu.
+
+Písma Cormorant Garamond a Manrope jsou místní WOFF2 soubory; licence OFL jsou v `assets/fonts`. V Cormorant Garamond (`editorial*.woff2`) je upravený háček u malých písmen č, ě, ň, ř, š, ž: původní byl vysoký 70 % výšky malých písmen a nad písmenem visel jako samostatné „v“. Háček je zmenšený a posazený blíž k písmenu ve všech tloušťkách i v kurzívě. Licence OFL úpravu dovoluje a nevyhrazuje název písma.
 
 ## Ověření
 
-Automatické kontroly pokrývají všechny vnitřní odkazy a soubory, počet H1, jazyk, testovací SEO, JSON-LD, kontaktní odkazy, ceny, reference a odložené načtení mapy. Syntaxe skriptů ověřena. Vizuální ověření skutečným prohlížečem a Lighthouse měření nejsou dokončené: přístup k prohlížeči zablokovala kontrola zásad prostředí. Nejde o naměřené hodnocení výkonu nebo certifikaci přístupnosti.
+Automatické kontroly pokrývají všechny vnitřní odkazy a soubory, počet H1, jazyk, testovací SEO, JSON-LD, kontaktní odkazy, ceny, reference a odložené načtení mapy.
+
+Vizuálně ověřeno snímky z Chromu na šířkách 320, 390 a 1440 px: všechny stránky bez vodorovného přetečení, otevřené mobilní menu (fokus uvnitř menu, Esc zavírá), verze bez JavaScriptu a pořadí fokusu z klávesnice. Kontrast hlavních dvojic barev je 7,99:1 (text na smaragdu i naopak). Automatická kontrola všech 9 stránek nenašla text pod hranicí WCAG AA (4,5:1, u velkého písma 3:1); text přes fotografie kontrola nezahrnuje. Lighthouse měření ani certifikace přístupnosti nebyly provedeny.
