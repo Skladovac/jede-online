@@ -85,7 +85,7 @@ function render(svc) {
   const ring = `DÁRKOVÝ POUKAZ · MASÁŽE · ${s.city.toUpperCase()} ·`;
   const seal = `<svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="ring" d="M100 100m-74 0a74 74 0 1 1 148 0a74 74 0 1 1-148 0"/></defs><circle cx="100" cy="100" r="99" fill="#043628"/><circle cx="100" cy="100" r="91" fill="none" stroke="rgba(248,231,201,.35)" stroke-width="1"/><text fill="#F8E7C9" font-family="Manrope" font-size="13" font-weight="600"><textPath href="#ring" textLength="452" lengthAdjust="spacing">${ring}</textPath></text><text x="100" y="114" text-anchor="middle" fill="#E6CFA2" font-family="Editorial" font-size="46" font-style="italic">LK</text></svg>`;
   const sprig = `<svg class="sprig" viewBox="0 0 120 48" aria-hidden="true">${OLIVE}</svg>`;
-  const testNote = s.staging ? ' Testovací údaje – před tiskem doplníme skutečné.' : '';
+  const testNote = s.staging ? ' Údaje provozovatele jsou testovací – před tiskem doplníme skutečné.' : '';
   return `<!doctype html>
 <html lang="cs"><head><meta charset="utf-8"><title>Dárkový poukaz – ${esc(svc.name)}, ${svc.minutes} minut | ${esc(s.name)}</title><style>${css}</style></head><body>
 <section class="sheet front" data-name="predni"><div class="light"></div><figure class="arch"><img src="${assets}wellness.webp" alt=""></figure><div class="seal">${seal}</div><div class="trim front-copy"><p class="brand"><span class="brand-name">${esc(s.name)}</span><span class="brand-sub">Masáže · ${esc(s.city)}</span></p><h1>Dárkový <em>poukaz</em></h1><div class="service"><p class="service-time"><span>${svc.minutes}</span><em>minut</em></p><p class="service-name">${esc(svc.name)}</p></div></div></section>
@@ -137,11 +137,14 @@ async function renderFiles(files) {
         writeFileSync(file.replace(/\.html$/, `-${side.name}.png`), Buffer.from(shot.data, 'base64'));
       }
     }
+    // Řádné zavření ukončí i pomocné procesy Chromu, které by jinak držely dočasný profil.
+    await Promise.race([send('Browser.close').catch(() => {}), sleep(3000)]);
     ws.close();
   } finally {
-    proc.kill();
-    if (proc.exitCode === null) await new Promise(r => { proc.once('exit', r); setTimeout(r, 3000); });
-    rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+    if (proc.exitCode === null) { proc.kill(); await new Promise(r => { proc.once('exit', r); setTimeout(r, 3000); }); }
+    // Úklid nesmí shodit hotové výstupy; Windows může soubory profilu ještě chvíli držet.
+    try { rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); }
+    catch { console.log(`Dočasný profil Chromu se nepodařilo smazat (lze smazat ručně): ${profile}`); }
   }
 }
 

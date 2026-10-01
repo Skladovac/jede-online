@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
+import { site } from '../src/site.mjs';
 const root = resolve(import.meta.dirname, '../dist');
 const paths = ['', 'masaze', 'o-lucii', 'cenik', 'darkove-poukazy', 'reference', 'faq', 'kontakt', 'soukromi'];
 test('All pages provide Czech content, contact actions and test-site SEO', () => {
@@ -12,8 +13,8 @@ test('All pages provide Czech content, contact actions and test-site SEO', () =>
     assert.match(html, /<html lang="cs">/);
     assert.equal((html.match(/<h1[ >]/g) || []).length, 1);
     assert.match(html, /name="robots" content="noindex, follow"/);
-    assert.match(html, /tel:\+420123456789/);
-    assert.match(html, /sms:\+420123456789/);
+    assert.ok(html.includes(`tel:${site.phoneLink}`), `${path || '/'}: chybí odkaz na telefon`);
+    assert.ok(html.includes(`sms:${site.phoneLink}`), `${path || '/'}: chybí odkaz na SMS`);
     assert.doesNotMatch(html, /aggregateRating|reviewCount|priceCurrency/);
     for (const [, json] of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) JSON.parse(json);
     for (const [, url] of html.matchAll(/(?:href|src)="([^"#]+)"/g)) {

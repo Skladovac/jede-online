@@ -33,7 +33,7 @@ Pohyb je nenápadný a vypíná se při nastavení „omezit pohyb“. Bez JavaS
 
 `staging: true` ponechává všechny stránky jako `noindex, follow`, aby se testovací telefon a provozovatel nedostaly do výsledků vyhledávání. Robots umožňuje načtení stránek, aby vyhledávač mohl noindex přečíst. To není ochrana přístupu.
 
-Telefon 123 456 789, DUKE test a IČO 111111111 jsou zadané placeholdery. Před ostrým spuštěním doplňte skutečné údaje, případnou novou doménu a ověřte informace o vzdělání, poukazech a zpracování osobních údajů. Změna `staging` na false je blokována generátorem, dokud zůstávají původní testovací firemní údaje nebo telefon. Potom znovu spusťte build a testy přizpůsobte ostrému režimu.
+Telefon 774 961 046 je skutečný (doplněn 1. 10. 2026). DUKE test a IČO 111111111 jsou zadané placeholdery. Před ostrým spuštěním doplňte skutečné údaje, případnou novou doménu a ověřte informace o vzdělání, poukazech a zpracování osobních údajů. Změna `staging` na false je blokována generátorem, dokud zůstávají původní testovací firemní údaje nebo telefon. Potom znovu spusťte build a testy přizpůsobte ostrému režimu.
 
 ## Nasazení
 
