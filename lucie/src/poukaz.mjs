@@ -1,6 +1,7 @@
 // Dárkový poukaz – tisková předloha ve formátu DL (210 × 99 mm) se spadávkou 3 mm.
 // Údaje bere ze src/site.mjs: po doplnění skutečného telefonu a provozovatele stačí spustit znovu.
-// Výstup do tisk/: poukaz-<minuty>.html (předloha), .pdf (pro tiskárnu, přední + zadní strana)
+// Výstup do tisk/: poukaz-<minuty>.html (předloha), .pdf (pro tiskárnu: přední + zadní strana, 216 × 105 mm),
+// -orezove-znacky.pdf (totéž se značkami ořezu, pro tiskárny, které je chtějí)
 // a -predni.png / -zadni.png (náhledy po ořezu, třeba k odeslání SMS nebo e-mailem).
 import { mkdirSync, writeFileSync, readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { resolve, join } from 'node:path';
@@ -8,25 +9,33 @@ import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { site as s } from './site.mjs';
-import { czechTypo, OLIVE } from './common.mjs';
+import { czechTypo, OLIVE, placeholderBusiness } from './common.mjs';
 
 const out = resolve(import.meta.dirname, '../tisk');
 const assets = '../public/assets/';
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+// Pevné řezy písem z tisk/fonts (vytváří src/tiskova-pisma.py). Proměnná webová písma by Chrome vložil do PDF jako Type3.
+const fonts = [['Editorial', 'editorial', 'normal', [300, 400, 500]], ['Editorial', 'editorial-italic', 'italic', [400]], ['Manrope', 'manrope', 'normal', [400, 500, 600]]]
+  .flatMap(([family, stem, style, weights]) => weights.map(weight => `@font-face { font-family: ${family}; src: url('fonts/${stem}-${weight}.woff2') format('woff2'); font-style: ${style}; font-weight: ${weight}; }`))
+  .join('\n');
+
 const css = `
-@font-face { font-family: Editorial; src: url('${assets}fonts/editorial.woff2') format('woff2'); font-style: normal; font-weight: 300 700; }
-@font-face { font-family: Editorial; src: url('${assets}fonts/editorial-italic.woff2') format('woff2'); font-style: italic; font-weight: 300 700; }
-@font-face { font-family: Manrope; src: url('${assets}fonts/text.woff2') format('woff2'); font-style: normal; font-weight: 200 800; }
+${fonts}
 @page { size: 216mm 105mm; margin: 0; }
 :root { --emerald: #064E3B; --emerald-deep: #043628; --champagne: #F8E7C9; --champagne-light: #FCF4E6; --gold: #C9B083; --gold-soft: #E6CFA2; --bronze: #76602F; --ink-soft: #2F5E4E; --on-dark-soft: #C3C5AA; --serif: Editorial, "Cormorant Garamond", Georgia, serif; --sans: Manrope, "Segoe UI", sans-serif; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-synthesis: none; }
 body { font-family: var(--sans); color: var(--emerald); -webkit-font-smoothing: antialiased; }
 h1, h2 { font-family: var(--serif); font-weight: 400; }
 svg { display: block; overflow: visible; }
-.sheet { position: relative; width: 216mm; height: 105mm; overflow: hidden; break-after: page; }
-.sheet:last-child { break-after: auto; }
+.plate { position: relative; break-after: page; }
+.plate:last-child { break-after: auto; }
+.sheet { position: relative; width: 216mm; height: 105mm; overflow: hidden; }
+/* Varianta se značkami ořezu: kolem spadávky je 8 mm volného okraje se značkami. */
+.crop { display: none; }
+.marks .plate { width: 232mm; height: 121mm; padding: 8mm; }
+.marks .crop { display: block; position: absolute; inset: 0; width: 232mm; height: 121mm; }
 /* Plocha po ořezu je 210 × 99 mm; texty drží nejméně 8 mm od hrany ořezu. */
 .trim { position: absolute; left: 3mm; top: 3mm; width: 210mm; height: 99mm; }
 .eyebrow { display: flex; align-items: center; gap: 2.6mm; font: 600 5.5pt/1 var(--sans); letter-spacing: .32em; text-transform: uppercase; }
@@ -85,11 +94,14 @@ function render(svc) {
   const ring = `DÁRKOVÝ POUKAZ · MASÁŽE · ${s.city.toUpperCase()} ·`;
   const seal = `<svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="ring" d="M100 100m-74 0a74 74 0 1 1 148 0a74 74 0 1 1-148 0"/></defs><circle cx="100" cy="100" r="99" fill="#043628"/><circle cx="100" cy="100" r="91" fill="none" stroke="rgba(248,231,201,.35)" stroke-width="1"/><text fill="#F8E7C9" font-family="Manrope" font-size="13" font-weight="600"><textPath href="#ring" textLength="452" lengthAdjust="spacing">${ring}</textPath></text><text x="100" y="114" text-anchor="middle" fill="#E6CFA2" font-family="Editorial" font-size="46" font-style="italic">LK</text></svg>`;
   const sprig = `<svg class="sprig" viewBox="0 0 120 48" aria-hidden="true">${OLIVE}</svg>`;
-  const testNote = s.staging ? ' Údaje provozovatele jsou testovací – před tiskem doplníme skutečné.' : '';
+  // Značky ořezu (jen ve variantě pro tiskárny, které je chtějí); končí 3 mm před spadávkou.
+  const crop = '<svg class="crop" viewBox="0 0 232 121" aria-hidden="true"><path d="M11 0V5M221 0V5M11 116V121M221 116V121M0 11H5M0 110H5M227 11H232M227 110H232" stroke="#000" stroke-width=".1" fill="none"/></svg>';
+  const issuer = s.businessName === s.name ? `${esc(s.name)}, IČO ${esc(s.businessId)}` : `${esc(s.name)} · provozovatel ${esc(s.businessName)}, IČO ${esc(s.businessId)}`;
+  const testNote = placeholderBusiness(s) ? ' Údaje provozovatele jsou testovací – před tiskem doplníme skutečné.' : '';
   return `<!doctype html>
 <html lang="cs"><head><meta charset="utf-8"><title>Dárkový poukaz – ${esc(svc.name)}, ${svc.minutes} minut | ${esc(s.name)}</title><style>${css}</style></head><body>
-<section class="sheet front" data-name="predni"><div class="light"></div><figure class="arch"><img src="${assets}wellness.webp" alt=""></figure><div class="seal">${seal}</div><div class="trim front-copy"><p class="brand"><span class="brand-name">${esc(s.name)}</span><span class="brand-sub">Masáže · ${esc(s.city)}</span></p><h1>Dárkový <em>poukaz</em></h1><div class="service"><p class="service-time"><span>${svc.minutes}</span><em>minut</em></p><p class="service-name">${esc(svc.name)}</p></div></div></section>
-<section class="sheet back" data-name="zadni"><div class="trim back-copy"><p class="eyebrow">Dárkový poukaz</p><h2>Chvíle <em>jen pro sebe.</em></h2><p class="back-service">${esc(svc.name)} · ${svc.minutes} minut</p><div class="fields"><span class="label">Pro</span><span class="line wide"></span><span class="label">Od</span><span class="line wide"></span><span class="label">Číslo poukazu</span><span class="line"></span><span class="label second">Platnost do</span><span class="line"></span><span class="label">Vystaveno dne</span><span class="line"></span><span class="label second">Podpis / razítko</span><span class="line"></span></div><p class="fine">Poukaz na ${esc(lower)} v délce ${svc.minutes} minut. ${esc(s.name)} · ${esc(s.address)}, ${esc(s.city)} · provozovatel ${esc(s.businessName)}, IČO ${esc(s.businessId)}.${testNote}</p></div><div class="info">${sprig}<p class="eyebrow">Jak poukaz uplatnit</p><p class="info-text">Termín si domluvte telefonem nebo SMS.<br>Při objednání uveďte číslo poukazu.</p><p class="phone">${esc(s.phone)}</p><p class="address">${esc(s.address)}, ${esc(s.city)}</p></div></section>
+<div class="plate">${crop}<section class="sheet front" data-name="predni"><div class="light"></div><figure class="arch"><img src="${assets}wellness.webp" alt=""></figure><div class="seal">${seal}</div><div class="trim front-copy"><p class="brand"><span class="brand-name">${esc(s.name)}</span><span class="brand-sub">Masáže · ${esc(s.city)}</span></p><h1>Dárkový <em>poukaz</em></h1><div class="service"><p class="service-time"><span>${svc.minutes}</span><em>minut</em></p><p class="service-name">${esc(svc.name)}</p></div></div></section></div>
+<div class="plate">${crop}<section class="sheet back" data-name="zadni"><div class="trim back-copy"><p class="eyebrow">Dárkový poukaz</p><h2>Chvíle <em>jen pro sebe.</em></h2><p class="back-service">${esc(svc.name)} · ${svc.minutes} minut</p><div class="fields"><span class="label">Pro</span><span class="line wide"></span><span class="label">Od</span><span class="line wide"></span><span class="label">Číslo poukazu</span><span class="line"></span><span class="label second">Platnost do</span><span class="line"></span><span class="label">Vystaveno dne</span><span class="line"></span><span class="label second">Podpis / razítko</span><span class="line"></span></div><p class="fine">Poukaz na ${esc(lower)} v délce ${svc.minutes} minut. ${issuer} · ${esc(s.address)}, ${esc(s.city)}.${testNote}</p></div><div class="info">${sprig}<p class="eyebrow">Jak poukaz uplatnit</p><p class="info-text">Termín si domluvte telefonem nebo SMS.<br>Při objednání uveďte číslo poukazu.</p><p class="phone">${esc(s.phone)}</p><p class="address">${esc(s.address)}, ${esc(s.city)}</p></div></section></div>
 </body></html>`;
 }
 
@@ -101,6 +113,38 @@ function findChrome() {
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'
   ].find(path => path && existsSync(path));
+}
+
+// Chrome zaokrouhluje velikost stránky a nezapisuje tiskové rámečky. Tady se doplní přesný MediaBox,
+// BleedBox (spadávka 216 × 105 mm) a TrimBox (formát po ořezu 210 × 99 mm) a přepočítá se tabulka xref.
+// Obsah Chrome kreslí od horní hrany stránky, proto se rámečky měří od ní. Neznámou strukturu PDF nechá beze změny.
+function finishPdf(buf, { width, height, offset }) {
+  const pt = mm => mm * 72 / 25.4;
+  const num = v => String(Math.round(v * 1000) / 1000);
+  const box = (x, y, w, h, top) => `[${num(pt(x))} ${num(top - pt(y + h))} ${num(pt(x + w))} ${num(top - pt(y))}]`;
+  const pdf = buf.toString('latin1');
+  const xrefAt = Number(/startxref\s+(\d+)\s*%%EOF\s*$/.exec(pdf)?.[1]);
+  const table = Number.isFinite(xrefAt) && /^xref\r?\n([\s\S]*?)trailer([\s\S]*?)startxref/.exec(pdf.slice(xrefAt));
+  if (!table) return buf;
+  const edits = [];
+  const head = pdf.slice(0, xrefAt).replace(/\/MediaBox\s*\[\s*([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s*\]/g, (match, x0, y0, x1, y1, at) => {
+    const top = Number(y1);
+    const boxes = `/MediaBox [0 ${num(top - pt(height))} ${num(pt(width))} ${num(top)}] /BleedBox ${box(offset, offset, 216, 105, top)} /TrimBox ${box(offset + 3, offset + 3, 210, 99, top)}`;
+    edits.push({ at, delta: boxes.length - match.length });
+    return boxes;
+  });
+  const shift = position => edits.reduce((sum, edit) => sum + (edit.at < position ? edit.delta : 0), 0);
+  const rows = table[1].split('\n').map(row => row.trim()).filter(Boolean);
+  let xref = 'xref\n';
+  for (let i = 0; i < rows.length;) {
+    const [start, count] = rows[i++].split(/\s+/).map(Number);
+    xref += `${start} ${count}\n`;
+    for (let k = 0; k < count; k++, i++) {
+      const [position, generation, type] = rows[i].split(/\s+/);
+      xref += `${String(Number(position) + (type === 'n' ? shift(Number(position)) : 0)).padStart(10, '0')} ${generation} ${type} \n`;
+    }
+  }
+  return Buffer.from(`${head}${xref}trailer\n${table[2].trim()}\nstartxref\n${head.length}\n%%EOF\n`, 'latin1');
 }
 
 // PDF a náhledy vykreslí Chrome bez okna, s dočasným profilem (nesahá na profil uživatele).
@@ -122,14 +166,23 @@ async function renderFiles(files) {
     ws.addEventListener('message', e => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } });
     const send = (method, params = {}) => new Promise((ok, fail) => { const i = ++id; pending.set(i, m => m.error ? fail(new Error(`${method}: ${m.error.message}`)) : ok(m.result)); ws.send(JSON.stringify({ id: i, method, params })); });
     const evaluate = async expression => (await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result.value;
+    const inch = mm => mm / 25.4;
+    // Velikost stránky určuje CSS (@page), jinak by Chrome obsah centroval a zmenšoval na papír.
+    // Stránka je o 0,5 mm větší, aby po zaokrouhlení v Chromu nic nepřeteklo; finishPdf ji ořízne přesně od levého horního rohu.
+    const print = async (width, height) => {
+      await evaluate(`(() => { const style = document.getElementById('page-size') || document.head.appendChild(Object.assign(document.createElement('style'), { id: 'page-size' })); style.textContent = '@page { size: ${width + 0.5}mm ${height + 0.5}mm; margin: 0; }'; })()`);
+      return Buffer.from((await send('Page.printToPDF', { printBackground: true, preferCSSPageSize: true, marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0 })).data, 'base64');
+    };
     await send('Emulation.setDeviceMetricsOverride', { width: 1100, height: 1000, deviceScaleFactor: 2, mobile: false });
     for (const file of files) {
       const url = pathToFileURL(file).href;
       await send('Page.navigate', { url });
       for (let i = 0; i < 100 && !(await evaluate(`location.href === ${JSON.stringify(url)} && document.readyState === 'complete'`)); i++) await sleep(50);
       await evaluate('document.fonts.ready.then(() => Promise.all([...document.images].map(img => img.decode().catch(() => {}))))');
-      const pdf = await send('Page.printToPDF', { printBackground: true, preferCSSPageSize: true });
-      writeFileSync(file.replace(/\.html$/, '.pdf'), Buffer.from(pdf.data, 'base64'));
+      writeFileSync(file.replace(/\.html$/, '.pdf'), finishPdf(await print(216, 105), { width: 216, height: 105, offset: 0 }));
+      await evaluate("document.body.classList.add('marks')");
+      writeFileSync(file.replace(/\.html$/, '-orezove-znacky.pdf'), finishPdf(await print(232, 121), { width: 232, height: 121, offset: 8 }));
+      await evaluate("document.body.classList.remove('marks')");
       const sides = await evaluate(`[...document.querySelectorAll('.sheet')].map(el => { const r = el.getBoundingClientRect(); return { name: el.dataset.name, x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height }; })`);
       for (const side of sides) {
         const bleed = side.w * 3 / 216; // spadávka se v náhledu ořízne
@@ -155,4 +208,5 @@ const files = s.services.map(svc => {
   return file;
 });
 await renderFiles(files);
-console.log(`Dárkové poukazy: ${s.services.map(x => x.minutes + ' min').join(', ')} → tisk/ (HTML, PDF pro tiskárnu, PNG náhledy). Testovací údaje: ${s.staging}`);
+console.log(`Dárkové poukazy: ${s.services.map(x => x.minutes + ' min').join(', ')} → tisk/ (HTML, PDF pro tiskárnu, PNG náhledy).`);
+console.log(placeholderBusiness(s) ? 'POZOR: poukazy obsahují testovací údaje provozovatele, k tisku zatím nejsou. Doplňte businessName a businessId v src/site.mjs.' : 'Připraveno k tisku.');

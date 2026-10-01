@@ -47,9 +47,17 @@ Soubory `.htaccess` a `_headers` jsou alternativy pro Apache a statické hosting
 
 ## Dárkový poukaz
 
-`npm run poukaz` vytvoří do složky `tisk/` tiskovou předlohu dárkového poukazu pro obě délky masáže: HTML, PDF pro tiskárnu (formát DL 210 × 99 mm, spadávka 3 mm, přední a zadní strana) a PNG náhledy po ořezu, které lze poslat i SMS nebo e-mailem. Údaje bere ze `src/site.mjs`, po doplnění skutečného telefonu a provozovatele stačí příkaz spustit znovu. PDF a PNG vykresluje Chrome nebo Edge bez okna (cestu lze zadat proměnnou `CHROME`).
+`npm run poukaz` vytvoří do složky `tisk/` tiskovou předlohu dárkového poukazu pro obě délky masáže (30 a 60 minut):
 
-Na poukazu není cena. Číslo poukazu, platnost a datum vystavení se vyplňují ručně; délku platnosti a podmínky poukazu určí klientka. Dokud web běží v testovacím režimu, nese poukaz drobnou poznámku o testovacích údajích.
+- `poukaz-<minuty>.pdf` pro tiskárnu: formát DL 210 × 99 mm se spadávkou 3 mm (stránka 216 × 105 mm), přední a zadní strana, nastavené rámečky TrimBox a BleedBox, vložená písma.
+- `poukaz-<minuty>-orezove-znacky.pdf`: totéž se značkami ořezu, pro tiskárny, které je chtějí.
+- `poukaz-<minuty>-predni.png` a `-zadni.png`: náhledy po ořezu, třeba k poslání SMS nebo e-mailem.
+
+Údaje bere ze `src/site.mjs`. Dokud jsou v něm testovací údaje provozovatele, nese poukaz drobnou poznámku a příkaz upozorní, že poukaz k tisku není. PDF a PNG vykresluje Chrome nebo Edge bez okna (cestu lze zadat proměnnou `CHROME`). Tisková písma jsou pevné řezy ve `tisk/fonts`, vytváří je jednorázově `python src/tiskova-pisma.py` (vyžaduje fontTools). Proměnná webová písma by Chrome vložil do PDF jako Type3, na což tiskárny upozorňují.
+
+Do tiskárny: DL 210 × 99 mm, oboustranně barevně (4/4), papír 300–350 g. PDF je v RGB, převod do CMYK udělá tiskárna; u první zakázky se vyplatí zkušební výtisk.
+
+Na poukazu není cena. Číslo poukazu, platnost a datum vystavení se vyplňují ručně; délku platnosti a podmínky poukazu určí klientka.
 
 ## Soukromí, fotografie a písma
 
