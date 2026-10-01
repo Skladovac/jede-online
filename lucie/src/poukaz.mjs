@@ -1,5 +1,6 @@
 // Dárkový poukaz – tisková předloha ve formátu DL (210 × 99 mm) se spadávkou 3 mm.
-// Údaje bere ze src/site.mjs: po doplnění skutečného telefonu a provozovatele stačí spustit znovu.
+// Údaje bere ze src/site.mjs: po změně telefonu nebo adresy stačí spustit znovu.
+// Údaje provozovatele ani IČO na poukazu nejsou (rozhodnutí klienta, 1. 10. 2026).
 // Výstup do tisk/: poukaz-<minuty>.html (předloha), .pdf (pro tiskárnu: přední + zadní strana, 216 × 105 mm),
 // -orezove-znacky.pdf (totéž se značkami ořezu, pro tiskárny, které je chtějí)
 // a -predni.png / -zadni.png (náhledy po ořezu, třeba k odeslání SMS nebo e-mailem).
@@ -9,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { site as s } from './site.mjs';
-import { czechTypo, OLIVE, placeholderBusiness } from './common.mjs';
+import { czechTypo, OLIVE } from './common.mjs';
 
 const out = resolve(import.meta.dirname, '../tisk');
 const assets = '../public/assets/';
@@ -96,12 +97,10 @@ function render(svc) {
   const sprig = `<svg class="sprig" viewBox="0 0 120 48" aria-hidden="true">${OLIVE}</svg>`;
   // Značky ořezu (jen ve variantě pro tiskárny, které je chtějí); končí 3 mm před spadávkou.
   const crop = '<svg class="crop" viewBox="0 0 232 121" aria-hidden="true"><path d="M11 0V5M221 0V5M11 116V121M221 116V121M0 11H5M0 110H5M227 11H232M227 110H232" stroke="#000" stroke-width=".1" fill="none"/></svg>';
-  const issuer = s.businessName === s.name ? `${esc(s.name)}, IČO ${esc(s.businessId)}` : `${esc(s.name)} · provozovatel ${esc(s.businessName)}, IČO ${esc(s.businessId)}`;
-  const testNote = placeholderBusiness(s) ? ' Údaje provozovatele jsou testovací – před tiskem doplníme skutečné.' : '';
   return `<!doctype html>
 <html lang="cs"><head><meta charset="utf-8"><title>Dárkový poukaz – ${esc(svc.name)}, ${svc.minutes} minut | ${esc(s.name)}</title><style>${css}</style></head><body>
 <div class="plate">${crop}<section class="sheet front" data-name="predni"><div class="light"></div><figure class="arch"><img src="${assets}wellness.webp" alt=""></figure><div class="seal">${seal}</div><div class="trim front-copy"><p class="brand"><span class="brand-name">${esc(s.name)}</span><span class="brand-sub">Masáže · ${esc(s.city)}</span></p><h1>Dárkový <em>poukaz</em></h1><div class="service"><p class="service-time"><span>${svc.minutes}</span><em>minut</em></p><p class="service-name">${esc(svc.name)}</p></div></div></section></div>
-<div class="plate">${crop}<section class="sheet back" data-name="zadni"><div class="trim back-copy"><p class="eyebrow">Dárkový poukaz</p><h2>Chvíle <em>jen pro sebe.</em></h2><p class="back-service">${esc(svc.name)} · ${svc.minutes} minut</p><div class="fields"><span class="label">Pro</span><span class="line wide"></span><span class="label">Od</span><span class="line wide"></span><span class="label">Číslo poukazu</span><span class="line"></span><span class="label second">Platnost do</span><span class="line"></span><span class="label">Vystaveno dne</span><span class="line"></span><span class="label second">Podpis / razítko</span><span class="line"></span></div><p class="fine">Poukaz na ${esc(lower)} v délce ${svc.minutes} minut. ${issuer} · ${esc(s.address)}, ${esc(s.city)}.${testNote}</p></div><div class="info">${sprig}<p class="eyebrow">Jak poukaz uplatnit</p><p class="info-text">Termín si domluvte telefonem nebo SMS.<br>Při objednání uveďte číslo poukazu.</p><p class="phone">${esc(s.phone)}</p><p class="address">${esc(s.address)}, ${esc(s.city)}</p></div></section></div>
+<div class="plate">${crop}<section class="sheet back" data-name="zadni"><div class="trim back-copy"><p class="eyebrow">Dárkový poukaz</p><h2>Chvíle <em>jen pro sebe.</em></h2><p class="back-service">${esc(svc.name)} · ${svc.minutes} minut</p><div class="fields"><span class="label">Pro</span><span class="line wide"></span><span class="label">Od</span><span class="line wide"></span><span class="label">Číslo poukazu</span><span class="line"></span><span class="label second">Platnost do</span><span class="line"></span><span class="label">Vystaveno dne</span><span class="line"></span><span class="label second">Podpis / razítko</span><span class="line"></span></div><p class="fine">Poukaz na ${esc(lower)} v délce ${svc.minutes} minut. ${esc(s.name)} · ${esc(s.address)}, ${esc(s.city)}.</p></div><div class="info">${sprig}<p class="eyebrow">Jak poukaz uplatnit</p><p class="info-text">Termín si domluvte telefonem nebo SMS.<br>Při objednání uveďte číslo poukazu.</p><p class="phone">${esc(s.phone)}</p><p class="address">${esc(s.address)}, ${esc(s.city)}</p></div></section></div>
 </body></html>`;
 }
 
@@ -209,4 +208,3 @@ const files = s.services.map(svc => {
 });
 await renderFiles(files);
 console.log(`Dárkové poukazy: ${s.services.map(x => x.minutes + ' min').join(', ')} → tisk/ (HTML, PDF pro tiskárnu, PNG náhledy).`);
-console.log(placeholderBusiness(s) ? 'POZOR: poukazy obsahují testovací údaje provozovatele, k tisku zatím nejsou. Doplňte businessName a businessId v src/site.mjs.' : 'Připraveno k tisku.');
