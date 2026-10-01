@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync, readFileSync, cpSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { site as s, faq } from './site.mjs';
+import { czechTypo, OLIVE } from './common.mjs';
 
 const out = resolve(import.meta.dirname, '../dist');
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -44,7 +45,7 @@ const sprite = `<svg class="sprite" aria-hidden="true" focusable="false"><defs>
 <symbol id="i-sms" viewBox="0 0 24 24"><path d="M4 5.5h16v10.5H9.5L5.5 19.5V16H4z"/><path d="M8 10.8h.01M12 10.8h.01M16 10.8h.01"/></symbol>
 <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></symbol>
 <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></symbol>
-<symbol id="i-olive" viewBox="0 0 120 48"><g stroke-width="1"><path d="M4 42C34 34 70 24 116 7"/><path d="M0 0c6.5 -4.8 18.5 -4.8 25 0c-6.5 4.8 -18.5 4.8 -25 0z" transform="translate(13.2 39.5) rotate(-59.1)"/><path d="M0 0c6.5 -4.8 18.5 -4.8 25 0c-6.5 4.8 -18.5 4.8 -25 0z" transform="translate(22.8 36.9) rotate(20.5)"/><path d="M0 0c6 -4.4 17 -4.4 23 0c-6 4.4 -17 4.4 -23 0z" transform="translate(34.8 33.5) rotate(-60)"/><path d="M0 0c5.7 -4.2 16.3 -4.2 22 0c-5.7 4.2 -16.3 4.2 -22 0z" transform="translate(47.4 29.9) rotate(19.4)"/><path d="M0 0c5.2 -3.8 14.8 -3.8 20 0c-5.2 3.8 -14.8 3.8 -20 0z" transform="translate(60.7 25.8) rotate(-61.3)"/><path d="M0 0c4.7 -3.4 13.3 -3.4 18 0c-4.7 3.4 -13.3 3.4 -18 0z" transform="translate(74.8 21.3) rotate(18)"/><path d="M0 0c4.2 -3 11.8 -3 16 0c-4.2 3 -11.8 3 -16 0z" transform="translate(89.6 16.4) rotate(-62.9)"/><path d="M0 0c3.4 -2.5 9.6 -2.5 13 0c-3.4 2.5 -9.6 2.5 -13 0z" transform="translate(102.5 11.9) rotate(16.4)"/><path d="M0 0c3 -2.2 9 -2.2 12 0c-3 2.2 -9 2.2 -12 0z" transform="translate(113 8) rotate(-20.3)"/></g></symbol>
+<symbol id="i-olive" viewBox="0 0 120 48">${OLIVE}</symbol>
 </defs></svg>`;
 
 function render(route, label, title, description, notFound = false) {
@@ -133,17 +134,6 @@ ${sprite}
 <main id="obsah" tabindex="-1">${body}</main>
 <footer class="site-footer"><div class="wrap"><p class="footer-mark">Lucie <em>Krampotová</em></p><p class="footer-tag">Masáže zad a šíje · ${s.city}</p><div class="footer-cols"><div><p class="eyebrow">Kontakt</p><a class="footer-phone" href="${tel}">${s.phone}</a><a href="${smsHref()}">Napsat SMS</a><p>${s.address}, ${s.city}</p></div><nav aria-label="Stránky webu"><p class="eyebrow">Stránky</p><div class="footer-links">${pages.slice(1, 8).map(([path, name]) => `<a href="${link(path)}">${name}</a>`).join('')}</div></nav><div><p class="eyebrow">Návštěvy</p><p>${s.years} let zkušeností.<br>Čas věnovaný vašim zádům.</p><p>Dle objednání telefonem nebo SMS.</p></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} Lucie Krampotová</span><span>${s.businessName} · IČO ${s.businessId}${s.staging ? ' · testovací údaje' : ''}</span><a href="${link('soukromi')}">Soukromí a informace o webu</a><span>Designed by <a class="footer-credit" href="https://jede.online">jede.online</a></span></div></div></footer>
 <div class="mobile-booking" aria-label="Rychlé objednání"><a href="${tel}">${icon('phone')}Zavolat</a><a href="${smsHref()}">${icon('sms')}Napsat SMS</a></div></body></html>`;
-}
-
-// Česká sazba: jednopísmenné předložky a spojky nezůstávají na konci řádku, čísla se nelámou.
-// Upravuje jen text mezi značkami; skripty, styly a atributy zůstávají beze změny.
-function czechTypo(html) {
-  const nbsp = '\u00a0';
-  return html.split(/(<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<[^>]+>)/g).map(part => part.startsWith('<') ? part : part
-    .replace(/(?<=^|[\s(„])([kKsSvVzZoOuUaAiI]) (?=\S)/g, `$1${nbsp}`)
-    .replace(/(\d) (?=\d{3}(?!\d))/g, `$1${nbsp}`)
-    .replace(/(\d) (?=[\p{L}/])/gu, `$1${nbsp}`)
-  ).join('');
 }
 
 // Zmenšení CSS pro produkci. Řetězce v uvozovkách (data URI, content) zůstávají beze změny.

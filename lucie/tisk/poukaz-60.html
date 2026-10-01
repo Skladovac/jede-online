@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="cs"><head><meta charset="utf-8"><title>Dárkový poukaz – Individuální masáž, 60 minut | Lucie Krampotová</title><style>
+@font-face { font-family: Editorial; src: url('../public/assets/fonts/editorial.woff2') format('woff2'); font-style: normal; font-weight: 300 700; }
+@font-face { font-family: Editorial; src: url('../public/assets/fonts/editorial-italic.woff2') format('woff2'); font-style: italic; font-weight: 300 700; }
+@font-face { font-family: Manrope; src: url('../public/assets/fonts/text.woff2') format('woff2'); font-style: normal; font-weight: 200 800; }
+@page { size: 216mm 105mm; margin: 0; }
+:root { --emerald: #064E3B; --emerald-deep: #043628; --champagne: #F8E7C9; --champagne-light: #FCF4E6; --gold: #C9B083; --gold-soft: #E6CFA2; --bronze: #76602F; --ink-soft: #2F5E4E; --on-dark-soft: #C3C5AA; --serif: Editorial, "Cormorant Garamond", Georgia, serif; --sans: Manrope, "Segoe UI", sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: var(--sans); color: var(--emerald); -webkit-font-smoothing: antialiased; }
+h1, h2 { font-family: var(--serif); font-weight: 400; }
+svg { display: block; overflow: visible; }
+.sheet { position: relative; width: 216mm; height: 105mm; overflow: hidden; break-after: page; }
+.sheet:last-child { break-after: auto; }
+/* Plocha po ořezu je 210 × 99 mm; texty drží nejméně 8 mm od hrany ořezu. */
+.trim { position: absolute; left: 3mm; top: 3mm; width: 210mm; height: 99mm; }
+.eyebrow { display: flex; align-items: center; gap: 2.6mm; font: 600 5.5pt/1 var(--sans); letter-spacing: .32em; text-transform: uppercase; }
+.eyebrow::before { content: ""; width: 8mm; height: .25mm; background: currentColor; opacity: .6; }
+.sprig { fill: none; stroke-linecap: round; }
+@media screen {
+  body { display: grid; justify-content: center; gap: 12mm; padding: 14mm; background: #E4DCCB; }
+  .sheet { box-shadow: 0 6mm 14mm -6mm rgba(2, 30, 22, .45); }
+}
+
+/* ---------- Přední strana ---------- */
+.front { background: var(--emerald); color: var(--champagne); }
+.light { position: absolute; inset: 0; background:
+  radial-gradient(60% 85% at 84% 6%, rgba(248, 231, 201, .16), transparent 62%),
+  linear-gradient(112deg, transparent 0 26%, rgba(248, 231, 201, .07) 33%, transparent 41%),
+  linear-gradient(112deg, transparent 0 47%, rgba(248, 231, 201, .05) 52%, transparent 58%); }
+.arch { position: absolute; right: 17mm; bottom: 0; width: 60mm; height: 84mm; overflow: hidden; border-radius: 30mm 30mm 0 0; background: var(--emerald-deep); box-shadow: 0 4mm 10mm rgba(2, 30, 22, .35); }
+.arch img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 62%; }
+.arch::after { content: ""; position: absolute; inset: 2.2mm 2.2mm -1mm; border: .25mm solid rgba(248, 231, 201, .55); border-radius: 27.8mm 27.8mm 0 0; }
+.seal { position: absolute; left: 123.5mm; top: 20.5mm; z-index: 2; width: 31mm; height: 31mm; filter: drop-shadow(0 1.5mm 2.5mm rgba(2, 30, 22, .4)); }
+.front-copy { display: flex; flex-direction: column; justify-content: space-between; width: 110mm; padding: 12mm 0 11mm 14mm; }
+.brand-name { display: block; font: 500 15pt/1 var(--serif); }
+.brand-sub { display: block; margin-top: 1.8mm; color: var(--gold); font: 600 5.5pt/1 var(--sans); letter-spacing: .38em; text-transform: uppercase; }
+.front h1 { font-size: 46pt; line-height: 1.04; letter-spacing: -.01em; }
+.front h1 em { display: block; color: var(--gold-soft); }
+.service-time { display: flex; align-items: baseline; gap: 2mm; font-family: var(--serif); }
+.service-time span { font-size: 30pt; font-weight: 300; line-height: .9; font-variant-numeric: lining-nums; }
+.service-time em { color: var(--gold-soft); font-size: 13pt; }
+.service-name { margin-top: 2mm; color: var(--on-dark-soft); font: 600 6pt/1 var(--sans); letter-spacing: .3em; text-transform: uppercase; }
+
+/* ---------- Zadní strana ---------- */
+.back { background: var(--champagne-light); }
+.back-copy { display: flex; flex-direction: column; width: 118mm; padding: 11mm 0 8mm 14mm; }
+.back-copy .eyebrow { color: var(--bronze); }
+.back h2 { margin-top: 3mm; font-size: 22pt; line-height: 1.1; }
+.back h2 em { color: var(--ink-soft); }
+.back-service { margin-top: 2.2mm; color: var(--ink-soft); font: 600 6pt/1.4 var(--sans); letter-spacing: .2em; text-transform: uppercase; }
+.fields { display: grid; grid-template-columns: max-content 1fr max-content 1fr; align-items: end; gap: 3.2mm 2.5mm; margin-top: 6mm; }
+.label { padding-bottom: .9mm; color: var(--ink-soft); font: 600 5pt/1 var(--sans); letter-spacing: .24em; text-transform: uppercase; }
+.label.second { margin-left: 4.5mm; }
+.line { height: 8.5mm; border-bottom: .25mm solid rgba(6, 78, 59, .45); }
+.line.wide { grid-column: 2 / -1; }
+.fine { margin-top: auto; max-width: 104mm; color: var(--ink-soft); font: 400 5.6pt/1.5 var(--sans); }
+.info { position: absolute; right: 17mm; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 64mm; height: 88mm; padding: 20mm 5mm 9mm; border-radius: 32mm 32mm 0 0; background: var(--emerald); color: var(--champagne); text-align: center; }
+.info::before { content: ""; position: absolute; inset: 2.2mm 2.2mm -1mm; border: .25mm solid rgba(248, 231, 201, .3); border-radius: 29.8mm 29.8mm 0 0; }
+.info .sprig { width: 22mm; height: 8.8mm; margin-bottom: 3.5mm; stroke: var(--gold); }
+.info .eyebrow { justify-content: center; color: var(--gold); letter-spacing: .28em; }
+.info .eyebrow::before { display: none; }
+.info-text { margin-top: 3mm; color: var(--on-dark-soft); font: 400 6.6pt/1.6 var(--sans); }
+.phone { margin-top: 3.5mm; color: var(--gold-soft); font: 400 21pt/1 var(--serif); font-variant-numeric: lining-nums; }
+.address { margin-top: 2.4mm; font: 500 7pt/1.4 var(--sans); }
+</style></head><body>
+<section class="sheet front" data-name="predni"><div class="light"></div><figure class="arch"><img src="../public/assets/wellness.webp" alt=""></figure><div class="seal"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="ring" d="M100 100m-74 0a74 74 0 1 1 148 0a74 74 0 1 1-148 0"/></defs><circle cx="100" cy="100" r="99" fill="#043628"/><circle cx="100" cy="100" r="91" fill="none" stroke="rgba(248,231,201,.35)" stroke-width="1"/><text fill="#F8E7C9" font-family="Manrope" font-size="13" font-weight="600"><textPath href="#ring" textLength="452" lengthAdjust="spacing">DÁRKOVÝ POUKAZ · MASÁŽE · VSETÍN ·</textPath></text><text x="100" y="114" text-anchor="middle" fill="#E6CFA2" font-family="Editorial" font-size="46" font-style="italic">LK</text></svg></div><div class="trim front-copy"><p class="brand"><span class="brand-name">Lucie Krampotová</span><span class="brand-sub">Masáže · Vsetín</span></p><h1>Dárkový <em>poukaz</em></h1><div class="service"><p class="service-time"><span>60</span><em>minut</em></p><p class="service-name">Individuální masáž</p></div></div></section>
+<section class="sheet back" data-name="zadni"><div class="trim back-copy"><p class="eyebrow">Dárkový poukaz</p><h2>Chvíle <em>jen pro sebe.</em></h2><p class="back-service">Individuální masáž · 60 minut</p><div class="fields"><span class="label">Pro</span><span class="line wide"></span><span class="label">Od</span><span class="line wide"></span><span class="label">Číslo poukazu</span><span class="line"></span><span class="label second">Platnost do</span><span class="line"></span><span class="label">Vystaveno dne</span><span class="line"></span><span class="label second">Podpis / razítko</span><span class="line"></span></div><p class="fine">Poukaz na individuální masáž v délce 60 minut. Lucie Krampotová · Mostecká 361, Vsetín · provozovatel DUKE test, IČO 111111111. Testovací údaje – před tiskem doplníme skutečné.</p></div><div class="info"><svg class="sprig" viewBox="0 0 120 48" aria-hidden="true"><g stroke-width="1"><path d="M4 42C34 34 70 24 116 7"/><path d="M0 0c6.5 -4.8 18.5 -4.8 25 0c-6.5 4.8 -18.5 4.8 -25 0z" transform="translate(13.2 39.5) rotate(-59.1)"/><path d="M0 0c6.5 -4.8 18.5 -4.8 25 0c-6.5 4.8 -18.5 4.8 -25 0z" transform="translate(22.8 36.9) rotate(20.5)"/><path d="M0 0c6 -4.4 17 -4.4 23 0c-6 4.4 -17 4.4 -23 0z" transform="translate(34.8 33.5) rotate(-60)"/><path d="M0 0c5.7 -4.2 16.3 -4.2 22 0c-5.7 4.2 -16.3 4.2 -22 0z" transform="translate(47.4 29.9) rotate(19.4)"/><path d="M0 0c5.2 -3.8 14.8 -3.8 20 0c-5.2 3.8 -14.8 3.8 -20 0z" transform="translate(60.7 25.8) rotate(-61.3)"/><path d="M0 0c4.7 -3.4 13.3 -3.4 18 0c-4.7 3.4 -13.3 3.4 -18 0z" transform="translate(74.8 21.3) rotate(18)"/><path d="M0 0c4.2 -3 11.8 -3 16 0c-4.2 3 -11.8 3 -16 0z" transform="translate(89.6 16.4) rotate(-62.9)"/><path d="M0 0c3.4 -2.5 9.6 -2.5 13 0c-3.4 2.5 -9.6 2.5 -13 0z" transform="translate(102.5 11.9) rotate(16.4)"/><path d="M0 0c3 -2.2 9 -2.2 12 0c-3 2.2 -9 2.2 -12 0z" transform="translate(113 8) rotate(-20.3)"/></g></svg><p class="eyebrow">Jak poukaz uplatnit</p><p class="info-text">Termín si domluvte telefonem nebo SMS.<br>Při objednání uveďte číslo poukazu.</p><p class="phone">123 456 789</p><p class="address">Mostecká 361, Vsetín</p></div></section>
+</body></html>

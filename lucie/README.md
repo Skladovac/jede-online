@@ -45,6 +45,12 @@ Mezipaměť: HTML se při každé návštěvě ověří u serveru (`no-cache`). 
 
 Soubory `.htaccess` a `_headers` jsou alternativy pro Apache a statické hostingy; na současném nginx serveru se nepoužívají.
 
+## Dárkový poukaz
+
+`npm run poukaz` vytvoří do složky `tisk/` tiskovou předlohu dárkového poukazu pro obě délky masáže: HTML, PDF pro tiskárnu (formát DL 210 × 99 mm, spadávka 3 mm, přední a zadní strana) a PNG náhledy po ořezu, které lze poslat i SMS nebo e-mailem. Údaje bere ze `src/site.mjs`, po doplnění skutečného telefonu a provozovatele stačí příkaz spustit znovu. PDF a PNG vykresluje Chrome nebo Edge bez okna (cestu lze zadat proměnnou `CHROME`).
+
+Na poukazu není cena. Číslo poukazu, platnost a datum vystavení se vyplňují ručně; délku platnosti a podmínky poukazu určí klientka. Dokud web běží v testovacím režimu, nese poukaz drobnou poznámku o testovacích údajích.
+
 ## Soukromí, fotografie a písma
 
 Žádná analytika, reklamní skripty, vlastní cookies ani požadavky na externí fontové servery. Mapa Google se vloží až po kliknutí. Objednání vede pouze do telefonní nebo SMS aplikace.
