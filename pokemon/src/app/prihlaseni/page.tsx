@@ -10,7 +10,7 @@ import { PasswordInput } from '@/components/PasswordInput'
 export const metadata: Metadata = { title: 'Přihlášení' }
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  if (await getCurrentUser()) redirect('/ucet')
+  if (await getCurrentUser()) redirect('/')
   const { next } = await searchParams
   return (
     <main className="mx-auto max-w-md px-4 py-10">

@@ -96,7 +96,7 @@ export async function login(_: FormState, fd: FormData): Promise<FormState> {
 
   await createSession(user.id)
   const next = str(fd, 'next')
-  redirect(next.startsWith('/') && !next.startsWith('//') ? next : '/ucet')
+  redirect(next.startsWith('/') && !next.startsWith('//') ? next : '/') // bez "next" na hlavní stránku
 }
 
 export async function logout() {
