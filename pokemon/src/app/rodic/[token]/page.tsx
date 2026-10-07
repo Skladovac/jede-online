@@ -134,7 +134,7 @@ export default async function ParentPage({ params }: { params: Promise<{ token: 
       </section>
 
       <p className="text-xs text-slate-500">
-        Tento odkaz si uschovejte, slouží ke správě účtu. Nikomu ho neposílejte. Dotazy: info@jede.online
+        Tento odkaz si uschovejte, slouží ke správě účtu. Nikomu ho neposílejte. Dotazy: <a href="mailto:pokemon@jede.online" className="underline">pokemon@jede.online</a>
       </p>
     </main>
   )

@@ -1,5 +1,7 @@
 import 'server-only'
 
+// Kontakt webu: přeposílá se přes ImprovMX do Gmailu správce.
+export const CONTACT_EMAIL = 'pokemon@jede.online'
 export const APP_URL = process.env.APP_URL ?? 'https://pokemon.jede.online'
 const FROM = { name: 'Pokémon karty', email: 'noreply@jede.online' }
 
@@ -38,6 +40,8 @@ ${button ? `<p style="margin:24px 0"><a href="${esc(button.url)}" style="display
         headers: { 'api-key': brevo, 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
           sender: FROM,
+          // Odpověď na automatický e-mail dojde na kontakt webu, ne do prázdna.
+          replyTo: { email: CONTACT_EMAIL },
           to: [{ email: to }],
           ...(cc.length && { cc: cc.map((email) => ({ email })) }),
           subject,

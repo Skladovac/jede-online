@@ -10,6 +10,10 @@ export function SiteFooter() {
           <a href="/soukromi" className="underline">
             Pravidla a ochrana osobních údajů
           </a>
+          {' · '}
+          <a href="mailto:pokemon@jede.online" className="underline">
+            pokemon@jede.online
+          </a>
         </p>
         <p>
           Designed by{' '}

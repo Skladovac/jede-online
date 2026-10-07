@@ -15,7 +15,7 @@ export default function PrivacyPage() {
         <h2>Kdo web provozuje</h2>
         <p>
           Web pokemon.jede.online je nekomerční komunitní projekt ve zkušebním provozu. Nic se na něm neprodává a
-          provozovatel z něj nemá žádný příjem. Kontakt na provozovatele: info@jede.online.
+          provozovatel z něj nemá žádný příjem. Kontakt na provozovatele: <a href="mailto:pokemon@jede.online" className="underline">pokemon@jede.online</a>.
         </p>
 
         <h2>Jaké údaje zpracováváme a proč</h2>
