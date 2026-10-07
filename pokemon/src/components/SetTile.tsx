@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { setLogo } from '@/lib/format'
+import { CardBack } from '@/components/CardBack'
 
 type Props = {
   id: string
@@ -9,11 +10,9 @@ type Props = {
   officialCount: number
   cardCount: number
   releaseDate: Date | null
-  // Náhrada za chybějící logo (obrázek boosteru nebo první karty), viz setFallbackImages().
-  fallbackImage?: string | null
 }
 
-export function SetTile({ id, name, code, logoUrl, officialCount, cardCount, releaseDate, fallbackImage }: Props) {
+export function SetTile({ id, name, code, logoUrl, officialCount, cardCount, releaseDate }: Props) {
   const logo = setLogo(logoUrl)
   // Promo sady nemají oficiální počet (0) — ukážeme skutečný počet karet.
   const count = officialCount || cardCount
@@ -26,11 +25,8 @@ export function SetTile({ id, name, code, logoUrl, officialCount, cardCount, rel
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logo} alt="" loading="lazy" className="max-h-16 max-w-full object-contain" />
-        ) : fallbackImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={fallbackImage} alt="" loading="lazy" className="max-h-16 max-w-full rounded object-contain" />
         ) : (
-          <span className="text-2xl font-black text-slate-300">{code ?? '★'}</span>
+          <CardBack />
         )}
       </div>
       <div>

@@ -4,6 +4,7 @@ import { getCurrentUser, isLimited } from '@/lib/auth'
 import { collectionOverview } from '@/lib/collection-view'
 import { CollectionOverview } from '@/components/CollectionOverview'
 import { ensureEurCzk } from '@/lib/fx'
+import { CopyLink } from '@/components/CopyLink'
 
 export const metadata: Metadata = { title: 'Moje sbírka' }
 export const dynamic = 'force-dynamic'
@@ -21,6 +22,15 @@ export default async function MyCollectionPage() {
         <p className="mb-6 text-sm text-yellow-700 dark:text-yellow-400">
           Dokud rodič nepotvrdí účet, tvoje nabídky ostatní neuvidí.
         </p>
+      )}
+      {!isLimited(user) && data.totals.wanted > 0 && (
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+          <p className="mb-2 text-sm font-semibold">Odkaz na to, co ti chybí – zkopíruj ho a vlož třeba na Facebook:</p>
+          <CopyLink
+            url={`https://pokemon.jede.online/u/${encodeURIComponent(user.nickname)}/chybi`}
+            title={`Co hledá ${user.nickname}`}
+          />
+        </div>
       )}
       <div className="mt-6">
         <CollectionOverview data={data} own />

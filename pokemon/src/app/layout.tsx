@@ -4,6 +4,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://pokemon.jede.online'),
   title: { default: 'Pokémon karty — sbírka a výměny', template: '%s · Pokémon karty' },
   description: 'Evidence sbírky Pokémon karet, seznam chybějících karet a výměny mezi sběrateli v ČR a SK.',
   // Uzavřená beta: nic se zatím neindexuje.

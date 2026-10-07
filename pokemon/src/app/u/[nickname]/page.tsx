@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
@@ -95,7 +96,13 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         <MatchSection data={await pairMatches(viewer.id, user.id)} nickname={user.nickname} />
       )}
 
-      <div className="mt-10">
+      <p className="mt-6 text-sm">
+        <Link href={`/u/${encodeURIComponent(user.nickname)}/chybi`} className="font-medium text-yellow-700 hover:underline dark:text-yellow-400">
+          Co hledá {user.nickname} →
+        </Link>
+      </p>
+
+      <div className="mt-6">
         <CollectionOverview data={await collectionOverview(user.id)} own={false} />
       </div>
 
