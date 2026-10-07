@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getCurrentUser } from '@/lib/auth'
+import { SearchBox } from '@/components/SearchBox'
 
 export async function SiteHeader() {
   const user = await getCurrentUser()
@@ -12,7 +13,11 @@ export async function SiteHeader() {
           </span>
           <span className="hidden sm:inline">Pokémon karty</span>
         </Link>
-        <nav className="flex items-center gap-4 text-sm font-medium">
+        {/* Na širší obrazovce je hledání v řádku, na mobilu pod ním. */}
+        <div className="hidden max-w-md flex-1 md:block">
+          <SearchBox />
+        </div>
+        <nav className="flex shrink-0 items-center gap-4 text-sm font-medium">
           <Link href="/sady" className="hover:text-yellow-600 dark:hover:text-yellow-400">
             Sady
           </Link>
@@ -34,6 +39,9 @@ export async function SiteHeader() {
             </>
           )}
         </nav>
+      </div>
+      <div className="px-4 pb-3 md:hidden">
+        <SearchBox />
       </div>
     </header>
   )
