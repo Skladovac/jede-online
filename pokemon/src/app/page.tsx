@@ -5,10 +5,12 @@ import { getCurrentUser } from '@/lib/auth'
 import { findCollectorsCached, parsePlace } from '@/lib/matches'
 import { CollectorList } from '@/components/CollectorList'
 import { LatestOffers } from '@/components/LatestOffers'
+import { GettingStarted } from '@/components/GettingStarted'
 
 export const dynamic = 'force-dynamic'
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ vitej?: string }> }) {
+  const { vitej } = await searchParams
   const [latest, setCount, cardCount] = await Promise.all([
     prisma.cardSet.findMany({
       where: { game: 'pokemon' },
@@ -26,6 +28,17 @@ export default async function Home() {
 
   return (
     <main className="mx-auto max-w-6xl px-4">
+      {/* Nový uživatel: průvodce hned nahoře. */}
+      <div className="pt-8">
+        {user && vitej && (
+          <p className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-900 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-200">
+            Účet je založený! Poslali jsme ti e-mail s odkazem pro potvrzení. Když ho nevidíš, podívej se do složky Spam /
+            Nevyžádaná pošta a označ ho jako „není spam“.
+          </p>
+        )}
+        {user && <GettingStarted userId={user.id} nickname={user.nickname} emailVerified={!!user.emailVerifiedAt} />}
+      </div>
+
       <section className="py-12 sm:py-16">
         <p className="mb-3 inline-block rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-800 dark:bg-yellow-400/10 dark:text-yellow-300">
           Uzavřené testování
@@ -41,6 +54,7 @@ export default async function Home() {
           {setCount} sad · {cardCount.toLocaleString('cs-CZ')} karet
         </p>
       </section>
+
 
       {matches && (
         <section className="mb-12">
