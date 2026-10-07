@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
+import { getCurrentUser } from '@/lib/auth'
+import { AddToCart } from '@/components/AddToCart'
 
 const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition' } as const
 const CONDITION = { MINT: 'Jako nová', LIGHT_PLAYED: 'Mírně hraná', DAMAGED: 'Poškozená' } as const
@@ -8,6 +10,7 @@ const OFFER_ORDER = { GIFT: 0, SELL: 1, TRADE: 2 } as const
 
 /** Kdo kartu nabízí (kusy "navíc" ve sbírkách). Omezené a zablokované účty se nezobrazují. */
 export async function CardOffers({ cardId }: { cardId: string }) {
+  const viewer = await getCurrentUser()
   const offers = await prisma.collectionItem.findMany({
     where: {
       cardId,
@@ -46,12 +49,19 @@ export async function CardOffers({ cardId }: { cardId: string }) {
                   {o.note && <span className="italic"> · „{o.note}“</span>}
                 </p>
               </div>
-              <span className="font-semibold">
+              <span className="flex items-center gap-3 font-semibold">
                 {o.offerType === 'SELL' && o.priceCzk != null
                   ? `${o.priceCzk.toLocaleString('cs-CZ')} Kč`
                   : o.offerType === 'GIFT'
                     ? 'Daruji za poštovné'
                     : 'Vyměním'}
+                {viewer && viewer.id !== o.userId ? (
+                  <AddToCart collectionItemId={o.id} />
+                ) : !viewer ? (
+                  <Link href="/prihlaseni" className="text-sm font-normal underline">
+                    Přihlas se
+                  </Link>
+                ) : null}
               </span>
             </li>
           ))}

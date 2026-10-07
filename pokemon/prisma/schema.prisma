@@ -205,6 +205,7 @@ model WantItem {
 // ── Poptávky a důvěra ───────────────────────────────────────────────
 
 enum RequestStatus {
+  DRAFT // košík kupujícího, ještě neodesláno
   PENDING
   ACCEPTED // kontakty zpřístupněny
   DECLINED
@@ -218,7 +219,9 @@ model TradeRequest {
   from        User          @relation("RequestFrom", fields: [fromId], references: [id], onDelete: Cascade)
   toId        String
   to          User          @relation("RequestTo", fields: [toId], references: [id], onDelete: Cascade)
-  status      RequestStatus @default(PENDING)
+  status      RequestStatus @default(DRAFT)
+  sentAt      DateTime?
+  respondedAt DateTime?
   fromDoneAt  DateTime?
   toDoneAt    DateTime?
   createdAt   DateTime      @default(now())
@@ -231,13 +234,25 @@ model TradeRequest {
   @@index([fromId, status])
 }
 
+// Položka poptávky. Údaje se při odeslání zkopírují (snapshot), aby poptávka dávala smysl,
+// i když prodávající kartu ze sbírky mezitím odebere nebo změní cenu.
 model TradeRequestItem {
-  id               String         @id @default(cuid())
+  id               String          @id @default(cuid())
   requestId        String
-  request          TradeRequest   @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  collectionItemId String
-  collectionItem   CollectionItem @relation(fields: [collectionItemId], references: [id])
-  quantity         Int            @default(1)
+  request          TradeRequest    @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  collectionItemId String?
+  collectionItem   CollectionItem? @relation(fields: [collectionItemId], references: [id], onDelete: SetNull)
+  // false = kus prodávajícího, který kupující chce; true = kus kupujícího nabídnutý na výměnu
+  fromRequester    Boolean         @default(false)
+  quantity         Int             @default(1)
+  cardId           String?
+  title            String
+  detail           String
+  imageUrl         String?
+  offerType        OfferType?
+  priceCzk         Int?
+
+  @@index([collectionItemId])
 }
 
 enum RatingTag {
