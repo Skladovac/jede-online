@@ -123,8 +123,8 @@ export async function syncCatalog(
         releaseDate: s.releaseDate ? new Date(s.releaseDate) : null,
         cardCount: s.cardCount.total,
         officialCount: s.cardCount.official,
-        logoUrl: s.logo ?? null,
-        symbolUrl: s.symbol ?? null,
+        logoUrl: s.logo ?? undefined,
+        symbolUrl: s.symbol ?? undefined,
       }
       await prisma.cardSet.upsert({ where: { id: s.id }, create: { id: s.id, ...data }, update: data })
       for (const c of s.cards ?? []) cardQueue.push({ setId: s.id, brief: c })

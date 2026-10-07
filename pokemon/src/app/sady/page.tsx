@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { SetTile } from '@/components/SetTile'
+import { setFallbackImages } from '@/lib/set-images'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Všechny sady' }
@@ -10,6 +11,8 @@ export default async function SetsPage() {
     where: { game: 'pokemon' },
     orderBy: { releaseDate: { sort: 'desc', nulls: 'last' } },
   })
+
+  const fallback = await setFallbackImages(sets)
 
   // Seskupení podle éry (série) v pořadí od nejnovější.
   const groups = new Map<string, typeof sets>()
@@ -37,7 +40,7 @@ export default async function SetsPage() {
           <h2 className="mb-4 text-xl font-bold">{series}</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {list.map((s) => (
-              <SetTile key={s.id} {...s} />
+              <SetTile key={s.id} {...s} fallbackImage={fallback.get(s.id)} />
             ))}
           </div>
         </section>

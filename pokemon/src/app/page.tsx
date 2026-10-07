@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { SetTile } from '@/components/SetTile'
+import { setFallbackImages } from '@/lib/set-images'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +15,7 @@ export default async function Home() {
     prisma.cardSet.count({ where: { game: 'pokemon' } }),
     prisma.card.count(),
   ])
+  const fallback = await setFallbackImages(latest)
 
   return (
     <main className="mx-auto max-w-6xl px-4">
@@ -43,7 +45,7 @@ export default async function Home() {
         {latest.length ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {latest.map((s) => (
-              <SetTile key={s.id} {...s} />
+              <SetTile key={s.id} {...s} fallbackImage={fallback.get(s.id)} />
             ))}
           </div>
         ) : (
