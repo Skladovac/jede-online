@@ -1,0 +1,9 @@
+[Unit]
+Description=Pokemon daily verified DB backup and docker build cache cleanup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/jede/pokemon-src/pokemon/deploy/backup-pokemon.sh
+User=root

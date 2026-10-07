@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Pokemon daily backup at 03:05 Prague time
+
+[Timer]
+OnCalendar=*-*-* 03:05:00 Europe/Prague
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target
