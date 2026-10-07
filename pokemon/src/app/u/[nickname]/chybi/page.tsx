@@ -43,13 +43,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!d) return { title: 'Profil nenalezen' }
   const title = `Co hledá ${d.user.nickname}`
   const description = `Chybí ${d.cardCount} karet${d.products.length ? ` a ${d.products.length} produktů` : ''}. Máš něco z toho? Napiš přes pokemon.jede.online.`
-  const img = cardImage(d.sets[0]?.cards[0]?.imageUrl ?? null, 'high')
   return {
     title,
     description,
     robots: d.user.indexable ? undefined : { index: false, follow: false },
-    // Náhled při vložení odkazu na Facebook.
-    openGraph: { title, description, type: 'website', ...(img && { images: [img] }) },
+    // Náhled při vložení odkazu na Facebook; obrázek dělá opengraph-image.tsx vedle.
+    openGraph: { title, description, type: 'website', siteName: 'Pokémon karty', locale: 'cs_CZ' },
   }
 }
 

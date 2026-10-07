@@ -7,6 +7,14 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://pokemon.jede.online'),
   title: { default: 'Pokémon karty — sbírka a výměny', template: '%s · Pokémon karty' },
   description: 'Evidence sbírky Pokémon karet, seznam chybějících karet a výměny mezi sběrateli v ČR a SK.',
+  // Náhled odkazu na Facebooku apod.; obrázek je app/opengraph-image.tsx.
+  openGraph: {
+    title: 'Pokémon karty — sbírka a výměny',
+    description: 'Vlastní sbírka, chybějící karty a výměny mezi sběrateli z Česka a Slovenska. Zdarma.',
+    siteName: 'Pokémon karty',
+    locale: 'cs_CZ',
+    type: 'website',
+  },
   // Uzavřená beta: nic se zatím neindexuje.
   robots: { index: false, follow: false },
 }
