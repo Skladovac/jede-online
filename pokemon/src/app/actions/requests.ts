@@ -9,7 +9,7 @@ import { ADMIN_EMAIL, APP_URL, esc, notify } from '@/lib/email'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { str, type FormState } from '@/lib/validation'
 
-const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition' } as const
+const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' } as const
 const CONDITION = { MINT: 'jako nová', LIGHT_PLAYED: 'mírně hraná', DAMAGED: 'poškozená' } as const
 const OFFER = { TRADE: 'výměna', SELL: 'prodej', GIFT: 'dar za poštovné' } as const
 const TAGS: RatingTag[] = ['FAST_SHIPPING', 'AS_DESCRIBED', 'FRIENDLY', 'SLOW', 'NOT_AS_DESCRIBED', 'NOT_SENT']

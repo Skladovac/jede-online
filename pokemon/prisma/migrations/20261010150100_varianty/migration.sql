@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Card" ADD COLUMN "hasPokeball" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "hasMasterball" BOOLEAN NOT NULL DEFAULT false;

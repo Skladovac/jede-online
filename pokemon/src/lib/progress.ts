@@ -6,9 +6,16 @@ export function isBaseCard(localId: string, officialCount: number) {
   return /^\d+$/.test(localId) && Number(localId) >= 1 && Number(localId) <= officialCount
 }
 
-type Flags = { hasNormal: boolean; hasHolo: boolean; hasReverse: boolean; hasFirstEd: boolean }
+type Flags = { hasNormal: boolean; hasHolo: boolean; hasReverse: boolean; hasFirstEd: boolean; hasPokeball: boolean; hasMasterball: boolean }
 export const cardVariants = (c: Flags) => {
-  const v = [c.hasNormal && 'NORMAL', c.hasHolo && 'HOLO', c.hasReverse && 'REVERSE', c.hasFirstEd && 'FIRST_EDITION'].filter(
+  const v = [
+    c.hasNormal && 'NORMAL',
+    c.hasHolo && 'HOLO',
+    c.hasReverse && 'REVERSE',
+    c.hasFirstEd && 'FIRST_EDITION',
+    c.hasPokeball && 'POKEBALL',
+    c.hasMasterball && 'MASTERBALL',
+  ].filter(
     (x): x is string => !!x,
   )
   return v.length ? v : ['NORMAL']
@@ -23,7 +30,7 @@ export type Progress = {
 /**
  * Tři postupy sady, jak je počítají sběratelé:
  * base = základní karty 1–oficiální počet, complete = všechny karty sady (i secret a mimo číslování),
- * master = všechny karty × všechny varianty, ve kterých vyšly (normal, holo, reverse, 1st ed.).
+ * master = všechny karty × všechny varianty, ve kterých vyšly (normal, holo, reverse, 1st ed., Poké Ball, Master Ball).
  */
 export async function setProgress(userId: string, setIds: string[]): Promise<Map<string, Progress>> {
   if (!setIds.length) return new Map()
@@ -31,7 +38,7 @@ export async function setProgress(userId: string, setIds: string[]): Promise<Map
     prisma.cardSet.findMany({ where: { id: { in: setIds } }, select: { id: true, officialCount: true } }),
     prisma.card.findMany({
       where: { setId: { in: setIds } },
-      select: { id: true, setId: true, localId: true, hasNormal: true, hasHolo: true, hasReverse: true, hasFirstEd: true },
+      select: { id: true, setId: true, localId: true, hasNormal: true, hasHolo: true, hasReverse: true, hasFirstEd: true, hasPokeball: true, hasMasterball: true },
     }),
     prisma.collectionItem.findMany({
       where: { userId, quantity: { gt: 0 }, card: { setId: { in: setIds } } },
