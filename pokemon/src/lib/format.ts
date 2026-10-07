@@ -9,11 +9,20 @@ export function formatEur(v: Prisma.Decimal | null | undefined) {
 // Obrázky jdou přes naši cestu /img/ — v produkci je nginx kešuje z CDN TCGdex
 // (jejich CDN občas vypadne a nechceme ho zatěžovat), lokálně je přepošle rewrite v next.config.
 const TCGDEX_ASSETS = 'https://assets.tcgdex.net/'
-const viaProxy = (url: string) => (url.startsWith(TCGDEX_ASSETS) ? '/img/' + url.slice(TCGDEX_ASSETS.length) : url)
+// Doplněné obrázky z pokemontcg.io jdou přes /img2/ (stejná keš v nginx).
+const PTCG_ASSETS = 'https://images.pokemontcg.io/'
+const viaProxy = (url: string) =>
+  url.startsWith(TCGDEX_ASSETS)
+    ? '/img/' + url.slice(TCGDEX_ASSETS.length)
+    : url.startsWith(PTCG_ASSETS)
+      ? '/img2/' + url.slice(PTCG_ASSETS.length)
+      : url
 
-// TCGdex dává adresu obrázku bez přípony.
+// TCGdex dává adresu obrázku bez přípony; pokemontcg.io celou adresu malého PNG (velké má _hires).
 export function cardImage(url: string | null, size: 'low' | 'high' = 'low') {
-  return url ? viaProxy(`${url}/${size}.webp`) : null
+  if (!url) return null
+  if (url.startsWith(PTCG_ASSETS)) return viaProxy(size === 'high' ? url.replace(/\.png$/, '_hires.png') : url)
+  return viaProxy(`${url}/${size}.webp`)
 }
 
 export function setLogo(url: string | null) {

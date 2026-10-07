@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { fillCatalogGaps } from '@/lib/catalog-fallback'
 
 /**
  * Import katalogu Pokémon karet z TCGdex (https://tcgdex.dev, otevřené API zdarma).
@@ -139,7 +140,8 @@ export async function syncCatalog(
       setId,
       localId: clean(brief.localId),
       name: brief.name,
-      imageUrl: brief.image ?? detail?.image ?? null,
+      // Když TCGdex obrázek nemá, nepřepisovat ten doplněný z pokemontcg.io (undefined = beze změny).
+      imageUrl: brief.image ?? detail?.image ?? undefined,
       ...(detail && {
         category: detail.category ?? null,
         rarity: detail.rarity ?? null,
@@ -154,7 +156,7 @@ export async function syncCatalog(
     }
     const id = clean(brief.id)
     try {
-      await prisma.card.upsert({ where: { id }, create: { id, ...data }, update: data })
+      await prisma.card.upsert({ where: { id }, create: { id, ...data, imageUrl: data.imageUrl ?? null }, update: data })
     } catch (err) {
       // Např. duplicitní číslo karty v sadě — jedna vadná karta nesmí shodit celý import.
       stats.cardDetailFailures++
@@ -169,6 +171,12 @@ export async function syncCatalog(
   const removed = await prisma.card.deleteMany({ where: excluded })
   await prisma.cardSet.deleteMany({ where: { seriesId: { in: EXCLUDED_SERIES } } })
   if (removed.count) log(`[catalog] odstraněno ${removed.count} karet z vyřazených sérií`)
+
+  try {
+    await fillCatalogGaps(log)
+  } catch (err) {
+    log(`[catalog] doplnění z pokemontcg.io selhalo: ${(err as Error).message}`)
+  }
 
   stats.finishedAt = new Date().toISOString()
   log(`[catalog] hotovo: ${stats.sets} sad, ${stats.cards} karet, ${stats.cardDetailFailures} bez detailu`)

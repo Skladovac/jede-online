@@ -14,7 +14,10 @@ const nextConfig: NextConfig = {
   // Obrázky karet: v produkci /img/ obsluhuje a kešuje nginx (viz deploy/nginx-…conf),
   // sem dojde jen lokální vývoj.
   async rewrites() {
-    return [{ source: '/img/:path*', destination: 'https://assets.tcgdex.net/:path*' }]
+    return [
+      { source: '/img/:path*', destination: 'https://assets.tcgdex.net/:path*' },
+      { source: '/img2/:path*', destination: 'https://images.pokemontcg.io/:path*' },
+    ]
   },
 }
 
