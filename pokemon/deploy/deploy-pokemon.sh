@@ -34,7 +34,9 @@ else
 fi
 
 log "3/7  Build gate — PŘED výměnou kontejneru"
-dc build pokemon || fail "build spadl. Běžící verze zůstává nasazená."
+# I migrační image! Je to samostatná image a bez přestavby by migrační brána
+# viděla staré prisma/migrations a nové migrace tiše přeskočila.
+dc --profile tools build pokemon pokemon-migrate || fail "build spadl. Běžící verze zůstává nasazená."
 
 log "4/7  Migrační brána"
 STATUS=$(dc --profile tools run --rm pokemon-migrate 2>&1 || true)
