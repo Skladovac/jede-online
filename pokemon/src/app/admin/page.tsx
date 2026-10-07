@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/admin'
 
 export default async function AdminHome() {
+  // Kontrola i na stránce, ne jen v layoutu (Next může layout při částečném vykreslení přeskočit).
+  await requireAdmin()
   const day = 86_400_000
   const since7 = new Date(Date.now() - 7 * day)
   const since30 = new Date(Date.now() - 30 * day)

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/admin'
 import { adminBan, adminDelete, adminHideOffer, adminHideRating, adminRename, adminResolveReport } from '@/app/actions/admin'
 import { ActionForm } from '@/components/ActionForm'
 import { Field, Submit, inputCls } from '@/components/ui'
@@ -10,6 +11,8 @@ import { COUNTRY_LABEL } from '@/lib/regions'
 const OFFER = { TRADE: 'vyměním', SELL: 'prodám', GIFT: 'daruji' } as const
 
 export default async function AdminUser({ params }: { params: Promise<{ id: string }> }) {
+  // Kontrola i na stránce, ne jen v layoutu (Next může layout při částečném vykreslení přeskočit).
+  await requireAdmin()
   const { id } = await params
   const u = await prisma.user.findUnique({
     where: { id },

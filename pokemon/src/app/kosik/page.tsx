@@ -44,7 +44,10 @@ export default async function CartPage() {
         <h1 className="text-3xl font-black tracking-tight">Košík</h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           Pro každého sběratele se posílá samostatná poptávka. Když ji přijme, uvidíte navzájem e-mail a domluvíte se na
-          předání. Web neřeší platby ani dopravu.
+          předání. Web neřeší platby ani dopravu.{' '}
+          <Link href="/bezpecny-obchod" className="font-medium underline">
+            🛡️ Jak obchodovat bezpečně
+          </Link>
         </p>
       </div>
       {blocked && (

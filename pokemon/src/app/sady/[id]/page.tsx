@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { safeDecode } from '@/lib/validation'
 import { getCurrentUser } from '@/lib/auth'
 import { setProgress } from '@/lib/progress'
 import { ProgressBars } from '@/components/ProgressBars'
@@ -19,7 +20,7 @@ type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ tab?: s
 
 async function getSet(id: string) {
   return prisma.cardSet.findUnique({
-    where: { id: decodeURIComponent(id) },
+    where: { id: (safeDecode(id) ?? '') },
     include: { cards: { select: { id: true, localId: true, name: true, imageUrl: true, priceEur: true } } },
   })
 }

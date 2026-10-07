@@ -80,6 +80,7 @@ export async function changePassword(_: FormState, fd: FormData): Promise<FormSt
 
   await prisma.user.update({ where: { id: user.id }, data: { passwordHash: await hashPassword(password) } })
   await prisma.session.deleteMany({ where: { userId: user.id } }) // odhlásit všude…
+  await prisma.emailToken.deleteMany({ where: { userId: user.id, kind: 'RESET' } })
   await createSession(user.id) // …kromě tohoto zařízení
   await sendPasswordChangedEmail(user.email, user.nickname)
   return { ok: 'Heslo je změněné. Poslali jsme ti o tom e-mail.' }
@@ -88,6 +89,7 @@ export async function changePassword(_: FormState, fd: FormData): Promise<FormSt
 export async function deleteAccount(_: FormState, fd: FormData): Promise<FormState> {
   const user = await getCurrentUser()
   if (!user) redirect('/prihlaseni')
+  if (!rateLimit(`delete:${user.id}`, 5, 60 * 60_000)) return { error: 'Příliš mnoho pokusů. Zkus to za hodinu.' }
   if (!(await verifyPassword(str(fd, 'password'), user.passwordHash))) return { error: 'Špatné heslo.' }
   await destroySession()
   await prisma.user.delete({ where: { id: user.id } }) // kaskádou smaže sbírku, relace, tokeny…

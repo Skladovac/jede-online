@@ -20,6 +20,8 @@ export async function saveProductItem(_: FormState, fd: FormData): Promise<FormS
   const quantity = Number(str(fd, 'quantity'))
   const spareQty = Number(str(fd, 'spareQty') || 0)
   const offerType = spareQty > 0 ? ((str(fd, 'offerType') || 'SELL') as OfferType) : null
+  if (spareQty > 0 && !user.emailVerifiedAt) return { error: 'Nabízet můžeš po potvrzení e-mailu (odkaz je v Můj účet).' }
+  if (!Number.isInteger(productId) || productId < 1 || productId > 2_147_483_647) return { error: 'Produkt nenalezen.' }
   const priceCzk = offerType === 'SELL' ? Number(str(fd, 'priceCzk')) : null
   const note = str(fd, 'note')
 

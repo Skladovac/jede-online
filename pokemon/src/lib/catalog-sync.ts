@@ -188,8 +188,13 @@ export async function syncCatalog(
 
   // Úklid sad, které už do katalogu nepatří (karty dřív, kvůli cizímu klíči).
   const excluded = { set: { seriesId: { in: EXCLUDED_SERIES } } }
-  const removed = await prisma.card.deleteMany({ where: excluded })
-  await prisma.cardSet.deleteMany({ where: { seriesId: { in: EXCLUDED_SERIES } } })
+  // Karty, které má někdo ve sbírce nebo mezi chybějícími, smazat nejdou — úklid nesmí shodit celý import.
+  const removed = await prisma.card
+    .deleteMany({ where: { ...excluded, items: { none: {} }, wants: { none: {} } } })
+    .catch((err) => (console.error('[katalog] úklid karet selhal', err), { count: 0 }))
+  await prisma.cardSet
+    .deleteMany({ where: { seriesId: { in: EXCLUDED_SERIES }, cards: { none: {} } } })
+    .catch((err) => console.error('[katalog] úklid sad selhal', err))
   if (removed.count) log(`[catalog] odstraněno ${removed.count} karet z vyřazených sérií`)
 
   try {

@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { prisma } from '@/lib/prisma'
+import { safeDecode } from '@/lib/validation'
 import { isLimited } from '@/lib/auth'
 import { OG_SIZE, cardsCz, ogCardImage, ogFonts, ogLogo } from '@/lib/og'
 
@@ -8,7 +9,7 @@ export const size = OG_SIZE
 export const contentType = 'image/png'
 
 export default async function Image({ params }: { params: Promise<{ nickname: string }> }) {
-  const nickname = decodeURIComponent((await params).nickname)
+  const nickname = (safeDecode((await params).nickname) ?? '')
   const user = await prisma.user.findFirst({
     where: { nickname: { equals: nickname, mode: 'insensitive' }, bannedAt: null },
   })

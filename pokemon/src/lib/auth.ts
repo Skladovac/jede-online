@@ -57,8 +57,10 @@ export async function createEmailToken(userId: string, kind: 'VERIFY' | 'RESET',
 
 /** Ověří a spotřebuje token. Vrací userId, nebo null. */
 export async function consumeEmailToken(token: string, kind: 'VERIFY' | 'RESET') {
-  const row = await prisma.emailToken.findUnique({ where: { id: sha256(token) } })
-  if (!row || row.kind !== kind || row.usedAt || row.expiresAt < new Date()) return null
-  await prisma.emailToken.update({ where: { id: row.id }, data: { usedAt: new Date() } })
-  return row.userId
+  const id = sha256(token)
+  const now = new Date()
+  // Podmíněný update = token jde použít právě jednou i při dvou souběžných kliknutích.
+  const used = await prisma.emailToken.updateMany({ where: { id, kind, usedAt: null, expiresAt: { gt: now } }, data: { usedAt: now } })
+  if (!used.count) return null
+  return (await prisma.emailToken.findUnique({ where: { id }, select: { userId: true } }))?.userId ?? null
 }

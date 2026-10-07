@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { safeDecode } from '@/lib/validation'
 import { getCurrentUser, isLimited } from '@/lib/auth'
 import { reportUser } from '@/app/actions/requests'
 import { ActionForm } from '@/components/ActionForm'
@@ -21,7 +22,7 @@ type Props = { params: Promise<{ nickname: string }>; searchParams?: Promise<{ n
 
 async function getProfile(nickname: string) {
   const user = await prisma.user.findFirst({
-    where: { nickname: { equals: decodeURIComponent(nickname), mode: 'insensitive' }, bannedAt: null },
+    where: { nickname: { equals: (safeDecode(nickname) ?? ''), mode: 'insensitive' }, bannedAt: null },
   })
   // Omezený účet (dítě bez souhlasu rodiče) navenek neexistuje.
   return user && !isLimited(user) ? user : null
@@ -40,7 +41,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
 
   const [viewer, ratings, completed] = await Promise.all([
     getCurrentUser(),
-    prisma.rating.groupBy({ by: ['positive'], where: { toId: user.id, hiddenAt: null }, _count: true }),
+    prisma.rating.groupBy({ by: ['positive'], where: { toId: user.id, hiddenAt: null, from: { bannedAt: null } }, _count: true }),
     prisma.tradeRequest.count({ where: { status: 'COMPLETED', OR: [{ fromId: user.id }, { toId: user.id }] } }),
   ])
   const pos = ratings.find((r) => r.positive)?._count ?? 0

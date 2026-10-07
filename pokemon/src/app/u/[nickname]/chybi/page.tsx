@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { safeDecode } from '@/lib/validation'
 import { getCurrentUser, isLimited } from '@/lib/auth'
 import { byLocalId, cardImage } from '@/lib/format'
 import { ProductTile } from '@/components/ProductTile'
@@ -14,7 +15,7 @@ type Props = { params: Promise<{ nickname: string }> }
 
 async function load(nickname: string) {
   const user = await prisma.user.findFirst({
-    where: { nickname: { equals: decodeURIComponent(nickname), mode: 'insensitive' }, bannedAt: null },
+    where: { nickname: { equals: (safeDecode(nickname) ?? ''), mode: 'insensitive' }, bannedAt: null },
   })
   if (!user || isLimited(user)) return null
   const [wants, productWants] = await Promise.all([

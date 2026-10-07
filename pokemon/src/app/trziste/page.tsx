@@ -25,7 +25,8 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
   const tab = TABS.find((t) => t.id === sp.tab) ?? TABS[0]
   const { key: kde, place } = parsePlace(sp.kde, null)
   const setId = sp.sada || null
-  const page = Math.max(1, Number(sp.strana) || 1)
+  // Stránku omezíme (velké číslo by načetlo celou databázi).
+  const page = Math.min(50, Math.max(1, Math.floor(Number(sp.strana)) || 1))
   const [{ entries, hasMore }, sets] = await Promise.all([
     marketEntries(tab.id, place, setId, page),
     prisma.cardSet.findMany({

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { BugStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/admin'
 import { adminBugStatus } from '@/app/actions/admin'
 import { ActionForm } from '@/components/ActionForm'
 
@@ -12,6 +13,8 @@ const CLS: Record<BugStatus, string> = {
 }
 
 export default async function AdminBugs({ searchParams }: { searchParams: Promise<{ stav?: string }> }) {
+  // Kontrola i na stránce, ne jen v layoutu (Next může layout při částečném vykreslení přeskočit).
+  await requireAdmin()
   const stav = (await searchParams).stav as BugStatus | 'vse' | undefined
   const where = stav === 'vse' ? {} : stav && stav in LABEL ? { status: stav as BugStatus } : { status: { not: 'DONE' as const } }
   const bugs = await prisma.bugReport.findMany({

@@ -13,8 +13,24 @@ const offered = { spareQty: { gt: 0 }, offerType: { not: null }, hiddenAt: null 
  * Denní souhrn: „někdo nově nabízí kartu (produkt), která ti chybí“ a „někdo chce koupit, co nabízíš“.
  * Bere nabídky přidané/změněné od posledního souhrnu daného uživatele. Spouští cron (/api/cron/match-digest).
  */
+let running = false
+
 export async function runMatchDigest() {
+  // Dva souběžné běhy (ruční + cron) by poslaly e-maily dvakrát.
+  if (running) return { users: 0, sent: 0, skipped: 'already-running' }
+  running = true
+  try {
+    return await digest()
+  } finally {
+    running = false
+  }
+}
+
+async function digest() {
   const now = new Date()
+  // Úklid: prošlá přihlášení a e-mailové odkazy.
+  await prisma.session.deleteMany({ where: { expiresAt: { lt: now } } })
+  await prisma.emailToken.deleteMany({ where: { expiresAt: { lt: new Date(now.getTime() - 7 * 86_400_000) } } })
   const users = await prisma.user.findMany({
     where: {
       matchEmails: true,
@@ -36,7 +52,9 @@ export async function runMatchDigest() {
     select: { id: true, email: true, nickname: true, isMinor: true, parentEmail: true, matchDigestAt: true },
   })
   let sent = 0
+  let failed = 0
   for (const u of users) {
+    try {
     // První souhrn: posledních 24 hodin (ne celá historie).
     const since = u.matchDigestAt ?? new Date(now.getTime() - 24 * 3_600_000)
     const [cards, products] = await Promise.all([
@@ -112,7 +130,7 @@ export async function runMatchDigest() {
 
     if (lines.length || buyLines.length) {
       const more = lines.length > MAX_LINES ? `<br>…a dalších ${lines.length - MAX_LINES}.` : ''
-      await notify(
+      const ok = await notify(
         u.email,
         // U dětí jde kopie rodiči, stejně jako u poptávek.
         u.isMinor && u.parentEmail ? [u.parentEmail] : [],
@@ -131,9 +149,18 @@ export async function runMatchDigest() {
           ? { label: 'Zobrazit, kdo to nabízí', url: `${APP_URL}/sberatele?kde=vse` }
           : { label: 'Otevřít moji sbírku', url: `${APP_URL}/sbirka` },
       )
+      if (!ok) {
+        // Nedoručeno (např. denní limit Brevo) — nechat na příště, nic se neztratí.
+        failed++
+        continue
+      }
       sent++
     }
     await prisma.user.update({ where: { id: u.id }, data: { matchDigestAt: now } })
+    } catch (err) {
+      failed++
+      console.error('[digest] uživatel', u.id, err)
+    }
   }
-  return { users: users.length, sent }
+  return { users: users.length, sent, failed }
 }

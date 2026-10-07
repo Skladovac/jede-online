@@ -17,6 +17,10 @@ export async function SiteFooter() {
             Pravidla a ochrana osobních údajů
           </a>
           <span>·</span>
+          <Link href="/bezpecny-obchod" className="underline">
+            Bezpečný obchod
+          </Link>
+          <span>·</span>
           <a href="mailto:pokemon@jede.online" className="underline">
             pokemon@jede.online
           </a>
