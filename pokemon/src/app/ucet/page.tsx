@@ -34,7 +34,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         </form>
       </div>
 
-      {vitej && <Notice tone="ok">Účet je založený. Zkontroluj e-mail a potvrď ho.</Notice>}
+      {vitej && <Notice tone="ok">Účet je založený. Poslali jsme ti e-mail s odkazem pro potvrzení. Když ho nevidíš, podívej se do složky Spam / Nevyžádaná pošta a označ ho jako „není spam“.</Notice>}
       {heslo && <Notice tone="ok">Nové heslo je uložené.</Notice>}
 
       {limited && (
@@ -42,7 +42,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <p className="font-semibold">Čekáme na souhlas rodiče</p>
           <p className="mt-1">
             Poslali jsme e-mail na <strong>{user.parentEmail}</strong>. Do schválení si můžeš procházet katalog, ale tvůj
-            profil není vidět a nejde posílat nabídky.
+            profil není vidět a nejde posílat nabídky. E-mail může skončit ve složce Spam / Nevyžádaná pošta.
           </p>
           <ActionForm action={resendParent} className="mt-3 space-y-3">
             <Submit variant="ghost">Poslat rodiči e-mail znovu</Submit>
@@ -52,7 +52,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
       {!user.emailVerifiedAt && (
         <Notice tone="warn">
-          <p>Tvůj e-mail <strong>{user.email}</strong> zatím není potvrzený.</p>
+          <p>
+            Tvůj e-mail <strong>{user.email}</strong> zatím není potvrzený. Odkaz najdeš v e-mailu od Pokémon karty
+            (noreply@jede.online) — podívej se i do složky Spam / Nevyžádaná pošta.
+          </p>
           <ActionForm action={resendVerify} className="mt-3 space-y-3">
             <Submit variant="ghost">Poslat potvrzovací e-mail znovu</Submit>
           </ActionForm>
