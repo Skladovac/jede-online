@@ -59,12 +59,13 @@ ${button ? `<p style="margin:24px 0"><a href="${esc(button.url)}" style="display
   if (!res.ok) console.error(`[email] ${brevo ? 'Brevo' : 'Resend'} selhal`, res.status, await res.text())
 }
 
-export function sendVerifyEmail(to: string, nickname: string, token: string) {
+export function sendVerifyEmail(to: string, nickname: string, token: string, next?: string | null) {
   return send(
     to,
     'Potvrď svůj e-mail',
     [`Ahoj <strong>${esc(nickname)}</strong>,`, 'díky za registraci. Potvrď prosím, že tento e-mail patří tobě.'],
-    { label: 'Potvrdit e-mail', url: `${APP_URL}/overeni/${token}` },
+    // next = kam se po potvrzení vrátit (např. stránka hodnocení, ze které přišel).
+    { label: 'Potvrdit e-mail', url: `${APP_URL}/overeni/${token}${next ? `?next=${encodeURIComponent(next)}` : ''}` },
   )
 }
 

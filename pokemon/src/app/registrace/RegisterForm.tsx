@@ -10,7 +10,7 @@ import { PasswordInput } from '@/components/PasswordInput'
 
 const MONTHS = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec']
 
-export function RegisterForm() {
+export function RegisterForm({ next }: { next?: string | null }) {
   const [state, action, pending] = useActionState(register, undefined)
   const f = state?.fields ?? {}
   const [country, setCountry] = useState<CountryCode>((f.country as CountryCode) || 'CZ')
@@ -31,6 +31,7 @@ export function RegisterForm() {
       }}
       className="space-y-5"
     >
+      {next && <input type="hidden" name="next" value={next} />}
       <Alert state={state} />
       <Field label="E-mail">
         <input name="email" type="email" required autoComplete="email" defaultValue={f.email} className={inputCls} />
