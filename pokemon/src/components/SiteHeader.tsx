@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { SearchBox } from '@/components/SearchBox'
+import { UserMenu } from '@/components/UserMenu'
 
 export async function SiteHeader() {
   const user = await getCurrentUser()
@@ -47,9 +48,7 @@ export async function SiteHeader() {
                 🛒
                 {cartCount > 0 && <Dot n={cartCount} />}
               </Link>
-              <Link href="/ucet" className="max-w-[7rem] truncate rounded-full bg-slate-100 px-3 py-1.5 dark:bg-slate-800">
-                {user.nickname}
-              </Link>
+              <UserMenu nickname={user.nickname} isAdmin={user.isAdmin} />
             </>
           ) : (
             <>
