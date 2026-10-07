@@ -44,7 +44,7 @@ export default function PrivacyPage() {
 
         <h2>Ceny karet</h2>
         <p>
-          Ceny u karet jsou orientační průměry z Cardmarketu. Skutečná hodnota se liší podle stavu karty a nabídky; ceny
+          Ceny u karet jsou orientační cenové trendy z Cardmarketu. Skutečná hodnota se liší podle stavu karty a nabídky; ceny
           nejsou nabídkou ani doporučením.
         </p>
 
