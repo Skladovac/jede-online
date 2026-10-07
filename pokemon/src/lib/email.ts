@@ -1,11 +1,11 @@
 import 'server-only'
 
 export const APP_URL = process.env.APP_URL ?? 'https://pokemon.jede.online'
-const FROM = 'Pokémon karty <noreply@jede.online>'
+const FROM = { name: 'Pokémon karty', email: 'noreply@jede.online' }
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 
-/** Odeslání přes Resend REST API. Bez RESEND_API_KEY (lokální vývoj) se e-mail jen vypíše do logu. */
+/** Odeslání přes Brevo (nebo Resend). Bez API klíče (lokální vývoj) se e-mail jen vypíše do logu. */
 async function send(to: string, subject: string, paragraphs: string[], button?: { label: string; url: string }) {
   const html = `<!doctype html><html lang="cs"><body style="margin:0;background:#f1f5f9;font-family:-apple-system,Segoe UI,sans-serif;color:#0f172a">
 <table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr><td align="center" style="padding:32px 16px">
@@ -17,17 +17,26 @@ ${button ? `<p style="margin:24px 0"><a href="${esc(button.url)}" style="display
 <p style="margin:24px 0 0;font-size:12px;color:#64748b">Tento e-mail byl odeslán automaticky z pokemon.jede.online. Pokud jste o nic nežádali, můžete ho ignorovat.</p>
 </td></tr></table></td></tr></table></body></html>`
 
-  const key = process.env.RESEND_API_KEY
-  if (!key) {
-    console.log(`[email] (bez RESEND_API_KEY) → ${to}: ${subject}${button ? `\n  ${button.url}` : ''}`)
+  // Brevo (zdarma 300 e-mailů/den, víc domén). Resend jen jako záloha — free tarif má jedinou doménu.
+  const brevo = process.env.BREVO_API_KEY
+  const resend = process.env.RESEND_API_KEY
+  if (!brevo && !resend) {
+    console.log(`[email] (bez API klíče) → ${to}: ${subject}${button ? `
+  ${button.url}` : ''}`)
     return
   }
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: FROM, to, subject, html }),
-  })
-  if (!res.ok) console.error('[email] Resend selhal', res.status, await res.text())
+  const res = brevo
+    ? await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'api-key': brevo, 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ sender: FROM, to: [{ email: to }], subject, htmlContent: html }),
+      })
+    : await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${resend}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: `${FROM.name} <${FROM.email}>`, to, subject, html }),
+      })
+  if (!res.ok) console.error(`[email] ${brevo ? 'Brevo' : 'Resend'} selhal`, res.status, await res.text())
 }
 
 export function sendVerifyEmail(to: string, nickname: string, token: string) {
