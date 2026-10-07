@@ -2,9 +2,10 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentUser, isLimited } from '@/lib/auth'
-import { deleteAccount, updateProfile } from '@/app/actions/account'
+import { changePassword, deleteAccount, updateProfile } from '@/app/actions/account'
 import { logout, resendParent, resendVerify } from '@/app/actions/auth'
 import { ActionForm } from '@/components/ActionForm'
+import { isAdult } from '@/lib/age'
 import { Checkbox, Field, Submit, inputCls } from '@/components/ui'
 import { COUNTRY_LABEL, REGIONS } from '@/lib/regions'
 import { PasswordInput } from '@/components/PasswordInput'
@@ -95,6 +96,15 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             {linksPending && <p className="text-xs text-yellow-700 dark:text-yellow-400">Odkazy čekají na schválení rodičem.</p>}
           </fieldset>
 
+          {isAdult(user) && (
+            <Field
+              label="Telefon (nepovinné)"
+              hint="Uvidí ho jen přihlášení uživatelé s ověřeným e-mailem po kliknutí na „Zobrazit číslo“. Každé zobrazení zaznamenáváme. Smazáním pole číslo z webu zmizí."
+            >
+              <input name="phone" type="tel" inputMode="tel" maxLength={20} placeholder="+420 777 123 456" defaultValue={user.phone ?? ''} className={inputCls} />
+            </Field>
+          )}
+
           {user.isMinor ? (
             <p className="text-sm text-slate-500">
               Dohledatelnost přes Google: {user.indexable ? 'zapnutá' : 'vypnutá'} (nastavuje rodič).
@@ -105,6 +115,32 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             </Checkbox>
           )}
           <Submit>Uložit</Submit>
+        </ActionForm>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="mb-1 text-lg font-bold">Přihlášení</h2>
+        <p className="mb-5 text-sm">
+          Přihlašuješ se e-mailem <strong className="break-all">{user.email}</strong>
+          {user.emailVerifiedAt ? ' ✓' : ' (zatím nepotvrzený)'}
+        </p>
+        <h3 className="mb-3 font-semibold">Změnit heslo</h3>
+        <ActionForm action={changePassword} className="space-y-3">
+          <Field label="Současné heslo">
+            <PasswordInput name="current" autoComplete="current-password" />
+          </Field>
+          <Field label="Nové heslo">
+            <PasswordInput name="password" autoComplete="new-password" />
+          </Field>
+          <Field label="Nové heslo znovu">
+            <PasswordInput name="password2" autoComplete="new-password" />
+          </Field>
+          <div className="flex flex-wrap items-center gap-4">
+            <Submit>Změnit heslo</Submit>
+            <Link href="/zapomenute-heslo" className="text-sm underline">
+              Nepamatuješ si současné heslo?
+            </Link>
+          </div>
         </ActionForm>
       </section>
 

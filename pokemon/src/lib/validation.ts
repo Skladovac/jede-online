@@ -39,3 +39,22 @@ export function parseSocial(field: SocialField, value: string): { url: string | 
     return { error: 'Odkaz musí vést na Facebook, Instagram nebo Aukro (podle pole).' }
   }
 }
+
+/** Telefon: povolené číslice, mezery, pomlčky a + na začátku; 9–15 číslic. Ukládá se bez mezer. */
+export function parsePhone(raw: string): { phone: string | null } | { error: string } {
+  const v = raw.trim()
+  if (!v) return { phone: null }
+  if (!/^\+?[\d\s-]+$/.test(v)) return { error: 'Telefon může obsahovat jen číslice, mezery a + na začátku.' }
+  const phone = v.replace(/[\s-]/g, '')
+  const digits = phone.replace('+', '').length
+  if (digits < 9 || digits > 15) return { error: 'Telefon nevypadá správně (9–15 číslic).' }
+  return { phone }
+}
+
+/** +420777123456 → +420 777 123 456 */
+export function formatPhone(p: string) {
+  const m = p.match(/^(\+\d{3})?(\d+)$/)
+  if (!m) return p
+  const rest = m[2].replace(/(\d{3})(?=\d)/g, '$1 ')
+  return m[1] ? `${m[1]} ${rest}` : rest
+}

@@ -89,6 +89,19 @@ export function sendResetEmail(to: string, token: string) {
   })
 }
 
+export function sendPasswordChangedEmail(to: string, nickname: string) {
+  return send(
+    to,
+    'Heslo bylo změněno',
+    [
+      `Ahoj <strong>${esc(nickname)}</strong>,`,
+      'heslo k tvému účtu na pokemon.jede.online bylo právě změněno a ostatní přihlášená zařízení jsme odhlásili.',
+      'Pokud jsi to nebyl(a) ty, nastav si hned nové heslo přes „Zapomenuté heslo“ a napiš nám na pokemon@jede.online.',
+    ],
+    { label: 'Zapomenuté heslo', url: `${APP_URL}/zapomenute-heslo` },
+  )
+}
+
 export function sendParentLinksEmail(to: string, nickname: string, parentToken: string) {
   return send(
     to,

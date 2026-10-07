@@ -11,6 +11,8 @@ import { collectionOverview } from '@/lib/collection-view'
 import { CollectionOverview } from '@/components/CollectionOverview'
 import { ensureEurCzk } from '@/lib/fx'
 import { pairMatches } from '@/lib/matches'
+import { isAdult } from '@/lib/age'
+import { PhoneReveal } from '@/components/PhoneReveal'
 import { MatchSection } from '@/components/MatchSection'
 
 export const dynamic = 'force-dynamic'
@@ -44,6 +46,9 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   const pos = ratings.find((r) => r.positive)?._count ?? 0
   const neg = ratings.find((r) => !r.positive)?._count ?? 0
 
+  // Telefon jen u dospělých; samotné číslo se do stránky nevypisuje, načte se až po kliknutí.
+  const hasPhone = !!user.phone && isAdult(user)
+
   const links = user.linksApprovedAt
     ? ([
         ['Facebook', user.facebookUrl],
@@ -76,8 +81,9 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         </div>
       </div>
 
-      {links.length > 0 && (
-        <div className="mt-6 flex flex-wrap gap-2">
+      {(links.length > 0 || hasPhone) && (
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          {hasPhone && <PhoneReveal ownerId={user.id} />}
           {links.map(([k, v]) => (
             <a
               key={k}

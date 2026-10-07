@@ -13,7 +13,7 @@ import {
   verifyPassword,
 } from '@/lib/auth'
 import { needsParentConsent, type CountryCode } from '@/lib/age'
-import { sendParentConsentEmail, sendResetEmail, sendVerifyEmail } from '@/lib/email'
+import { sendParentConsentEmail, sendPasswordChangedEmail, sendResetEmail, sendVerifyEmail } from '@/lib/email'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { EMAIL_RE, NICK_RE, checkPassword, checkRegion, str, type FormState } from '@/lib/validation'
 import { nicknameProblem } from '@/lib/nickname-filter'
@@ -118,8 +118,9 @@ export async function resetPassword(_: FormState, fd: FormData): Promise<FormSta
   if (pwErr) return { error: pwErr }
   const userId = await consumeEmailToken(str(fd, 'token'), 'RESET')
   if (!userId) return { error: 'Odkaz už neplatí. Požádej o nový.' }
-  await prisma.user.update({ where: { id: userId }, data: { passwordHash: await hashPassword(password) } })
+  const user = await prisma.user.update({ where: { id: userId }, data: { passwordHash: await hashPassword(password) } })
   await prisma.session.deleteMany({ where: { userId } }) // odhlásit všude
+  await sendPasswordChangedEmail(user.email, user.nickname)
   await createSession(userId)
   redirect('/ucet?heslo=1')
 }
