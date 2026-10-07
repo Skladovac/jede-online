@@ -13,6 +13,12 @@ import { pickStats } from '@/lib/price-stats'
 
 const API = 'https://api.tcgdex.net/v2/en'
 const CONCURRENCY = 6
+// Loga, která TCGdex zatím nemá (nejnovější sady). Soubory v public/set-logos, převzaté z press.pokemon.com
+// (licence pro nekomerční informační užití). Jakmile TCGdex logo doplní, má přednost.
+const MANUAL_LOGOS: Record<string, string> = {
+  '30th': '/set-logos/30th.png',
+  '30th-c': '/set-logos/30th.png',
+}
 // Pokémon TCG Pocket je mobilní hra — její karty fyzicky neexistují, nesbírají se ani nevyměňují.
 const EXCLUDED_SERIES = ['tcgp']
 
@@ -123,7 +129,7 @@ export async function syncCatalog(
         releaseDate: s.releaseDate ? new Date(s.releaseDate) : null,
         cardCount: s.cardCount.total,
         officialCount: s.cardCount.official,
-        logoUrl: s.logo ?? undefined,
+        logoUrl: s.logo ?? MANUAL_LOGOS[s.id] ?? undefined,
         symbolUrl: s.symbol ?? undefined,
       }
       await prisma.cardSet.upsert({ where: { id: s.id }, create: { id: s.id, ...data }, update: data })
