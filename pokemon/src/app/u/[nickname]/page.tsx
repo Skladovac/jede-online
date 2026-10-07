@@ -9,6 +9,8 @@ import { COUNTRY_LABEL } from '@/lib/regions'
 import { collectionOverview } from '@/lib/collection-view'
 import { CollectionOverview } from '@/components/CollectionOverview'
 import { ensureEurCzk } from '@/lib/fx'
+import { pairMatches } from '@/lib/matches'
+import { MatchSection } from '@/components/MatchSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -87,6 +89,10 @@ export default async function ProfilePage({ params, searchParams }: Props) {
             </a>
           ))}
         </div>
+      )}
+
+      {viewer && viewer.id !== user.id && !isLimited(viewer) && (
+        <MatchSection data={await pairMatches(viewer.id, user.id)} nickname={user.nickname} />
       )}
 
       <div className="mt-10">

@@ -37,6 +37,9 @@ export async function SiteHeader() {
               <Link href="/sbirka" className="hover:text-yellow-600 dark:hover:text-yellow-400">
                 Sbírka
               </Link>
+              <Link href="/sberatele" className="hidden hover:text-yellow-600 dark:hover:text-yellow-400 sm:inline">
+                Sběratelé
+              </Link>
               <Link href="/poptavky" className="relative hover:text-yellow-600 dark:hover:text-yellow-400">
                 Poptávky
                 {pendingCount > 0 && <Dot n={pendingCount} />}
