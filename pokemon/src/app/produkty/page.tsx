@@ -33,6 +33,7 @@ export default async function ProductsPage({
         some: {
           spareQty: { gt: 0 },
           offerType: { not: null },
+          hiddenAt: null,
           user: { bannedAt: null, OR: [{ isMinor: false }, { parentConsentAt: { not: null } }] },
         },
       },

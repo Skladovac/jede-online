@@ -62,6 +62,14 @@ export default async function RequestDetail({
           {STATUS[req.status].label}
         </span>
       </div>
+      <p className="-mt-3 text-xs">
+        <Link
+          href={`/u/${encodeURIComponent(other.nickname)}?nahlasit=1#nahlasit`}
+          className="text-slate-400 hover:text-red-600 hover:underline"
+        >
+          Něco nesedí? Nahlásit {other.nickname}
+        </Link>
+      </p>
       {odeslano && (
         <p className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-900 dark:bg-green-500/10 dark:text-green-200">
           Odesláno! {other.nickname} dostal(a) e-mail. Jakmile odpoví, dáme ti vědět e-mailem (může skončit ve složce Spam / Nevyžádaná pošta). Stav uvidíš i tady v Poptávkách.

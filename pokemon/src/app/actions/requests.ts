@@ -67,7 +67,8 @@ export async function addToCart(_: FormState, fd: FormData): Promise<FormState> 
     where: { id: str(fd, 'collectionItemId') },
     include: { ...itemInclude, user: true },
   })
-  if (!item || item.spareQty < 1 || !item.offerType || !visible(item.user)) return { error: 'Nabídka už neplatí.' }
+  if (!item || item.spareQty < 1 || !item.offerType || item.hiddenAt || !visible(item.user))
+    return { error: 'Nabídka už neplatí.' }
   if (item.userId === user.id) return { error: 'Tohle je tvoje vlastní nabídka.' }
 
   const draft =
@@ -90,7 +91,8 @@ export async function addToCart(_: FormState, fd: FormData): Promise<FormState> 
 
 async function addProductToCart(user: User, productItemId: string): Promise<FormState> {
   const item = await prisma.productItem.findUnique({ where: { id: productItemId }, include: { ...productInclude, user: true } })
-  if (!item || item.spareQty < 1 || !item.offerType || !visible(item.user)) return { error: 'Nabídka už neplatí.' }
+  if (!item || item.spareQty < 1 || !item.offerType || item.hiddenAt || !visible(item.user))
+    return { error: 'Nabídka už neplatí.' }
   if (item.userId === user.id) return { error: 'Tohle je tvoje vlastní nabídka.' }
   const draft =
     (await prisma.tradeRequest.findFirst({ where: { fromId: user.id, toId: item.userId, status: 'DRAFT' } })) ??

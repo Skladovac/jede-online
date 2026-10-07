@@ -16,6 +16,7 @@ export async function CardOffers({ cardId }: { cardId: string }) {
       cardId,
       spareQty: { gt: 0 },
       offerType: { not: null },
+      hiddenAt: null,
       user: { bannedAt: null, OR: [{ isMinor: false }, { parentConsentAt: { not: null } }] },
     },
     include: { user: { select: { nickname: true, city: true, region: true } } },
@@ -41,6 +42,14 @@ export async function CardOffers({ cardId }: { cardId: string }) {
                 <Link href={`/u/${encodeURIComponent(o.user.nickname)}`} className="font-semibold hover:underline">
                   {o.user.nickname}
                 </Link>
+                {viewer && viewer.id !== o.userId && (
+                  <Link
+                    href={`/u/${encodeURIComponent(o.user.nickname)}?nahlasit=1#nahlasit`}
+                    className="ml-2 text-xs text-slate-400 hover:text-red-600 hover:underline"
+                  >
+                    nahlásit
+                  </Link>
+                )}
                 <span className="text-sm text-slate-500"> · {o.user.city ?? o.user.region ?? 'neuvedeno'}</span>
                 <p className="text-xs text-slate-500">
                   {[VARIANT[o.variant], CONDITION[o.condition], o.language.toUpperCase(), o.spareQty > 1 && `${o.spareQty} ks`]

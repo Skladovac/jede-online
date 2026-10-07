@@ -115,6 +115,7 @@ model User {
   emailTokens    EmailToken[]
   productItems   ProductItem[]
   productWants   ProductWant[]
+  bugReports     BugReport[]
 
   @@index([country, region, city])
 }
@@ -184,6 +185,7 @@ model CollectionItem {
   spareQty   Int       @default(0)
   offerType  OfferType?
   priceCzk   Int?
+  hiddenAt   DateTime? // nabídku skryl správce
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
@@ -355,6 +357,7 @@ model ProductItem {
   offerType OfferType?
   priceCzk  Int?
   note      String?    @db.VarChar(30)
+  hiddenAt  DateTime? // nabídku skryl správce
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -374,4 +377,34 @@ model ProductWant {
 
   @@unique([userId, productId])
   @@index([productId])
+}
+
+// ── Správa ─────────────────────────────────────────────────────────
+
+enum BugStatus {
+  NEW
+  IN_PROGRESS
+  DONE
+}
+
+// Hlášení chyby z patičky webu (i od nepřihlášených).
+model BugReport {
+  id        String    @id @default(cuid())
+  message   String    @db.VarChar(2000)
+  pageUrl   String?   @db.VarChar(500)
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  contact   String?   @db.VarChar(200) // e-mail, pokud ho nepřihlášený vyplní
+  userAgent String?   @db.VarChar(300)
+  status    BugStatus @default(NEW)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status, createdAt])
+}
+
+// Zakázaná slova v přezdívkách, která doplnil správce (k výchozímu seznamu v kódu).
+model BannedWord {
+  word      String   @id
+  createdAt DateTime @default(now())
 }

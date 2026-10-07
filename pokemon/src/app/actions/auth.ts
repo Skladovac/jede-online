@@ -16,6 +16,7 @@ import { needsParentConsent, type CountryCode } from '@/lib/age'
 import { sendParentConsentEmail, sendResetEmail, sendVerifyEmail } from '@/lib/email'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { EMAIL_RE, NICK_RE, checkPassword, checkRegion, str, type FormState } from '@/lib/validation'
+import { nicknameProblem } from '@/lib/nickname-filter'
 
 export async function register(_: FormState, fd: FormData): Promise<FormState> {
   const fields = Object.fromEntries(
@@ -34,6 +35,7 @@ export async function register(_: FormState, fd: FormData): Promise<FormState> {
 
   if (!EMAIL_RE.test(email)) return fail('Zadej platný e-mail.')
   if (!NICK_RE.test(fields.nickname)) return fail('Přezdívka: 3–20 znaků, jen písmena, číslice, _ a -.')
+  if (await nicknameProblem(fields.nickname)) return fail('Tahle přezdívka není povolená. Zvol prosím jinou.')
   const pwErr = checkPassword(password)
   if (pwErr) return fail(pwErr)
   if (country !== 'CZ' && country !== 'SK') return fail('Vyber zemi.')
