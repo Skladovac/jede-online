@@ -57,15 +57,23 @@ const norm = (s: string) =>
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
 
-const STOP = new Set(['pokemon', 'the', 'of', 'and', 'tcg', 'pack', 'exclusive', 'a', 'x'])
+// "International/Retail Version" jsou na TCGplayeru dvě verze téhož produktu (stejný obrázek).
+const STOP = new Set(['pokemon', 'the', 'of', 'and', 'tcg', 'pack', 'exclusive', 'a', 'x', 'version', 'international', 'retail'])
+// Asijské edice TCGplayer nemá — nesmí dostat obrázek anglické verze.
+const ASIAN = ['jp', 'japanese', 'chinese', 'simplified', 'traditional', 'indonesian', 'thai', 'korean']
 const tokens = (s: string, drop: Set<string>) =>
   new Set(norm(s).split(' ').filter((t) => t && !STOP.has(t) && !drop.has(t)))
 
 function similarity(a: Set<string>, b: Set<string>) {
   if (!a.size || !b.size) return 0
+  if (ASIAN.some((t) => a.has(t) !== b.has(t))) return 0
   let inter = 0
   for (const t of a) if (b.has(t)) inter++
-  return inter / (a.size + b.size - inter)
+  const jaccard = inter / (a.size + b.size - inter)
+  // Název z TCGplayeru celý obsažený v našem: "Mini Tin [Mew]" ⊂ "Mew & Alolan Exeggutor Mini Tin".
+  // Jen když pokrývá většinu našeho názvu, ať obecné "Booster" nesedne na všechno.
+  const contained = inter === b.size && inter / a.size >= 0.6 ? 0.78 : 0
+  return Math.max(jaccard, contained)
 }
 
 const price = (p?: CmPrice) => {
@@ -163,7 +171,8 @@ export async function fillProductImages(log: (m: string) => void) {
           const all = (await getJson<{ results: TcgProduct[] }>(`${TCGCSV}/${g.groupId}/products`)).results
           for (const p of all)
             if (!(p.extendedData ?? []).some((e) => e.name === 'Number'))
-              cands.push({ id: p.productId, group: g.groupId, name: p.name, tokFull: tokens(`${strip(g.name)} ${p.name}`, new Set()) })
+              if (!/^code card/i.test(p.name)) // digitální kódy, ne fyzický produkt
+                cands.push({ id: p.productId, group: g.groupId, name: p.name, tokFull: tokens(`${strip(g.name)} ${p.name}`, new Set()) })
         } catch {
           /* jedna skupina nevadí */
         }
@@ -171,12 +180,14 @@ export async function fillProductImages(log: (m: string) => void) {
     }),
   )
 
-  const pick = (scored: { id: number; s: number }[], min: number) => {
+  const pick = (scored: { id: number; s: number; key: string }[], min: number) => {
     scored.sort((a, b) => b.s - a.s)
     const [best, second] = scored
-    // Jen jisté shody: vysoká podobnost a jednoznačný vítěz.
-    return best && best.s >= min && (!second || second.s < best.s) ? best.id : null
+    // Jen jisté shody: vysoká podobnost a jednoznačný vítěz. Remíza je OK jen mezi stejně pojmenovanými
+    // verzemi téhož produktu (International / Retail).
+    return best && best.s >= min && (!second || second.s < best.s || second.key === best.key) ? best.id : null
   }
+  const key = (t: Set<string>) => [...t].sort().join(' ')
 
   let found = 0
   const now = new Date()
@@ -187,13 +198,18 @@ export async function fillProductImages(log: (m: string) => void) {
       const drop = tokens(p.set!.name, new Set())
       const mine = tokens(p.name, drop)
       hit = pick(
-        cands.filter((c) => c.group === group.groupId).map((c) => ({ id: c.id, s: similarity(mine, tokens(c.name, drop)) })),
+        cands
+          .filter((c) => c.group === group.groupId)
+          .map((c) => {
+            const t = tokens(c.name, drop)
+            return { id: c.id, s: similarity(mine, t), key: key(t) }
+          }),
         0.75,
       )
     }
     if (!hit) {
       const mine = tokens(p.name, new Set())
-      hit = pick(cands.map((c) => ({ id: c.id, s: similarity(mine, c.tokFull) })), 0.8)
+      hit = pick(cands.map((c) => ({ id: c.id, s: similarity(mine, c.tokFull), key: key(c.tokFull) })), 0.8)
     }
     await prisma.product.update({
       where: { id: p.id },
