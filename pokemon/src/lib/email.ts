@@ -3,10 +3,17 @@ import 'server-only'
 export const APP_URL = process.env.APP_URL ?? 'https://pokemon.jede.online'
 const FROM = { name: 'Pokémon karty', email: 'noreply@jede.online' }
 
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
+export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 
 /** Odeslání přes Brevo (nebo Resend). Bez API klíče (lokální vývoj) se e-mail jen vypíše do logu. */
-async function send(to: string, subject: string, paragraphs: string[], button?: { label: string; url: string }) {
+async function send(
+  to: string,
+  subject: string,
+  paragraphs: string[],
+  button?: { label: string; url: string },
+  cc: string[] = [],
+) {
+  cc = [...new Set(cc.filter((c) => c && c !== to))]
   const html = `<!doctype html><html lang="cs"><body style="margin:0;background:#f1f5f9;font-family:-apple-system,Segoe UI,sans-serif;color:#0f172a">
 <table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr><td align="center" style="padding:32px 16px">
 <table width="520" cellpadding="0" cellspacing="0" role="presentation" style="max-width:520px;width:100%;background:#fff;border-radius:16px">
@@ -21,7 +28,7 @@ ${button ? `<p style="margin:24px 0"><a href="${esc(button.url)}" style="display
   const brevo = process.env.BREVO_API_KEY
   const resend = process.env.RESEND_API_KEY
   if (!brevo && !resend) {
-    console.log(`[email] (bez API klíče) → ${to}: ${subject}${button ? `
+    console.log(`[email] (bez API klíče) → ${to}${cc.length ? ` (kopie ${cc.join(', ')})` : ''}: ${subject}${button ? `
   ${button.url}` : ''}`)
     return
   }
@@ -29,12 +36,18 @@ ${button ? `<p style="margin:24px 0"><a href="${esc(button.url)}" style="display
     ? await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: { 'api-key': brevo, 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ sender: FROM, to: [{ email: to }], subject, htmlContent: html }),
+        body: JSON.stringify({
+          sender: FROM,
+          to: [{ email: to }],
+          ...(cc.length && { cc: cc.map((email) => ({ email })) }),
+          subject,
+          htmlContent: html,
+        }),
       })
     : await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: `Bearer ${resend}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: `${FROM.name} <${FROM.email}>`, to, subject, html }),
+        body: JSON.stringify({ from: `${FROM.name} <${FROM.email}>`, to, ...(cc.length && { cc }), subject, html }),
       })
   if (!res.ok) console.error(`[email] ${brevo ? 'Brevo' : 'Resend'} selhal`, res.status, await res.text())
 }
@@ -78,4 +91,15 @@ export function sendParentLinksEmail(to: string, nickname: string, parentToken: 
     ],
     { label: 'Zkontrolovat a schválit', url: `${APP_URL}/rodic/${parentToken}` },
   )
+}
+
+/** Obecné upozornění (poptávky). U nezletilého jde kopie rodiči — viz parentCc(). */
+export function notify(
+  to: string,
+  cc: string[],
+  subject: string,
+  paragraphs: string[],
+  button?: { label: string; url: string },
+) {
+  return send(to, subject, paragraphs, button, cc)
 }
