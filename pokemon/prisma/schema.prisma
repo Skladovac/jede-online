@@ -48,6 +48,8 @@ model Card {
   hasHolo        Boolean  @default(false)
   hasReverse     Boolean  @default(false)
   hasFirstEd     Boolean  @default(false)
+  hasPokeball    Boolean  @default(false)
+  hasMasterball  Boolean  @default(false)
   // Orientační ceny z Cardmarketu v EUR (průměr prodejů), aktualizuje noční import.
   priceEur        Decimal? @db.Decimal(10, 2)
   priceReverseEur Decimal? @db.Decimal(10, 2) // reverse holo verze
@@ -163,6 +165,8 @@ enum Variant {
   HOLO
   REVERSE
   FIRST_EDITION
+  POKEBALL // reverse holo se vzorem Poké Ball (např. Prismatic Evolutions, 151 JP)
+  MASTERBALL // reverse holo se vzorem Master Ball
 }
 
 enum Condition {

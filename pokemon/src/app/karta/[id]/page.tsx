@@ -37,6 +37,8 @@ export default async function CardPage({ params }: Props) {
     card.hasHolo && 'Holo',
     card.hasReverse && 'Reverse holo',
     card.hasFirstEd && '1st edition',
+    card.hasPokeball && 'Poké Ball reverse',
+    card.hasMasterball && 'Master Ball reverse',
   ].filter(Boolean) as string[]
   const price = formatEur(card.priceEur)
   const priceReverse = formatEur(card.priceReverseEur)

@@ -16,7 +16,7 @@ export type ItemData = {
   note: string | null
 }
 
-const VARIANT_LABEL: Record<string, string> = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition' }
+const VARIANT_LABEL: Record<string, string> = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' }
 const LANGS: [string, string][] = [
   ['en', 'angličtina'],
   ['de', 'němčina'],

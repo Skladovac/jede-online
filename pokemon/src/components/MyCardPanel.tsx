@@ -7,7 +7,15 @@ import { Submit } from '@/components/ui'
 import { ItemForm } from '@/components/ItemForm'
 import { CardBuyForm } from '@/components/BuyForm'
 
-type CardVariants = { id: string; hasNormal: boolean; hasHolo: boolean; hasReverse: boolean; hasFirstEd: boolean }
+type CardVariants = {
+  id: string
+  hasNormal: boolean
+  hasHolo: boolean
+  hasReverse: boolean
+  hasFirstEd: boolean
+  hasPokeball: boolean
+  hasMasterball: boolean
+}
 
 /** "Moje sbírka" na detailu karty: kolik kusů mám, v jaké variantě a stavu, co nabízím. */
 export async function MyCardPanel({ card }: { card: CardVariants }) {
@@ -32,6 +40,8 @@ export async function MyCardPanel({ card }: { card: CardVariants }) {
     card.hasHolo && 'HOLO',
     card.hasReverse && 'REVERSE',
     card.hasFirstEd && 'FIRST_EDITION',
+    card.hasPokeball && 'POKEBALL',
+    card.hasMasterball && 'MASTERBALL',
   ].filter(Boolean) as string[]
   if (!variants.length) variants.push('NORMAL')
 
