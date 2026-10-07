@@ -24,8 +24,17 @@ export default async function MyCollectionPage() {
         </p>
       )}
       {!isLimited(user) && data.totals.wanted > 0 && (
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <p className="mb-2 text-sm font-semibold">Odkaz na to, co ti chybí – zkopíruj ho a vlož třeba na Facebook:</p>
+        <div className="mt-6 rounded-2xl border-2 border-orange-300 bg-orange-50 p-4 dark:border-orange-500/40 dark:bg-orange-500/10">
+          {/* Oranžová = „chybí“ (stejně jako okraj chybějících karet v sadě). */}
+          <p className="mb-1 flex items-center gap-2 font-bold text-orange-900 dark:text-orange-200">
+            <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-orange-500 text-sm text-white">
+              🔗
+            </span>
+            Pochlub se, co sháníš
+          </p>
+          <p className="mb-3 text-sm text-orange-900/80 dark:text-orange-200/80">
+            Zkopíruj odkaz na seznam karet, které ti chybí, a vlož ho třeba na Facebook nebo do skupiny sběratelů.
+          </p>
           <CopyLink
             url={`https://pokemon.jede.online/u/${encodeURIComponent(user.nickname)}/chybi`}
             title={`Co hledá ${user.nickname}`}
