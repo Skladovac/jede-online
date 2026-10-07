@@ -80,7 +80,7 @@ export function RegisterForm() {
             Je ti méně než {CONSENT_AGE[country]} let, takže účet musí schválit rodič. Pošleme mu e-mail s odkazem. Do té
             doby si můžeš prohlížet katalog a vést sbírku, ale profil nebude vidět a nepůjde posílat nabídky.
           </p>
-          <Field label="E-mail rodiče">
+          <Field label="E-mail rodiče" hint="E-mail od noreply@jede.online může skončit ve složce Spam / Nevyžádaná pošta.">
             <input name="parentEmail" type="email" required defaultValue={f.parentEmail} className={inputCls} />
           </Field>
         </div>

@@ -107,7 +107,7 @@ export async function requestReset(_: FormState, fd: FormData): Promise<FormStat
   if (!rateLimit(`reset:${await clientIp()}`, 5, 60 * 60_000)) return { error: 'Příliš mnoho žádostí. Zkus to za hodinu.' }
   const user = await prisma.user.findUnique({ where: { email } })
   if (user && !user.bannedAt) await sendResetEmail(email, await createEmailToken(user.id, 'RESET', 1))
-  return { ok: 'Pokud je e-mail zaregistrovaný, poslali jsme na něj odkaz pro nové heslo.' }
+  return { ok: 'Pokud je e-mail zaregistrovaný, poslali jsme na něj odkaz pro nové heslo. Když nedorazí, podívej se i do složky Spam / Nevyžádaná pošta.' }
 }
 
 export async function resetPassword(_: FormState, fd: FormData): Promise<FormState> {
@@ -125,15 +125,15 @@ export async function resetPassword(_: FormState, fd: FormData): Promise<FormSta
 export async function resendVerify(): Promise<FormState> {
   const user = await getCurrentUser()
   if (!user || user.emailVerifiedAt) return undefined
-  if (!rateLimit(`verify:${user.id}`, 3, 60 * 60_000)) return { error: 'E-mail už jsme poslali, zkontroluj i spam.' }
+  if (!rateLimit(`verify:${user.id}`, 3, 60 * 60_000)) return { error: 'E-mail už jsme poslali. Podívej se i do složky Spam / Nevyžádaná pošta.' }
   await sendVerifyEmail(user.email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72))
-  return { ok: 'Poslali jsme nový potvrzovací e-mail.' }
+  return { ok: 'Poslali jsme nový potvrzovací e-mail. Nevidíš ho? Podívej se i do složky Spam / Nevyžádaná pošta.' }
 }
 
 export async function resendParent(): Promise<FormState> {
   const user = await getCurrentUser()
   if (!user?.isMinor || user.parentConsentAt || !user.parentEmail || !user.parentToken) return undefined
-  if (!rateLimit(`parent:${user.id}`, 3, 24 * 60 * 60_000)) return { error: 'E-mail rodiči už odešel. Ať zkontroluje i spam.' }
+  if (!rateLimit(`parent:${user.id}`, 3, 24 * 60 * 60_000)) return { error: 'E-mail rodiči už odešel. Ať se podívá i do složky Spam / Nevyžádaná pošta.' }
   await sendParentConsentEmail(user.parentEmail, user.nickname, user.parentToken)
-  return { ok: 'E-mail rodiči jsme poslali znovu.' }
+  return { ok: 'E-mail rodiči jsme poslali znovu. Ať se podívá i do složky Spam / Nevyžádaná pošta.' }
 }

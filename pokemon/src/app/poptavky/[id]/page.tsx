@@ -64,7 +64,7 @@ export default async function RequestDetail({
       </div>
       {odeslano && (
         <p className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-900 dark:bg-green-500/10 dark:text-green-200">
-          Odesláno! {other.nickname} dostal(a) e-mail. Jakmile odpoví, dáme ti vědět.
+          Odesláno! {other.nickname} dostal(a) e-mail. Jakmile odpoví, dáme ti vědět e-mailem (může skončit ve složce Spam / Nevyžádaná pošta). Stav uvidíš i tady v Poptávkách.
         </p>
       )}
 
