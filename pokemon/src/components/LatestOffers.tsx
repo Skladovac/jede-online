@@ -21,7 +21,12 @@ export async function LatestOffers({ take = 12 }: { take?: number }) {
   if (!offers.length) return null
   return (
     <section className="mb-12">
-      <h2 className="mb-4 text-xl font-bold">Nejnovější nabídky</h2>
+      <div className="mb-4 flex items-baseline justify-between">
+        <h2 className="text-xl font-bold">Nejnovější nabídky</h2>
+        <Link href="/trziste" className="text-sm font-medium text-yellow-700 hover:underline dark:text-yellow-400">
+          Celé tržiště →
+        </Link>
+      </div>
       <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
         {offers.map((o) => {
           const img = cardImage(o.card.imageUrl)

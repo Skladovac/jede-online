@@ -32,9 +32,13 @@ export async function SiteHeader() {
           <Link href="/produkty" className="hidden hover:text-yellow-600 dark:hover:text-yellow-400 lg:inline">
             Produkty
           </Link>
+          <Link href="/trziste" className="hover:text-yellow-600 dark:hover:text-yellow-400">
+            Tržiště
+          </Link>
           {user ? (
             <>
-              <Link href="/sbirka" className="hover:text-yellow-600 dark:hover:text-yellow-400">
+              {/* Na mobilu je Sbírka v menu pod přezdívkou (do lišty se nevejde vedle Tržiště a Poptávek). */}
+              <Link href="/sbirka" className="hidden hover:text-yellow-600 dark:hover:text-yellow-400 sm:inline">
                 Sbírka
               </Link>
               <Link href="/sberatele" className="hidden hover:text-yellow-600 dark:hover:text-yellow-400 sm:inline">
