@@ -1,0 +1,43 @@
+import { NextResponse, type NextRequest } from 'next/server'
+import { syncCatalog, type SyncStats } from '@/lib/catalog-sync'
+
+export const dynamic = 'force-dynamic'
+
+/**
+ * Noční import katalogu. Spouští cron na serveru:
+ *   curl -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3400/api/cron/sync-catalog
+ * Import trvá ~10 minut, proto běží na pozadí a odpověď je hned 202.
+ * GET vrátí stav posledního běhu.
+ */
+
+let running: Promise<void> | null = null
+let last: SyncStats | null = null
+
+function authorized(req: NextRequest) {
+  const secret = process.env.CRON_SECRET
+  return !!secret && req.headers.get('authorization') === `Bearer ${secret}`
+}
+
+export async function POST(req: NextRequest) {
+  if (!authorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (running) return NextResponse.json({ status: 'already-running' }, { status: 409 })
+
+  running = syncCatalog()
+    .then((s) => {
+      last = s
+    })
+    .catch((err) => {
+      console.error('[catalog] import selhal:', err)
+      last = { startedAt: new Date().toISOString(), sets: 0, cards: 0, cardDetailFailures: 0, setFailures: [], error: String(err) }
+    })
+    .finally(() => {
+      running = null
+    })
+
+  return NextResponse.json({ status: 'started' }, { status: 202 })
+}
+
+export async function GET(req: NextRequest) {
+  if (!authorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  return NextResponse.json({ running: !!running, last })
+}
