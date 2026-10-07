@@ -40,8 +40,12 @@ type TcgCard = {
       updated?: string
       avg?: number | null
       trend?: number | null
+      avg7?: number | null
+      avg30?: number | null
       'avg-holo'?: number | null
       'trend-holo'?: number | null
+      'avg7-holo'?: number | null
+      'avg30-holo'?: number | null
     } | null
   }
 }
@@ -75,10 +79,12 @@ const clean = (s: string) => {
   }
 }
 
-// Průměr prodejů; když chybí, trend. Nulu bereme jako "cena neznámá".
-function eur(avg?: number | null, trend?: number | null) {
-  const v = avg || trend
-  return v && v > 0 ? new Prisma.Decimal(v.toFixed(2)) : null
+// Cenový trend Cardmarketu ("Price Trend"), jinak 7denní a 30denní průměr.
+// Pole `avg` NEpoužívat: u nových karet drží zastaralý průměr z prvních dnů (např. 10 € místo 1,60 €).
+// Nulu bereme jako "cena neznámá".
+function eur(...candidates: (number | null | undefined)[]) {
+  const v = candidates.find((c) => c && c > 0)
+  return v ? new Prisma.Decimal(v.toFixed(2)) : null
 }
 
 async function pool<T>(items: T[], worker: (item: T) => Promise<void>) {
@@ -149,8 +155,8 @@ export async function syncCatalog(
         hasHolo: v?.holo ?? false,
         hasReverse: v?.reverse ?? false,
         hasFirstEd: v?.firstEdition ?? false,
-        priceEur: eur(cm?.avg, cm?.trend),
-        priceReverseEur: eur(cm?.['avg-holo'], cm?.['trend-holo']),
+        priceEur: eur(cm?.trend, cm?.avg7, cm?.avg30),
+        priceReverseEur: eur(cm?.['trend-holo'], cm?.['avg7-holo'], cm?.['avg30-holo']),
         priceUpdatedAt: cm?.updated ? new Date(cm.updated) : null,
       }),
     }
