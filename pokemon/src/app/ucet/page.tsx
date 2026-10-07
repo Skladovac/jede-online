@@ -7,6 +7,7 @@ import { logout, resendParent, resendVerify } from '@/app/actions/auth'
 import { ActionForm } from '@/components/ActionForm'
 import { Checkbox, Field, Submit, inputCls } from '@/components/ui'
 import { COUNTRY_LABEL, REGIONS } from '@/lib/regions'
+import { PasswordInput } from '@/components/PasswordInput'
 
 export const metadata: Metadata = { title: 'Můj účet' }
 export const dynamic = 'force-dynamic'
@@ -112,7 +113,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <p className="mb-4 mt-1 text-sm text-slate-500">Smaže profil, sbírku i všechny údaje. Nejde vrátit.</p>
         <ActionForm action={deleteAccount} className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <Field label="Pro potvrzení zadej heslo">
-            <input name="password" type="password" required autoComplete="current-password" className={inputCls} />
+            <PasswordInput autoComplete="current-password" />
           </Field>
           <Submit variant="danger">Smazat účet</Submit>
         </ActionForm>
