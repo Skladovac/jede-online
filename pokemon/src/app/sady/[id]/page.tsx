@@ -109,6 +109,8 @@ export default async function SetPage({ params, searchParams }: Props) {
       <SetGrid
         loggedIn={!!user}
         officialCount={set.officialCount || set.cardCount}
+        setId={set.id}
+        baseCount={set.officialCount}
         initial={initial}
         cards={cards.map((c) => ({
           id: c.id,
