@@ -146,6 +146,40 @@ export async function deleteItem(_: FormState, fd: FormData): Promise<FormState>
   return { ok: 'Odebráno ze sbírky.' }
 }
 
+/** Číslo karty v základní sadě (1–oficiální počet); secret rare a TG/GG/SV podsady mají číslo vyšší nebo s písmeny. */
+function isBaseCard(localId: string, officialCount: number) {
+  return /^\d+$/.test(localId) && Number(localId) >= 1 && Number(localId) <= officialCount
+}
+
+/**
+ * „Vše, co nemám, mi chybí“: všechny karty sady, které uživatel nevlastní, dá mezi chybějící.
+ * onlyBase = jen základní karty (bez secret rare). Vrací id karet, které teď chybí.
+ */
+export async function markRestWanted(setId: string, onlyBase: boolean): Promise<string[]> {
+  const user = await requireUser()
+  const set = await prisma.cardSet.findUniqueOrThrow({
+    where: { id: setId },
+    include: { cards: { select: { id: true, localId: true } } },
+  })
+  const [owned, wanted] = await Promise.all([
+    prisma.collectionItem.findMany({ where: { userId: user.id, card: { setId } }, select: { cardId: true } }),
+    prisma.wantItem.findMany({ where: { userId: user.id, card: { setId } }, select: { cardId: true } }),
+  ])
+  const skip = new Set([...owned, ...wanted].map((x) => x.cardId))
+  const toAdd = set.cards
+    .filter((c) => !skip.has(c.id))
+    .filter((c) => !onlyBase || !set.officialCount || isBaseCard(c.localId, set.officialCount))
+  if (toAdd.length)
+    await prisma.wantItem.createMany({ data: toAdd.map((c) => ({ userId: user.id, cardId: c.id, variant: null })) })
+  return [...new Set([...wanted.map((w) => w.cardId), ...toAdd.map((c) => c.id)])]
+}
+
+/** Zruší všechny chybějící karty v sadě. */
+export async function clearSetWanted(setId: string): Promise<void> {
+  const user = await requireUser()
+  await prisma.wantItem.deleteMany({ where: { userId: user.id, card: { setId } } })
+}
+
 export async function toggleWantForm(_: FormState, fd: FormData): Promise<FormState> {
   await toggleWant(str(fd, 'cardId'))
   revalidatePath(`/karta/${str(fd, 'cardId')}`)

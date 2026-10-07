@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
-import { changeSpare, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
+import { changeSpare, clearSetWanted, markRestWanted, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
 
 export type GridCard = { id: string; localId: string; name: string; image: string | null; price: string | null }
 type Mode = 'view' | 'owned' | 'want' | 'spare'
@@ -23,11 +23,16 @@ export function SetGrid({
   initial,
   loggedIn,
   officialCount,
+  setId,
+  baseCount,
 }: {
   cards: GridCard[]
   initial: Record<string, QuickState>
   loggedIn: boolean
   officialCount: number
+  setId: string
+  // Počet karet základní sady (bez secret rare); 0 = sada ho nemá (promo).
+  baseCount: number
 }) {
   const [mode, setMode] = useState<Mode>('view')
   const [state, setState] = useState(initial)
@@ -50,6 +55,33 @@ export function SetGrid({
         setError('Uložení se nepovedlo. Jsi přihlášený?')
       }
     })
+  }
+
+  const [bulkBusy, setBulkBusy] = useState(false)
+  const hasSecret = baseCount > 0 && cards.length > baseCount
+
+  // Hromadně: co nemám, to mi chybí (nebo naopak vše zrušit).
+  async function bulk(kind: 'all' | 'base' | 'clear') {
+    if (kind === 'clear' && !confirm('Zrušit všechny chybějící karty v této sadě?')) return
+    setBulkBusy(true)
+    try {
+      const wantedIds = kind === 'clear' ? [] : await markRestWanted(setId, kind === 'base')
+      if (kind === 'clear') await clearSetWanted(setId)
+      const w = new Set(wantedIds)
+      setState((s) => {
+        const next = { ...s }
+        for (const c of cards) {
+          const cur = next[c.id] ?? { owned: 0, spare: 0, want: false }
+          next[c.id] = { ...cur, want: w.has(c.id) }
+        }
+        return next
+      })
+      setError(null)
+    } catch {
+      setError('Uložení se nepovedlo. Jsi přihlášený?')
+    } finally {
+      setBulkBusy(false)
+    }
   }
 
   function onCard(cardId: string) {
@@ -85,6 +117,33 @@ export function SetGrid({
             ))}
           </div>
           <p className="mt-2 text-xs text-slate-500">{MODES.find((m) => m.id === mode)!.hint}</p>
+          {(mode === 'want' || mode === 'owned') && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              <button
+                type="button"
+                disabled={bulkBusy}
+                onClick={() => bulk('all')}
+                className="rounded-full bg-orange-500 px-3 py-1 font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
+              >
+                {bulkBusy ? 'Ukládám…' : 'Vše, co nemám, mi chybí'}
+              </button>
+              {hasSecret && (
+                <button
+                  type="button"
+                  disabled={bulkBusy}
+                  onClick={() => bulk('base')}
+                  className="rounded-full border border-orange-400 px-3 py-1 font-semibold text-orange-700 disabled:opacity-50 dark:text-orange-300"
+                >
+                  Jen základní 1–{baseCount} (bez secret)
+                </button>
+              )}
+              {wantCount > 0 && (
+                <button type="button" disabled={bulkBusy} onClick={() => bulk('clear')} className="underline">
+                  Zrušit chybějící v sadě
+                </button>
+              )}
+            </div>
+          )}
           <div className="mt-2 flex items-center gap-3 text-xs">
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
               <div
