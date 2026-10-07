@@ -1,0 +1,42 @@
+# pokemon.jede.online — vlastní compose projekt na Hetzner CX23 (178.104.231.220).
+#
+# Připojuje se ke sdílené síti `jede_default` (postgres `db` ze stacku landingu)
+# a používá vlastní databázi `pokemon` s vlastním uživatelem.
+# Spouští se vždy přes deploy-pokemon.sh, který doplní --env-file.
+#
+# Pojistka 8: proměnná, která tu není VYPSANÁ, do kontejneru NEDOJDE.
+
+name: pokemon
+
+services:
+  pokemon:
+    build:
+      context: ..            # složka pokemon/ (tam je Dockerfile)
+      target: runner
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${POKEMON_DATABASE_URL}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    ports:
+      - "127.0.0.1:3400:3000"
+    networks: [jede]
+
+  # Migrační brána (pojistka 3). Stage `builder` má prisma CLI i migrace.
+  pokemon-migrate:
+    build:
+      context: ..
+      target: builder
+    profiles: ["tools"]
+    environment:
+      DATABASE_URL: ${POKEMON_DATABASE_URL}
+    command: ["npx", "prisma", "migrate", "status"]
+    networks: [jede]
+
+networks:
+  jede:
+    external: true
+    name: jede_default
