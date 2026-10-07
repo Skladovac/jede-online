@@ -169,6 +169,7 @@ export function SetGrid({
       <ul className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
         {cards.map((c) => {
           const s = state[c.id] ?? { owned: 0, spare: 0, want: false }
+          // Neoznačené karty v režimu úprav ztlumené; chybějící šedé jen v obrázku, okraj zůstává oranžový.
           const dim = loggedIn && mode !== 'view' && !s.owned && !s.want
           const tile = (
             <>
@@ -179,7 +180,7 @@ export function SetGrid({
               >
                 {c.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.image} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
+                  <img src={c.image} alt={c.name} loading="lazy" className={`h-full w-full object-cover ${s.want ? 'opacity-60 grayscale' : ''}`} />
                 ) : (
                   <div className="grid h-full place-items-center p-2 text-center text-xs text-slate-500">{c.name}</div>
                 )}
