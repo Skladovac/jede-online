@@ -124,7 +124,7 @@ export async function findCollectors(viewerId: string, place: Place, limit = 50)
   const previewCardIds = [...new Set([...previewKeys.values()].flat().map((k) => k.slice(2)))]
   const [userRows, ratings, cards] = await Promise.all([
     prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, nickname: true, city: true, region: true, country: true } }),
-    prisma.rating.groupBy({ by: ['toId', 'positive'], where: { toId: { in: ids } }, _count: true }),
+    prisma.rating.groupBy({ by: ['toId', 'positive'], where: { toId: { in: ids }, hiddenAt: null }, _count: true }),
     prisma.card.findMany({ where: { id: { in: previewCardIds } }, select: { id: true, name: true, imageUrl: true } }),
   ])
   const userById = new Map(userRows.map((u) => [u.id, u]))

@@ -55,4 +55,15 @@ export async function nicknameProblem(nickname: string) {
   return words.find((w) => n.includes(w)) ?? null
 }
 
+/** Volný text (komentář u hodnocení): kontroluje se každé slovo zvlášť, ať nevznikají falešné shody přes mezery. */
+export async function textProblem(text: string) {
+  const words = await bannedWords()
+  for (const token of text.split(/\s+/)) {
+    const n = normalizeNick(token)
+    const hit = n && words.find((w) => n.includes(w))
+    if (hit) return hit
+  }
+  return null
+}
+
 export const DEFAULT_BANNED_WORDS = DEFAULT_WORDS

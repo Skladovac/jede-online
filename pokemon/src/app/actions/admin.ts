@@ -59,6 +59,16 @@ export async function adminHideOffer(_: FormState, fd: FormData): Promise<FormSt
   return { ok: hiddenAt ? 'Nabídka skryta.' : 'Nabídka znovu zobrazena.' }
 }
 
+/** Skrytí / zobrazení hodnocení (nevhodný komentář, podvodné hodnocení). */
+export async function adminHideRating(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin()
+  const hiddenAt = str(fd, 'hide') === '1' ? new Date() : null
+  const res = await prisma.rating.updateMany({ where: { id: str(fd, 'ratingId') }, data: { hiddenAt } })
+  if (!res.count) return { error: 'Hodnocení nenalezeno.' }
+  revalidatePath('/admin', 'layout')
+  return { ok: hiddenAt ? 'Hodnocení skryto.' : 'Hodnocení znovu zobrazeno.' }
+}
+
 export async function adminResolveReport(_: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin()
   const resolved = str(fd, 'resolved') === '1'

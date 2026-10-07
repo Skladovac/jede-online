@@ -19,7 +19,7 @@ export async function SiteHeader() {
         <Link href="/" className="flex shrink-0 items-center gap-2 font-bold tracking-tight">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" width={32} height={32} className="h-8 w-8" />
-          <span className="hidden sm:inline">Pokémon karty</span>
+          <span className="hidden sm:inline">pokemon.jede.online</span>
         </Link>
         {/* Na širší obrazovce je hledání v řádku, na mobilu pod ním. */}
         <div className="hidden max-w-md flex-1 md:block">
