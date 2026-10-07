@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import type { CollectionItem, ProductItem, RatingTag, User } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser, isLimited } from '@/lib/auth'
-import { APP_URL, CONTACT_EMAIL, esc, notify } from '@/lib/email'
+import { ADMIN_EMAIL, APP_URL, esc, notify } from '@/lib/email'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { str, type FormState } from '@/lib/validation'
 
@@ -351,7 +351,7 @@ export async function reportUser(_: FormState, fd: FormData): Promise<FormState>
   if (reason.length < 10 || reason.length > 500) return { error: 'Popiš prosím, co se stalo (10–500 znaků).' }
   await prisma.report.create({ data: { fromId: user.id, againstId: against.id, reason } })
   await notify(
-    CONTACT_EMAIL,
+    ADMIN_EMAIL,
     [],
     `Nahlášení uživatele ${against.nickname}`,
     [`Nahlásil(a): ${esc(user.nickname)} (${esc(user.email)})`, `Kdo: ${esc(against.nickname)} (${esc(against.email)})`, esc(reason)],

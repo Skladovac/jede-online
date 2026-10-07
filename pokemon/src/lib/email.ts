@@ -2,6 +2,9 @@ import 'server-only'
 
 // Kontakt webu: přeposílá se přes ImprovMX do Gmailu správce.
 export const CONTACT_EMAIL = 'pokemon@jede.online'
+// Kam chodí nahlášení uživatelů. Přímo do schránky správce (ADMIN_EMAIL v env na serveru, mimo git),
+// protože zprávy z Brevo na pokemon@ může ImprovMX odmítnout kvůli blacklistům sdílených IP.
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || CONTACT_EMAIL
 export const APP_URL = process.env.APP_URL ?? 'https://pokemon.jede.online'
 const FROM = { name: 'Pokémon karty', email: 'noreply@jede.online' }
 
