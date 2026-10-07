@@ -7,6 +7,11 @@ export function SiteFooter() {
           Pokémon Company). Data katalogu: TCGdex.
         </p>
         <p>
+          <a href="/soukromi" className="underline">
+            Pravidla a ochrana osobních údajů
+          </a>
+        </p>
+        <p>
           Designed by{' '}
           <a href="https://jede.online" className="font-semibold text-[#C9A961] hover:text-[#D4AF37]">
             jede.online

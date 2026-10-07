@@ -93,6 +93,8 @@ model User {
   aukroUrl      String?
   linksApprovedAt DateTime? // u nezletilých schvaluje rodič
 
+  acceptedTermsAt DateTime?
+
   isAdmin     Boolean  @default(false)
   bannedAt    DateTime?
   createdAt   DateTime @default(now())
@@ -106,8 +108,38 @@ model User {
   ratingsGot     Rating[]       @relation("RatingTo")
   reportsMade    Report[]       @relation("ReportFrom")
   reportsAgainst Report[]       @relation("ReportAgainst")
+  sessions       Session[]
+  emailTokens    EmailToken[]
 
   @@index([country, region, city])
+}
+
+// Přihlášení: v cookie je náhodný token, v DB jen jeho SHA-256 (únik DB ≠ převzetí relací).
+model Session {
+  id        String   @id // sha256(token)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum EmailTokenKind {
+  VERIFY // potvrzení vlastního e-mailu
+  RESET // zapomenuté heslo
+}
+
+model EmailToken {
+  id        String         @id // sha256(token)
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      EmailTokenKind
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime       @default(now())
+
+  @@index([userId, kind])
 }
 
 // ── Sbírka ──────────────────────────────────────────────────────────
