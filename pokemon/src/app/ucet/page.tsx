@@ -105,6 +105,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             </Field>
           )}
 
+          <Checkbox name="matchEmails" defaultChecked={user.matchEmails}>
+            Pošli mi jednou denně e-mail, když někdo nabídne kartu, která mi chybí.
+          </Checkbox>
+
           {user.isMinor ? (
             <p className="text-sm text-slate-500">
               Dohledatelnost přes Google: {user.indexable ? 'zapnutá' : 'vypnutá'} (nastavuje rodič).

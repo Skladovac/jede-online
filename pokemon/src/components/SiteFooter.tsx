@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getCurrentUser } from '@/lib/auth'
 import { BugReportForm } from '@/components/BugReportForm'
+import { InstallApp } from '@/components/InstallApp'
 
 export async function SiteFooter() {
   const user = await getCurrentUser()
@@ -21,6 +22,8 @@ export async function SiteFooter() {
           </a>
           <span>·</span>
           <BugReportForm loggedIn={!!user} />
+          <span>·</span>
+          <InstallApp />
           {user?.isAdmin && (
             <>
               <span>·</span>

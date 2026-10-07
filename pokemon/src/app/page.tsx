@@ -4,6 +4,7 @@ import { SetTile } from '@/components/SetTile'
 import { getCurrentUser } from '@/lib/auth'
 import { findCollectors, parsePlace } from '@/lib/matches'
 import { CollectorList } from '@/components/CollectorList'
+import { LatestOffers } from '@/components/LatestOffers'
 
 export const dynamic = 'force-dynamic'
 
@@ -60,6 +61,8 @@ export default async function Home() {
           )}
         </section>
       )}
+
+      <LatestOffers />
 
       <section>
         <div className="mb-4 flex items-baseline justify-between">
