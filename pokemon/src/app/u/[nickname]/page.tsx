@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { isLimited } from '@/lib/auth'
 import { COUNTRY_LABEL } from '@/lib/regions'
+import { collectionOverview } from '@/lib/collection-view'
+import { CollectionOverview } from '@/components/CollectionOverview'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,7 +37,7 @@ export default async function ProfilePage({ params }: Props) {
     : []
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
+    <main className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex items-center gap-4">
         <span className="grid h-16 w-16 place-items-center rounded-full bg-yellow-400 text-2xl font-black text-slate-900">
           {user.nickname.slice(0, 1).toUpperCase()}
@@ -44,7 +46,7 @@ export default async function ProfilePage({ params }: Props) {
           <h1 className="text-3xl font-black tracking-tight">{user.nickname}</h1>
           <p className="text-sm text-slate-500">
             {[user.city, user.region, COUNTRY_LABEL[user.country]].filter(Boolean).join(', ')} · členem od{' '}
-            {user.createdAt.toLocaleDateString('cs-CZ', { month: 'long', year: 'numeric' })}
+            {user.createdAt.toLocaleDateString('cs-CZ', { month: 'numeric', year: 'numeric' })}
           </p>
         </div>
       </div>
@@ -65,9 +67,9 @@ export default async function ProfilePage({ params }: Props) {
         </div>
       )}
 
-      <p className="mt-10 rounded-2xl border border-dashed border-slate-300 p-6 text-center text-slate-500 dark:border-slate-700">
-        Sbírka, nabídky a hodnocení se tu objeví v další verzi.
-      </p>
+      <div className="mt-10">
+        <CollectionOverview data={await collectionOverview(user.id)} own={false} />
+      </div>
     </main>
   )
 }

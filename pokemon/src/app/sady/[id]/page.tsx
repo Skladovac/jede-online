@@ -2,8 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { getCurrentUser } from '@/lib/auth'
 import { byLocalId, cardImage, formatEur, setLogo } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
+import { SetGrid } from '@/components/SetGrid'
+import type { QuickState } from '@/app/actions/collection'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function SetPage({ params }: Props) {
-  const set = await getSet((await params).id)
+  const [set, user] = await Promise.all([getSet((await params).id), getCurrentUser()])
   if (!set) notFound()
   const cards = [...set.cards].sort(byLocalId)
   const logo = setLogo(set.logoUrl)
@@ -32,6 +35,22 @@ export default async function SetPage({ params }: Props) {
     `${set.officialCount} karet (${set.cardCount} včetně secret)`,
     set.releaseDate?.toLocaleDateString('cs-CZ'),
   ]
+
+  // Stav sbírky přihlášeného uživatele pro karty této sady.
+  const initial: Record<string, QuickState> = {}
+  if (user) {
+    const ids = cards.map((c) => c.id)
+    const [items, wants] = await Promise.all([
+      prisma.collectionItem.findMany({ where: { userId: user.id, cardId: { in: ids } } }),
+      prisma.wantItem.findMany({ where: { userId: user.id, cardId: { in: ids } }, select: { cardId: true } }),
+    ])
+    for (const i of items) {
+      const s = (initial[i.cardId] ??= { owned: 0, spare: 0, want: false })
+      s.owned += i.quantity
+      s.spare += i.spareQty
+    }
+    for (const w of wants) (initial[w.cardId] ??= { owned: 0, spare: 0, want: false }).want = true
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -49,30 +68,18 @@ export default async function SetPage({ params }: Props) {
         </div>
       </header>
 
-      <ul className="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
-        {cards.map((c) => {
-          const img = cardImage(c.imageUrl)
-          const price = formatEur(c.priceEur)
-          return (
-            <li key={c.id}>
-              <Link href={`/karta/${encodeURIComponent(c.id)}`} className="group block">
-                <div className="aspect-[63/88] overflow-hidden rounded-lg bg-slate-200 shadow-sm transition group-hover:-translate-y-0.5 group-hover:shadow-md dark:bg-slate-800">
-                  {img ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={img} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="grid h-full place-items-center p-2 text-center text-xs text-slate-500">{c.name}</div>
-                  )}
-                </div>
-                <p className="mt-1.5 truncate text-xs font-medium">
-                  <span className="text-slate-400">{c.localId}</span> {c.name}
-                </p>
-                {price && <p className="text-xs text-slate-500">≈ {price}</p>}
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
+      <SetGrid
+        loggedIn={!!user}
+        officialCount={set.officialCount}
+        initial={initial}
+        cards={cards.map((c) => ({
+          id: c.id,
+          localId: c.localId,
+          name: c.name,
+          image: cardImage(c.imageUrl),
+          price: formatEur(c.priceEur),
+        }))}
+      />
       <PriceNote className="mt-8" />
     </main>
   )
