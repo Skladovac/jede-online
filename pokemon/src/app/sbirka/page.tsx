@@ -30,7 +30,7 @@ export default async function MyCollectionPage() {
             <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-orange-500 text-sm text-white">
               🔗
             </span>
-            Pochlub se, co sháníš
+            Sdílej, co sháníš
           </p>
           <p className="mb-3 text-sm text-orange-900/80 dark:text-orange-200/80">
             Zkopíruj odkaz na seznam karet, které ti chybí, a vlož ho třeba na Facebook nebo do skupiny sběratelů.
