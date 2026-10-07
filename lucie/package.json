@@ -1,0 +1,7 @@
+{
+  "name": "lucie-masaze-vsetin",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "node src/build.mjs", "start": "node src/serve.mjs", "test": "node --test tests/site.test.mjs", "poukaz": "node src/poukaz.mjs" },
+  "engines": { "node": ">=20" }
+}

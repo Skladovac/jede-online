@@ -1,0 +1,240 @@
+// pokemon.jede.online — datový model (fáze 0, návrh pro celé MVP).
+// Katalog (CardSet, Card) se plní importem z TCGdex, zbytek tvoří uživatelé.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ── Katalog ─────────────────────────────────────────────────────────
+
+model CardSet {
+  id          String    @id // id ze zdroje katalogu, např. "sv01"
+  name        String
+  series      String // éra, např. "Scarlet & Violet"
+  code        String? // zkratka natištěná na kartě, např. "SVI"
+  releaseDate DateTime?
+  cardCount   Int
+  logoUrl     String?
+  symbolUrl   String?
+  cards       Card[]
+  syncedAt    DateTime  @updatedAt
+
+  @@index([series])
+  @@index([code])
+}
+
+model Card {
+  id             String   @id // např. "sv01-045"
+  setId          String
+  set            CardSet  @relation(fields: [setId], references: [id])
+  localId        String // číslo v sadě, např. "045" (může obsahovat písmena, "TG01")
+  name           String
+  rarity         String?
+  imageUrl       String?
+  // Jaké varianty karta v tisku existuje (z katalogu).
+  hasNormal      Boolean  @default(true)
+  hasHolo        Boolean  @default(false)
+  hasReverse     Boolean  @default(false)
+  hasFirstEd     Boolean  @default(false)
+  // Orientační cena z Cardmarketu v EUR (průměr), aktualizuje noční import.
+  priceEur       Decimal? @db.Decimal(10, 2)
+  priceUpdatedAt DateTime?
+
+  items     CollectionItem[]
+  wants     WantItem[]
+  syncedAt  DateTime @updatedAt
+
+  @@unique([setId, localId])
+  @@index([name])
+}
+
+// ── Uživatelé ───────────────────────────────────────────────────────
+
+enum Country {
+  CZ
+  SK
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  emailVerifiedAt DateTime?
+  nickname     String   @unique
+  birthYear    Int
+  birthMonth   Int
+  country      Country
+  region       String? // kraj
+  city         String?
+
+  // Rodičovský souhlas (CZ pod 15, SK pod 16). Do schválení je účet omezený.
+  isMinor             Boolean   @default(false)
+  parentEmail         String?
+  parentConsentAt     DateTime?
+  parentConsentName   String?
+  parentToken         String?   @unique // trvalý odkaz rodiče na správu účtu
+
+  // Profil vidí kdokoliv; indexace Googlem jen po výslovném souhlasu.
+  indexable     Boolean @default(false)
+  facebookUrl   String?
+  instagramUrl  String?
+  aukroUrl      String?
+  linksApprovedAt DateTime? // u nezletilých schvaluje rodič
+
+  isAdmin     Boolean  @default(false)
+  bannedAt    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items          CollectionItem[]
+  wants          WantItem[]
+  sentRequests   TradeRequest[] @relation("RequestFrom")
+  gotRequests    TradeRequest[] @relation("RequestTo")
+  ratingsGiven   Rating[]       @relation("RatingFrom")
+  ratingsGot     Rating[]       @relation("RatingTo")
+  reportsMade    Report[]       @relation("ReportFrom")
+  reportsAgainst Report[]       @relation("ReportAgainst")
+
+  @@index([country, region, city])
+}
+
+// ── Sbírka ──────────────────────────────────────────────────────────
+
+enum Variant {
+  NORMAL
+  HOLO
+  REVERSE
+  FIRST_EDITION
+}
+
+enum Condition {
+  MINT
+  LIGHT_PLAYED
+  DAMAGED
+}
+
+enum OfferType {
+  TRADE // vyměním
+  SELL // prodám
+  GIFT // daruji za poštovné
+}
+
+// Jeden řádek = konkrétní kusy jedné karty v jedné variantě/stavu/jazyce.
+model CollectionItem {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId     String
+  card       Card      @relation(fields: [cardId], references: [id])
+  variant    Variant   @default(NORMAL)
+  condition  Condition @default(MINT)
+  language   String    @default("en")
+  note       String?   @db.VarChar(30)
+  quantity   Int       @default(1)
+  // Kolik z toho je "navíc" a nabízí se.
+  spareQty   Int       @default(0)
+  offerType  OfferType?
+  priceCzk   Int?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  requestItems TradeRequestItem[]
+
+  @@unique([userId, cardId, variant, condition, language])
+  @@index([cardId, spareQty])
+}
+
+// Chybějící karta (wishlist).
+model WantItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId    String
+  card      Card     @relation(fields: [cardId], references: [id])
+  variant   Variant? // null = je jedno jaká
+  createdAt DateTime @default(now())
+
+  @@unique([userId, cardId, variant])
+  @@index([cardId])
+}
+
+// ── Poptávky a důvěra ───────────────────────────────────────────────
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED // kontakty zpřístupněny
+  DECLINED
+  CANCELLED
+  COMPLETED // obě strany potvrdily dokončení
+}
+
+model TradeRequest {
+  id          String        @id @default(cuid())
+  fromId      String
+  from        User          @relation("RequestFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  toId        String
+  to          User          @relation("RequestTo", fields: [toId], references: [id], onDelete: Cascade)
+  status      RequestStatus @default(PENDING)
+  fromDoneAt  DateTime?
+  toDoneAt    DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  items   TradeRequestItem[]
+  ratings Rating[]
+
+  @@index([toId, status])
+  @@index([fromId, status])
+}
+
+model TradeRequestItem {
+  id               String         @id @default(cuid())
+  requestId        String
+  request          TradeRequest   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  collectionItemId String
+  collectionItem   CollectionItem @relation(fields: [collectionItemId], references: [id])
+  quantity         Int            @default(1)
+}
+
+enum RatingTag {
+  FAST_SHIPPING
+  AS_DESCRIBED
+  FRIENDLY
+  SLOW
+  NOT_AS_DESCRIBED
+  NOT_SENT
+}
+
+model Rating {
+  id        String       @id @default(cuid())
+  requestId String
+  request   TradeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  fromId    String
+  from      User         @relation("RatingFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  toId      String
+  to        User         @relation("RatingTo", fields: [toId], references: [id], onDelete: Cascade)
+  positive  Boolean
+  tag       RatingTag?
+  createdAt DateTime     @default(now())
+
+  @@unique([requestId, fromId])
+  @@index([toId])
+}
+
+model Report {
+  id         String    @id @default(cuid())
+  fromId     String
+  from       User      @relation("ReportFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  againstId  String
+  against    User      @relation("ReportAgainst", fields: [againstId], references: [id], onDelete: Cascade)
+  reason     String    @db.VarChar(500)
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+
+  @@index([resolvedAt])
+}
