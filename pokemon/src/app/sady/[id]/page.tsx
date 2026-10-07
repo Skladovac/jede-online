@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { setProgress } from '@/lib/progress'
+import { ProgressBars } from '@/components/ProgressBars'
 import { byLocalId, cardImage, formatEur, setLogo } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
 import { SetGrid } from '@/components/SetGrid'
@@ -31,6 +33,8 @@ export default async function SetPage({ params, searchParams }: Props) {
   await ensureEurCzk() // kurz ČNB pro korunové částky u cen
   const [set, user] = await Promise.all([getSet((await params).id), getCurrentUser()])
   if (!set) notFound()
+  // Postup přihlášeného (base / complete / master); po změně v mřížce se obnoví při dalším načtení stránky.
+  const progress = user ? (await setProgress(user.id, [set.id])).get(set.id) : null
   const tab = (await searchParams)?.tab === 'produkty' ? 'produkty' : 'karty'
   const products = await prisma.product.findMany({
     where: { setId: set.id },
@@ -79,6 +83,11 @@ export default async function SetPage({ params, searchParams }: Props) {
           <p className="mt-1 text-sm text-slate-500">{meta.filter(Boolean).join(' · ')}</p>
         </div>
       </header>
+      {progress && (
+        <div className="mt-5">
+          <ProgressBars p={progress} />
+        </div>
+      )}
 
       <nav className="mt-6 flex gap-2 border-b border-slate-200 dark:border-slate-800">
         {[

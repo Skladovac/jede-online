@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Overview } from '@/lib/collection-view'
 import { cardImage } from '@/lib/format'
 import { ProductTile } from '@/components/ProductTile'
+import { ProgressBars } from '@/components/ProgressBars'
 
 const OFFER = { TRADE: 'vyměním', SELL: 'prodám', GIFT: 'daruji za poštovné' } as const
 
@@ -31,6 +32,15 @@ function CardStrip({ cards, extra }: { cards: MiniCard[]; extra?: (c: MiniCard, 
         )
       })}
     </ul>
+  )
+}
+
+/** Štítek poptávky „chci koupit“. */
+export function BuyBadge({ price }: { price: number | null }) {
+  return (
+    <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+      💰 {price ? `koupím do ${price.toLocaleString('cs-CZ')} Kč` : 'koupím'}
+    </p>
   )
 }
 
@@ -116,7 +126,11 @@ export function CollectionOverview({ data, own }: { data: Overview; own: boolean
       <section>
         <h2 className="mb-3 text-xl font-bold">Chybí ({wanted.length})</h2>
         {wanted.length ? (
-          <BySet items={wanted} card={(c) => c} />
+          <BySet
+            items={wanted}
+            card={(c) => c}
+            extra={(c) => c.buy && <BuyBadge price={c.maxPriceCzk} />}
+          />
         ) : (
           <p className="text-sm text-slate-500">
             {own ? 'Zatím nic. V sadě přepni na „Chybí“ a označ karty, které sháníš.' : 'Zatím nic.'}
@@ -165,7 +179,7 @@ export function CollectionOverview({ data, own }: { data: Overview; own: boolean
               <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
                 {productWants.map((p) => (
                   <li key={p.id}>
-                    <ProductTile p={p} />
+                    <ProductTile p={p} extra={p.buy ? <BuyBadge price={p.maxPriceCzk} /> : undefined} />
                   </li>
                 ))}
               </ul>
@@ -178,21 +192,21 @@ export function CollectionOverview({ data, own }: { data: Overview; own: boolean
         <h2 className="mb-3 text-xl font-bold">Sady</h2>
         {sets.length ? (
           <ul className="space-y-2">
-            {sets.map(({ set, owned }) => (
+            {sets.map(({ set, owned, progress }) => (
               <li key={set.id}>
                 <Link
                   href={`/sady/${encodeURIComponent(set.id)}`}
                   className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3 hover:border-yellow-400 dark:border-slate-800 dark:bg-slate-900"
                 >
-                  <span className="min-w-0 flex-1 truncate font-medium">{set.name}</span>
-                  <span className="hidden h-2 w-40 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800 sm:block">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">{set.name}</span>
+                    <ProgressBars p={progress} compact />
+                  </span>
+                  <span className="hidden h-2 w-32 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800 sm:block" title="Base">
                     <span
                       className="block h-full rounded-full bg-green-500"
-                      style={{ width: `${Math.min(100, (owned / Math.max(set.officialCount, 1)) * 100)}%` }}
+                      style={{ width: `${progress.base ? Math.min(100, (progress.base.owned / Math.max(progress.base.total, 1)) * 100) : Math.min(100, (owned / Math.max(progress.complete.total, 1)) * 100)}%` }}
                     />
-                  </span>
-                  <span className="shrink-0 text-sm text-slate-500">
-                    {owned}/{set.officialCount}
                   </span>
                 </Link>
               </li>

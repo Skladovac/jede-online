@@ -5,6 +5,7 @@ import { toggleWantForm } from '@/app/actions/collection'
 import { ActionForm } from '@/components/ActionForm'
 import { Submit } from '@/components/ui'
 import { ItemForm } from '@/components/ItemForm'
+import { CardBuyForm } from '@/components/BuyForm'
 
 type CardVariants = { id: string; hasNormal: boolean; hasHolo: boolean; hasReverse: boolean; hasFirstEd: boolean }
 
@@ -45,6 +46,8 @@ export async function MyCardPanel({ card }: { card: CardVariants }) {
           </ActionForm>
         )}
       </div>
+      {/* „Chci koupit“: rozšíření chybějící karty (karta se tím přidá mezi chybějící). */}
+      {!items.length && <CardBuyForm cardId={card.id} variants={variants} want={want} />}
       {items.map((i) => (
         <ItemForm key={i.id} cardId={card.id} variants={variants} item={i} />
       ))}

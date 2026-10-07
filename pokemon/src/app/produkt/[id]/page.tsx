@@ -6,6 +6,8 @@ import { getCurrentUser } from '@/lib/auth'
 import { formatEur, productImage, setLogo } from '@/lib/format'
 import { KIND_LABEL } from '@/lib/products'
 import { toggleProductWant } from '@/app/actions/products'
+import { ProductBuyForm } from '@/components/BuyForm'
+import { ProductBuyers } from '@/components/Buyers'
 import { PriceNote } from '@/components/PriceNote'
 import { PriceStatsTable } from '@/components/PriceStatsTable'
 import { eurCzkDate } from '@/lib/fx'
@@ -131,6 +133,7 @@ export default async function ProductPage({ params }: Props) {
               </ActionForm>
             )}
           </div>
+          {!mine.length && <ProductBuyForm productId={p.id} want={want} />}
           {mine.map((i) => (
             <ProductItemForm key={i.id} productId={p.id} item={i} />
           ))}
@@ -154,6 +157,8 @@ export default async function ProductPage({ params }: Props) {
           a přidej si produkt do sbírky, mezi hledané nebo ho nabídni.
         </p>
       )}
+
+      <ProductBuyers productId={p.id} />
 
       <section className="mt-10">
         <h2 className="text-xl font-bold">Kdo ho nabízí</h2>

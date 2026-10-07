@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser, isLimited } from '@/lib/auth'
 import { byLocalId, cardImage } from '@/lib/format'
 import { ProductTile } from '@/components/ProductTile'
+import { BuyBadge } from '@/components/CollectionOverview'
 import { ensureEurCzk } from '@/lib/fx'
 
 export const dynamic = 'force-dynamic'
@@ -35,7 +36,9 @@ async function load(nickname: string) {
     .map((e) => ({ ...e, cards: e.cards.sort(byLocalId) }))
     .sort((a, b) => (b.set.releaseDate?.getTime() ?? 0) - (a.set.releaseDate?.getTime() ?? 0))
   const cardCount = sets.reduce((s, e) => s + e.cards.length, 0)
-  return { user, sets, cardCount, products: productWants.map((w) => w.product) }
+  // Poptávky „chci koupit“: cardId → nejvyšší cena (null = cena dohodou).
+  const buy = new Map(wants.filter((w) => w.buy).map((w) => [w.cardId, w.maxPriceCzk]))
+  return { user, sets, cardCount, buy, products: productWants.map((w) => ({ ...w.product, buy: w.buy, maxPriceCzk: w.maxPriceCzk })) }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -112,6 +115,7 @@ export default async function WantedPage({ params }: Props) {
                     </div>
                     <p className="mt-1 truncate text-xs font-medium">{c.name}</p>
                     <p className="text-xs text-slate-500">{c.localId}</p>
+                    {d.buy.has(c.id) && <BuyBadge price={d.buy.get(c.id) ?? null} />}
                   </Link>
                 </li>
               )
@@ -126,7 +130,7 @@ export default async function WantedPage({ params }: Props) {
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
             {d.products.map((p) => (
               <li key={p.id}>
-                <ProductTile p={p} />
+                <ProductTile p={p} extra={p.buy ? <BuyBadge price={p.maxPriceCzk} /> : undefined} />
               </li>
             ))}
           </ul>
