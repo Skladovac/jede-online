@@ -24,6 +24,7 @@ type Props = { params: Promise<{ id: string }> }
 
 async function getProduct(id: string) {
   const n = Number(id)
+  if (!Number.isInteger(n) || n < 1 || n > 2_147_483_647) return null
   return Number.isInteger(n) ? prisma.product.findUnique({ where: { id: n }, include: { set: true } }) : null
 }
 

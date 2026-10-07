@@ -18,6 +18,8 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      # Data na webu (toLocaleDateString) v českém čase, ne v UTC.
+      TZ: Europe/Prague
       DATABASE_URL: ${POKEMON_DATABASE_URL}
       BREVO_API_KEY: ${BREVO_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}

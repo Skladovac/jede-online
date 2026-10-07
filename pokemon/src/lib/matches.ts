@@ -1,5 +1,6 @@
 import 'server-only'
 import type { Country, Prisma } from '@prisma/client'
+import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 
 /**
@@ -124,7 +125,7 @@ export async function findCollectors(viewerId: string, place: Place, limit = 50)
   const previewCardIds = [...new Set([...previewKeys.values()].flat().map((k) => k.slice(2)))]
   const [userRows, ratings, cards] = await Promise.all([
     prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, nickname: true, city: true, region: true, country: true } }),
-    prisma.rating.groupBy({ by: ['toId', 'positive'], where: { toId: { in: ids }, hiddenAt: null }, _count: true }),
+    prisma.rating.groupBy({ by: ['toId', 'positive'], where: { toId: { in: ids }, hiddenAt: null, from: { bannedAt: null } }, _count: true }),
     prisma.card.findMany({ where: { id: { in: previewCardIds } }, select: { id: true, name: true, imageUrl: true } }),
   ])
   const userById = new Map(userRows.map((u) => [u.id, u]))
@@ -185,4 +186,14 @@ export async function pairMatches(viewerId: string, otherId: string) {
     theyWantCards: [...new Map(theyWantCards.map((w) => [w.cardId, w.card])).values()],
     theyWantProducts: theyWantProducts.map((w) => w.product),
   }
+}
+
+/**
+ * Hlavní stránka: stejný výpočet, ale s krátkou keší (2 min), ať se při každém načtení
+ * nepočítají shody přes celou databázi. Stránka /sberatele počítá vždy čerstvě.
+ */
+export function findCollectorsCached(viewerId: string, place: Place, limit: number) {
+  return unstable_cache(() => findCollectors(viewerId, place, limit), ['collectors', viewerId, JSON.stringify(place), String(limit)], {
+    revalidate: 120,
+  })()
 }

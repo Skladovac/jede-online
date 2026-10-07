@@ -29,7 +29,14 @@ export async function adminBan(_: FormState, fd: FormData): Promise<FormState> {
   const ban = str(fd, 'ban') === '1'
   await prisma.user.update({ where: { id }, data: { bannedAt: ban ? new Date() : null } })
   // Zablokovaný se okamžitě odhlásí.
-  if (ban) await prisma.session.deleteMany({ where: { userId: id } })
+  if (ban) {
+    await prisma.session.deleteMany({ where: { userId: id } })
+    // Otevřené poptávky zablokovaného se zruší (nikdo mu už nesmí poslat kontakt).
+    await prisma.tradeRequest.updateMany({
+      where: { OR: [{ fromId: id }, { toId: id }], status: { in: ['DRAFT', 'PENDING', 'ACCEPTED'] } },
+      data: { status: 'CANCELLED' },
+    })
+  }
   revalidatePath(`/admin/uzivatele/${id}`)
   return { ok: ban ? 'Účet zablokován a odhlášen.' : 'Účet odblokován.' }
 }

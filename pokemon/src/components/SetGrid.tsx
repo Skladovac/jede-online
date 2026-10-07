@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
-import { changeSpare, clearSetWanted, markRestWanted, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
+import { useRef, useState, useTransition } from 'react'
+import { changeSpare, clearSetWanted, markByNumbers, markRestWanted, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
 
 export type GridCard = { id: string; localId: string; name: string; image: string | null; price: string | null }
 type Mode = 'view' | 'owned' | 'want' | 'spare'
@@ -43,16 +43,29 @@ export function SetGrid({
   const wantCount = cards.filter((c) => state[c.id]?.want).length
   const spareCount = cards.reduce((s, c) => s + (state[c.id]?.spare ?? 0), 0)
 
+  // Karty, u kterých se právě ukládá — další klepnutí se ignoruje (dvojklik by poslal dvě protichůdné změny).
+  const inFlight = useRef(new Set<string>())
+
   function apply(cardId: string, optimistic: QuickState, call: () => Promise<QuickState>) {
+    if (inFlight.current.has(cardId)) return
+    inFlight.current.add(cardId)
+    const prev = state[cardId] ?? { owned: 0, spare: 0, want: false }
     setState((s) => ({ ...s, [cardId]: optimistic }))
     startTransition(async () => {
       try {
         const real = await call()
-        setState((s) => ({ ...s, [cardId]: real }))
-        setError(null)
+        if (real.error) {
+          setState((s) => ({ ...s, [cardId]: prev }))
+          setError(real.error)
+        } else {
+          setState((s) => ({ ...s, [cardId]: real }))
+          setError(null)
+        }
       } catch {
-        setState((s) => ({ ...s, [cardId]: initial[cardId] ?? { owned: 0, spare: 0, want: false } }))
+        setState((s) => ({ ...s, [cardId]: prev }))
         setError('Uložení se nepovedlo. Jsi přihlášený?')
+      } finally {
+        inFlight.current.delete(cardId)
       }
     })
   }
@@ -61,6 +74,35 @@ export function SetGrid({
   const hasSecret = baseCount > 0 && cards.length > baseCount
 
   // Hromadně: co nemám, to mi chybí (nebo naopak vše zrušit).
+  // Rychlé označení podle čísel („1, 5, 23-30, TG05“) v režimu Mám / Chybí.
+  const [numbers, setNumbers] = useState('')
+  const [numbersInfo, setNumbersInfo] = useState<string | null>(null)
+  async function byNumbers() {
+    if (!numbers.trim() || (mode !== 'owned' && mode !== 'want')) return
+    setBulkBusy(true)
+    try {
+      const res = await markByNumbers(setId, numbers, mode)
+      const hit = new Set(res.ids)
+      setState((s) => {
+        const next = { ...s }
+        for (const id of hit) {
+          const cur = next[id] ?? { owned: 0, spare: 0, want: false }
+          next[id] = mode === 'owned' ? { ...cur, owned: Math.max(cur.owned, 1), want: false } : { ...cur, want: cur.owned ? cur.want : true }
+        }
+        return next
+      })
+      setNumbersInfo(
+        `Označeno: ${res.ids.length} ${res.ids.length === 1 ? 'karta' : res.ids.length >= 2 && res.ids.length <= 4 ? 'karty' : 'karet'}.` + (res.notFound.length ? ` Nenalezeno: ${res.notFound.slice(0, 10).join(', ')}.` : ''),
+      )
+      setNumbers('')
+      setError(null)
+    } catch {
+      setError('Uložení se nepovedlo. Jsi přihlášený?')
+    } finally {
+      setBulkBusy(false)
+    }
+  }
+
   async function bulk(kind: 'all' | 'base' | 'clear') {
     if (kind === 'clear' && !confirm('Zrušit všechny chybějící karty v této sadě?')) return
     setBulkBusy(true)
@@ -143,6 +185,29 @@ export function SetGrid({
                 </button>
               )}
             </div>
+          )}
+          {(mode === 'want' || mode === 'owned') && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                byNumbers()
+              }}
+              className="mt-2 flex flex-wrap items-center gap-2 text-xs"
+            >
+              <input
+                value={numbers}
+                onChange={(e) => setNumbers(e.target.value)}
+                placeholder="Čísla karet: 1, 5, 23-30, 145"
+                className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+              />
+              <button
+                disabled={bulkBusy || !numbers.trim()}
+                className="rounded-full bg-slate-900 px-3 py-1.5 font-semibold text-white disabled:opacity-50 dark:bg-yellow-400 dark:text-slate-900"
+              >
+                {mode === 'owned' ? 'Označit jako Mám' : 'Označit jako Chybí'}
+              </button>
+              {numbersInfo && <span className="w-full text-slate-500">{numbersInfo}</span>}
+            </form>
           )}
           <div className="mt-2 flex items-center gap-3 text-xs">
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">

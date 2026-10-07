@@ -61,6 +61,10 @@ export default async function RequestDetail({
         >
           Něco nesedí? Nahlásit {other.nickname}
         </Link>
+        <span className="text-slate-400"> · </span>
+        <Link href="/bezpecny-obchod" className="font-medium text-yellow-700 hover:underline dark:text-yellow-400">
+          🛡️ Jak obchodovat bezpečně
+        </Link>
       </p>
       {odeslano && (
         <p className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-900 dark:bg-green-500/10 dark:text-green-200">
@@ -80,7 +84,7 @@ export default async function RequestDetail({
       </section>
 
       {/* Kontakt až po přijetí. */}
-      {(req.status === 'ACCEPTED' || req.status === 'COMPLETED') && (
+      {(req.status === 'ACCEPTED' || req.status === 'COMPLETED') && !other.bannedAt && (
         <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-500/30 dark:bg-blue-500/10">
           <h2 className="font-bold">Kontakt na {other.nickname}</h2>
           <p className="mt-2 text-sm">

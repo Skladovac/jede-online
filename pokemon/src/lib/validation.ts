@@ -59,7 +59,24 @@ export function formatPhone(p: string) {
   return m[1] ? `${m[1]} ${rest}` : rest
 }
 
-/** Návratová adresa (?next=) — jen cesta na tomto webu, nikdy cizí doména („//evil“, „\evil“). */
+/** Návratová adresa (?next=) — jen cesta na tomto webu, nikdy cizí doména („//evil“, „/\t/evil“, „\\evil“). */
 export function safeNext(next: string | null | undefined) {
-  return next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') ? next.slice(0, 300) : null
+  if (!next || !next.startsWith('/') || /[\u0000-\u001f\u007f\\]/.test(next)) return null
+  try {
+    const base = 'https://pokemon.jede.online'
+    const u = new URL(next, base)
+    if (u.origin !== base) return null
+    return (u.pathname + u.search + u.hash).slice(0, 300)
+  } catch {
+    return null
+  }
+}
+
+/** decodeURIComponent, který na rozbitém „%“ nespadne (vrací null → 404 místo chyby 500). */
+export function safeDecode(s: string) {
+  try {
+    return decodeURIComponent(s)
+  } catch {
+    return null
+  }
 }

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { getCurrentUser } from '@/lib/auth'
 import { str, type FormState } from '@/lib/validation'
 
 // Rodič se nepřihlašuje — autorizací je tajný odkaz z e-mailu (parentToken).
@@ -15,6 +16,9 @@ async function childByToken(fd: FormData) {
 export async function giveConsent(_: FormState, fd: FormData): Promise<FormState> {
   const child = await childByToken(fd)
   if (!child) return { error: 'Odkaz neplatí.' }
+  // Dítě přihlášené ve stejném prohlížeči si souhlas samo udělit nemůže.
+  if ((await getCurrentUser())?.id === child.id)
+    return { error: 'Souhlas musí udělit rodič ze svého zařízení. Dítě se nejdřív musí odhlásit.' }
   const name = str(fd, 'parentName')
   if (name.length < 3 || name.length > 80) return { error: 'Napište prosím své jméno a příjmení.' }
   if (fd.get('confirm') !== 'on') return { error: 'Potvrďte prosím, že jste zákonný zástupce a souhlasíte.' }

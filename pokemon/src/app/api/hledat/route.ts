@@ -3,13 +3,16 @@ import { searchCards, searchProducts } from '@/lib/search'
 import { cardImage, formatEur, productImage } from '@/lib/format'
 import { KIND_LABEL } from '@/lib/products'
 import { ensureEurCzk } from '@/lib/fx'
+import { clientIp, rateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
 // Našeptávač ve vyhledávacím poli.
 export async function GET(req: NextRequest) {
+  // Našeptávač volá při psaní — 120 dotazů za minutu z jedné adresy bohatě stačí.
+  if (!rateLimit(`search:${await clientIp()}`, 120, 60_000)) return NextResponse.json([], { status: 429 })
   await ensureEurCzk() // kurz ČNB pro korunové částky u cen
-  const q = req.nextUrl.searchParams.get('q') ?? ''
+  const q = (req.nextUrl.searchParams.get('q') ?? '').slice(0, 100)
   const [hits, products] = await Promise.all([searchCards(q, 6), searchProducts(q, 3)])
   return NextResponse.json(
     [

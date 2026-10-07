@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { safeDecode } from '@/lib/validation'
 import { cardImage, categoryLabel, formatEur, rarityLabel } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
 import { PriceStatsTable } from '@/components/PriceStatsTable'
@@ -17,7 +18,7 @@ export const dynamic = 'force-dynamic'
 type Props = { params: Promise<{ id: string }> }
 
 async function getCard(id: string) {
-  return prisma.card.findUnique({ where: { id: decodeURIComponent(id) }, include: { set: true } })
+  return prisma.card.findUnique({ where: { id: (safeDecode(id) ?? '') }, include: { set: true } })
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

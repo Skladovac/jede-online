@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { safeDecode } from '@/lib/validation'
 import { getCurrentUser, isLimited } from '@/lib/auth'
 import { ratingSummary } from '@/lib/ratings'
 import { TAG_LABEL } from '@/lib/rating-tags'
@@ -16,7 +17,7 @@ type Props = { params: Promise<{ nickname: string }> }
 
 async function getUser(nickname: string) {
   const u = await prisma.user.findFirst({
-    where: { nickname: { equals: decodeURIComponent(nickname), mode: 'insensitive' }, bannedAt: null },
+    where: { nickname: { equals: (safeDecode(nickname) ?? ''), mode: 'insensitive' }, bannedAt: null },
   })
   return u && !isLimited(u) ? u : null
 }
@@ -44,7 +45,7 @@ export default async function RatingsPage({ params }: Props) {
     getCurrentUser(),
     ratingSummary(u.id),
     prisma.rating.findMany({
-      where: { toId: u.id, hiddenAt: null },
+      where: { toId: u.id, hiddenAt: null, from: { bannedAt: null } },
       include: { from: { select: { nickname: true, bannedAt: true } } },
       orderBy: { updatedAt: 'desc' },
       take: 200,

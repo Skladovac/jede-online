@@ -1,9 +1,12 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/admin'
 import { adminResolveReport } from '@/app/actions/admin'
 import { ActionForm } from '@/components/ActionForm'
 
 export default async function AdminReports({ searchParams }: { searchParams: Promise<{ vse?: string }> }) {
+  // Kontrola i na stránce, ne jen v layoutu (Next může layout při částečném vykreslení přeskočit).
+  await requireAdmin()
   const all = !!(await searchParams).vse
   const reports = await prisma.report.findMany({
     where: all ? {} : { resolvedAt: null },

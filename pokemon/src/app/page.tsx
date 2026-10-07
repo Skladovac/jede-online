@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { SetTile } from '@/components/SetTile'
 import { getCurrentUser } from '@/lib/auth'
-import { findCollectors, parsePlace } from '@/lib/matches'
+import { findCollectorsCached, parsePlace } from '@/lib/matches'
 import { CollectorList } from '@/components/CollectorList'
 import { LatestOffers } from '@/components/LatestOffers'
 
@@ -21,8 +21,8 @@ export default async function Home() {
 
   // Přihlášenému: kdo má, co mu chybí (napřed jeho kraj, když tam nikdo není, celé ČR/SK).
   const user = await getCurrentUser()
-  let matches = user ? await findCollectors(user.id, parsePlace(undefined, user.region).place, 3) : null
-  if (user && matches && !matches.collectors.length && user.region) matches = await findCollectors(user.id, {}, 3)
+  let matches = user ? await findCollectorsCached(user.id, parsePlace(undefined, user.region).place, 3) : null
+  if (user && matches && !matches.collectors.length && user.region) matches = await findCollectorsCached(user.id, {}, 3)
 
   return (
     <main className="mx-auto max-w-6xl px-4">

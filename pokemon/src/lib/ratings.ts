@@ -7,7 +7,7 @@ export { TAG_LABEL } from '@/lib/rating-tags'
 export async function ratingSummary(userId: string) {
   const rows = await prisma.rating.groupBy({
     by: ['positive'],
-    where: { toId: userId, hiddenAt: null },
+    where: { toId: userId, hiddenAt: null, from: { bannedAt: null } },
     _count: true,
   })
   const pos = rows.find((r) => r.positive)?._count ?? 0

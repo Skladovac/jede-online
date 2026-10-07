@@ -277,9 +277,14 @@ model TradeRequestItem {
   offerType        OfferType?
   priceCzk         Int?
 
+  @@index([requestId])
   @@index([collectionItemId])
   @@index([productItemId])
 }
+
+// Pozn.: migrace 20261010120000_pojistky přidává i částečné indexy, které Prisma neumí popsat:
+//  unikátní WantItem(userId, cardId) WHERE variant IS NULL, TradeRequest(fromId, toId) WHERE status='DRAFT',
+//  Rating(fromId, toId) WHERE requestId IS NULL a indexy nabídek/poptávek podle updatedAt.
 
 enum RatingTag {
   FAST_SHIPPING

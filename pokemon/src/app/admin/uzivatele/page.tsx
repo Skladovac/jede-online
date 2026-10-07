@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/admin'
 
 const FILTERS: Record<string, { label: string; where: Prisma.UserWhereInput }> = {
   vse: { label: 'Všichni', where: {} },
@@ -16,6 +17,8 @@ export default async function AdminUsers({
 }: {
   searchParams: Promise<{ q?: string; filtr?: string; smazano?: string }>
 }) {
+  // Kontrola i na stránce, ne jen v layoutu (Next může layout při částečném vykreslení přeskočit).
+  await requireAdmin()
   const sp = await searchParams
   const q = (sp.q ?? '').trim()
   const filtr = sp.filtr && sp.filtr in FILTERS ? sp.filtr : 'vse'

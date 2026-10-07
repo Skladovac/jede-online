@@ -124,7 +124,7 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
 export async function topRated(limit = 50) {
   const rows = await prisma.rating.groupBy({
     by: ['toId', 'positive'],
-    where: { hiddenAt: null, to: { bannedAt: null, OR: [{ isMinor: false }, { parentConsentAt: { not: null } }] } },
+    where: { hiddenAt: null, from: { bannedAt: null }, to: { bannedAt: null, OR: [{ isMinor: false }, { parentConsentAt: { not: null } }] } },
     _count: true,
   })
   const by = new Map<string, { pos: number; neg: number }>()
@@ -145,7 +145,7 @@ export async function topRated(limit = 50) {
     }),
     prisma.rating.groupBy({
       by: ['toId'],
-      where: { toId: { in: ranked.map(([id]) => id) }, hiddenAt: null, requestId: { not: null } },
+      where: { toId: { in: ranked.map(([id]) => id) }, hiddenAt: null, from: { bannedAt: null }, requestId: { not: null } },
       _count: true,
     }),
   ])

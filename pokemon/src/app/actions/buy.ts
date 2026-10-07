@@ -26,6 +26,7 @@ export async function saveCardBuy(_: FormState, fd: FormData): Promise<FormState
   if (!user) return { error: 'Přihlas se.' }
   const cardId = str(fd, 'cardId')
   const buy = fd.get('buy') === 'on'
+  if (buy && !user.emailVerifiedAt) return { error: 'Poptávku „chci koupit“ můžeš zveřejnit po potvrzení e-mailu.' }
   const priceRes = parsePrice(str(fd, 'maxPriceCzk'))
   if ('error' in priceRes) return { error: priceRes.error }
   const variantRaw = str(fd, 'variant') as Variant
@@ -57,8 +58,9 @@ export async function saveProductBuy(_: FormState, fd: FormData): Promise<FormSt
   const user = await getCurrentUser()
   if (!user) return { error: 'Přihlas se.' }
   const productId = Number(str(fd, 'productId'))
-  if (!Number.isInteger(productId)) return { error: 'Produkt nenalezen.' }
+  if (!Number.isInteger(productId) || productId < 1 || productId > 2_147_483_647) return { error: 'Produkt nenalezen.' }
   const buy = fd.get('buy') === 'on'
+  if (buy && !user.emailVerifiedAt) return { error: 'Poptávku „chci koupit“ můžeš zveřejnit po potvrzení e-mailu.' }
   const priceRes = parsePrice(str(fd, 'maxPriceCzk'))
   if ('error' in priceRes) return { error: priceRes.error }
   const data = { buy, maxPriceCzk: buy ? priceRes.price : null }

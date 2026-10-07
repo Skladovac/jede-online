@@ -17,7 +17,7 @@ async function send(
   paragraphs: string[],
   button?: { label: string; url: string },
   cc: string[] = [],
-) {
+): Promise<boolean> {
   cc = [...new Set(cc.filter((c) => c && c !== to))]
   const html = `<!doctype html><html lang="cs"><body style="margin:0;background:#f1f5f9;font-family:-apple-system,Segoe UI,sans-serif;color:#0f172a">
 <table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr><td align="center" style="padding:32px 16px">
@@ -35,7 +35,7 @@ ${button ? `<p style="margin:24px 0"><a href="${esc(button.url)}" style="display
   if (!brevo && !resend) {
     console.log(`[email] (bez API klíče) → ${to}${cc.length ? ` (kopie ${cc.join(', ')})` : ''}: ${subject}${button ? `
   ${button.url}` : ''}`)
-    return
+    return true
   }
   const res = brevo
     ? await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -57,6 +57,7 @@ ${button ? `<p style="margin:24px 0"><a href="${esc(button.url)}" style="display
         body: JSON.stringify({ from: `${FROM.name} <${FROM.email}>`, to, ...(cc.length && { cc }), subject, html }),
       })
   if (!res.ok) console.error(`[email] ${brevo ? 'Brevo' : 'Resend'} selhal`, res.status, await res.text())
+  return res.ok
 }
 
 export function sendVerifyEmail(to: string, nickname: string, token: string, next?: string | null) {

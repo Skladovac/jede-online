@@ -1,10 +1,13 @@
 import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/admin'
 import { adminAddWord, adminRemoveWord } from '@/app/actions/admin'
 import { ActionForm } from '@/components/ActionForm'
 import { Submit, inputCls } from '@/components/ui'
 import { DEFAULT_BANNED_WORDS, normalizeNick } from '@/lib/nickname-filter'
 
 export default async function AdminWords() {
+  // Kontrola i na stránce, ne jen v layoutu (Next může layout při částečném vykreslení přeskočit).
+  await requireAdmin()
   const extra = await prisma.bannedWord.findMany({ orderBy: { word: 'asc' } })
   // Kdo už teď má přezdívku se zakázaným slovem (např. po přidání nového slova).
   const words = [...DEFAULT_BANNED_WORDS.map(normalizeNick), ...extra.map((w) => w.word)]

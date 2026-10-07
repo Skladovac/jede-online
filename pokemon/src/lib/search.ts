@@ -50,7 +50,7 @@ export async function searchCards(raw: string, limit = 12): Promise<SearchHit[]>
   const slash = q.match(/^([A-Za-z]*\d+[A-Za-z]*)\s*\/\s*(\d+)$/)
   if (slash) {
     return prisma.card.findMany({
-      where: { localId: { in: localIdVariants(slash[1]) }, set: { officialCount: Number(slash[2]) } },
+      where: { localId: { in: localIdVariants(slash[1]) }, set: { officialCount: Math.min(Number(slash[2]), 100_000) } },
       select,
       orderBy: newestFirst,
       take: limit,

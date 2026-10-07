@@ -85,14 +85,20 @@ export async function register(_: FormState, fd: FormData): Promise<FormState> {
   redirect(`/ucet?vitej=1${next ? `&next=${encodeURIComponent(next)}` : ''}`)
 }
 
+// bcrypt otisk náhodného hesla — porovnání s ním trvá stejně dlouho jako se skutečným účtem.
+const DUMMY_HASH = '$2a$12$6Y6r15t8sijkCjbkYaGFKu9SdMSUsgIoXepIWjD9EBYckCUSkdIrq'
+
 export async function login(_: FormState, fd: FormData): Promise<FormState> {
   const email = str(fd, 'email').toLowerCase()
   const fail = (error: string): FormState => ({ error, fields: { email } })
   if (!rateLimit(`login:${await clientIp()}`, 10, 15 * 60_000)) return fail('Příliš mnoho pokusů. Zkus to za 15 minut.')
 
+  if (!rateLimit(`login-acc:${email}`, 10, 15 * 60_000)) return fail('Příliš mnoho pokusů. Zkus to za 15 minut.')
+
   const user = await prisma.user.findUnique({ where: { email } })
-  // Stejná hláška pro neexistující účet i špatné heslo — neprozrazujeme, kdo je registrovaný.
-  if (!user || !(await verifyPassword(str(fd, 'password'), user.passwordHash))) return fail('Špatný e-mail nebo heslo.')
+  // Stejná hláška i stejně dlouhá odpověď pro neexistující účet a špatné heslo — neprozrazujeme, kdo je registrovaný.
+  const ok = await verifyPassword(str(fd, 'password'), user?.passwordHash ?? DUMMY_HASH)
+  if (!user || !ok) return fail('Špatný e-mail nebo heslo.')
   if (user.bannedAt) return fail('Tento účet je zablokovaný.')
 
   await createSession(user.id)
@@ -107,7 +113,8 @@ export async function logout() {
 
 export async function requestReset(_: FormState, fd: FormData): Promise<FormState> {
   const email = str(fd, 'email').toLowerCase()
-  if (!rateLimit(`reset:${await clientIp()}`, 5, 60 * 60_000)) return { error: 'Příliš mnoho žádostí. Zkus to za hodinu.' }
+  if (!rateLimit(`reset:${await clientIp()}`, 5, 60 * 60_000) || !rateLimit(`reset-acc:${email}`, 3, 60 * 60_000))
+    return { error: 'Příliš mnoho žádostí. Zkus to za hodinu.' }
   const user = await prisma.user.findUnique({ where: { email } })
   if (user && !user.bannedAt) await sendResetEmail(email, await createEmailToken(user.id, 'RESET', 1))
   return { ok: 'Pokud je e-mail zaregistrovaný, poslali jsme na něj odkaz pro nové heslo. Když nedorazí, podívej se i do složky Spam / Nevyžádaná pošta.' }
@@ -121,6 +128,7 @@ export async function resetPassword(_: FormState, fd: FormData): Promise<FormSta
   if (!userId) return { error: 'Odkaz už neplatí. Požádej o nový.' }
   const user = await prisma.user.update({ where: { id: userId }, data: { passwordHash: await hashPassword(password) } })
   await prisma.session.deleteMany({ where: { userId } }) // odhlásit všude
+  await prisma.emailToken.deleteMany({ where: { userId, kind: 'RESET' } }) // ostatní odkazy na obnovu přestanou platit
   await sendPasswordChangedEmail(user.email, user.nickname)
   await createSession(userId)
   redirect('/ucet?heslo=1')
