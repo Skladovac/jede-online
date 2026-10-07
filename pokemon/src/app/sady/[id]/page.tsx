@@ -7,7 +7,7 @@ import { byLocalId, cardImage, formatEur, setLogo } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
 import { SetGrid } from '@/components/SetGrid'
 import { ProductTile } from '@/components/ProductTile'
-import { setFallbackImages } from '@/lib/set-images'
+import { CardBack } from '@/components/CardBack'
 import type { QuickState } from '@/app/actions/collection'
 import { ensureEurCzk } from '@/lib/fx'
 
@@ -38,7 +38,7 @@ export default async function SetPage({ params, searchParams }: Props) {
     orderBy: [{ imageUrl: { sort: 'asc', nulls: 'last' } }, { name: 'asc' }],
   })
   const cards = [...set.cards].sort(byLocalId)
-  const logo = setLogo(set.logoUrl) ?? (await setFallbackImages([set])).get(set.id) ?? null
+  const logo = setLogo(set.logoUrl)
   const meta = [
     set.series,
     set.code,
@@ -68,9 +68,11 @@ export default async function SetPage({ params, searchParams }: Props) {
         ← Všechny sady
       </Link>
       <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
-        {logo && (
+        {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logo} alt="" className="h-16 w-auto max-w-[200px] object-contain" />
+        ) : (
+          <CardBack />
         )}
         <div>
           <h1 className="text-3xl font-black tracking-tight">{set.name}</h1>
