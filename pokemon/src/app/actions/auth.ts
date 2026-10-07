@@ -82,7 +82,8 @@ export async function register(_: FormState, fd: FormData): Promise<FormState> {
   if (isMinor && user.parentToken) await sendParentConsentEmail(parentEmail, user.nickname, user.parentToken)
 
   await createSession(user.id)
-  redirect(`/ucet?vitej=1${next ? `&next=${encodeURIComponent(next)}` : ''}`)
+  // Nový uživatel na hlavní stránku s průvodcem „Jak začít“ (nebo zpět tam, odkud přišel).
+  redirect(next ? `/ucet?vitej=1&next=${encodeURIComponent(next)}` : '/?vitej=1')
 }
 
 // bcrypt otisk náhodného hesla — porovnání s ním trvá stejně dlouho jako se skutečným účtem.
