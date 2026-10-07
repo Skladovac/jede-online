@@ -11,6 +11,8 @@ import { prisma } from '@/lib/prisma'
 
 const API = 'https://api.tcgdex.net/v2/en'
 const CONCURRENCY = 6
+// Pokémon TCG Pocket je mobilní hra — její karty fyzicky neexistují, nesbírají se ani nevyměňují.
+const EXCLUDED_SERIES = ['tcgp']
 
 type TcgSetBrief = { id: string }
 type TcgSet = {
@@ -101,6 +103,7 @@ export async function syncCatalog(
   await pool(briefs, async ({ id }) => {
     try {
       const s = await getJson<TcgSet>(`/sets/${encodeURIComponent(id)}`)
+      if (EXCLUDED_SERIES.includes(s.serie.id)) return
       const data = {
         game: 'pokemon',
         name: s.name,
@@ -160,6 +163,12 @@ export async function syncCatalog(
     }
     if (++stats.cards % 2000 === 0) log(`[catalog] ${stats.cards}/${cardQueue.length} karet`)
   })
+
+  // Úklid sad, které už do katalogu nepatří (karty dřív, kvůli cizímu klíči).
+  const excluded = { set: { seriesId: { in: EXCLUDED_SERIES } } }
+  const removed = await prisma.card.deleteMany({ where: excluded })
+  await prisma.cardSet.deleteMany({ where: { seriesId: { in: EXCLUDED_SERIES } } })
+  if (removed.count) log(`[catalog] odstraněno ${removed.count} karet z vyřazených sérií`)
 
   stats.finishedAt = new Date().toISOString()
   log(`[catalog] hotovo: ${stats.sets} sad, ${stats.cards} karet, ${stats.cardDetailFailures} bez detailu`)
