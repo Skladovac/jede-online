@@ -8,6 +8,7 @@ import { PriceStatsTable } from '@/components/PriceStatsTable'
 import { eurCzkDate } from '@/lib/fx'
 import type { PriceStats } from '@/lib/price-stats'
 import { CardOffers } from '@/components/CardOffers'
+import { CardBuyers } from '@/components/Buyers'
 import { MyCardPanel } from '@/components/MyCardPanel'
 import { ensureEurCzk } from '@/lib/fx'
 
@@ -131,6 +132,7 @@ export default async function CardPage({ params }: Props) {
       </div>
       <MyCardPanel card={card} />
       <CardOffers cardId={card.id} />
+      <CardBuyers cardId={card.id} />
     </main>
   )
 }

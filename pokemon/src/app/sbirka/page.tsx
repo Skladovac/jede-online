@@ -5,6 +5,9 @@ import { collectionOverview } from '@/lib/collection-view'
 import { CollectionOverview } from '@/components/CollectionOverview'
 import { ensureEurCzk } from '@/lib/fx'
 import { CopyLink } from '@/components/CopyLink'
+import { interestInMyCards } from '@/lib/interest'
+import { cardImage } from '@/lib/format'
+import Link from 'next/link'
 
 export const metadata: Metadata = { title: 'Moje sbírka' }
 export const dynamic = 'force-dynamic'
@@ -13,7 +16,7 @@ export default async function MyCollectionPage() {
   await ensureEurCzk() // kurz ČNB pro korunové částky u cen
   const user = await getCurrentUser()
   if (!user) redirect('/prihlaseni?next=/sbirka')
-  const data = await collectionOverview(user.id)
+  const [data, interest] = await Promise.all([collectionOverview(user.id), interestInMyCards(user.id)])
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
@@ -40,6 +43,36 @@ export default async function MyCollectionPage() {
             title={`Co hledá ${user.nickname}`}
           />
         </div>
+      )}
+      {interest.length > 0 && (
+        <section className="mt-6 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-500/40 dark:bg-emerald-500/10">
+          <h2 className="font-bold text-emerald-900 dark:text-emerald-200">💰 O tvoje karty je zájem ({interest.length})</h2>
+          <p className="mb-3 text-sm text-emerald-900/80 dark:text-emerald-200/80">
+            Tyhle karty máš ve sbírce a někdo je chce koupit. Klikni na kartu a uvidíš kdo a za kolik.
+          </p>
+          <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+            {interest.map((i) => {
+              const img = cardImage(i.card.imageUrl)
+              return (
+                <li key={i.card.id}>
+                  <Link href={`/karta/${encodeURIComponent(i.card.id)}`} className="block">
+                    <div className="aspect-[63/88] overflow-hidden rounded-lg bg-slate-200 shadow-sm dark:bg-slate-800">
+                      {img && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={img} alt={i.card.name} loading="lazy" className="h-full w-full object-cover" />
+                      )}
+                    </div>
+                    <p className="mt-1 truncate text-xs font-medium">{i.card.name}</p>
+                    <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                      {i.buyers}× zájem{i.best ? ` · až ${i.best.toLocaleString('cs-CZ')} Kč` : ''}
+                    </p>
+                    {!i.spare && <p className="text-xs text-slate-500">zatím nenabízíš</p>}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
       )}
       <div className="mt-6">
         <CollectionOverview data={data} own />

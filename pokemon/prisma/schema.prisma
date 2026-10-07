@@ -211,10 +211,17 @@ model WantItem {
   cardId    String
   card      Card     @relation(fields: [cardId], references: [id])
   variant   Variant? // null = je jedno jaká
+  // „Chci koupit“: veřejná poptávka s nejvyšší cenou (nepovinná) a podmínkami.
+  buy          Boolean    @default(false)
+  maxPriceCzk  Int?
+  minCondition Condition?
+  language     String? // null = je jedno jaký
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@unique([userId, cardId, variant])
   @@index([cardId])
+  @@index([cardId, buy])
 }
 
 // ── Poptávky a důvěra ───────────────────────────────────────────────
@@ -387,7 +394,11 @@ model ProductWant {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId Int
   product   Product  @relation(fields: [productId], references: [id])
+  // „Chci koupit“ s nejvyšší cenou (nepovinná).
+  buy         Boolean  @default(false)
+  maxPriceCzk Int?
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@unique([userId, productId])
   @@index([productId])
