@@ -22,9 +22,14 @@ export async function SiteHeader() {
             Sady
           </Link>
           {user ? (
-            <Link href="/ucet" className="rounded-full bg-slate-100 px-3 py-1.5 dark:bg-slate-800">
-              {user.nickname}
-            </Link>
+            <>
+              <Link href="/sbirka" className="hover:text-yellow-600 dark:hover:text-yellow-400">
+                Sbírka
+              </Link>
+              <Link href="/ucet" className="rounded-full bg-slate-100 px-3 py-1.5 dark:bg-slate-800">
+                {user.nickname}
+              </Link>
+            </>
           ) : (
             <>
               <Link href="/prihlaseni" className="hover:text-yellow-600 dark:hover:text-yellow-400">

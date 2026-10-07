@@ -1,0 +1,49 @@
+import 'server-only'
+import { prisma } from '@/lib/prisma'
+import { byLocalId } from '@/lib/format'
+
+/** Přehled sbírky uživatele: postup po sadách, chybějící karty a nabídky. Sdílí /sbirka a veřejný profil. */
+export async function collectionOverview(userId: string) {
+  const [items, wants] = await Promise.all([
+    prisma.collectionItem.findMany({
+      where: { userId },
+      include: { card: { include: { set: true } } },
+    }),
+    prisma.wantItem.findMany({
+      where: { userId },
+      include: { card: { include: { set: true } } },
+    }),
+  ])
+
+  // Postup po sadách (počítá se karta, ne kus).
+  const bySet = new Map<string, { set: (typeof items)[number]['card']['set']; cards: Set<string> }>()
+  for (const i of items) {
+    const e = bySet.get(i.card.setId) ?? { set: i.card.set, cards: new Set<string>() }
+    e.cards.add(i.cardId)
+    bySet.set(i.card.setId, e)
+  }
+  const sets = [...bySet.values()]
+    .map((e) => ({ set: e.set, owned: e.cards.size }))
+    .sort((a, b) => (b.set.releaseDate?.getTime() ?? 0) - (a.set.releaseDate?.getTime() ?? 0))
+
+  const offers = items
+    .filter((i) => i.spareQty > 0 && i.offerType)
+    .sort((a, b) => a.card.set.name.localeCompare(b.card.set.name) || byLocalId(a.card, b.card))
+  const wanted = wants
+    .map((w) => w.card)
+    .sort((a, b) => a.set.name.localeCompare(b.set.name) || byLocalId(a, b))
+
+  return {
+    sets,
+    offers,
+    wanted,
+    totals: {
+      cards: new Set(items.map((i) => i.cardId)).size,
+      pieces: items.reduce((s, i) => s + i.quantity, 0),
+      spare: items.reduce((s, i) => s + i.spareQty, 0),
+      wanted: wanted.length,
+    },
+  }
+}
+
+export type Overview = Awaited<ReturnType<typeof collectionOverview>>

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { cardImage, categoryLabel, formatEur, rarityLabel } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
 import { CardOffers } from '@/components/CardOffers'
+import { MyCardPanel } from '@/components/MyCardPanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -115,6 +116,7 @@ export default async function CardPage({ params }: Props) {
           </section>
         </div>
       </div>
+      <MyCardPanel card={card} />
       <CardOffers cardId={card.id} />
     </main>
   )
