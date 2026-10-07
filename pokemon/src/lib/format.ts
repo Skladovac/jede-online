@@ -37,6 +37,8 @@ const viaProxy = (url: string) =>
 // TCGdex dává adresu obrázku bez přípony; pokemontcg.io celou adresu malého PNG (velké má _hires).
 export function cardImage(url: string | null, size: 'low' | 'high' = 'low') {
   if (!url) return null
+  // pokemontcg.io část obrázků přesunul na scrydex: ".../small" a ".../large", bez přípony.
+  if (url.startsWith('https://images.scrydex.com/')) return size === 'high' ? url.replace(/\/small$/, '/large') : url
   if (url.startsWith(PTCG_ASSETS)) return viaProxy(size === 'high' ? url.replace(/\.png$/, '_hires.png') : url)
   return viaProxy(`${url}/${size}.webp`)
 }
