@@ -33,7 +33,7 @@ async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url, {
     cache: 'no-store',
     signal: AbortSignal.timeout(120_000),
-    headers: { 'User-Agent': 'pokemon.jede.online catalog sync (info@jede.online)' },
+    headers: { 'User-Agent': 'pokemon.jede.online catalog sync (pokemon@jede.online)' },
   })
   if (!res.ok) throw new Error(`${res.status} ${url}`)
   return (await res.json()) as T
