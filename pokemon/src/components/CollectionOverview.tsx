@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Overview } from '@/lib/collection-view'
 import { cardImage } from '@/lib/format'
+import { ProductTile } from '@/components/ProductTile'
 
 const OFFER = { TRADE: 'vyměním', SELL: 'prodám', GIFT: 'daruji za poštovné' } as const
 
@@ -34,7 +35,8 @@ function CardStrip({ cards, extra }: { cards: MiniCard[]; extra?: (c: MiniCard, 
 }
 
 export function CollectionOverview({ data, own }: { data: Overview; own: boolean }) {
-  const { sets, offers, wanted, totals } = data
+  const { sets, offers, wanted, totals, productItems, productWants } = data
+  const OFFER_SHORT = { TRADE: 'vyměním', SELL: 'prodám', GIFT: 'daruji' } as const
   return (
     <div className="space-y-10">
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -81,6 +83,56 @@ export function CollectionOverview({ data, own }: { data: Overview; own: boolean
           </p>
         )}
       </section>
+
+      {(productItems.length > 0 || productWants.length > 0 || own) && (
+        <section>
+          <h2 className="mb-3 text-xl font-bold">Zapečetěné produkty</h2>
+          {productItems.length ? (
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+              {productItems.map((i) => (
+                <li key={i.id}>
+                  <ProductTile
+                    p={i.product}
+                    extra={
+                      <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">
+                        {i.quantity}× {i.language.toUpperCase()}
+                        {i.spareQty > 0 && i.offerType &&
+                          ` · ${i.spareQty}× ${i.offerType === 'SELL' && i.priceCzk ? `${i.priceCzk} Kč` : OFFER_SHORT[i.offerType]}`}
+                      </p>
+                    }
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-slate-500">
+              {own ? (
+                <>
+                  Zatím žádné.{' '}
+                  <Link href="/produkty" className="underline">
+                    Najdi produkt
+                  </Link>{' '}
+                  (ETB, booster box, tin…) a přidej si ho nebo nabídni.
+                </>
+              ) : (
+                'Zatím žádné.'
+              )}
+            </p>
+          )}
+          {productWants.length > 0 && (
+            <>
+              <h3 className="mb-3 mt-6 font-semibold">Shání ({productWants.length})</h3>
+              <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+                {productWants.map((p) => (
+                  <li key={p.id}>
+                    <ProductTile p={p} />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
 
       <section>
         <h2 className="mb-3 text-xl font-bold">Sady</h2>

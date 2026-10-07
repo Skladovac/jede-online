@@ -26,6 +26,7 @@ model CardSet {
   logoUrl       String?
   symbolUrl     String?
   cards         Card[]
+  products      Product[]
   syncedAt      DateTime  @updatedAt
 
   @@index([game, releaseDate])
@@ -110,6 +111,8 @@ model User {
   reportsAgainst Report[]       @relation("ReportAgainst")
   sessions       Session[]
   emailTokens    EmailToken[]
+  productItems   ProductItem[]
+  productWants   ProductWant[]
 
   @@index([country, region, city])
 }
@@ -243,6 +246,9 @@ model TradeRequestItem {
   collectionItemId String?
   collectionItem   CollectionItem? @relation(fields: [collectionItemId], references: [id], onDelete: SetNull)
   // false = kus prodávajícího, který kupující chce; true = kus kupujícího nabídnutý na výměnu
+  productItemId    String?
+  productItem      ProductItem?    @relation(fields: [productItemId], references: [id], onDelete: SetNull)
+  productId        Int?
   fromRequester    Boolean         @default(false)
   quantity         Int             @default(1)
   cardId           String?
@@ -253,6 +259,7 @@ model TradeRequestItem {
   priceCzk         Int?
 
   @@index([collectionItemId])
+  @@index([productItemId])
 }
 
 enum RatingTag {
@@ -291,4 +298,77 @@ model Report {
   resolvedAt DateTime?
 
   @@index([resolvedAt])
+}
+
+// ── Zapečetěné produkty (ETB, boostery, tins, mince…) ──────────────
+// Katalog z Cardmarketu (products_nonsingles + price_guide), obrázky z TCGplayeru.
+
+enum ProductKind {
+  BOOSTER
+  DISPLAY // booster box, bundle, display
+  ETB
+  TIN
+  BLISTER
+  BOX_SET // kolekce, premium boxy
+  THEME_DECK
+  TRAINER_KIT
+  COIN
+  OTHER
+}
+
+model Product {
+  id             Int         @id // idProduct na Cardmarketu
+  game           String      @default("pokemon")
+  name           String
+  kind           ProductKind
+  cmExpansionId  Int
+  setId          String? // naše sada, pokud ji jde určit
+  set            CardSet?    @relation(fields: [setId], references: [id])
+  imageUrl       String?
+  imageCheckedAt DateTime? // kdy se naposledy hledal obrázek (hledá se nejvýš 1× za 30 dní)
+  priceEur       Decimal?    @db.Decimal(10, 2)
+  priceUpdatedAt DateTime?
+  addedAt        DateTime?
+  syncedAt       DateTime    @updatedAt
+
+  items ProductItem[]
+  wants ProductWant[]
+
+  @@index([setId])
+  @@index([kind])
+  @@index([name])
+}
+
+// Produkt ve sbírce. Vždy zapečetěný; jazyk rozlišuje (EN/DE/JP…).
+model ProductItem {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product    @relation(fields: [productId], references: [id])
+  language  String     @default("en")
+  quantity  Int        @default(1)
+  spareQty  Int        @default(0)
+  offerType OfferType?
+  priceCzk  Int?
+  note      String?    @db.VarChar(30)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  requestItems TradeRequestItem[]
+
+  @@unique([userId, productId, language])
+  @@index([productId, spareQty])
+}
+
+model ProductWant {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([productId])
 }

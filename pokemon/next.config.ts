@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     return [
       { source: '/img/:path*', destination: 'https://assets.tcgdex.net/:path*' },
       { source: '/img2/:path*', destination: 'https://images.pokemontcg.io/:path*' },
+      { source: '/img3/:path*', destination: 'https://tcgplayer-cdn.tcgplayer.com/:path*' },
     ]
   },
 }

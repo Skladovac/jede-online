@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import type { CollectionItem, RatingTag, User } from '@prisma/client'
+import type { CollectionItem, ProductItem, RatingTag, User } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser, isLimited } from '@/lib/auth'
 import { APP_URL, esc, notify } from '@/lib/email'
@@ -23,6 +23,7 @@ const visible = (u: User) => !u.bannedAt && !isLimited(u)
 function snapshot(i: FullItem) {
   return {
     cardId: i.cardId,
+    productId: null,
     title: `${i.card.name} (${i.card.set.name} ${i.card.localId})`,
     detail: [VARIANT[i.variant], CONDITION[i.condition], i.language.toUpperCase(), i.note && `„${i.note}“`]
       .filter(Boolean)
@@ -40,6 +41,20 @@ async function requireUser() {
 }
 
 const itemInclude = { card: { select: { name: true, localId: true, imageUrl: true, set: { select: { name: true } } } } }
+const productInclude = { product: { select: { id: true, name: true, imageUrl: true } } }
+type FullProductItem = ProductItem & { product: { id: number; name: string; imageUrl: string | null } }
+
+function snapshotProduct(i: FullProductItem) {
+  return {
+    cardId: null,
+    productId: i.productId,
+    title: i.product.name,
+    detail: ['zapečetěno', i.language.toUpperCase(), i.note && `„${i.note}“`].filter(Boolean).join(' · '),
+    imageUrl: i.product.imageUrl,
+    offerType: i.offerType,
+    priceCzk: i.offerType === 'SELL' ? i.priceCzk : null,
+  }
+}
 
 // ── Košík ──────────────────────────────────────────────────────────
 
@@ -47,6 +62,7 @@ const itemInclude = { card: { select: { name: true, localId: true, imageUrl: tru
 export async function addToCart(_: FormState, fd: FormData): Promise<FormState> {
   const user = await getCurrentUser()
   if (!user) return { error: 'Nejdřív se přihlas.' }
+  if (str(fd, 'productItemId')) return addProductToCart(user, str(fd, 'productItemId'))
   const item = await prisma.collectionItem.findUnique({
     where: { id: str(fd, 'collectionItemId') },
     include: { ...itemInclude, user: true },
@@ -72,11 +88,33 @@ export async function addToCart(_: FormState, fd: FormData): Promise<FormState> 
   return { ok: 'Přidáno do košíku.' }
 }
 
+async function addProductToCart(user: User, productItemId: string): Promise<FormState> {
+  const item = await prisma.productItem.findUnique({ where: { id: productItemId }, include: { ...productInclude, user: true } })
+  if (!item || item.spareQty < 1 || !item.offerType || !visible(item.user)) return { error: 'Nabídka už neplatí.' }
+  if (item.userId === user.id) return { error: 'Tohle je tvoje vlastní nabídka.' }
+  const draft =
+    (await prisma.tradeRequest.findFirst({ where: { fromId: user.id, toId: item.userId, status: 'DRAFT' } })) ??
+    (await prisma.tradeRequest.create({ data: { fromId: user.id, toId: item.userId } }))
+  const existing = await prisma.tradeRequestItem.findFirst({
+    where: { requestId: draft.id, productItemId: item.id, fromRequester: false },
+  })
+  if (existing) {
+    if (existing.quantity >= item.spareQty) return { ok: 'Už máš v košíku všechny nabízené kusy.' }
+    await prisma.tradeRequestItem.update({ where: { id: existing.id }, data: { quantity: existing.quantity + 1 } })
+  } else {
+    await prisma.tradeRequestItem.create({
+      data: { requestId: draft.id, productItemId: item.id, fromRequester: false, ...snapshotProduct(item) },
+    })
+  }
+  revalidatePath('/', 'layout')
+  return { ok: 'Přidáno do košíku.' }
+}
+
 export async function setCartQty(_: FormState, fd: FormData): Promise<FormState> {
   const user = await requireUser()
   const row = await prisma.tradeRequestItem.findUnique({
     where: { id: str(fd, 'itemId') },
-    include: { request: true, collectionItem: true },
+    include: { request: true, collectionItem: true, productItem: true },
   })
   if (!row || row.request.fromId !== user.id || row.request.status !== 'DRAFT') return { error: 'Položka nenalezena.' }
   const qty = Number(str(fd, 'quantity'))
@@ -86,7 +124,7 @@ export async function setCartQty(_: FormState, fd: FormData): Promise<FormState>
     if (!(await prisma.tradeRequestItem.count({ where: { requestId: row.requestId, fromRequester: false } })))
       await prisma.tradeRequest.delete({ where: { id: row.requestId } })
   } else {
-    const max = row.collectionItem?.spareQty ?? 0
+    const max = row.collectionItem?.spareQty ?? row.productItem?.spareQty ?? 0
     await prisma.tradeRequestItem.update({ where: { id: row.id }, data: { quantity: Math.min(qty, Math.max(max, 1)) } })
   }
   revalidatePath('/', 'layout')
@@ -98,15 +136,25 @@ export async function offerMyItem(_: FormState, fd: FormData): Promise<FormState
   const user = await requireUser()
   const req = await prisma.tradeRequest.findUnique({ where: { id: str(fd, 'requestId') } })
   if (!req || req.fromId !== user.id || req.status !== 'DRAFT') return { error: 'Poptávka nenalezena.' }
-  const mine = await prisma.collectionItem.findUnique({ where: { id: str(fd, 'collectionItemId') }, include: itemInclude })
-  if (!mine || mine.userId !== user.id || mine.spareQty < 1) return { error: 'Vyber svůj kus navíc.' }
-  const existing = await prisma.tradeRequestItem.findFirst({
-    where: { requestId: req.id, collectionItemId: mine.id, fromRequester: true },
-  })
-  if (existing) return { ok: 'Už je nabídnutý.' }
-  await prisma.tradeRequestItem.create({
-    data: { requestId: req.id, collectionItemId: mine.id, fromRequester: true, ...snapshot(mine), offerType: 'TRADE', priceCzk: null },
-  })
+  // Hodnota "c:<id>" = karta, "p:<id>" = produkt.
+  const [kind, id] = str(fd, 'mine').split(':')
+  if (kind === 'p') {
+    const mine = await prisma.productItem.findUnique({ where: { id }, include: productInclude })
+    if (!mine || mine.userId !== user.id || mine.spareQty < 1) return { error: 'Vyber svůj kus navíc.' }
+    if (await prisma.tradeRequestItem.findFirst({ where: { requestId: req.id, productItemId: mine.id, fromRequester: true } }))
+      return { ok: 'Už je nabídnutý.' }
+    await prisma.tradeRequestItem.create({
+      data: { requestId: req.id, productItemId: mine.id, fromRequester: true, ...snapshotProduct(mine), offerType: 'TRADE', priceCzk: null },
+    })
+  } else {
+    const mine = await prisma.collectionItem.findUnique({ where: { id }, include: itemInclude })
+    if (!mine || mine.userId !== user.id || mine.spareQty < 1) return { error: 'Vyber svůj kus navíc.' }
+    if (await prisma.tradeRequestItem.findFirst({ where: { requestId: req.id, collectionItemId: mine.id, fromRequester: true } }))
+      return { ok: 'Už je nabídnutý.' }
+    await prisma.tradeRequestItem.create({
+      data: { requestId: req.id, collectionItemId: mine.id, fromRequester: true, ...snapshot(mine), offerType: 'TRADE', priceCzk: null },
+    })
+  }
   revalidatePath('/kosik')
   return undefined
 }
@@ -121,14 +169,17 @@ export async function sendRequest(_: FormState, fd: FormData): Promise<FormState
 
   const req = await prisma.tradeRequest.findUnique({
     where: { id: str(fd, 'requestId') },
-    include: { to: true, items: { include: { collectionItem: { include: itemInclude } } } },
+    include: {
+      to: true,
+      items: { include: { collectionItem: { include: itemInclude }, productItem: { include: productInclude } } },
+    },
   })
   if (!req || req.fromId !== user.id || req.status !== 'DRAFT') return { error: 'Poptávka nenalezena.' }
   if (!visible(req.to)) return { error: 'Tento uživatel teď poptávky nepřijímá.' }
 
   // Aktualizovat snapshot podle současného stavu nabídek; zmizelé položky vyřadit.
   for (const it of req.items) {
-    const ci = it.collectionItem
+    const ci = it.collectionItem ?? it.productItem
     if (!ci || ci.spareQty < 1 || (!it.fromRequester && !ci.offerType)) {
       await prisma.tradeRequestItem.delete({ where: { id: it.id } })
       continue
@@ -136,7 +187,7 @@ export async function sendRequest(_: FormState, fd: FormData): Promise<FormState
     await prisma.tradeRequestItem.update({
       where: { id: it.id },
       data: {
-        ...snapshot(ci),
+        ...(it.collectionItem ? snapshot(it.collectionItem) : snapshotProduct(it.productItem!)),
         ...(it.fromRequester && { offerType: 'TRADE' as const, priceCzk: null }),
         quantity: Math.min(it.quantity, ci.spareQty),
       },
@@ -235,6 +286,19 @@ export async function markDone(_: FormState, fd: FormData): Promise<FormState> {
     })
     if (!completed) return
     for (const it of req.items) {
+      if (it.productItemId) {
+        const pi = await tx.productItem.findUnique({ where: { id: it.productItemId } })
+        if (!pi) continue
+        const quantity = Math.max(pi.quantity - it.quantity, 0)
+        const spareQty = Math.max(pi.spareQty - it.quantity, 0)
+        if (quantity === 0) await tx.productItem.delete({ where: { id: pi.id } })
+        else
+          await tx.productItem.update({
+            where: { id: pi.id },
+            data: { quantity, spareQty, ...(spareQty === 0 && { offerType: null, priceCzk: null }) },
+          })
+        continue
+      }
       if (!it.collectionItemId) continue
       const ci = await tx.collectionItem.findUnique({ where: { id: it.collectionItemId } })
       if (!ci) continue

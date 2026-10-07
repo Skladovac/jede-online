@@ -29,6 +29,9 @@ export async function SiteHeader() {
           <Link href="/sady" className="hidden hover:text-yellow-600 dark:hover:text-yellow-400 sm:inline">
             Sady
           </Link>
+          <Link href="/produkty" className="hidden hover:text-yellow-600 dark:hover:text-yellow-400 lg:inline">
+            Produkty
+          </Link>
           {user ? (
             <>
               <Link href="/sbirka" className="hover:text-yellow-600 dark:hover:text-yellow-400">

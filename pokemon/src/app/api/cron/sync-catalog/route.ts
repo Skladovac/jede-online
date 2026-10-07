@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { syncCatalog, type SyncStats } from '@/lib/catalog-sync'
+import { syncProducts } from '@/lib/product-sync'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,8 +24,10 @@ export async function POST(req: NextRequest) {
   if (running) return NextResponse.json({ status: 'already-running' }, { status: 409 })
 
   running = syncCatalog()
-    .then((s) => {
+    .then(async (s) => {
       last = s
+      // Zapečetěné produkty (Cardmarket) — chyba tady nesmí shodit import karet.
+      await syncProducts().catch((err) => console.error('[produkty] import selhal:', err))
     })
     .catch((err) => {
       console.error('[catalog] import selhal:', err)

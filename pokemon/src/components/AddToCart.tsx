@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { useActionState } from 'react'
 import { addToCart } from '@/app/actions/requests'
 
-export function AddToCart({ collectionItemId }: { collectionItemId: string }) {
+export function AddToCart({ collectionItemId, productItemId }: { collectionItemId?: string; productItemId?: string }) {
   const [state, action, pending] = useActionState(addToCart, undefined)
   return (
     <form action={action} className="flex flex-col items-end gap-1">
-      <input type="hidden" name="collectionItemId" value={collectionItemId} />
+      {collectionItemId && <input type="hidden" name="collectionItemId" value={collectionItemId} />}
+      {productItemId && <input type="hidden" name="productItemId" value={productItemId} />}
       <button
         disabled={pending}
         className="rounded-full bg-yellow-400 px-4 py-1.5 text-sm font-semibold text-slate-900 hover:bg-yellow-300 disabled:opacity-50"

@@ -15,7 +15,7 @@ export default async function CartPage() {
   const user = await getCurrentUser()
   if (!user) redirect('/prihlaseni?next=/kosik')
 
-  const [drafts, mySpare] = await Promise.all([
+  const [drafts, mySpare, mySpareProducts] = await Promise.all([
     prisma.tradeRequest.findMany({
       where: { fromId: user.id, status: 'DRAFT' },
       include: { to: { select: { nickname: true, city: true, region: true } }, items: { orderBy: { id: 'asc' } } },
@@ -24,6 +24,11 @@ export default async function CartPage() {
     prisma.collectionItem.findMany({
       where: { userId: user.id, spareQty: { gt: 0 } },
       include: { card: { select: { name: true, localId: true, set: { select: { name: true } } } } },
+      orderBy: { updatedAt: 'desc' },
+    }),
+    prisma.productItem.findMany({
+      where: { userId: user.id, spareQty: { gt: 0 } },
+      include: { product: { select: { name: true } } },
       orderBy: { updatedAt: 'desc' },
     }),
   ])
@@ -57,7 +62,11 @@ export default async function CartPage() {
       {drafts.map((d) => {
         const wanted = d.items.filter((i) => !i.fromRequester)
         const offered = d.items.filter((i) => i.fromRequester)
-        const offeredIds = new Set(offered.map((i) => i.collectionItemId))
+        const offeredIds = new Set(offered.map((i) => (i.productItemId ? `p:${i.productItemId}` : `c:${i.collectionItemId}`)))
+        const options = [
+          ...mySpare.map((m) => ({ v: `c:${m.id}`, l: `${m.card.name} (${m.card.set.name} ${m.card.localId}) · ${m.spareQty}× navíc` })),
+          ...mySpareProducts.map((m) => ({ v: `p:${m.id}`, l: `${m.product.name} · ${m.spareQty}× navíc` })),
+        ].filter((o) => !offeredIds.has(o.v))
         const hasTrade = wanted.some((i) => i.offerType === 'TRADE')
         return (
           <section key={d.id} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
@@ -96,17 +105,15 @@ export default async function CartPage() {
                 ) : (
                   <p className="mt-1 text-xs text-slate-500">Zatím nic. Vyber ze svých karet navíc.</p>
                 )}
-                {mySpare.filter((m) => !offeredIds.has(m.id)).length > 0 ? (
+                {options.length > 0 ? (
                   <ActionForm action={offerMyItem} className="mt-3 flex gap-2">
                     <input type="hidden" name="requestId" value={d.id} />
-                    <select name="collectionItemId" className={inputCls + ' text-sm'}>
-                      {mySpare
-                        .filter((m) => !offeredIds.has(m.id))
-                        .map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.card.name} ({m.card.set.name} {m.card.localId}) · {m.spareQty}× navíc
-                          </option>
-                        ))}
+                    <select name="mine" className={inputCls + ' text-sm'}>
+                      {options.map((o) => (
+                        <option key={o.v} value={o.v}>
+                          {o.l}
+                        </option>
+                      ))}
                     </select>
                     <Submit variant="ghost">Přidat</Submit>
                   </ActionForm>

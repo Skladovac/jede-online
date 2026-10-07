@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-type Hit = { id: string; name: string; number: string; set: string; image: string | null; price: string | null }
+type Hit = { id: string; href: string; name: string; number: string; set: string; image: string | null; price: string | null }
 
 export function SearchBox() {
   const router = useRouter()
@@ -54,7 +54,7 @@ export function SearchBox() {
         role="search"
         onSubmit={(e) => {
           e.preventDefault()
-          if (active >= 0 && hits[active]) go(`/karta/${encodeURIComponent(hits[active].id)}`)
+          if (active >= 0 && hits[active]) go(hits[active].href)
           else if (q.trim().length >= 2) go(`/hledat?q=${encodeURIComponent(q.trim())}`)
         }}
       >
@@ -72,7 +72,7 @@ export function SearchBox() {
               setActive((a) => Math.max(a - 1, -1))
             } else if (e.key === 'Escape') setOpen(false)
           }}
-          placeholder="Hledat kartu: Charizard, SVI 045…"
+          placeholder="Hledat: Charizard, SVI 045, Prismatic ETB…"
           aria-label="Hledat kartu"
           autoComplete="off"
           className="w-full rounded-full border border-slate-300 bg-white px-4 py-2 text-sm outline-none transition focus:border-yellow-500 focus:ring-2 focus:ring-yellow-400/40 dark:border-slate-700 dark:bg-slate-900"
@@ -90,7 +90,7 @@ export function SearchBox() {
                   <button
                     type="button"
                     onMouseEnter={() => setActive(i)}
-                    onClick={() => go(`/karta/${encodeURIComponent(h.id)}`)}
+                    onClick={() => go(h.href)}
                     className={`flex w-full items-center gap-3 px-3 py-2 text-left ${i === active ? 'bg-yellow-50 dark:bg-slate-800' : ''}`}
                   >
                     <span className="h-14 w-10 shrink-0 overflow-hidden rounded bg-slate-200 dark:bg-slate-800">
