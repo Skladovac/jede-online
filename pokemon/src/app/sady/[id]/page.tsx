@@ -7,6 +7,7 @@ import { byLocalId, cardImage, formatEur, setLogo } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
 import { SetGrid } from '@/components/SetGrid'
 import { ProductTile } from '@/components/ProductTile'
+import { setFallbackImages } from '@/lib/set-images'
 import type { QuickState } from '@/app/actions/collection'
 import { ensureEurCzk } from '@/lib/fx'
 
@@ -37,11 +38,11 @@ export default async function SetPage({ params, searchParams }: Props) {
     orderBy: [{ imageUrl: { sort: 'asc', nulls: 'last' } }, { name: 'asc' }],
   })
   const cards = [...set.cards].sort(byLocalId)
-  const logo = setLogo(set.logoUrl)
+  const logo = setLogo(set.logoUrl) ?? (await setFallbackImages([set])).get(set.id) ?? null
   const meta = [
     set.series,
     set.code,
-    `${set.officialCount} karet (${set.cardCount} včetně secret)`,
+    set.officialCount ? `${set.officialCount} karet (${set.cardCount} včetně secret)` : `${set.cardCount} karet`,
     set.releaseDate?.toLocaleDateString('cs-CZ'),
   ]
 
@@ -107,7 +108,7 @@ export default async function SetPage({ params, searchParams }: Props) {
       ) : (
       <SetGrid
         loggedIn={!!user}
-        officialCount={set.officialCount}
+        officialCount={set.officialCount || set.cardCount}
         initial={initial}
         cards={cards.map((c) => ({
           id: c.id,
