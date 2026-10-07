@@ -14,7 +14,9 @@ export async function reportBug(_: FormState, fd: FormData): Promise<FormState> 
 
   const message = str(fd, 'message')
   const contact = str(fd, 'contact')
-  const pageUrl = str(fd, 'pageUrl').slice(0, 500)
+  // Adresu posílá prohlížeč — může být podvržená (např. "javascript:…"). Bereme jen http(s).
+  const rawUrl = str(fd, 'pageUrl').slice(0, 500)
+  const pageUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : ''
   if (message.length < 10) return { error: 'Popiš prosím chybu aspoň pár slovy (min. 10 znaků).' }
   if (message.length > 2000) return { error: 'Popis je moc dlouhý (max. 2000 znaků).' }
   if (contact && !EMAIL_RE.test(contact)) return { error: 'Kontaktní e-mail nevypadá správně (nebo ho nech prázdný).' }

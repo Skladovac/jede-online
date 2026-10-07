@@ -58,7 +58,7 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
                   )}
                   {b.contact && ` (${b.contact})`}
                 </span>
-                {b.pageUrl && (
+                {b.pageUrl && /^https?:\/\//i.test(b.pageUrl) && (
                   <a href={b.pageUrl} className="truncate underline" target="_blank" rel="noreferrer">
                     {b.pageUrl.replace(/^https?:\/\/[^/]+/, '')}
                   </a>
