@@ -109,8 +109,9 @@ export function RegisterForm() {
           Souhlasím s{' '}
           <Link href="/soukromi" target="_blank" className="underline">
             pravidly a zásadami ochrany osobních údajů
-          </Link>
-          .
+          </Link>{' '}
+          a beru na vědomí, že web jen zprostředkovává kontakt mezi sběrateli. Za nabídky, domluvené výměny, prodeje ani
+          jejich průběh provozovatel neodpovídá.
         </Checkbox>
       </div>
 
