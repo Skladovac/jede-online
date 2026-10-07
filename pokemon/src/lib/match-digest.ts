@@ -83,16 +83,37 @@ async function digest() {
         take: 20,
       }),
     ])
-    const lines = [
-      ...cards.map(
-        (i) =>
-          `• <strong>${esc(i.card.name)}</strong> (${esc(i.card.set.name)} ${esc(i.card.localId)}) — ${esc(i.user.nickname)} ${OFFER[i.offerType!]}${i.offerType === 'SELL' && i.priceCzk ? ` za ${i.priceCzk} Kč` : ''}`,
-      ),
-      ...products.map(
-        (i) =>
-          `• <strong>${esc(i.product.name)}</strong> — ${esc(i.user.nickname)} ${OFFER[i.offerType!]}${i.offerType === 'SELL' && i.priceCzk ? ` za ${i.priceCzk} Kč` : ''}`,
-      ),
-    ]
+    // Hlídání ceny: moje „koupím do X Kč“ — nabídky pod touto cenou (nebo dar / výměna) dáme nahoru s ✅.
+    const [myCardBuy, myProductBuy] = await Promise.all([
+      prisma.wantItem.findMany({ where: { userId: u.id, buy: true }, select: { cardId: true, maxPriceCzk: true } }),
+      prisma.productWant.findMany({ where: { userId: u.id, buy: true }, select: { productId: true, maxPriceCzk: true } }),
+    ])
+    const cardMax = new Map(myCardBuy.map((w) => [w.cardId, w.maxPriceCzk]))
+    const productMax = new Map(myProductBuy.map((w) => [w.productId, w.maxPriceCzk]))
+    const deal = (max: number | null | undefined, offerType: string | null, price: number | null) =>
+      max != null && (offerType !== 'SELL' || (price != null && price <= max))
+    const offerLine = (name: string, seller: string, offerType: string | null, price: number | null, max: number | null | undefined) =>
+      `${deal(max, offerType, price) ? '✅' : '•'} ${name} — ${esc(seller)} ${OFFER[offerType as keyof typeof OFFER]}${
+        offerType === 'SELL' && price ? ` za ${price} Kč` : ''
+      }${deal(max, offerType, price) ? ` <strong>(tvoje cena: do ${max} Kč)</strong>` : ''}`
+    const rows = [
+      ...cards.map((i) => ({
+        deal: deal(cardMax.get(i.cardId), i.offerType, i.priceCzk),
+        line: offerLine(
+          `<strong>${esc(i.card.name)}</strong> (${esc(i.card.set.name)} ${esc(i.card.localId)})`,
+          i.user.nickname,
+          i.offerType,
+          i.priceCzk,
+          cardMax.get(i.cardId),
+        ),
+      })),
+      ...products.map((i) => ({
+        deal: deal(productMax.get(i.productId), i.offerType, i.priceCzk),
+        line: offerLine(`<strong>${esc(i.product.name)}</strong>`, i.user.nickname, i.offerType, i.priceCzk, productMax.get(i.productId)),
+      })),
+    ].sort((a, b) => Number(b.deal) - Number(a.deal))
+    const lines = rows.map((r) => r.line)
+    const deals = rows.filter((r) => r.deal).length
     // Druhý směr: kdo nově chce koupit, co nabízím (poptávka „chci koupit“).
     const [buyCards, buyProducts] = await Promise.all([
       prisma.wantItem.findMany({
@@ -134,11 +155,13 @@ async function digest() {
         u.email,
         // U dětí jde kopie rodiči, stejně jako u poptávek.
         u.isMinor && u.parentEmail ? [u.parentEmail] : [],
-        lines.length
-          ? lines.length === 1
-            ? 'Někdo nabízí, co ti chybí'
-            : `Nové nabídky toho, co ti chybí (${lines.length})`
-          : 'Někdo chce koupit, co nabízíš',
+        deals
+          ? `✅ ${deals === 1 ? 'Nabídka' : `${deals} nabídky`} za tvou cenu nebo levněji`
+          : lines.length
+            ? lines.length === 1
+              ? 'Někdo nabízí, co ti chybí'
+              : `Nové nabídky toho, co ti chybí (${lines.length})`
+            : 'Někdo chce koupit, co nabízíš',
         [
           `Ahoj <strong>${esc(u.nickname)}</strong>,`,
           ...(lines.length ? ['od posledního e-mailu se objevily nabídky toho, co sháníš:', lines.slice(0, MAX_LINES).join('<br>') + more] : []),
