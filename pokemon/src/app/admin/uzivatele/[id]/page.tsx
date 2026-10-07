@@ -21,7 +21,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
       ratingsGot: { include: { from: { select: { nickname: true } } }, orderBy: { createdAt: 'desc' } },
       reportsAgainst: { include: { from: { select: { nickname: true } } }, orderBy: { createdAt: 'desc' } },
       reportsMade: { include: { against: { select: { nickname: true } } }, orderBy: { createdAt: 'desc' } },
-      _count: { select: { wants: true, productWants: true, sessions: true } },
+      _count: { select: { wants: true, productWants: true, sessions: true, phoneViewsMade: true, phoneViewsGot: true } },
     },
   })
   if (!u) notFound()
@@ -74,6 +74,10 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
             )}
             <dt className="text-slate-500">Místo</dt>
             <dd>{[u.city, u.region, COUNTRY_LABEL[u.country]].filter(Boolean).join(', ')}</dd>
+            <dt className="text-slate-500">Telefon</dt>
+            <dd>
+              {u.phone ?? '—'} · zobrazen {u._count.phoneViewsGot}× · sám zobrazil {u._count.phoneViewsMade}×
+            </dd>
             <dt className="text-slate-500">Odkazy</dt>
             <dd className="break-all">
               {[u.facebookUrl, u.instagramUrl, u.aukroUrl].filter(Boolean).join(' · ') || '—'}

@@ -22,6 +22,10 @@ export default function PrivacyPage() {
         <ul>
           <li>E-mail a heslo (uložené jen jako otisk): přihlášení, obnova hesla a upozornění na nabídky.</li>
           <li>Přezdívka, kraj, město a odkazy na sociální sítě: veřejný profil, aby se sběratelé mohli najít.</li>
+          <li>
+            Telefon (nepovinný, jen dospělí): zobrazí se pouze přihlášeným uživatelům s ověřeným e-mailem po kliknutí.
+            Zaznamenáváme, kdo si číslo zobrazil (ochrana proti zneužití); smazáním čísla v Můj účet z webu zmizí.
+          </li>
           <li>Rok a měsíc narození a země: zjištění, zda je potřeba souhlas rodiče. Nezveřejňujeme.</li>
           <li>E-mail rodiče a jméno, které uvedl při souhlasu (u dětí): souhlas a správa účtu dítěte.</li>
           <li>Sbírka karet a nabídky: hlavní funkce webu.</li>

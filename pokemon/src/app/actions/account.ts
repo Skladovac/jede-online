@@ -3,9 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { destroySession, getCurrentUser, verifyPassword } from '@/lib/auth'
-import { sendParentLinksEmail } from '@/lib/email'
-import { NICK_RE, SOCIAL_FIELDS, checkRegion, parseSocial, str, type FormState } from '@/lib/validation'
+import { createSession, destroySession, getCurrentUser, hashPassword, verifyPassword } from '@/lib/auth'
+import { sendParentLinksEmail, sendPasswordChangedEmail } from '@/lib/email'
+import { rateLimit } from '@/lib/rate-limit'
+import { NICK_RE, SOCIAL_FIELDS, checkPassword, checkRegion, parsePhone, parseSocial, str, type FormState } from '@/lib/validation'
+import { isAdult } from '@/lib/age'
 import { nicknameProblem } from '@/lib/nickname-filter'
 
 export async function updateProfile(_: FormState, fd: FormData): Promise<FormState> {
@@ -31,6 +33,10 @@ export async function updateProfile(_: FormState, fd: FormData): Promise<FormSta
     if ('error' in r) return { error: r.error }
     links[f] = r.url
   }
+  // Telefon smí mít jen dospělý.
+  const phoneRes = isAdult(user) ? parsePhone(str(fd, 'phone')) : { phone: null }
+  if ('error' in phoneRes) return { error: phoneRes.error }
+
   const linksChanged = SOCIAL_FIELDS.some((f) => links[f] !== user[f])
   const hasLinks = SOCIAL_FIELDS.some((f) => links[f])
 
@@ -41,6 +47,7 @@ export async function updateProfile(_: FormState, fd: FormData): Promise<FormSta
       region: region || null,
       city: city || null,
       ...links,
+      phone: phoneRes.phone,
       // Dospělý si odkazy schvaluje sám; dítěti je musí znovu schválit rodič.
       ...(linksChanged && { linksApprovedAt: user.isMinor ? null : new Date() }),
       // Indexaci u dítěte řídí jen rodič.
@@ -55,6 +62,26 @@ export async function updateProfile(_: FormState, fd: FormData): Promise<FormSta
   return {
     ok: linksChanged && hasLinks && user.isMinor ? 'Uloženo. Odkazy se zobrazí, až je schválí rodič.' : 'Uloženo.',
   }
+}
+
+/** Změna hesla v Můj účet: staré heslo + nové 2×; ostatní zařízení se odhlásí a přijde upozornění e-mailem. */
+export async function changePassword(_: FormState, fd: FormData): Promise<FormState> {
+  const user = await getCurrentUser()
+  if (!user) redirect('/prihlaseni')
+  if (!rateLimit(`pwchange:${user.id}`, 5, 60 * 60_000)) return { error: 'Příliš mnoho pokusů. Zkus to za hodinu.' }
+  const current = str(fd, 'current')
+  const password = str(fd, 'password')
+  if (!(await verifyPassword(current, user.passwordHash))) return { error: 'Současné heslo nesedí.' }
+  const pwErr = checkPassword(password)
+  if (pwErr) return { error: pwErr }
+  if (password !== str(fd, 'password2')) return { error: 'Nová hesla se neshodují.' }
+  if (password === current) return { error: 'Nové heslo musí být jiné než současné.' }
+
+  await prisma.user.update({ where: { id: user.id }, data: { passwordHash: await hashPassword(password) } })
+  await prisma.session.deleteMany({ where: { userId: user.id } }) // odhlásit všude…
+  await createSession(user.id) // …kromě tohoto zařízení
+  await sendPasswordChangedEmail(user.email, user.nickname)
+  return { ok: 'Heslo je změněné. Poslali jsme ti o tom e-mail.' }
 }
 
 export async function deleteAccount(_: FormState, fd: FormData): Promise<FormState> {

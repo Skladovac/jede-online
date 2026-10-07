@@ -94,6 +94,8 @@ model User {
   facebookUrl   String?
   instagramUrl  String?
   aukroUrl      String?
+  // Telefon jen u dospělých; zobrazí se přihlášenému po kliknutí (každé zobrazení se zapisuje).
+  phone         String?  @db.VarChar(20)
   linksApprovedAt DateTime? // u nezletilých schvaluje rodič
 
   acceptedTermsAt DateTime?
@@ -116,6 +118,8 @@ model User {
   productItems   ProductItem[]
   productWants   ProductWant[]
   bugReports     BugReport[]
+  phoneViewsMade PhoneView[]    @relation("PhoneViewer")
+  phoneViewsGot  PhoneView[]    @relation("PhoneOwner")
 
   @@index([country, region, city])
 }
@@ -407,4 +411,17 @@ model BugReport {
 model BannedWord {
   word      String   @id
   createdAt DateTime @default(now())
+}
+
+// Kdo si zobrazil čí telefon (ochrana proti sběru čísel, přehled pro správce).
+model PhoneView {
+  id        String   @id @default(cuid())
+  viewerId  String
+  viewer    User     @relation("PhoneViewer", fields: [viewerId], references: [id], onDelete: Cascade)
+  ownerId   String
+  owner     User     @relation("PhoneOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([viewerId, createdAt])
+  @@index([ownerId, createdAt])
 }

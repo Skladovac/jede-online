@@ -10,6 +10,9 @@ export function ageAt(birthYear: number, birthMonth: number, now = new Date()) {
   return y - birthYear - (m <= birthMonth ? 1 : 0)
 }
 
+/** Telefon na profilu smí mít jen dospělý (18+). */
+export const isAdult = (u: { birthYear: number; birthMonth: number }, now = new Date()) => ageAt(u.birthYear, u.birthMonth, now) >= 18
+
 export function needsParentConsent(birthYear: number, birthMonth: number, country: CountryCode, now = new Date()) {
   return ageAt(birthYear, birthMonth, now) < CONSENT_AGE[country]
 }
