@@ -4,6 +4,7 @@ import { searchCards, searchProducts } from '@/lib/search'
 import { ProductTile } from '@/components/ProductTile'
 import { cardImage, formatEur } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
+import { ensureEurCzk } from '@/lib/fx'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 export default async function SearchPage({ searchParams }: Props) {
+  await ensureEurCzk() // kurz ČNB pro korunové částky u cen
   const q = ((await searchParams).q ?? '').trim()
   const [hits, products] = await Promise.all([searchCards(q, 60), searchProducts(q, 24)])
 

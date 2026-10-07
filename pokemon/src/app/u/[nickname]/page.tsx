@@ -8,6 +8,7 @@ import { Submit, inputCls } from '@/components/ui'
 import { COUNTRY_LABEL } from '@/lib/regions'
 import { collectionOverview } from '@/lib/collection-view'
 import { CollectionOverview } from '@/components/CollectionOverview'
+import { ensureEurCzk } from '@/lib/fx'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProfilePage({ params }: Props) {
+  await ensureEurCzk() // kurz ČNB pro korunové částky u cen
   const user = await getProfile((await params).nickname)
   if (!user) notFound()
 

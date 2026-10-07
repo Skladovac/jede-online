@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { fillCatalogGaps } from '@/lib/catalog-fallback'
+import { pickStats } from '@/lib/price-stats'
 
 /**
  * Import katalogu Pokémon karet z TCGdex (https://tcgdex.dev, otevřené API zdarma).
@@ -39,7 +40,9 @@ type TcgCard = {
     cardmarket?: {
       updated?: string
       avg?: number | null
+      low?: number | null
       trend?: number | null
+      avg1?: number | null
       avg7?: number | null
       avg30?: number | null
       'avg-holo'?: number | null
@@ -157,6 +160,11 @@ export async function syncCatalog(
         hasFirstEd: v?.firstEdition ?? false,
         priceEur: eur(cm?.trend, cm?.avg7, cm?.avg30),
         priceReverseEur: eur(cm?.['trend-holo'], cm?.['avg7-holo'], cm?.['avg30-holo']),
+        priceStats: (() => {
+          const base = pickStats(cm as Record<string, number | null>)
+          const reverse = pickStats(cm as Record<string, number | null>, '-holo')
+          return base || reverse ? { ...(base ?? {}), ...(reverse && { reverse }) } : Prisma.JsonNull
+        })(),
         priceUpdatedAt: cm?.updated ? new Date(cm.updated) : null,
       }),
     }

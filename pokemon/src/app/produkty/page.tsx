@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { Prisma, ProductKind } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { ensureEurCzk } from '@/lib/fx'
 import { KIND_LABEL } from '@/lib/products'
 import { ProductTile } from '@/components/ProductTile'
 import { PriceNote } from '@/components/PriceNote'
@@ -16,6 +17,7 @@ export default async function ProductsPage({
 }: {
   searchParams: Promise<{ typ?: string; q?: string; nabidky?: string; strana?: string }>
 }) {
+  await ensureEurCzk() // kurz ČNB pro korunové částky u cen
   const sp = await searchParams
   const kind = sp.typ && sp.typ in KIND_LABEL ? (sp.typ as ProductKind) : undefined
   const q = (sp.q ?? '').trim().slice(0, 60)

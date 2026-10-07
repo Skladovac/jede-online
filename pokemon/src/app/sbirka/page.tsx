@@ -3,11 +3,13 @@ import { redirect } from 'next/navigation'
 import { getCurrentUser, isLimited } from '@/lib/auth'
 import { collectionOverview } from '@/lib/collection-view'
 import { CollectionOverview } from '@/components/CollectionOverview'
+import { ensureEurCzk } from '@/lib/fx'
 
 export const metadata: Metadata = { title: 'Moje sbírka' }
 export const dynamic = 'force-dynamic'
 
 export default async function MyCollectionPage() {
+  await ensureEurCzk() // kurz ČNB pro korunové částky u cen
   const user = await getCurrentUser()
   if (!user) redirect('/prihlaseni?next=/sbirka')
   const data = await collectionOverview(user.id)

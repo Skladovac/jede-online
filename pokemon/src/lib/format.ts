@@ -1,9 +1,25 @@
 import type { Prisma } from '@prisma/client'
 
 const eurFmt = new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'EUR' })
+const czkFmt = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 })
 
-export function formatEur(v: Prisma.Decimal | null | undefined) {
-  return v == null ? null : eurFmt.format(Number(v))
+// Kurz EUR/CZK z ČNB. Nastavuje ho lib/fx.ts (ensureEurCzk) na začátku stránky; tady jen čteme.
+let czkRate: number | null = null
+export const setCzkRate = (r: number | null) => {
+  czkRate = r
+}
+
+/** Orientační přepočet na koruny, např. "40 Kč" (null, když kurz zatím nemáme). */
+export function formatCzk(eur: number | Prisma.Decimal | null | undefined) {
+  if (eur == null || !czkRate) return null
+  return `${czkFmt.format(Math.max(1, Math.round(Number(eur) * czkRate)))} Kč`
+}
+
+/** "1,63 € (40 Kč)" — korunová částka podle kurzu ČNB v závorce. */
+export function formatEur(v: Prisma.Decimal | number | null | undefined) {
+  if (v == null) return null
+  const czk = formatCzk(v)
+  return `${eurFmt.format(Number(v))}${czk ? ` (${czk})` : ''}`
 }
 
 // Obrázky jdou přes naši cestu /img/ — v produkci je nginx kešuje z CDN TCGdex
