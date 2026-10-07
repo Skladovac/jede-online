@@ -96,6 +96,10 @@ model User {
   aukroUrl      String?
   // Telefon jen u dospělých; zobrazí se přihlášenému po kliknutí (každé zobrazení se zapisuje).
   phone         String?  @db.VarChar(20)
+
+  // Denní e-mail „někdo nabízí kartu, která ti chybí“ (jde vypnout v Můj účet).
+  matchEmails   Boolean   @default(true)
+  matchDigestAt DateTime? // do kdy už jsme shody poslali
   linksApprovedAt DateTime? // u nezletilých schvaluje rodič
 
   acceptedTermsAt DateTime?

@@ -1,0 +1,4 @@
+# Nocni import katalogu Pokemon karet (TCGdex) do pokemon.jede.online
+30 3 * * * root . /opt/jede/pokemon.env && curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3400/api/cron/sync-catalog >> /var/log/pokemon-catalog.log 2>&1
+# Denni e-mail o shodach (nekdo nabizi, co ti chybi) - odpoledne po skole (15 UTC = 17 v lete, 16 v zime)
+0 15 * * * root . /opt/jede/pokemon.env && curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3400/api/cron/match-digest >> /var/log/pokemon-digest.log 2>&1 && echo >> /var/log/pokemon-digest.log

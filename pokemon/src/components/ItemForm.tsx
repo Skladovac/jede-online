@@ -92,6 +92,7 @@ export function ItemForm({ cardId, item, variants }: { cardId: string; item: Ite
             <input name="note" maxLength={30} defaultValue={item.note ?? ''} className={small} />
           </label>
         </div>
+        <p className="text-xs text-slate-400">📷 Fotka vlastní karty (kvůli stavu) — připravujeme.</p>
 
         {spare > 0 && (
           <div className="flex flex-wrap items-end gap-2 rounded-xl bg-blue-50 p-3 dark:bg-blue-500/10">

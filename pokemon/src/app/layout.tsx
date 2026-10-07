@@ -15,6 +15,8 @@ export const metadata: Metadata = {
     locale: 'cs_CZ',
     type: 'website',
   },
+  // iPhone: po „Přidat na plochu“ se web otevře jako aplikace přes celou obrazovku.
+  appleWebApp: { capable: true, title: 'Pokémon karty', statusBarStyle: 'default' },
   // Uzavřená beta: nic se zatím neindexuje.
   robots: { index: false, follow: false },
 }
