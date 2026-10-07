@@ -19,7 +19,8 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: ${POKEMON_DATABASE_URL}
-      RESEND_API_KEY: ${RESEND_API_KEY}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
       CRON_SECRET: ${CRON_SECRET}
       GIT_COMMIT: ${GIT_COMMIT:-unknown}
     ports:
