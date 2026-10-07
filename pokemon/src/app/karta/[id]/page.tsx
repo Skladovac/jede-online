@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { cardImage, categoryLabel, formatEur, rarityLabel } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
+import { CardOffers } from '@/components/CardOffers'
 
 export const dynamic = 'force-dynamic'
 
@@ -114,6 +115,7 @@ export default async function CardPage({ params }: Props) {
           </section>
         </div>
       </div>
+      <CardOffers cardId={card.id} />
     </main>
   )
 }
