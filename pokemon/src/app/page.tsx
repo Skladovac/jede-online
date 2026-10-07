@@ -2,6 +2,9 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { SetTile } from '@/components/SetTile'
 import { setFallbackImages } from '@/lib/set-images'
+import { getCurrentUser } from '@/lib/auth'
+import { findCollectors, parsePlace } from '@/lib/matches'
+import { CollectorList } from '@/components/CollectorList'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +20,11 @@ export default async function Home() {
   ])
   const fallback = await setFallbackImages(latest)
 
+  // Přihlášenému: kdo má, co mu chybí (napřed jeho kraj, když tam nikdo není, celé ČR/SK).
+  const user = await getCurrentUser()
+  let matches = user ? await findCollectors(user.id, parsePlace(undefined, user.region).place, 3) : null
+  if (user && matches && !matches.collectors.length && user.region) matches = await findCollectors(user.id, {}, 3)
+
   return (
     <main className="mx-auto max-w-6xl px-4">
       <section className="py-12 sm:py-16">
@@ -27,13 +35,33 @@ export default async function Home() {
           Měj přehled o své sbírce a najdi karty, které ti chybí.
         </h1>
         <p className="mt-4 max-w-xl text-lg text-slate-600 dark:text-slate-300">
-          Katalog všech anglických sad od roku 1999. Brzy: vlastní sbírka, seznam chybějících karet a výměny se
+          Katalog všech anglických sad od roku 1999, vlastní sbírka, seznam chybějících karet a výměny se
           sběrateli z Česka a Slovenska.
         </p>
         <p className="mt-6 text-sm text-slate-500">
           {setCount} sad · {cardCount.toLocaleString('cs-CZ')} karet
         </p>
       </section>
+
+      {matches && (
+        <section className="mb-12">
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 className="text-xl font-bold">Kdo má, co ti chybí</h2>
+            <Link href="/sberatele" className="text-sm font-medium text-yellow-700 hover:underline dark:text-yellow-400">
+              Najdi sběratele →
+            </Link>
+          </div>
+          {matches.collectors.length ? (
+            <CollectorList collectors={matches.collectors} />
+          ) : (
+            <p className="text-sm text-slate-500">
+              {matches.mine.wantCards.length || matches.mine.wantProducts.length
+                ? 'Zatím nikdo nemá nic z toho, co ti chybí. Mrkni sem později.'
+                : 'Označ si v sadě karty, které ti chybí, a tady uvidíš, kdo je má.'}
+            </p>
+          )}
+        </section>
+      )}
 
       <section>
         <div className="mb-4 flex items-baseline justify-between">
