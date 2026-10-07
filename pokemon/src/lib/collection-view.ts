@@ -30,7 +30,7 @@ export async function collectionOverview(userId: string) {
     .sort((a, b) => (b.set.releaseDate?.getTime() ?? 0) - (a.set.releaseDate?.getTime() ?? 0))
 
   const offers = items
-    .filter((i) => i.spareQty > 0 && i.offerType)
+    .filter((i) => i.spareQty > 0 && i.offerType && !i.hiddenAt)
     .sort((a, b) => a.card.set.name.localeCompare(b.card.set.name) || byLocalId(a.card, b.card))
   const wanted = wants
     .map((w) => w.card)

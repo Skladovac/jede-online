@@ -12,7 +12,7 @@ import { ensureEurCzk } from '@/lib/fx'
 
 export const dynamic = 'force-dynamic'
 
-type Props = { params: Promise<{ nickname: string }> }
+type Props = { params: Promise<{ nickname: string }>; searchParams?: Promise<{ nahlasit?: string }> }
 
 async function getProfile(nickname: string) {
   const user = await prisma.user.findFirst({
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: user.nickname, robots: user.indexable ? undefined : { index: false, follow: false } }
 }
 
-export default async function ProfilePage({ params }: Props) {
+export default async function ProfilePage({ params, searchParams }: Props) {
   await ensureEurCzk() // kurz ČNB pro korunové částky u cen
   const user = await getProfile((await params).nickname)
   if (!user) notFound()
@@ -94,7 +94,7 @@ export default async function ProfilePage({ params }: Props) {
       </div>
 
       {viewer && viewer.id !== user.id && (
-        <details className="mt-12 text-sm">
+        <details id="nahlasit" className="mt-12 text-sm" open={!!(await searchParams)?.nahlasit}>
           <summary className="cursor-pointer text-slate-500 underline">Nahlásit uživatele</summary>
           <ActionForm action={reportUser} className="mt-3 max-w-lg space-y-3">
             <input type="hidden" name="againstId" value={user.id} />

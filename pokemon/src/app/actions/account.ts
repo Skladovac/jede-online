@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { destroySession, getCurrentUser, verifyPassword } from '@/lib/auth'
 import { sendParentLinksEmail } from '@/lib/email'
 import { NICK_RE, SOCIAL_FIELDS, checkRegion, parseSocial, str, type FormState } from '@/lib/validation'
+import { nicknameProblem } from '@/lib/nickname-filter'
 
 export async function updateProfile(_: FormState, fd: FormData): Promise<FormState> {
   const user = await getCurrentUser()
@@ -15,6 +16,8 @@ export async function updateProfile(_: FormState, fd: FormData): Promise<FormSta
   const region = str(fd, 'region')
   const city = str(fd, 'city')
   if (!NICK_RE.test(nickname)) return { error: 'Přezdívka: 3–20 znaků, jen písmena, číslice, _ a -.' }
+  if (nickname !== user.nickname && (await nicknameProblem(nickname)))
+    return { error: 'Tahle přezdívka není povolená. Zvol prosím jinou.' }
   if (!checkRegion(user.country, region)) return { error: 'Vyber kraj ze seznamu.' }
   if (city.length > 60) return { error: 'Název města je příliš dlouhý.' }
   if (nickname.toLowerCase() !== user.nickname.toLowerCase()) {
