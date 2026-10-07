@@ -283,20 +283,26 @@ enum RatingTag {
   NOT_SENT
 }
 
+// Hodnocení: buď po dokončené výměně na webu (requestId = ověřené), nebo volné od registrovaného
+// uživatele (requestId null, max. jedno od každého uživatele) — např. po obchodu domluveném mimo web.
 model Rating {
-  id        String       @id @default(cuid())
-  requestId String
-  request   TradeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  id        String        @id @default(cuid())
+  requestId String?
+  request   TradeRequest? @relation(fields: [requestId], references: [id], onDelete: Cascade)
   fromId    String
   from      User         @relation("RatingFrom", fields: [fromId], references: [id], onDelete: Cascade)
   toId      String
   to        User         @relation("RatingTo", fields: [toId], references: [id], onDelete: Cascade)
   positive  Boolean
   tag       RatingTag?
+  comment   String?      @db.VarChar(300)
+  hiddenAt  DateTime? // skryl správce
   createdAt DateTime     @default(now())
+  updatedAt DateTime     @default(now()) @updatedAt
 
   @@unique([requestId, fromId])
   @@index([toId])
+  @@index([fromId, toId])
 }
 
 model Report {

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { adminBan, adminDelete, adminHideOffer, adminRename, adminResolveReport } from '@/app/actions/admin'
+import { adminBan, adminDelete, adminHideOffer, adminHideRating, adminRename, adminResolveReport } from '@/app/actions/admin'
 import { ActionForm } from '@/components/ActionForm'
 import { Field, Submit, inputCls } from '@/components/ui'
 import { STATUS } from '@/lib/request-status'
@@ -18,7 +18,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
       productItems: { include: { product: { select: { id: true, name: true } } }, orderBy: { updatedAt: 'desc' } },
       sentRequests: { include: { to: { select: { nickname: true } } }, orderBy: { createdAt: 'desc' }, take: 30 },
       gotRequests: { include: { from: { select: { nickname: true } } }, orderBy: { createdAt: 'desc' }, take: 30 },
-      ratingsGot: { include: { from: { select: { nickname: true } } }, orderBy: { createdAt: 'desc' } },
+      ratingsGot: { include: { from: { select: { nickname: true } } }, orderBy: { updatedAt: 'desc' } },
       reportsAgainst: { include: { from: { select: { nickname: true } } }, orderBy: { createdAt: 'desc' } },
       reportsMade: { include: { against: { select: { nickname: true } } }, orderBy: { createdAt: 'desc' } },
       _count: { select: { wants: true, productWants: true, sessions: true, phoneViewsMade: true, phoneViewsGot: true } },
@@ -27,7 +27,8 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
   if (!u) notFound()
   const offers = u.items.filter((i) => i.spareQty > 0 && i.offerType)
   const productOffers = u.productItems.filter((i) => i.spareQty > 0 && i.offerType)
-  const pos = u.ratingsGot.filter((r) => r.positive).length
+  const shown = u.ratingsGot.filter((r) => !r.hiddenAt)
+  const pos = shown.filter((r) => r.positive).length
 
   const Box = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
@@ -89,9 +90,30 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
             <dd>{u._count.sessions}</dd>
             <dt className="text-slate-500">Hodnocení</dt>
             <dd>
-              👍 {pos} · 👎 {u.ratingsGot.length - pos}
+              👍 {pos} · 👎 {shown.length - pos}
             </dd>
           </dl>
+        </Box>
+
+        <Box title={`Hodnocení (${u.ratingsGot.length})`}>
+          {u.ratingsGot.length ? (
+            <ul className="space-y-2 text-sm">
+              {u.ratingsGot.map((r) => (
+                <li key={r.id} className={r.hiddenAt ? 'opacity-50' : ''}>
+                  {r.positive ? '👍' : '👎'} <strong>{r.from.nickname}</strong>
+                  {r.requestId ? ' · ✓ výměna' : ' · volné'}
+                  {r.comment && <span className="text-slate-500"> · „{r.comment}“</span>}
+                  <ActionForm action={adminHideRating} className="inline">
+                    <input type="hidden" name="ratingId" value={r.id} />
+                    <input type="hidden" name="hide" value={r.hiddenAt ? '0' : '1'} />
+                    <button className="ml-2 text-xs text-red-600 underline">{r.hiddenAt ? 'zobrazit' : 'skrýt'}</button>
+                  </ActionForm>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-slate-500">Žádná.</p>
+          )}
         </Box>
 
         <Box title="Zásahy">

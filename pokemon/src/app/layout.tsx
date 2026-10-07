@@ -5,7 +5,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://pokemon.jede.online'),
-  title: { default: 'Pokémon karty — sbírka a výměny', template: '%s · Pokémon karty' },
+  title: { default: 'Pokémon karty — sbírka a výměny', template: '%s · pokemon.jede.online' },
   description: 'Evidence sbírky Pokémon karet, seznam chybějících karet a výměny mezi sběrateli v ČR a SK.',
   // Náhled odkazu na Facebooku apod.; obrázek je app/opengraph-image.tsx.
   openGraph: {

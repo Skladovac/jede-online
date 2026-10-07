@@ -39,6 +39,9 @@ export function UserMenu({ nickname, isAdmin }: { nickname: string; isAdmin: boo
         <Link href={`/u/${encodeURIComponent(nickname)}`} className={item}>
           Můj veřejný profil
         </Link>
+        <Link href={`/u/${encodeURIComponent(nickname)}/hodnoceni`} className={item}>
+          Moje hodnocení
+        </Link>
         <Link href="/sberatele" className={item}>
           Najdi sběratele
         </Link>

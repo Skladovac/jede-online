@@ -8,18 +8,10 @@ import { ActionForm } from '@/components/ActionForm'
 import { Submit, inputCls } from '@/components/ui'
 import { RequestItems } from '@/components/RequestItems'
 import { STATUS } from '@/lib/request-status'
+import { TAG_LABEL } from '@/lib/rating-tags'
 
 export const metadata: Metadata = { title: 'Poptávka', robots: { index: false, follow: false } }
 export const dynamic = 'force-dynamic'
-
-const TAG_LABEL = {
-  FAST_SHIPPING: 'rychle odesláno',
-  AS_DESCRIBED: 'odpovídá popisu',
-  FRIENDLY: 'příjemná domluva',
-  SLOW: 'pomalé',
-  NOT_AS_DESCRIBED: 'neodpovídá popisu',
-  NOT_SENT: 'neodesláno',
-} as const
 
 export default async function RequestDetail({
   params,

@@ -40,7 +40,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
 
   const [viewer, ratings, completed] = await Promise.all([
     getCurrentUser(),
-    prisma.rating.groupBy({ by: ['positive'], where: { toId: user.id }, _count: true }),
+    prisma.rating.groupBy({ by: ['positive'], where: { toId: user.id, hiddenAt: null }, _count: true }),
     prisma.tradeRequest.count({ where: { status: 'COMPLETED', OR: [{ fromId: user.id }, { toId: user.id }] } }),
   ])
   const pos = ratings.find((r) => r.positive)?._count ?? 0
@@ -76,7 +76,11 @@ export default async function ProfilePage({ params, searchParams }: Props) {
                 {' '}
                 · 👍 {pos} · 👎 {neg} ({Math.round((pos / (pos + neg)) * 100)} % kladných)
               </>
-            )}
+            )}{' '}
+            ·{' '}
+            <Link href={`/u/${encodeURIComponent(user.nickname)}/hodnoceni`} className="font-medium text-yellow-700 underline dark:text-yellow-400">
+              {pos + neg > 0 ? 'Zobrazit hodnocení' : 'Ohodnotit'}
+            </Link>
           </p>
         </div>
       </div>
