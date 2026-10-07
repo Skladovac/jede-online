@@ -45,6 +45,12 @@ export function UserMenu({ nickname, isAdmin }: { nickname: string; isAdmin: boo
         <Link href="/sberatele" className={item}>
           Najdi sběratele
         </Link>
+        <Link href="/trziste" className={item}>
+          Tržiště
+        </Link>
+        <Link href="/hodnoceni" className={item}>
+          Nejlépe hodnocení
+        </Link>
         {isAdmin && (
           <Link href="/admin" className={item}>
             Administrace
