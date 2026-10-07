@@ -89,7 +89,9 @@ export async function syncProducts(log: (m: string) => void = console.log) {
     prisma.cardSet.findMany({ where: { game: 'pokemon' }, select: { id: true, name: true } }),
   ])
   const prices = new Map(priceGuides.map((p) => [p.idProduct, p]))
-  const list = products.filter((p) => !SKIP.has(p.categoryName))
+  // Indonéské (a indonésko-thajské) edice u nás nikdo nesbírá — do katalogu vůbec nepatří.
+  const EXCLUDED_NAME = /\b(indonesian|thai)\b/i
+  const list = products.filter((p) => !SKIP.has(p.categoryName) && !EXCLUDED_NAME.test(p.name))
 
   // Rozšíření Cardmarketu → naše sada. Každý produkt hlasuje sadou, jejímž názvem začíná.
   // Celé rozšíření se přiřadí jen při jasné většině (smíšené skupiny typu "Box Sets" by jinak
@@ -132,6 +134,11 @@ export async function syncProducts(log: (m: string) => void = console.log) {
       }),
     )
   }
+  // Úklid dřív naimportovaných vyřazených produktů (jen pokud je nikdo nemá ve sbírce ani je neshání).
+  const removed = await prisma.product.deleteMany({
+    where: { name: { contains: 'Indonesian', mode: 'insensitive' }, items: { none: {} }, wants: { none: {} } },
+  })
+  if (removed.count) log(`[produkty] odstraněno ${removed.count} indonéských produktů`)
   log(`[produkty] ${list.length} produktů, ${[...expansionSet.keys()].length} rozšíření spárováno se sadami`)
 
   try {
