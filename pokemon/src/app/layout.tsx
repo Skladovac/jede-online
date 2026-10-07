@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next'
+import { SiteHeader } from '@/components/SiteHeader'
+import { SiteFooter } from '@/components/SiteFooter'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Pokémon karty — sbírka a výměny',
+  title: { default: 'Pokémon karty — sbírka a výměny', template: '%s · Pokémon karty' },
   description: 'Evidence sbírky Pokémon karet, seznam chybějících karet a výměny mezi sběrateli v ČR a SK.',
   // Uzavřená beta: nic se zatím neindexuje.
   robots: { index: false, follow: false },
@@ -18,7 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="cs">
       <body className="min-h-dvh bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
+        <SiteHeader />
         {children}
+        <SiteFooter />
       </body>
     </html>
   )

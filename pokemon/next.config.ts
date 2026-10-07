@@ -11,9 +11,10 @@ const nextConfig: NextConfig = {
 
   serverExternalPackages: ['@prisma/client'],
 
-  images: {
-    // Obrázky karet se neukládají u nás, berou se z CDN zdroje katalogu.
-    remotePatterns: [{ protocol: 'https', hostname: 'assets.tcgdex.net' }],
+  // Obrázky karet: v produkci /img/ obsluhuje a kešuje nginx (viz deploy/nginx-…conf),
+  // sem dojde jen lokální vývoj.
+  async rewrites() {
+    return [{ source: '/img/:path*', destination: 'https://assets.tcgdex.net/:path*' }]
   },
 }
 

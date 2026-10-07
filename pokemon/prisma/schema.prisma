@@ -13,18 +13,23 @@ generator client {
 // ── Katalog ─────────────────────────────────────────────────────────
 
 model CardSet {
-  id          String    @id // id ze zdroje katalogu, např. "sv01"
-  name        String
-  series      String // éra, např. "Scarlet & Violet"
-  code        String? // zkratka natištěná na kartě, např. "SVI"
-  releaseDate DateTime?
-  cardCount   Int
-  logoUrl     String?
-  symbolUrl   String?
-  cards       Card[]
-  syncedAt    DateTime  @updatedAt
+  id            String    @id // id ze zdroje katalogu, např. "sv01"
+  // Karetní hra. Zatím jen "pokemon"; připraveno pro další hry (Magic, Yu-Gi-Oh!, …).
+  game          String    @default("pokemon")
+  name          String
+  seriesId      String // éra, např. "sv"
+  series        String // např. "Scarlet & Violet"
+  code          String? // zkratka natištěná na kartě, např. "SVI"
+  releaseDate   DateTime?
+  cardCount     Int // včetně secret rare
+  officialCount Int // číslo za lomítkem na kartě, např. 198
+  logoUrl       String?
+  symbolUrl     String?
+  cards         Card[]
+  syncedAt      DateTime  @updatedAt
 
-  @@index([series])
+  @@index([game, releaseDate])
+  @@index([seriesId])
   @@index([code])
 }
 
@@ -34,16 +39,18 @@ model Card {
   set            CardSet  @relation(fields: [setId], references: [id])
   localId        String // číslo v sadě, např. "045" (může obsahovat písmena, "TG01")
   name           String
+  category       String? // Pokemon / Trainer / Energy
   rarity         String?
-  imageUrl       String?
+  imageUrl       String? // bez přípony; /low.webp nebo /high.webp se doplní při zobrazení
   // Jaké varianty karta v tisku existuje (z katalogu).
   hasNormal      Boolean  @default(true)
   hasHolo        Boolean  @default(false)
   hasReverse     Boolean  @default(false)
   hasFirstEd     Boolean  @default(false)
-  // Orientační cena z Cardmarketu v EUR (průměr), aktualizuje noční import.
-  priceEur       Decimal? @db.Decimal(10, 2)
-  priceUpdatedAt DateTime?
+  // Orientační ceny z Cardmarketu v EUR (průměr prodejů), aktualizuje noční import.
+  priceEur        Decimal? @db.Decimal(10, 2)
+  priceReverseEur Decimal? @db.Decimal(10, 2) // reverse holo verze
+  priceUpdatedAt  DateTime?
 
   items     CollectionItem[]
   wants     WantItem[]
