@@ -34,6 +34,47 @@ function CardStrip({ cards, extra }: { cards: MiniCard[]; extra?: (c: MiniCard, 
   )
 }
 
+type SetInfo = { id: string; name: string; releaseDate: Date | null }
+
+/** Karty rozdělené po sadách (nejnovější sada nahoře), každá sada jde sbalit. */
+function BySet<T>({
+  items,
+  card,
+  extra,
+}: {
+  items: T[]
+  card: (t: T) => MiniCard & { set: SetInfo }
+  extra?: (t: T) => React.ReactNode
+}) {
+  const groups = new Map<string, { set: SetInfo; items: T[] }>()
+  for (const t of items) {
+    const set = card(t).set
+    const g = groups.get(set.id) ?? { set, items: [] }
+    g.items.push(t)
+    groups.set(set.id, g)
+  }
+  const sorted = [...groups.values()].sort((a, b) => (b.set.releaseDate?.getTime() ?? 0) - (a.set.releaseDate?.getTime() ?? 0))
+  return (
+    <div className="space-y-3">
+      {sorted.map(({ set, items: list }) => (
+        <details key={set.id} open className="group rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+          <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold">
+            <span className="text-slate-400 transition group-open:rotate-90">▸</span>
+            <span className="min-w-0 flex-1 truncate">{set.name}</span>
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-800">{list.length}</span>
+            <Link href={`/sady/${encodeURIComponent(set.id)}`} className="text-xs font-normal text-slate-500 underline">
+              sada
+            </Link>
+          </summary>
+          <div className="mt-3">
+            <CardStrip cards={list.map(card)} extra={extra && ((_, i) => extra(list[i]))} />
+          </div>
+        </details>
+      ))}
+    </div>
+  )
+}
+
 export function CollectionOverview({ data, own }: { data: Overview; own: boolean }) {
   const { sets, offers, wanted, totals, productItems, productWants } = data
   const OFFER_SHORT = { TRADE: 'vyměním', SELL: 'prodám', GIFT: 'daruji' } as const
@@ -56,13 +97,12 @@ export function CollectionOverview({ data, own }: { data: Overview; own: boolean
       <section>
         <h2 className="mb-3 text-xl font-bold">Nabízí ({offers.length})</h2>
         {offers.length ? (
-          <CardStrip
-            cards={offers.map((o) => o.card)}
-            extra={(_, i) => (
+          <BySet
+            items={offers}
+            card={(o) => o.card}
+            extra={(o) => (
               <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">
-                {offers[i].spareQty}× {offers[i].offerType === 'SELL' && offers[i].priceCzk
-                  ? `${offers[i].priceCzk} Kč`
-                  : OFFER[offers[i].offerType!]}
+                {o.spareQty}× {o.offerType === 'SELL' && o.priceCzk ? `${o.priceCzk} Kč` : OFFER[o.offerType!]}
               </p>
             )}
           />
@@ -76,7 +116,7 @@ export function CollectionOverview({ data, own }: { data: Overview; own: boolean
       <section>
         <h2 className="mb-3 text-xl font-bold">Chybí ({wanted.length})</h2>
         {wanted.length ? (
-          <CardStrip cards={wanted} />
+          <BySet items={wanted} card={(c) => c} />
         ) : (
           <p className="text-sm text-slate-500">
             {own ? 'Zatím nic. V sadě přepni na „Chybí“ a označ karty, které sháníš.' : 'Zatím nic.'}

@@ -25,11 +25,21 @@ export default async function Image({ params }: { params: Promise<{ nickname: st
         }),
       ])
     : [0, []]
-  const imgs = wants.map((w) => ogCardImage(w.card.imageUrl)).filter((u): u is string => !!u).slice(0, 5)
+  // Některé obrázky v katalogu chybí (404) — bereme jen ty, které se opravdu načtou.
+  const candidates = wants.map((w) => ogCardImage(w.card.imageUrl)).filter((u): u is string => !!u)
+  const ok = await Promise.all(
+    candidates.map((u) =>
+      fetch(u, { method: 'HEAD', signal: AbortSignal.timeout(4000) })
+        .then((r) => r.ok && !!r.headers.get('content-type')?.startsWith('image/'))
+        .catch(() => false),
+    ),
+  )
+  const imgs = candidates.filter((_, i) => ok[i]).slice(0, 5)
 
   const title = visible ? `Co hledá ${user.nickname}` : 'Pokémon karty'
   const sub = visible ? `Chybí ${cardsCz(count)}. Máš něco z toho?` : 'Sbírka a výměny karet'
   const foot = 'pokemon.jede.online'
+  const promo = 'Zdarma: veď si sbírku a najdi, s kým měnit'
 
   return new ImageResponse(
     (
@@ -42,15 +52,19 @@ export default async function Image({ params }: { params: Promise<{ nickname: st
             <div style={{ fontSize: 36, color: '#e2e8f0', marginTop: 14 }}>{sub}</div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 24, marginTop: 44, flex: 1 }}>
+        <div style={{ display: 'flex', gap: 24, marginTop: 36, flex: 1 }}>
           {imgs.map((src) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={src} src={src} width={196} height={274} alt="" style={{ borderRadius: 12, border: '5px solid #fb923c' }} />
+            <img key={src} src={src} width={180} height={251} alt="" style={{ borderRadius: 12, border: '5px solid #fb923c' }} />
           ))}
         </div>
-        <div style={{ display: 'flex', fontSize: 30, fontWeight: 800, color: '#facc15' }}>{foot}</div>
+        {/* Promo pruh: kdo náhled uvidí, má hned vědět, co je to za web. */}
+        <div style={{ display: 'flex', alignItems: 'center', background: '#facc15', borderRadius: 18, padding: '14px 26px', margin: '0 -8px' }}>
+          <div style={{ fontSize: 30, fontWeight: 800, color: '#0f172a' }}>{foot}</div>
+          <div style={{ fontSize: 28, color: '#1e293b', marginLeft: 20 }}>{promo}</div>
+        </div>
       </div>
     ),
-    { ...OG_SIZE, fonts: await ogFonts(title + sub + foot + '0123456789') },
+    { ...OG_SIZE, fonts: await ogFonts(title + sub + foot + promo + '0123456789') },
   )
 }
