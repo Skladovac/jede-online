@@ -25,6 +25,13 @@ export function cardImage(url: string | null, size: 'low' | 'high' = 'low') {
   return viaProxy(`${url}/${size}.webp`)
 }
 
+// Produkty: obrázky TCGplayeru přes /img3/ (nginx keš). Uložené bez přípony velikosti.
+const TCGP_ASSETS = 'https://tcgplayer-cdn.tcgplayer.com/'
+export function productImage(url: string | null, size: 'low' | 'high' = 'low') {
+  if (!url?.startsWith(TCGP_ASSETS)) return null
+  return '/img3/' + url.slice(TCGP_ASSETS.length) + (size === 'high' ? '_in_1000x1000.jpg' : '_200w.jpg')
+}
+
 export function setLogo(url: string | null) {
   return url ? viaProxy(`${url}.webp`) : null
 }

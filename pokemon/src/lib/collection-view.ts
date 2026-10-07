@@ -4,7 +4,8 @@ import { byLocalId } from '@/lib/format'
 
 /** Přehled sbírky uživatele: postup po sadách, chybějící karty a nabídky. Sdílí /sbirka a veřejný profil. */
 export async function collectionOverview(userId: string) {
-  const [items, wants] = await Promise.all([
+  const productInclude = { product: { include: { set: { select: { logoUrl: true } } } } }
+  const [items, wants, productItems, productWants] = await Promise.all([
     prisma.collectionItem.findMany({
       where: { userId },
       include: { card: { include: { set: true } } },
@@ -13,6 +14,8 @@ export async function collectionOverview(userId: string) {
       where: { userId },
       include: { card: { include: { set: true } } },
     }),
+    prisma.productItem.findMany({ where: { userId }, include: productInclude, orderBy: { updatedAt: 'desc' } }),
+    prisma.productWant.findMany({ where: { userId }, include: productInclude, orderBy: { createdAt: 'desc' } }),
   ])
 
   // Postup po sadách (počítá se karta, ne kus).
@@ -37,6 +40,8 @@ export async function collectionOverview(userId: string) {
     sets,
     offers,
     wanted,
+    productItems,
+    productWants: productWants.map((w) => w.product),
     totals: {
       cards: new Set(items.map((i) => i.cardId)).size,
       pieces: items.reduce((s, i) => s + i.quantity, 0),

@@ -14,6 +14,21 @@ const select = {
 
 export type SearchHit = Prisma.CardGetPayload<{ select: typeof select }>
 
+/** Zapečetěné produkty podle názvu (všechna slova musí sedět, "prismatic etb" najde ETB). */
+export async function searchProducts(raw: string, limit = 6) {
+  const words = raw.trim().replace(/\s+/g, ' ').slice(0, 60).split(' ').filter((w) => w.length >= 2)
+  if (!words.length) return []
+  // "etb" a "bb" jako zkratky, které lidé píšou
+  const expand = (w: string) =>
+    w.toLowerCase() === 'etb' ? 'Elite Trainer Box' : w.toLowerCase() === 'bb' ? 'Booster Bundle' : w
+  return prisma.product.findMany({
+    where: { AND: words.map((w) => ({ name: { contains: expand(w), mode: 'insensitive' as const } })) },
+    select: { id: true, name: true, kind: true, imageUrl: true, priceEur: true, set: { select: { logoUrl: true } } },
+    orderBy: [{ imageUrl: { sort: 'asc', nulls: 'last' } }, { addedAt: { sort: 'desc', nulls: 'last' } }],
+    take: limit,
+  })
+}
+
 const newestFirst = { set: { releaseDate: { sort: 'desc', nulls: 'last' } } } as const
 
 // "45" najde i "045" a "0045" — na kartách jsou čísla s nulami různě dlouhá.

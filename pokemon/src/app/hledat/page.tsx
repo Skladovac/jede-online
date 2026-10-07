@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { searchCards } from '@/lib/search'
+import { searchCards, searchProducts } from '@/lib/search'
+import { ProductTile } from '@/components/ProductTile'
 import { cardImage, formatEur } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
 
@@ -15,7 +16,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function SearchPage({ searchParams }: Props) {
   const q = ((await searchParams).q ?? '').trim()
-  const hits = await searchCards(q, 60)
+  const [hits, products] = await Promise.all([searchCards(q, 60), searchProducts(q, 24)])
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -28,7 +29,7 @@ export default async function SearchPage({ searchParams }: Props) {
             : `${hits.length} karet`}
       </p>
 
-      {q.length >= 2 && hits.length === 0 && (
+      {q.length >= 2 && hits.length === 0 && products.length === 0 && (
         <p className="mt-8 text-slate-500">
           Nic jsme nenašli. Zkus jen část jména nebo kód sady a číslo z dolního rohu karty.
         </p>
@@ -59,7 +60,19 @@ export default async function SearchPage({ searchParams }: Props) {
           )
         })}
       </ul>
-      {hits.length > 0 && <PriceNote className="mt-8" />}
+      {products.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-4 text-xl font-bold">Produkty ({products.length})</h2>
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {products.map((p) => (
+              <li key={p.id}>
+                <ProductTile p={p} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {(hits.length > 0 || products.length > 0) && <PriceNote className="mt-8" />}
     </main>
   )
 }
