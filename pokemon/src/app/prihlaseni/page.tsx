@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { login } from '@/app/actions/auth'
 import { ActionForm } from '@/components/ActionForm'
 import { Field, Submit, inputCls } from '@/components/ui'
+import { PasswordInput } from '@/components/PasswordInput'
 
 export const metadata: Metadata = { title: 'Přihlášení' }
 
@@ -26,7 +27,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <input name="email" type="email" required autoComplete="email" className={inputCls} />
         </Field>
         <Field label="Heslo">
-          <input name="password" type="password" required autoComplete="current-password" className={inputCls} />
+          <PasswordInput autoComplete="current-password" />
         </Field>
         <div className="flex items-center justify-between gap-4">
           <Submit>Přihlásit se</Submit>

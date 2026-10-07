@@ -6,6 +6,7 @@ import { register } from '@/app/actions/auth'
 import { Alert, Checkbox, Field, inputCls } from '@/components/ui'
 import { needsParentConsent, CONSENT_AGE, type CountryCode } from '@/lib/age'
 import { REGIONS } from '@/lib/regions'
+import { PasswordInput } from '@/components/PasswordInput'
 
 const MONTHS = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec']
 
@@ -35,7 +36,7 @@ export function RegisterForm() {
         <input name="email" type="email" required autoComplete="email" defaultValue={f.email} className={inputCls} />
       </Field>
       <Field label="Heslo" hint="Aspoň 8 znaků.">
-        <input name="password" type="password" required minLength={8} autoComplete="new-password" className={inputCls} />
+        <PasswordInput autoComplete="new-password" minLength={8} />
       </Field>
       <Field label="Přezdívka" hint="Uvidí ji ostatní. Nepiš skutečné jméno a příjmení.">
         <input name="nickname" required minLength={3} maxLength={20} defaultValue={f.nickname} className={inputCls} />

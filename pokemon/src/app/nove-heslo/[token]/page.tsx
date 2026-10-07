@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { resetPassword } from '@/app/actions/auth'
 import { ActionForm } from '@/components/ActionForm'
 import { Field, Submit, inputCls } from '@/components/ui'
+import { PasswordInput } from '@/components/PasswordInput'
 
 export const metadata: Metadata = { title: 'Nové heslo' }
 
@@ -13,7 +14,7 @@ export default async function NewPasswordPage({ params }: { params: Promise<{ to
       <ActionForm action={resetPassword}>
         <input type="hidden" name="token" value={token} />
         <Field label="Nové heslo" hint="Aspoň 8 znaků.">
-          <input name="password" type="password" required minLength={8} autoComplete="new-password" className={inputCls} />
+          <PasswordInput autoComplete="new-password" minLength={8} />
         </Field>
         <Submit>Uložit heslo</Submit>
       </ActionForm>
