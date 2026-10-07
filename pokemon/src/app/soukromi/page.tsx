@@ -30,7 +30,7 @@ export default function PrivacyPage() {
           <li>E-mail rodiče a jméno, které uvedl při souhlasu (u dětí): souhlas a správa účtu dítěte.</li>
           <li>Sbírka karet a nabídky: hlavní funkce webu.</li>
         </ul>
-        <p>Údaje neprodáváme ani nepředáváme třetím stranám. E-maily odesíláme přes službu Resend.</p>
+        <p>Údaje neprodáváme ani nepředáváme třetím stranám. E-maily odesíláme přes službu Brevo.</p>
 
         <h2>Děti</h2>
         <p>
@@ -44,6 +44,34 @@ export default function PrivacyPage() {
           <li>Web neřeší platby ani doručení. Za domluvu odpovídají uživatelé (u dětí jejich rodiče).</li>
           <li>Zakázané jsou podvody, urážky, nabízení padělků a cokoli, co neodpovídá popisu karty.</li>
           <li>Nevhodné chování můžete nahlásit. Účty porušující pravidla můžeme zablokovat.</li>
+        </ul>
+
+        <h2>Odpovědnost provozovatele</h2>
+        <ul>
+          <li>
+            Web je jen nástroj, přes který se sběratelé najdou a domluví. Provozovatel není stranou žádné výměny, prodeje
+            ani daru a nevstupuje do domluvy mezi uživateli.
+          </li>
+          <li>
+            Za obsah nabídek (popis, stav a pravost karet, ceny) odpovídá výhradně uživatel, který je zveřejnil. Provozovatel
+            nabídky předem nekontroluje.
+          </li>
+          <li>
+            Provozovatel neodpovídá za průběh ani výsledek domluvených obchodů, za platby, poštovné, ztrátu či poškození
+            zásilky, nedodání, padělky ani za jednání jiných uživatelů. Případné spory řeší uživatelé mezi sebou (u dětí
+            jejich zákonní zástupci).
+          </li>
+          <li>
+            Hodnocení a údaje v profilech zadávají uživatelé; provozovatel neručí za jejich pravdivost.
+          </li>
+          <li>
+            Web je poskytován zdarma a „tak, jak je“, bez záruky nepřetržité dostupnosti. Provozovatel neodpovídá za ztrátu
+            dat ani škody vzniklé jeho používáním, nedostupností nebo chybou v katalogu či cenách.
+          </li>
+          <li>
+            Podezření na podvod nebo porušení pravidel nahlaste přes „Nahlásit“ u uživatele. Provozovatel může nabídku
+            skrýt nebo účet zablokovat, není to ale jeho povinnost ani záruka. Při podvodu se obraťte na Policii ČR / SR.
+          </li>
         </ul>
 
         <h2>Ceny karet</h2>
