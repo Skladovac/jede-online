@@ -8,6 +8,7 @@ import { PriceNote } from '@/components/PriceNote'
 import { SetGrid } from '@/components/SetGrid'
 import { ProductTile } from '@/components/ProductTile'
 import type { QuickState } from '@/app/actions/collection'
+import { ensureEurCzk } from '@/lib/fx'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function SetPage({ params, searchParams }: Props) {
+  await ensureEurCzk() // kurz ČNB pro korunové částky u cen
   const [set, user] = await Promise.all([getSet((await params).id), getCurrentUser()])
   if (!set) notFound()
   const tab = (await searchParams)?.tab === 'produkty' ? 'produkty' : 'karty'

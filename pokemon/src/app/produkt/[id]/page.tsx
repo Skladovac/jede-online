@@ -7,10 +7,14 @@ import { formatEur, productImage, setLogo } from '@/lib/format'
 import { KIND_LABEL } from '@/lib/products'
 import { toggleProductWant } from '@/app/actions/products'
 import { PriceNote } from '@/components/PriceNote'
+import { PriceStatsTable } from '@/components/PriceStatsTable'
+import { eurCzkDate } from '@/lib/fx'
+import type { PriceStats } from '@/lib/price-stats'
 import { ActionForm } from '@/components/ActionForm'
 import { Submit } from '@/components/ui'
 import { ProductItemForm } from '@/components/ProductItemForm'
 import { AddToCart } from '@/components/AddToCart'
+import { ensureEurCzk } from '@/lib/fx'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,6 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const OFFER_ORDER = { GIFT: 0, SELL: 1, TRADE: 2 } as const
 
 export default async function ProductPage({ params }: Props) {
+  await ensureEurCzk() // kurz ČNB pro korunové částky u cen
   const p = await getProduct((await params).id)
   if (!p) notFound()
   const viewer = await getCurrentUser()
@@ -103,7 +108,13 @@ export default async function ProductPage({ params }: Props) {
           <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Orientační cena</h2>
             <p className="mt-3 text-2xl font-bold">{price ? `≈ ${price}` : 'Cena zatím není k dispozici.'}</p>
+            {p.priceStats && (
+              <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-800">
+                <PriceStatsTable stats={p.priceStats as PriceStats} title="Cardmarket" />
+              </div>
+            )}
             <PriceNote className="mt-4" />
+            {eurCzkDate() && <p className="mt-1 text-xs text-slate-400">Kurz ČNB ze dne {eurCzkDate()}</p>}
           </section>
         </div>
       </div>

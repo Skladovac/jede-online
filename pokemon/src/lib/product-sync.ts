@@ -1,5 +1,6 @@
 import { Prisma, type ProductKind } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { pickStats } from '@/lib/price-stats'
 
 /**
  * Katalog zapečetěných produktů z veřejných souborů Cardmarketu (název, typ, rozšíření, ceny v EUR)
@@ -24,7 +25,15 @@ const KIND: Record<string, ProductKind> = {
 const SKIP = new Set(['Pokémon Lot'])
 
 type CmProduct = { idProduct: number; name: string; categoryName: string; idExpansion: number; dateAdded: string }
-type CmPrice = { idProduct: number; avg?: number | null; trend?: number | null; avg7?: number | null; avg30?: number | null }
+type CmPrice = {
+  idProduct: number
+  avg?: number | null
+  low?: number | null
+  trend?: number | null
+  avg1?: number | null
+  avg7?: number | null
+  avg30?: number | null
+}
 type TcgGroup = { groupId: number; name: string }
 type TcgProduct = { productId: number; name: string; extendedData?: { name: string }[] }
 
@@ -107,6 +116,7 @@ export async function syncProducts(log: (m: string) => void = console.log) {
           cmExpansionId: p.idExpansion,
           setId: setFor(p),
           priceEur: price(prices.get(p.idProduct)),
+          priceStats: pickStats(prices.get(p.idProduct) as unknown as Record<string, number | null>) ?? Prisma.JsonNull,
           priceUpdatedAt: now,
           addedAt: p.dateAdded ? new Date(p.dateAdded.replace(' ', 'T') + 'Z') : null,
         }

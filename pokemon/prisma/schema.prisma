@@ -51,6 +51,8 @@ model Card {
   // Orientační ceny z Cardmarketu v EUR (průměr prodejů), aktualizuje noční import.
   priceEur        Decimal? @db.Decimal(10, 2)
   priceReverseEur Decimal? @db.Decimal(10, 2) // reverse holo verze
+  // Podrobnosti z Cardmarketu: { low, trend, avg1, avg7, avg30, reverse?: {…} } v EUR
+  priceStats      Json?
   priceUpdatedAt  DateTime?
 
   items     CollectionItem[]
@@ -327,6 +329,7 @@ model Product {
   imageUrl       String?
   imageCheckedAt DateTime? // kdy se naposledy hledal obrázek (hledá se nejvýš 1× za 30 dní)
   priceEur       Decimal?    @db.Decimal(10, 2)
+  priceStats     Json? // { low, trend, avg1, avg7, avg30 } v EUR
   priceUpdatedAt DateTime?
   addedAt        DateTime?
   syncedAt       DateTime    @updatedAt

@@ -4,8 +4,12 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { cardImage, categoryLabel, formatEur, rarityLabel } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
+import { PriceStatsTable } from '@/components/PriceStatsTable'
+import { eurCzkDate } from '@/lib/fx'
+import type { PriceStats } from '@/lib/price-stats'
 import { CardOffers } from '@/components/CardOffers'
 import { MyCardPanel } from '@/components/MyCardPanel'
+import { ensureEurCzk } from '@/lib/fx'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,6 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CardPage({ params }: Props) {
+  await ensureEurCzk() // kurz ČNB pro korunové částky u cen
   const card = await getCard((await params).id)
   if (!card) notFound()
 
@@ -107,12 +112,20 @@ export default async function CardPage({ params }: Props) {
             ) : (
               <p className="mt-3 text-slate-500">Cena zatím není k dispozici.</p>
             )}
+            {(() => {
+              const stats = card.priceStats as PriceStats | null
+              return stats ? (
+                <div className="mt-5 grid gap-5 border-t border-slate-200 pt-4 dark:border-slate-800 sm:grid-cols-2">
+                  <PriceStatsTable stats={stats} title={stats.reverse ? 'Běžná verze' : 'Cardmarket'} />
+                  {stats.reverse && <PriceStatsTable stats={stats.reverse} title="Reverse holo" />}
+                </div>
+              ) : null
+            })()}
             <PriceNote className="mt-4" />
-            {card.priceUpdatedAt && (
-              <p className="mt-1 text-xs text-slate-400">
-                Aktualizováno {card.priceUpdatedAt.toLocaleDateString('cs-CZ')}
-              </p>
-            )}
+            <p className="mt-1 text-xs text-slate-400">
+              {card.priceUpdatedAt && <>Ceny z {card.priceUpdatedAt.toLocaleDateString('cs-CZ')}</>}
+              {eurCzkDate() && <> · kurz ČNB ze dne {eurCzkDate()}</>}
+            </p>
           </section>
         </div>
       </div>
