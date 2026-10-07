@@ -30,7 +30,13 @@ export default function PrivacyPage() {
           <li>E-mail rodiče a jméno, které uvedl při souhlasu (u dětí): souhlas a správa účtu dítěte.</li>
           <li>Sbírka karet a nabídky: hlavní funkce webu.</li>
         </ul>
-        <p>Údaje neprodáváme ani nepředáváme třetím stranám. E-maily odesíláme přes službu Brevo.</p>
+        <p>
+          <strong>Kontaktní údaje (e-mail, telefon, e-mail rodiče) neposkytujeme, neprodáváme ani nepronajímáme třetím
+          stranám</strong> a nepoužíváme je k reklamě. Ostatní uživatelé uvidí kontakt jen v rozsahu, který sami zvolíte:
+          e-mail po přijetí konkrétní poptávky a telefon (pokud ho vyplníte) po kliknutí na „Zobrazit číslo“. E-maily
+          technicky odesíláme přes službu Brevo, která je smí použít jen k doručení zprávy. Údaje bychom vydali jen tehdy,
+          kdyby to ukládal zákon (např. na žádost policie nebo soudu).
+        </p>
 
         <h2>Děti</h2>
         <p>
