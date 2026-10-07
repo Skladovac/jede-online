@@ -23,6 +23,15 @@ export async function POST(req: NextRequest) {
   if (!authorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   if (running) return NextResponse.json({ status: 'already-running' }, { status: 409 })
 
+  if (req.nextUrl.searchParams.get('only') === 'produkty') {
+    running = syncProducts()
+      .catch((err) => console.error('[produkty] import selhal:', err))
+      .finally(() => {
+        running = null
+      })
+    return NextResponse.json({ status: 'started', only: 'produkty' }, { status: 202 })
+  }
+
   running = syncCatalog()
     .then(async (s) => {
       last = s
