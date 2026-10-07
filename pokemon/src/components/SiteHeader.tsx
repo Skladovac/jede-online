@@ -16,9 +16,8 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
         <Link href="/" className="flex shrink-0 items-center gap-2 font-bold tracking-tight">
-          <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-yellow-400 text-sm text-slate-900">
-            ★
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" width={32} height={32} className="h-8 w-8" />
           <span className="hidden sm:inline">Pokémon karty</span>
         </Link>
         {/* Na širší obrazovce je hledání v řádku, na mobilu pod ním. */}
