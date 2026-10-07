@@ -102,7 +102,7 @@ export default async function RatingsPage({ params }: Props) {
           {!viewer ? (
             <p className="mt-2 text-sm">
               Hodnotit mohou jen registrovaní uživatelé.{' '}
-              <Link href="/registrace" className="font-semibold underline">
+              <Link href={`/registrace?next=${encodeURIComponent(back)}`} className="font-semibold underline">
                 Zaregistruj se
               </Link>{' '}
               (zdarma) nebo se{' '}

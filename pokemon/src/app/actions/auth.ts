@@ -15,7 +15,7 @@ import {
 import { needsParentConsent, type CountryCode } from '@/lib/age'
 import { sendParentConsentEmail, sendPasswordChangedEmail, sendResetEmail, sendVerifyEmail } from '@/lib/email'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
-import { EMAIL_RE, NICK_RE, checkPassword, checkRegion, str, type FormState } from '@/lib/validation'
+import { EMAIL_RE, NICK_RE, checkPassword, checkRegion, safeNext, str, type FormState } from '@/lib/validation'
 import { nicknameProblem } from '@/lib/nickname-filter'
 
 export async function register(_: FormState, fd: FormData): Promise<FormState> {
@@ -77,11 +77,12 @@ export async function register(_: FormState, fd: FormData): Promise<FormState> {
     },
   })
 
-  await sendVerifyEmail(email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72))
+  const next = safeNext(str(fd, 'next'))
+  await sendVerifyEmail(email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72), next)
   if (isMinor && user.parentToken) await sendParentConsentEmail(parentEmail, user.nickname, user.parentToken)
 
   await createSession(user.id)
-  redirect('/ucet?vitej=1')
+  redirect(`/ucet?vitej=1${next ? `&next=${encodeURIComponent(next)}` : ''}`)
 }
 
 export async function login(_: FormState, fd: FormData): Promise<FormState> {
@@ -96,7 +97,7 @@ export async function login(_: FormState, fd: FormData): Promise<FormState> {
 
   await createSession(user.id)
   const next = str(fd, 'next')
-  redirect(next.startsWith('/') && !next.startsWith('//') ? next : '/') // bez "next" na hlavní stránku
+  redirect(safeNext(next) ?? '/') // bez "next" na hlavní stránku
 }
 
 export async function logout() {

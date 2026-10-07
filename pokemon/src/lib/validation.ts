@@ -58,3 +58,8 @@ export function formatPhone(p: string) {
   const rest = m[2].replace(/(\d{3})(?=\d)/g, '$1 ')
   return m[1] ? `${m[1]} ${rest}` : rest
 }
+
+/** Návratová adresa (?next=) — jen cesta na tomto webu, nikdy cizí doména („//evil“, „\evil“). */
+export function safeNext(next: string | null | undefined) {
+  return next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') ? next.slice(0, 300) : null
+}

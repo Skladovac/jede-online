@@ -6,6 +6,7 @@ import { changePassword, deleteAccount, updateProfile } from '@/app/actions/acco
 import { logout, resendParent, resendVerify } from '@/app/actions/auth'
 import { ActionForm } from '@/components/ActionForm'
 import { isAdult } from '@/lib/age'
+import { safeNext } from '@/lib/validation'
 import { Checkbox, Field, Submit, inputCls } from '@/components/ui'
 import { COUNTRY_LABEL, REGIONS } from '@/lib/regions'
 import { PasswordInput } from '@/components/PasswordInput'
@@ -13,10 +14,11 @@ import { PasswordInput } from '@/components/PasswordInput'
 export const metadata: Metadata = { title: 'Můj účet' }
 export const dynamic = 'force-dynamic'
 
-export default async function AccountPage({ searchParams }: { searchParams: Promise<{ vitej?: string; heslo?: string }> }) {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ vitej?: string; heslo?: string; next?: string }> }) {
   const user = await getCurrentUser()
   if (!user) redirect('/prihlaseni?next=/ucet')
   const { vitej, heslo } = await searchParams
+  const next = safeNext((await searchParams).next)
   const limited = isLimited(user)
   const linksPending = user.isMinor && !user.linksApprovedAt && (user.facebookUrl || user.instagramUrl || user.aukroUrl)
 
@@ -36,7 +38,21 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         </form>
       </div>
 
-      {vitej && <Notice tone="ok">Účet je založený. Poslali jsme ti e-mail s odkazem pro potvrzení. Když ho nevidíš, podívej se do složky Spam / Nevyžádaná pošta a označ ho jako „není spam“.</Notice>}
+      {vitej && (
+        <Notice tone="ok">
+          Účet je založený. Poslali jsme ti e-mail s odkazem pro potvrzení. Když ho nevidíš, podívej se do složky Spam /
+          Nevyžádaná pošta a označ ho jako „není spam“.
+          {next && (
+            <>
+              {' '}
+              Po potvrzení tě odkaz vrátí zpátky na stránku, odkud jsi přišel(a).{' '}
+              <Link href={next} className="font-semibold underline">
+                Zpět tam →
+              </Link>
+            </>
+          )}
+        </Notice>
+      )}
       {heslo && <Notice tone="ok">Nové heslo je uložené.</Notice>}
 
       {limited && (
