@@ -2,21 +2,20 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Pravidla a ochrana osobních údajů' }
 
-// NÁVRH pro uzavřenou betu. Před veřejným spuštěním nechat zkontrolovat právníkem
-// a doplnit údaje provozovatele (správce).
+// NÁVRH pro zkušební provoz. Před veřejným spuštěním nechat zkontrolovat právníkem.
 export default function PrivacyPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">
       <p className="mb-6 rounded-xl bg-yellow-50 px-4 py-3 text-sm text-yellow-900 dark:bg-yellow-400/10 dark:text-yellow-100">
-        Pracovní verze pro uzavřené testování. Konečné znění doplníme před veřejným spuštěním.
+        Zkušební provoz. Pracovní verze pravidel, konečné znění doplníme před ostrým spuštěním.
       </p>
       <article className="space-y-6 leading-relaxed [&_h2]:mt-8 [&_h2]:text-xl [&_h2]:font-bold [&_li]:ml-5 [&_li]:list-disc">
         <h1 className="text-3xl font-black tracking-tight">Pravidla a ochrana osobních údajů</h1>
 
         <h2>Kdo web provozuje</h2>
         <p>
-          Web pokemon.jede.online je neziskový komunitní projekt. Správcem osobních údajů je [DOPLNIT: jméno / název
-          a IČO provozovatele], kontakt: info@jede.online.
+          Web pokemon.jede.online je nekomerční komunitní projekt ve zkušebním provozu. Nic se na něm neprodává a
+          provozovatel z něj nemá žádný příjem. Kontakt na provozovatele: info@jede.online.
         </p>
 
         <h2>Jaké údaje zpracováváme a proč</h2>
