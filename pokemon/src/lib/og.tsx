@@ -41,6 +41,7 @@ export function ogCardImage(url: string | null) {
   if (!url) return null
   if (url.startsWith('https://assets.tcgdex.net/')) return `${APP_URL}/img/${url.slice('https://assets.tcgdex.net/'.length)}/low.png`
   if (url.startsWith('https://images.pokemontcg.io/')) return `${APP_URL}/img2/${url.slice('https://images.pokemontcg.io/'.length)}`
+  if (url.startsWith('https://tcgplayer-cdn.tcgplayer.com/')) return `${APP_URL}/img3/${url.slice('https://tcgplayer-cdn.tcgplayer.com/'.length)}_400w.jpg`
   return null
 }
 

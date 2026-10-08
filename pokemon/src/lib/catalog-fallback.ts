@@ -9,8 +9,9 @@ import { prisma } from '@/lib/prisma'
 const API = 'https://api.pokemontcg.io/v2'
 
 // Kde se názvy sad v obou zdrojích liší. Ostatní se párují podle názvu.
+// Pozor: pokemontcg/scrydex „me55c“ (30th Classic Collection) čísluje podle původních sad (Charizard = 4/102),
+// takže se k našim číslům 1–30 nehodí — tu sadu bereme z TCGplayeru podle názvu (viz TCGPLAYER níže).
 const MANUAL: Record<string, { ptcg: string; prefix?: string }> = {
-  '30th-c': { ptcg: 'me55c' },
   svp: { ptcg: 'svp' },
   sve: { ptcg: 'sve' },
   rc: { ptcg: 'bw11', prefix: 'RC' }, // Radiant Collection je podsada Legendary Treasures (RC1–RC25)
@@ -52,7 +53,89 @@ async function ptcgCards(setId: string) {
   return out
 }
 
+// ── Obrázky z TCGplayeru (přes tcgcsv.com) pro sady, které TCGdex ani pokemontcg nemají dobře ──
+// match: 'number' = podle čísla karty (R/RGB → R, 065/128 → 065), 'name' = podle názvu (sady s původním číslováním).
+const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' }> = {
+  '30th': { group: 24722, match: 'number' },
+  '30th-c': { group: 24837, match: 'name' },
+}
+const TCGP_CDN = 'https://tcgplayer-cdn.tcgplayer.com/product/'
+
+type TcgpProduct = { productId: number; name: string; extendedData?: { name: string; value: string }[] }
+
+// Název pro párování: bez doplňků TCGplayeru („(Delta Species)“, „LV.X“, „ - 158/128“).
+const nameKey = (s: string) =>
+  norm(
+    s
+      .replace(/\s+-\s+[\w/]+$/, '')
+      .replace(/\([^)]*\)/g, '')
+      .replace(/\bLV\.?X\b/gi, ''),
+  )
+
+async function urlOk(url: string) {
+  try {
+    const r = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(15_000) })
+    return r.ok && !!r.headers.get('content-type')?.startsWith('image/')
+  } catch {
+    return false
+  }
+}
+
+// Obrázek, který víme, že nesedí: scrydex me55c (jiné číslování) nebo nedostupný (404).
+async function badImage(url: string | null) {
+  if (!url) return true
+  if (url.includes('scrydex.com/pokemon/me55c-')) return true
+  if (url.startsWith(TCGP_CDN)) return false
+  const test = url.startsWith('https://assets.tcgdex.net/') ? `${url}/low.webp` : url
+  return !(await urlOk(test))
+}
+
+async function fillFromTcgplayer(log: (m: string) => void) {
+  let fixed = 0
+  for (const [setId, cfg] of Object.entries(TCGPLAYER)) {
+    try {
+      const res = await fetch(`https://tcgcsv.com/tcgplayer/3/${cfg.group}/products`, {
+        headers: { 'User-Agent': 'pokemon.jede.online catalog sync' },
+        signal: AbortSignal.timeout(60_000),
+      })
+      if (!res.ok) throw new Error(`tcgcsv ${res.status}`)
+      const products = ((await res.json()) as { results: TcgpProduct[] }).results.filter((p) =>
+        p.extendedData?.some((e) => e.name === 'Number'),
+      )
+      const cards = await prisma.card.findMany({ where: { setId }, select: { id: true, localId: true, name: true, imageUrl: true } })
+      const byNum = new Map<string, TcgpProduct>()
+      const byName = new Map<string, TcgpProduct[]>()
+      for (const p of products) {
+        const num = p.extendedData!.find((e) => e.name === 'Number')!.value.split('/')[0]
+        byNum.set(numKey(num), p)
+        const k = nameKey(p.name)
+        byName.set(k, [...(byName.get(k) ?? []), p])
+      }
+      for (const c of cards) {
+        let p: TcgpProduct | undefined
+        if (cfg.match === 'number') p = byNum.get(numKey(c.localId))
+        else {
+          const list = byName.get(nameKey(c.name)) ?? []
+          // Dvojice se stejným názvem (Darkrai & Cresselia LEGEND horní/dolní půlka): podle pořadí čísel.
+          if (list.length > 1) {
+            const same = cards.filter((x) => nameKey(x.name) === nameKey(c.name)).sort((a, b) => a.localId.localeCompare(b.localId))
+            const sorted = [...list].sort((a, b) => (/\(top\)/i.test(a.name) ? -1 : /\(top\)/i.test(b.name) ? 1 : 0))
+            p = sorted[same.findIndex((x) => x.id === c.id)]
+          } else p = list[0]
+        }
+        if (!p || !(await badImage(c.imageUrl))) continue
+        await prisma.card.update({ where: { id: c.id }, data: { imageUrl: `${TCGP_CDN}${p.productId}` } })
+        fixed++
+      }
+    } catch (err) {
+      log(`[catalog] obrázky z TCGplayeru pro ${setId} selhaly: ${(err as Error).message}`)
+    }
+  }
+  log(`[catalog] obrázky z TCGplayeru: ${fixed}`)
+}
+
 export async function fillCatalogGaps(log: (m: string) => void = console.log) {
+  await fillFromTcgplayer(log)
   const gaps = await prisma.cardSet.findMany({
     where: { game: 'pokemon' },
     include: { cards: { select: { id: true, localId: true, imageUrl: true } } },
