@@ -1,6 +1,7 @@
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { APP_URL, esc, notify } from '@/lib/email'
+import { pushNotification } from '@/lib/notifications'
 
 const OFFER = { TRADE: 'vymění', SELL: 'prodá', GIFT: 'daruje' } as const
 const MAX_LINES = 12
@@ -32,6 +33,7 @@ async function digest() {
   await prisma.session.deleteMany({ where: { expiresAt: { lt: now } } })
   await prisma.emailToken.deleteMany({ where: { expiresAt: { lt: new Date(now.getTime() - 7 * 86_400_000) } } })
   // Anonymní otisky návštěvníků držíme jen 60 dní (denní součty zobrazení zůstávají).
+  await prisma.notification.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - 90 * 86_400_000) } } })
   await prisma.visitorDay.deleteMany({ where: { day: { lt: new Date(now.getTime() - 60 * 86_400_000) } } })
   const users = await prisma.user.findMany({
     where: {
@@ -152,6 +154,21 @@ async function digest() {
     ]
 
     if (lines.length || buyLines.length) {
+      // Na webu (zvoneček) zvlášť nabídky a zájem o moje karty.
+      if (lines.length)
+        await pushNotification(u.id, {
+          icon: deals ? '✅' : '🔔',
+          title: deals ? `${deals}× nabídka za tvou cenu nebo levněji` : `Nové nabídky toho, co ti chybí (${lines.length})`,
+          body: rows.map((r) => r.line.replace(/<[^>]+>/g, '').replace(/^[•✅]\s*/, '')).slice(0, 3).join(' · '),
+          url: '/sberatele?kde=vse',
+        })
+      if (buyLines.length)
+        await pushNotification(u.id, {
+          icon: '💰',
+          title: `Někdo chce koupit, co nabízíš (${buyLines.length})`,
+          body: buyLines.map((l) => l.replace(/<[^>]+>/g, '').replace(/^•\s*/, '')).slice(0, 3).join(' · '),
+          url: '/sbirka',
+        })
       const more = lines.length > MAX_LINES ? `<br>…a dalších ${lines.length - MAX_LINES}.` : ''
       const ok = await notify(
         u.email,

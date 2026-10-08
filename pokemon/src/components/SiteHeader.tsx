@@ -7,12 +7,13 @@ import { UserMenu } from '@/components/UserMenu'
 export async function SiteHeader() {
   const user = await getCurrentUser()
   // Počet kusů v košíku a nevyřízených příchozích poptávek (odznáček).
-  const [cartCount, pendingCount] = user
+  const [cartCount, pendingCount, unreadCount] = user
     ? await Promise.all([
         prisma.tradeRequestItem.count({ where: { request: { fromId: user.id, status: 'DRAFT' }, fromRequester: false } }),
         prisma.tradeRequest.count({ where: { toId: user.id, status: 'PENDING' } }),
+        prisma.notification.count({ where: { userId: user.id, readAt: null } }),
       ])
-    : [0, 0]
+    : [0, 0, 0]
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
@@ -47,6 +48,10 @@ export async function SiteHeader() {
               <Link href="/poptavky" className="relative hover:text-yellow-600 dark:hover:text-yellow-400">
                 Výměny
                 {pendingCount > 0 && <Dot n={pendingCount} />}
+              </Link>
+              <Link href="/upozorneni" aria-label="Upozornění" className="relative hover:text-yellow-600 dark:hover:text-yellow-400">
+                🔔
+                {unreadCount > 0 && <Dot n={unreadCount} />}
               </Link>
               <Link href="/kosik" aria-label="Košík" className="relative hover:text-yellow-600 dark:hover:text-yellow-400">
                 🛒

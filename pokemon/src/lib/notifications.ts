@@ -1,0 +1,17 @@
+import 'server-only'
+import { prisma } from '@/lib/prisma'
+
+/** Upozornění na webu (zvoneček). Chyba při zápisu nesmí shodit akci, která ho vyvolala. */
+export async function pushNotification(userId: string, n: { title: string; body?: string; url?: string; icon?: string }) {
+  await prisma.notification
+    .create({
+      data: {
+        userId,
+        title: n.title.slice(0, 200),
+        body: n.body?.slice(0, 500) ?? null,
+        url: n.url?.slice(0, 300) ?? null,
+        icon: n.icon ?? null,
+      },
+    })
+    .catch((err) => console.error('[upozorneni]', err))
+}
