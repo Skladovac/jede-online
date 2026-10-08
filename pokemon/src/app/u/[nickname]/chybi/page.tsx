@@ -6,6 +6,8 @@ import { safeDecode } from '@/lib/validation'
 import { getCurrentUser, isLimited } from '@/lib/auth'
 import { byLocalId, cardImage } from '@/lib/format'
 import { ProductTile } from '@/components/ProductTile'
+import { CardImg } from '@/components/CardImg'
+import { splitBase } from '@/lib/card-number'
 import { BuyBadge } from '@/components/CollectionOverview'
 import { ensureEurCzk } from '@/lib/fx'
 
@@ -102,26 +104,48 @@ export default async function WantedPage({ params }: Props) {
             </Link>{' '}
             <span className="text-sm font-normal text-slate-500">({cards.length})</span>
           </h2>
-          <ul className="grid grid-cols-3 gap-3 sm:grid-cols-5 md:grid-cols-8">
-            {cards.map((c) => {
-              const img = cardImage(c.imageUrl)
-              return (
-                <li key={c.id}>
-                  <Link href={`/karta/${encodeURIComponent(c.id)}`} className="block">
-                    <div className="aspect-[63/88] overflow-hidden rounded-lg bg-slate-200 shadow-sm dark:bg-slate-800">
-                      {img && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={img} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
-                      )}
-                    </div>
-                    <p className="mt-1 truncate text-xs font-medium">{c.name}</p>
-                    <p className="text-xs text-slate-500">{c.localId}</p>
-                    {d.buy.has(c.id) && <BuyBadge price={d.buy.get(c.id) ?? null} />}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+          {(() => {
+            // Base set (1–oficiální počet) a zvlášť secret rare / karty mimo číslování.
+            const { base, extra } = splitBase(cards, (c) => c.localId, set.officialCount)
+            const grid = (list: typeof cards) => (
+              <ul className="grid grid-cols-3 gap-3 sm:grid-cols-5 md:grid-cols-8">
+                {list.map((c) => (
+                  <li key={c.id}>
+                    <Link href={`/karta/${encodeURIComponent(c.id)}`} className="block">
+                      <div className="aspect-[63/88] overflow-hidden rounded-lg bg-slate-200 shadow-sm dark:bg-slate-800">
+                        <CardImg src={cardImage(c.imageUrl)} alt={c.name} />
+                      </div>
+                      <p className="mt-1 truncate text-xs font-medium">{c.name}</p>
+                      <p className="text-xs text-slate-500">{c.localId}</p>
+                      {d.buy.has(c.id) && <BuyBadge price={d.buy.get(c.id) ?? null} />}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )
+            return (
+              <div className="space-y-5">
+                {base.length > 0 && (
+                  <div>
+                    {set.officialCount > 0 && (
+                      <h3 className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                        Base set (1–{set.officialCount}) · chybí {base.length}
+                      </h3>
+                    )}
+                    {grid(base)}
+                  </div>
+                )}
+                {extra.length > 0 && (
+                  <div>
+                    <h3 className="mb-2 text-sm font-semibold text-purple-700 dark:text-purple-400">
+                      Secret rare a karty mimo číslování · chybí {extra.length}
+                    </h3>
+                    {grid(extra)}
+                  </div>
+                )}
+              </div>
+            )
+          })()}
         </section>
       ))}
 

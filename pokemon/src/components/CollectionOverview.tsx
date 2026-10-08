@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { Overview } from '@/lib/collection-view'
 import { cardImage } from '@/lib/format'
+import { splitBase } from '@/lib/card-number'
+import { CardImg } from '@/components/CardImg'
 import { ProductTile } from '@/components/ProductTile'
 import { ProgressBars } from '@/components/ProgressBars'
 
@@ -17,10 +19,7 @@ function CardStrip({ cards, extra }: { cards: MiniCard[]; extra?: (c: MiniCard, 
           <li key={`${c.id}-${i}`}>
             <Link href={`/karta/${encodeURIComponent(c.id)}`} className="group block">
               <div className="aspect-[63/88] overflow-hidden rounded-lg bg-slate-200 shadow-sm dark:bg-slate-800">
-                {img && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={img} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
-                )}
+                <CardImg src={img} alt={c.name} />
               </div>
               <p className="mt-1 truncate text-xs font-medium">{c.name}</p>
               <p className="truncate text-xs text-slate-500">
@@ -44,7 +43,7 @@ export function BuyBadge({ price }: { price: number | null }) {
   )
 }
 
-type SetInfo = { id: string; name: string; releaseDate: Date | null }
+type SetInfo = { id: string; name: string; releaseDate: Date | null; officialCount: number }
 
 /** Karty rozdělené po sadách (nejnovější sada nahoře), každá sada jde sbalit. */
 function BySet<T>({
@@ -76,8 +75,33 @@ function BySet<T>({
               sada
             </Link>
           </summary>
-          <div className="mt-3">
-            <CardStrip cards={list.map(card)} extra={extra && ((_, i) => extra(list[i]))} />
+          <div className="mt-3 space-y-4">
+            {(() => {
+              // Base set (1–oficiální počet) a zvlášť secret rare / karty mimo číslování.
+              const { base, extra: rest } = splitBase(list, (t) => card(t).localId, set.officialCount)
+              return (
+                <>
+                  {base.length > 0 && (
+                    <div>
+                      {set.officialCount > 0 && (
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Base set (1–{set.officialCount}) · {base.length}
+                        </p>
+                      )}
+                      <CardStrip cards={base.map(card)} extra={extra && ((_, i) => extra(base[i]))} />
+                    </div>
+                  )}
+                  {rest.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-purple-600 dark:text-purple-400">
+                        Secret rare a mimo číslování · {rest.length}
+                      </p>
+                      <CardStrip cards={rest.map(card)} extra={extra && ((_, i) => extra(rest[i]))} />
+                    </div>
+                  )}
+                </>
+              )
+            })()}
           </div>
         </details>
       ))}

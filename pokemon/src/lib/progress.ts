@@ -1,10 +1,8 @@
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 
-/** Číslo karty v základní sadě (1–oficiální počet); secret rare a TG/GG/SV podsady mají číslo vyšší nebo s písmeny. */
-export function isBaseCard(localId: string, officialCount: number) {
-  return /^\d+$/.test(localId) && Number(localId) >= 1 && Number(localId) <= officialCount
-}
+import { isBaseCard } from '@/lib/card-number'
+export { isBaseCard }
 
 type Flags = { hasNormal: boolean; hasHolo: boolean; hasReverse: boolean; hasFirstEd: boolean; hasPokeball: boolean; hasMasterball: boolean }
 export const cardVariants = (c: Flags) => {
