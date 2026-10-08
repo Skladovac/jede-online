@@ -30,7 +30,13 @@ async function getSet(id: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const set = await getSet((await params).id)
   const t = await getT()
-  return { title: set ? set.name : t('Sada nenalezena') }
+  if (!set) return { title: t('Sada nenalezena') }
+  const title = t('{name} – seznam karet a ceny', { name: set.name })
+  const description = t('Všech {n} karet sady {name} s cenami. Odklikej si, co máš, co ti chybí, a najdi sběratele na výměnu. Zdarma.', {
+    n: set.cardCount,
+    name: set.name,
+  })
+  return { title, description, openGraph: { title, description } }
 }
 
 export default async function SetPage({ params, searchParams }: Props) {

@@ -180,5 +180,14 @@ const dict: Record<string, string> = {
   'Japonské sady': 'Japonské sady',
   '{n} japonských sad z ér Scarlet & Violet a Mega, od nejnovějších. Japonské sady mají jiné složení než anglické.': '{n} japonských sád z ér Scarlet & Violet a Mega, od najnovších. Japonské sady majú iné zloženie ako anglické.',
   'Japonská': 'Japonská',
+  '{name} ({set} {num}) – cena a kdo ji nabízí': '{name} ({set} {num}) – cena a kto ju ponúka',
+  'Orientační cena {price}.': 'Orientačná cena {price}.',
+  'Nabízí ji {n} sběratelů z Česka a Slovenska.': 'Ponúka ju {n} zberateľov z Česka a Slovenska.',
+  'Najdi sběratele, kteří ji nabízejí.': 'Nájdi zberateľov, ktorí ju ponúkajú.',
+  'Koupit ji chce {n} sběratelů.': 'Kúpiť ju chce {n} zberateľov.',
+  'Zdarma si veď sbírku a vyměňuj karty.': 'Zadarmo si veď zbierku a vymieňaj karty.',
+  '{name} – seznam karet a ceny': '{name} – zoznam kariet a ceny',
+  'Všech {n} karet sady {name} s cenami. Odklikej si, co máš, co ti chybí, a najdi sběratele na výměnu. Zdarma.': 'Všetkých {n} kariet sady {name} s cenami. Odklikaj si, čo máš, čo ti chýba, a nájdi zberateľov na výmenu. Zadarmo.',
+  '{name}: orientační cena, kdo ho nabízí a kdo ho chce koupit. Sběratelé Pokémon karet z Česka a Slovenska.': '{name}: orientačná cena, kto ho ponúka a kto ho chce kúpiť. Zberatelia Pokémon kariet z Česka a Slovenska.',
 }
 export default dict

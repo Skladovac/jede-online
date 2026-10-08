@@ -1,27 +1,19 @@
-# Vyhledávače zatím ne (uzavřené testování), náhledy odkazů na sociálních sítích ano.
-User-agent: facebookexternalhit
-Allow: /
-
-User-agent: Facebot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: WhatsApp
-Allow: /
-
-User-agent: TelegramBot
-Allow: /
-
-User-agent: Discordbot
-Allow: /
-
-User-agent: LinkedInBot
-Allow: /
-
-User-agent: Slackbot-LinkExpanding
-Allow: /
-
+# pokemon.jede.online – veřejný katalog a profily ano, soukromé stránky ne.
 User-agent: *
-Disallow: /
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /ucet
+Disallow: /sbirka
+Disallow: /kosik
+Disallow: /poptavky
+Disallow: /upozorneni
+Disallow: /rodic/
+Disallow: /overeni/
+Disallow: /nove-heslo/
+Disallow: /prihlaseni
+Disallow: /hledat
+
+Sitemap: https://pokemon.jede.online/sitemap/0.xml
+Sitemap: https://pokemon.jede.online/sitemap/1.xml
+Sitemap: https://pokemon.jede.online/sitemap/2.xml
