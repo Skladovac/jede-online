@@ -176,5 +176,9 @@ const dict: Record<string, string> = {
   'Balíček (deck)': 'Deck',
   'Mince': 'Coins',
   'Ostatní': 'Other',
+  'Anglické sady': 'English sets',
+  'Japonské sady': 'Japanese sets',
+  '{n} japonských sad z ér Scarlet & Violet a Mega, od nejnovějších. Japonské sady mají jiné složení než anglické.': '{n} Japanese sets from the Scarlet & Violet and Mega eras, newest first. Japanese sets have a different card list than English ones.',
+  'Japonská': 'Japanese',
 }
 export default dict

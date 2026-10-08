@@ -87,7 +87,15 @@ export default async function SetPage({ params, searchParams }: Props) {
           <CardBack />
         )}
         <div>
-          <h1 className="text-3xl font-black tracking-tight">{set.name}</h1>
+          <h1 className="text-3xl font-black tracking-tight">
+            {set.name}
+            {set.language === 'ja' && (
+              <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 align-middle text-xs font-semibold text-red-800 dark:bg-red-400/10 dark:text-red-300">
+                🇯🇵 {t('Japonská')}
+              </span>
+            )}
+          </h1>
+          {set.nameOriginal && <p className="text-sm text-slate-500">{set.nameOriginal}</p>}
           <p className="mt-1 text-sm text-slate-500">{meta.filter(Boolean).join(' · ')}</p>
         </div>
       </header>

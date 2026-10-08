@@ -15,7 +15,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
   const t = await getT()
   const [latest, setCount, cardCount] = await Promise.all([
     prisma.cardSet.findMany({
-      where: { game: 'pokemon' },
+      where: { game: 'pokemon', language: 'en' },
       orderBy: { releaseDate: { sort: 'desc', nulls: 'last' } },
       take: 8,
     }),

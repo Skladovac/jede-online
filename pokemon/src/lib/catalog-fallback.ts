@@ -137,7 +137,8 @@ async function fillFromTcgplayer(log: (m: string) => void) {
 export async function fillCatalogGaps(log: (m: string) => void = console.log) {
   await fillFromTcgplayer(log)
   const gaps = await prisma.cardSet.findMany({
-    where: { game: 'pokemon' },
+    // Jen anglické sady (pokemontcg.io japonské nezná).
+    where: { game: 'pokemon', language: 'en' },
     include: { cards: { select: { id: true, localId: true, imageUrl: true } } },
   })
   const todo = gaps.filter((s) => s.cards.length < s.cardCount || s.cards.some((c) => !c.imageUrl))
