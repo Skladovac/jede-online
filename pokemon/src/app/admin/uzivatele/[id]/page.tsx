@@ -217,7 +217,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
         </p>
       </Box>
 
-      <Box title="Poptávky">
+      <Box title="Výměny">
         <ul className="space-y-1 text-sm">
           {[
             ...u.sentRequests.map((r) => ({ r, text: `→ ${r.to.nickname}` })),

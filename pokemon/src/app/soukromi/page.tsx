@@ -33,7 +33,7 @@ export default function PrivacyPage() {
         <p>
           <strong>Kontaktní údaje (e-mail, telefon, e-mail rodiče) neposkytujeme, neprodáváme ani nepronajímáme třetím
           stranám</strong> a nepoužíváme je k reklamě. Ostatní uživatelé uvidí kontakt jen v rozsahu, který sami zvolíte:
-          e-mail po přijetí konkrétní poptávky a telefon (pokud ho vyplníte) po kliknutí na „Zobrazit číslo“. E-maily
+          e-mail po přijetí konkrétní žádosti o výměnu a telefon (pokud ho vyplníte) po kliknutí na „Zobrazit číslo“. E-maily
           technicky odesíláme přes službu Brevo, která je smí použít jen k doručení zprávy. Údaje bychom vydali jen tehdy,
           kdyby to ukládal zákon (např. na žádost policie nebo soudu).
         </p>

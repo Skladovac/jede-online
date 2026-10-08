@@ -73,7 +73,7 @@ export default async function AdminUsers({
               <th className="px-4 py-2">E-mail</th>
               <th className="px-4 py-2">Stav</th>
               <th className="px-4 py-2">Sbírka</th>
-              <th className="px-4 py-2">Poptávky</th>
+              <th className="px-4 py-2">Výměny</th>
               <th className="px-4 py-2">Nahlášení</th>
               <th className="px-4 py-2">Registrace</th>
             </tr>

@@ -28,7 +28,7 @@ export async function rateUser(_: FormState, fd: FormData): Promise<FormState> {
 
   // Kdo už hodnotil po výměně přes web, nepřidává druhé (volné) hodnocení — počítalo by se dvakrát.
   if (await prisma.rating.findFirst({ where: { fromId: user.id, toId: to.id, requestId: { not: null } } }))
-    return { error: 'Tohoto uživatele už jsi hodnotil(a) po výměně přes web. Hodnocení upravíš v detailu poptávky.' }
+    return { error: 'Tohoto uživatele už jsi hodnotil(a) po výměně přes web. Hodnocení upravíš v detailu výměny.' }
 
   const positive = str(fd, 'positive') === '1'
   const tagRaw = str(fd, 'tag')

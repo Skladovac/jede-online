@@ -57,7 +57,7 @@ export default function SafeTradePage() {
           <ul className="mt-3 list-disc space-y-1.5 pl-5">
             <li>Nedomlouvej se s nikým mimo web bez vědomí rodičů a nesdílej adresu školy ani bydliště veřejně.</li>
             <li>Když ti něco nesedí nebo se někdo chová divně, řekni to rodičům a uživatele <strong>nahlaš</strong> (odkaz „Nahlásit“ na jeho profilu).</li>
-            <li>Rodiče dostávají kopie e-mailů o poptávkách a mohou účet dítěte spravovat přes odkaz ze souhlasu.</li>
+            <li>Rodiče dostávají kopie e-mailů o výměnách a mohou účet dítěte spravovat přes odkaz ze souhlasu.</li>
           </ul>
         </section>
 

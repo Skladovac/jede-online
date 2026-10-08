@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { STATUS } from '@/lib/request-status'
 
-export const metadata: Metadata = { title: 'Poptávky' }
+export const metadata: Metadata = { title: 'Výměny' }
 export const dynamic = 'force-dynamic'
 
 export default async function RequestsPage() {
@@ -49,13 +49,14 @@ export default async function RequestsPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-10 px-4 py-10">
-      <h1 className="text-3xl font-black tracking-tight">Poptávky</h1>
+      <h1 className="text-3xl font-black tracking-tight">Výměny</h1>
+      <p className="-mt-6 text-sm text-slate-500">Žádosti o výměnu, koupi nebo dar mezi tebou a ostatními sběrateli.</p>
       <section>
-        <h2 className="mb-3 text-xl font-bold">Přišly mně ({incoming.length})</h2>
+        <h2 className="mb-3 text-xl font-bold">Chtějí ode mě ({incoming.length})</h2>
         <List rows={incoming} mine={false} />
       </section>
       <section>
-        <h2 className="mb-3 text-xl font-bold">Poslal(a) jsem ({outgoing.length})</h2>
+        <h2 className="mb-3 text-xl font-bold">Chci od ostatních ({outgoing.length})</h2>
         <List rows={outgoing} mine />
       </section>
     </main>

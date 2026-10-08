@@ -33,7 +33,7 @@ export default async function CartPage() {
     }),
   ])
   const blocked = isLimited(user)
-    ? 'Poptávky půjde posílat, až rodič potvrdí tvůj účet.'
+    ? 'Žádosti o výměnu půjde posílat, až rodič potvrdí tvůj účet.'
     : !user.emailVerifiedAt
       ? 'Před odesláním potvrď svůj e-mail (najdeš na stránce Můj účet).'
       : null
@@ -43,7 +43,7 @@ export default async function CartPage() {
       <div>
         <h1 className="text-3xl font-black tracking-tight">Košík</h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-          Pro každého sběratele se posílá samostatná poptávka. Když ji přijme, uvidíte navzájem e-mail a domluvíte se na
+          Každému sběrateli se posílá samostatná žádost o výměnu. Když ji přijme, uvidíte navzájem e-mail a domluvíte se na
           předání. Web neřeší platby ani dopravu.{' '}
           <Link href="/bezpecny-obchod" className="font-medium underline">
             🛡️ Jak obchodovat bezpečně
@@ -133,7 +133,7 @@ export default async function CartPage() {
             {!blocked && (
               <ActionForm action={sendRequest} className="mt-5 space-y-3">
                 <input type="hidden" name="requestId" value={d.id} />
-                <Submit>Odeslat poptávku</Submit>
+                <Submit>Odeslat žádost</Submit>
               </ActionForm>
             )}
           </section>

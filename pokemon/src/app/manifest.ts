@@ -20,7 +20,7 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       { name: 'Moje sbírka', url: '/sbirka' },
       { name: 'Najdi sběratele', url: '/sberatele' },
-      { name: 'Poptávky', url: '/poptavky' },
+      { name: 'Výměny', url: '/poptavky' },
     ],
   }
 }

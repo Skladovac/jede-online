@@ -10,7 +10,7 @@ import { RequestItems } from '@/components/RequestItems'
 import { STATUS } from '@/lib/request-status'
 import { TAG_LABEL } from '@/lib/rating-tags'
 
-export const metadata: Metadata = { title: 'Poptávka', robots: { index: false, follow: false } }
+export const metadata: Metadata = { title: 'Výměna', robots: { index: false, follow: false } }
 export const dynamic = 'force-dynamic'
 
 export default async function RequestDetail({
@@ -41,11 +41,11 @@ export default async function RequestDetail({
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
       <Link href="/poptavky" className="text-sm text-slate-500 hover:underline">
-        ← Poptávky
+        ← Výměny
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-black tracking-tight">
-          {iAmBuyer ? 'Poptávka pro ' : 'Poptávka od '}
+          {iAmBuyer ? 'Žádost o výměnu pro ' : 'Žádost o výměnu od '}
           <Link href={`/u/${encodeURIComponent(other.nickname)}`} className="hover:underline">
             {other.nickname}
           </Link>
@@ -68,7 +68,7 @@ export default async function RequestDetail({
       </p>
       {odeslano && (
         <p className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-900 dark:bg-green-500/10 dark:text-green-200">
-          Odesláno! {other.nickname} dostal(a) e-mail. Jakmile odpoví, dáme ti vědět e-mailem (může skončit ve složce Spam / Nevyžádaná pošta). Stav uvidíš i tady v Poptávkách.
+          Odesláno! {other.nickname} dostal(a) e-mail. Jakmile odpoví, dáme ti vědět e-mailem (může skončit ve složce Spam / Nevyžádaná pošta). Stav uvidíš i tady ve Výměnách.
         </p>
       )}
 
@@ -137,7 +137,7 @@ export default async function RequestDetail({
         {(req.status === 'PENDING' || req.status === 'ACCEPTED') && (
           <ActionForm action={cancelRequest} className="contents">
             <input type="hidden" name="requestId" value={req.id} />
-            <Submit variant="ghost">Zrušit poptávku</Submit>
+            <Submit variant="ghost">Zrušit výměnu</Submit>
           </ActionForm>
         )}
       </div>
