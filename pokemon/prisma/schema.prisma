@@ -455,3 +455,22 @@ model PhoneView {
   @@index([viewerId, createdAt])
   @@index([ownerId, createdAt])
 }
+
+// ── Návštěvnost (bez cookies, bez třetích stran) ──────────────────────
+// Denní počty zobrazení po stránkách.
+model PageStat {
+  day   DateTime @db.Date
+  path  String   @db.VarChar(200)
+  views Int      @default(0)
+
+  @@id([day, path])
+}
+
+// Unikátní návštěvníci za den: jen otisk sha256(den + IP + prohlížeč + tajemství), z něj nejde zjistit, kdo to byl.
+// Maže se po 60 dnech.
+model VisitorDay {
+  day  DateTime @db.Date
+  hash String   @db.Char(64)
+
+  @@id([day, hash])
+}

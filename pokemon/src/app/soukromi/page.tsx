@@ -93,7 +93,11 @@ export default function PrivacyPage() {
         </p>
 
         <h2>Cookies</h2>
-        <p>Používáme jen nezbytnou cookie pro přihlášení. Žádné reklamní ani analytické cookies.</p>
+        <p>
+          Používáme jen nezbytnou cookie pro přihlášení. Žádné reklamní ani analytické cookies. Návštěvnost počítáme vlastním
+          jednoduchým počítadlem bez cookies: ukládá se jen denní počet zobrazení stránek a anonymní otisk návštěvníka (nejde
+          z něj zjistit, kdo jste), který po 60 dnech mažeme. Nic se nepředává třetím stranám.
+        </p>
       </article>
     </main>
   )
