@@ -1,17 +1,19 @@
 import Link from 'next/link'
 import type { TradeRequestItem } from '@prisma/client'
 import { cardImage, productImage } from '@/lib/format'
+import { getT } from '@/lib/i18n/server'
 
 const OFFER = { TRADE: 'výměna', SELL: 'prodej', GIFT: 'dar za poštovné' } as const
 
 /** Seznam položek poptávky (karty) se součtem ceny za prodávané kusy. */
-export function RequestItems({
+export async function RequestItems({
   items,
   action,
 }: {
   items: TradeRequestItem[]
   action?: (item: TradeRequestItem) => React.ReactNode
 }) {
+  const t = await getT()
   const total = items.reduce((s, i) => s + (i.offerType === 'SELL' && i.priceCzk ? i.priceCzk * i.quantity : 0), 0)
   return (
     <div>
@@ -42,7 +44,7 @@ export function RequestItems({
               </div>
               <div className="shrink-0 text-right text-sm">
                 <p className="font-semibold">
-                  {i.quantity}× {i.offerType === 'SELL' && i.priceCzk ? `${i.priceCzk} Kč` : OFFER[i.offerType ?? 'TRADE']}
+                  {i.quantity}× {i.offerType === 'SELL' && i.priceCzk ? `${i.priceCzk} Kč` : t(OFFER[i.offerType ?? 'TRADE'])}
                 </p>
                 {action?.(i)}
               </div>
@@ -50,7 +52,7 @@ export function RequestItems({
           )
         })}
       </ul>
-      {total > 0 && <p className="mt-2 text-right text-sm font-semibold">Za prodávané kusy celkem: {total} Kč</p>}
+      {total > 0 && <p className="mt-2 text-right text-sm font-semibold">{t('Za prodávané kusy celkem: {total} Kč', { total })}</p>}
     </div>
   )
 }

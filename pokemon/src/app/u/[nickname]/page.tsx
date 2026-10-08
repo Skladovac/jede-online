@@ -15,6 +15,8 @@ import { pairMatches } from '@/lib/matches'
 import { isAdult } from '@/lib/age'
 import { PhoneReveal } from '@/components/PhoneReveal'
 import { MatchSection } from '@/components/MatchSection'
+import { getT, getLocale } from '@/lib/i18n/server'
+import { LOCALE_INFO } from '@/lib/i18n/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,12 +32,14 @@ async function getProfile(nickname: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const user = await getProfile((await params).nickname)
-  if (!user) return { title: 'Profil nenalezen' }
+  if (!user) return { title: (await getT())('Profil nenalezen') }
   return { title: user.nickname, robots: user.indexable ? undefined : { index: false, follow: false } }
 }
 
 export default async function ProfilePage({ params, searchParams }: Props) {
   await ensureEurCzk() // kurz ČNB pro korunové částky u cen
+  const t = await getT()
+  const locale = await getLocale()
   const user = await getProfile((await params).nickname)
   if (!user) notFound()
 
@@ -67,20 +71,20 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         <div>
           <h1 className="text-3xl font-black tracking-tight">{user.nickname}</h1>
           <p className="text-sm text-slate-500">
-            {[user.city, user.region, COUNTRY_LABEL[user.country]].filter(Boolean).join(', ')} · členem od{' '}
-            {user.createdAt.toLocaleDateString('cs-CZ', { month: 'numeric', year: 'numeric' })}
+            {[user.city, user.region, t(COUNTRY_LABEL[user.country])].filter(Boolean).join(', ')} · {t('členem od')}{' '}
+            {user.createdAt.toLocaleDateString(LOCALE_INFO[locale].intl, { month: 'numeric', year: 'numeric' })}
           </p>
           <p className="mt-1 text-sm">
-            {completed} {completed === 1 ? 'dokončená výměna' : completed >= 2 && completed <= 4 ? 'dokončené výměny' : 'dokončených výměn'}
+            {completed} {completed === 1 ? t('dokončená výměna') : completed >= 2 && completed <= 4 ? t('dokončené výměny') : t('dokončených výměn')}
             {pos + neg > 0 && (
               <>
                 {' '}
-                · 👍 {pos} · 👎 {neg} ({Math.round((pos / (pos + neg)) * 100)} % kladných)
+                · 👍 {pos} · 👎 {neg} ({t('{percent} % kladných', { percent: Math.round((pos / (pos + neg)) * 100) })})
               </>
             )}{' '}
             ·{' '}
             <Link href={`/u/${encodeURIComponent(user.nickname)}/hodnoceni`} className="font-medium text-yellow-700 underline dark:text-yellow-400">
-              {pos + neg > 0 ? 'Zobrazit hodnocení' : 'Ohodnotit'}
+              {pos + neg > 0 ? t('Zobrazit hodnocení') : t('Ohodnotit')}
             </Link>
           </p>
         </div>
@@ -109,7 +113,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
 
       <p className="mt-6 text-sm">
         <Link href={`/u/${encodeURIComponent(user.nickname)}/chybi`} className="font-medium text-yellow-700 hover:underline dark:text-yellow-400">
-          Co hledá {user.nickname} →
+          {t('Co hledá {name}', { name: user.nickname })} →
         </Link>
       </p>
 
@@ -119,7 +123,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
 
       {viewer && viewer.id !== user.id && (
         <details id="nahlasit" className="mt-12 text-sm" open={!!(await searchParams)?.nahlasit}>
-          <summary className="cursor-pointer text-slate-500 underline">Nahlásit uživatele</summary>
+          <summary className="cursor-pointer text-slate-500 underline">{t('Nahlásit uživatele')}</summary>
           <ActionForm action={reportUser} className="mt-3 max-w-lg space-y-3">
             <input type="hidden" name="againstId" value={user.id} />
             <textarea
@@ -128,10 +132,10 @@ export default async function ProfilePage({ params, searchParams }: Props) {
               minLength={10}
               maxLength={500}
               rows={4}
-              placeholder="Co se stalo? (podvod, nevhodné chování, karty neodpovídaly…)"
+              placeholder={t('Co se stalo? (podvod, nevhodné chování, karty neodpovídaly…)')}
               className={inputCls}
             />
-            <Submit variant="danger">Odeslat nahlášení</Submit>
+            <Submit variant="danger">{t('Odeslat nahlášení')}</Submit>
           </ActionForm>
         </details>
       )}

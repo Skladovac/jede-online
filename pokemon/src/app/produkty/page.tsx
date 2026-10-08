@@ -6,8 +6,12 @@ import { ensureEurCzk } from '@/lib/fx'
 import { KIND_LABEL } from '@/lib/products'
 import { ProductTile } from '@/components/ProductTile'
 import { PriceNote } from '@/components/PriceNote'
+import { getT } from '@/lib/i18n/server'
 
-export const metadata: Metadata = { title: 'Produkty' }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t('Produkty') }
+}
 export const dynamic = 'force-dynamic'
 
 const PAGE = 60
@@ -18,6 +22,7 @@ export default async function ProductsPage({
   searchParams: Promise<{ typ?: string; q?: string; nabidky?: string; strana?: string }>
 }) {
   await ensureEurCzk() // kurz ČNB pro korunové částky u cen
+  const t = await getT()
   const sp = await searchParams
   const kind = sp.typ && sp.typ in KIND_LABEL ? (sp.typ as ProductKind) : undefined
   const q = (sp.q ?? '').trim().slice(0, 60)
@@ -62,9 +67,9 @@ export default async function ProductsPage({
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-3xl font-black tracking-tight">Zapečetěné produkty</h1>
+      <h1 className="text-3xl font-black tracking-tight">{t('Zapečetěné produkty')}</h1>
       <p className="mt-2 text-slate-600 dark:text-slate-300">
-        Boostery, Elite Trainer Boxy, tins, kolekce a mince. {total.toLocaleString('cs-CZ')} produktů.
+        {t('Boostery, Elite Trainer Boxy, tins, kolekce a mince.')} {t('{n} produktů.', { n: total.toLocaleString('cs-CZ') })}
       </p>
 
       <form action="/produkty" className="mt-6 flex gap-2">
@@ -73,25 +78,25 @@ export default async function ProductsPage({
         <input
           name="q"
           defaultValue={q}
-          placeholder="Hledat produkt: Prismatic Evolutions ETB…"
+          placeholder={t('Hledat produkt: Prismatic Evolutions ETB…')}
           className="w-full max-w-md rounded-full border border-slate-300 bg-white px-4 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
         />
         <button className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white dark:bg-yellow-400 dark:text-slate-900">
-          Hledat
+          {t('Hledat')}
         </button>
       </form>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Link href={href({ typ: undefined, strana: undefined })} className={chip(!kind)}>
-          Vše
+          {t('Vše')}
         </Link>
         {(Object.keys(KIND_LABEL) as ProductKind[]).map((k) => (
           <Link key={k} href={href({ typ: k, strana: undefined })} className={chip(kind === k)}>
-            {KIND_LABEL[k]}
+            {t(KIND_LABEL[k])}
           </Link>
         ))}
         <Link href={href({ nabidky: onlyOffers ? undefined : '1', strana: undefined })} className={chip(onlyOffers)}>
-          Jen co někdo nabízí
+          {t('Jen co někdo nabízí')}
         </Link>
       </div>
 
@@ -104,16 +109,16 @@ export default async function ProductsPage({
           ))}
         </ul>
       ) : (
-        <p className="mt-8 text-slate-500">Nic jsme nenašli.</p>
+        <p className="mt-8 text-slate-500">{t('Nic jsme nenašli.')}</p>
       )}
 
       {total > PAGE && (
         <div className="mt-8 flex items-center justify-center gap-4 text-sm">
-          {page > 1 && <Link href={href({ strana: String(page - 1) })}>← Předchozí</Link>}
+          {page > 1 && <Link href={href({ strana: String(page - 1) })}>← {t('Předchozí')}</Link>}
           <span className="text-slate-500">
             {page} / {Math.ceil(total / PAGE)}
           </span>
-          {page * PAGE < total && <Link href={href({ strana: String(page + 1) })}>Další →</Link>}
+          {page * PAGE < total && <Link href={href({ strana: String(page + 1) })}>{t('Další')} →</Link>}
         </div>
       )}
       <PriceNote className="mt-8" />

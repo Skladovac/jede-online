@@ -6,11 +6,13 @@ import { findCollectorsCached, parsePlace } from '@/lib/matches'
 import { CollectorList } from '@/components/CollectorList'
 import { LatestOffers } from '@/components/LatestOffers'
 import { GettingStarted } from '@/components/GettingStarted'
+import { getT } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ vitej?: string }> }) {
   const { vitej } = await searchParams
+  const t = await getT()
   const [latest, setCount, cardCount] = await Promise.all([
     prisma.cardSet.findMany({
       where: { game: 'pokemon' },
@@ -32,8 +34,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
       <div className="pt-8">
         {user && vitej && (
           <p className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-900 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-200">
-            Účet je založený! Poslali jsme ti e-mail s odkazem pro potvrzení. Když ho nevidíš, podívej se do složky Spam /
-            Nevyžádaná pošta a označ ho jako „není spam“.
+            {t(
+              'Účet je založený! Poslali jsme ti e-mail s odkazem pro potvrzení. Když ho nevidíš, podívej se do složky Spam / Nevyžádaná pošta a označ ho jako „není spam“.',
+            )}
           </p>
         )}
         {user && <GettingStarted userId={user.id} nickname={user.nickname} emailVerified={!!user.emailVerifiedAt} />}
@@ -41,17 +44,18 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
 
       <section className="py-12 sm:py-16">
         <p className="mb-3 inline-block rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-800 dark:bg-yellow-400/10 dark:text-yellow-300">
-          Zkušební provoz · ve vývoji
+          {t('Zkušební provoz · ve vývoji')}
         </p>
         <h1 className="max-w-2xl text-3xl font-black tracking-tight sm:text-5xl">
-          Měj přehled o své sbírce a najdi karty, které ti chybí.
+          {t('Měj přehled o své sbírce a najdi karty, které ti chybí.')}
         </h1>
         <p className="mt-4 max-w-xl text-lg text-slate-600 dark:text-slate-300">
-          Katalog všech anglických sad od roku 1999, vlastní sbírka, seznam chybějících karet a výměny se
-          sběrateli z Česka a Slovenska.
+          {t(
+            'Katalog všech anglických sad od roku 1999, vlastní sbírka, seznam chybějících karet a výměny se sběrateli z Česka a Slovenska.',
+          )}
         </p>
         <p className="mt-6 text-sm text-slate-500">
-          {setCount} sad · {cardCount.toLocaleString('cs-CZ')} karet
+          {setCount} {t('sad')} · {cardCount.toLocaleString('cs-CZ')} {t('karet')}
         </p>
       </section>
 
@@ -59,9 +63,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
       {matches && (
         <section className="mb-12">
           <div className="mb-4 flex items-baseline justify-between">
-            <h2 className="text-xl font-bold">Kdo má, co ti chybí</h2>
+            <h2 className="text-xl font-bold">{t('Kdo má, co ti chybí')}</h2>
             <Link href="/sberatele" className="text-sm font-medium text-yellow-700 hover:underline dark:text-yellow-400">
-              Najdi sběratele →
+              {t('Najdi sběratele')} →
             </Link>
           </div>
           {matches.collectors.length ? (
@@ -69,8 +73,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
           ) : (
             <p className="text-sm text-slate-500">
               {matches.mine.wantCards.length || matches.mine.wantProducts.length
-                ? 'Zatím nikdo nemá nic z toho, co ti chybí. Mrkni sem později.'
-                : 'Označ si v sadě karty, které ti chybí, a tady uvidíš, kdo je má.'}
+                ? t('Zatím nikdo nemá nic z toho, co ti chybí. Mrkni sem později.')
+                : t('Označ si v sadě karty, které ti chybí, a tady uvidíš, kdo je má.')}
             </p>
           )}
         </section>
@@ -80,9 +84,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
 
       <section>
         <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="text-xl font-bold">Nejnovější sady</h2>
+          <h2 className="text-xl font-bold">{t('Nejnovější sady')}</h2>
           <Link href="/sady" className="text-sm font-medium text-yellow-700 hover:underline dark:text-yellow-400">
-            Všechny sady →
+            {t('Všechny sady')} →
           </Link>
         </div>
         {latest.length ? (
@@ -92,7 +96,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
             ))}
           </div>
         ) : (
-          <p className="text-slate-500">Katalog se právě načítá. Zkus to za pár minut.</p>
+          <p className="text-slate-500">{t('Katalog se právě načítá. Zkus to za pár minut.')}</p>
         )}
       </section>
     </main>

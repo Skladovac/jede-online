@@ -2,6 +2,7 @@
 
 import { useFormStatus } from 'react-dom'
 import type { FormState } from '@/lib/validation'
+import { useT } from '@/lib/i18n/client'
 
 export const inputCls =
   'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base outline-none transition focus:border-yellow-500 focus:ring-2 focus:ring-yellow-400/40 dark:border-slate-700 dark:bg-slate-900'
@@ -18,6 +19,7 @@ export function Field({ label, hint, children }: { label: string; hint?: React.R
 
 export function Submit({ children, variant = 'primary' }: { children: React.ReactNode; variant?: 'primary' | 'danger' | 'ghost' }) {
   const { pending } = useFormStatus()
+  const t = useT()
   const cls = {
     primary: 'bg-slate-900 text-white hover:bg-slate-700 dark:bg-yellow-400 dark:text-slate-900 dark:hover:bg-yellow-300',
     danger: 'bg-red-600 text-white hover:bg-red-500',
@@ -29,7 +31,7 @@ export function Submit({ children, variant = 'primary' }: { children: React.Reac
       disabled={pending}
       className={`rounded-xl px-5 py-2.5 font-semibold transition disabled:opacity-50 ${cls}`}
     >
-      {pending ? 'Moment…' : children}
+      {pending ? t('Moment…') : children}
     </button>
   )
 }

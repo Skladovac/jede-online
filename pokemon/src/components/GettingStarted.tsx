@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
+import { getT } from '@/lib/i18n/server'
 
 /**
  * Průvodce „Jak začít“ pro nové uživatele (hlavní stránka a Můj účet po registraci).
  * Kroky se odškrtávají podle skutečných dat; když je hotovo všechno, průvodce zmizí.
  */
 export async function GettingStarted({ userId, nickname, emailVerified }: { userId: string; nickname: string; emailVerified: boolean }) {
+  const t = await getT()
   const [items, wants, spare, latestSet] = await Promise.all([
     prisma.collectionItem.count({ where: { userId } }),
     prisma.wantItem.count({ where: { userId } }),
@@ -15,31 +17,31 @@ export async function GettingStarted({ userId, nickname, emailVerified }: { user
   const steps = [
     {
       done: emailVerified,
-      title: 'Potvrď e-mail',
-      text: 'Odkaz ti přišel e-mailem (podívej se i do spamu). Bez potvrzení nejde nic nabízet.',
+      title: t('Potvrď e-mail'),
+      text: t('Odkaz ti přišel e-mailem (podívej se i do spamu). Bez potvrzení nejde nic nabízet.'),
       href: '/ucet',
-      cta: 'Můj účet',
+      cta: t('Můj účet'),
     },
     {
       done: items > 0,
-      title: 'Odklikej, co máš',
-      text: 'Otevři sadu, přepni na „Mám“ a klepej na karty. Nebo napiš čísla karet („1, 5, 23-30“).',
+      title: t('Odklikej, co máš'),
+      text: t('Otevři sadu, přepni na „Mám“ a klepej na karty. Nebo napiš čísla karet („1, 5, 23-30“).'),
       href: latestSet ? `/sady/${encodeURIComponent(latestSet.id)}` : '/sady',
-      cta: latestSet ? `Otevřít ${latestSet.name}` : 'Vybrat sadu',
+      cta: latestSet ? t('Otevřít {name}', { name: latestSet.name }) : t('Vybrat sadu'),
     },
     {
       done: wants > 0,
-      title: 'Označ, co ti chybí',
-      text: 'V sadě přepni na „Chybí“, nebo jedním tlačítkem „Vše, co nemám, mi chybí“.',
+      title: t('Označ, co ti chybí'),
+      text: t('V sadě přepni na „Chybí“, nebo jedním tlačítkem „Vše, co nemám, mi chybí“.'),
       href: '/sady',
-      cta: 'Vybrat sadu',
+      cta: t('Vybrat sadu'),
     },
     {
       done: spare > 0,
-      title: 'Nabídni karty navíc',
-      text: 'Režim „Navíc“: karty, které máš víckrát, uvidí ostatní a můžou si o ně napsat.',
+      title: t('Nabídni karty navíc'),
+      text: t('Režim „Navíc“: karty, které máš víckrát, uvidí ostatní a můžou si o ně napsat.'),
       href: '/sady',
-      cta: 'Vybrat sadu',
+      cta: t('Vybrat sadu'),
     },
   ]
   const doneCount = steps.filter((s) => s.done).length
@@ -49,9 +51,9 @@ export async function GettingStarted({ userId, nickname, emailVerified }: { user
   return (
     <section className="mb-10 rounded-2xl border-2 border-yellow-400 bg-yellow-50 p-5 dark:bg-yellow-400/10">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-xl font-bold">Vítej, {nickname}! Jak začít</h2>
+        <h2 className="text-xl font-bold">{t('Vítej, {nickname}! Jak začít', { nickname })}</h2>
         <span className="text-sm text-slate-600 dark:text-slate-300">
-          hotovo {doneCount} ze {steps.length}
+          {t('hotovo {done} ze {total}', { done: doneCount, total: steps.length })}
         </span>
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-yellow-200 dark:bg-yellow-900/40">

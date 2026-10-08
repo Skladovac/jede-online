@@ -10,6 +10,7 @@ import { pushNotification } from '@/lib/notifications'
 import { textProblem } from '@/lib/nickname-filter'
 import { TAG_LABEL } from '@/lib/rating-tags'
 import { str, type FormState } from '@/lib/validation'
+import { getT } from '@/lib/i18n/server'
 
 /**
  * Volné hodnocení od registrovaného uživatele (i po obchodu domluveném mimo web).
@@ -17,26 +18,27 @@ import { str, type FormState } from '@/lib/validation'
  * Hodnocení z dokončené výměny na webu se ukazuje jako ověřené — to dělá rateRequest().
  */
 export async function rateUser(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await getCurrentUser()
-  if (!user) return { error: 'Hodnotit mohou jen přihlášení uživatelé.' }
-  if (!user.emailVerifiedAt) return { error: 'Nejdřív potvrď svůj e-mail (odkaz najdeš v Můj účet).' }
-  if (isLimited(user) || user.bannedAt) return { error: 'Hodnotit zatím nemůžeš.' }
-  if (!rateLimit(`rate:${user.id}`, 10, 24 * 3_600_000)) return { error: 'Dnes už jsi hodnotil(a) hodně lidí. Zkus to zítra.' }
+  if (!user) return { error: t('Hodnotit mohou jen přihlášení uživatelé.') }
+  if (!user.emailVerifiedAt) return { error: t('Nejdřív potvrď svůj e-mail (odkaz najdeš v Můj účet).') }
+  if (isLimited(user) || user.bannedAt) return { error: t('Hodnotit zatím nemůžeš.') }
+  if (!rateLimit(`rate:${user.id}`, 10, 24 * 3_600_000)) return { error: t('Dnes už jsi hodnotil(a) hodně lidí. Zkus to zítra.') }
 
   const to = await prisma.user.findUnique({ where: { id: str(fd, 'toId') } })
-  if (!to || to.bannedAt || isLimited(to)) return { error: 'Uživatel nenalezen.' }
-  if (to.id === user.id) return { error: 'Sám sebe hodnotit nemůžeš. 🙂' }
+  if (!to || to.bannedAt || isLimited(to)) return { error: t('Uživatel nenalezen.') }
+  if (to.id === user.id) return { error: t('Sám sebe hodnotit nemůžeš. 🙂') }
 
   // Kdo už hodnotil po výměně přes web, nepřidává druhé (volné) hodnocení — počítalo by se dvakrát.
   if (await prisma.rating.findFirst({ where: { fromId: user.id, toId: to.id, requestId: { not: null } } }))
-    return { error: 'Tohoto uživatele už jsi hodnotil(a) po výměně přes web. Hodnocení upravíš v detailu výměny.' }
+    return { error: t('Tohoto uživatele už jsi hodnotil(a) po výměně přes web. Hodnocení upravíš v detailu výměny.') }
 
   const positive = str(fd, 'positive') === '1'
   const tagRaw = str(fd, 'tag')
   const tag = tagRaw in TAG_LABEL ? (tagRaw as RatingTag) : null
   const comment = str(fd, 'comment').replace(/\s+/g, ' ').trim()
-  if (comment.length > 300) return { error: 'Komentář může mít nejvýš 300 znaků.' }
-  if (comment && (await textProblem(comment))) return { error: 'Komentář obsahuje nevhodné slovo. Uprav ho prosím.' }
+  if (comment.length > 300) return { error: t('Komentář může mít nejvýš 300 znaků.') }
+  if (comment && (await textProblem(comment))) return { error: t('Komentář obsahuje nevhodné slovo. Uprav ho prosím.') }
 
   const data = { positive, tag, comment: comment || null }
   const existing = await prisma.rating.findFirst({ where: { fromId: user.id, toId: to.id, requestId: null } })
@@ -62,5 +64,5 @@ export async function rateUser(_: FormState, fd: FormData): Promise<FormState> {
     )
   }
   revalidatePath(`/u/${encodeURIComponent(to.nickname)}/hodnoceni`)
-  return { ok: existing ? 'Hodnocení jsme upravili.' : 'Díky za hodnocení!' }
+  return { ok: existing ? t('Hodnocení jsme upravili.') : t('Díky za hodnocení!') }
 }

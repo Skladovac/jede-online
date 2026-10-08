@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Prisma, ProductKind } from '@prisma/client'
 import { formatEur, productImage, setLogo } from '@/lib/format'
 import { KIND_LABEL } from '@/lib/products'
+import { getT } from '@/lib/i18n/server'
 
 export type TileProduct = {
   id: number
@@ -13,7 +14,8 @@ export type TileProduct = {
 }
 
 /** Dlaždice produktu. Bez obrázku ukáže logo sady a typ produktu. */
-export function ProductTile({ p, extra }: { p: TileProduct; extra?: React.ReactNode }) {
+export async function ProductTile({ p, extra }: { p: TileProduct; extra?: React.ReactNode }) {
+  const t = await getT()
   const img = productImage(p.imageUrl)
   const logo = p.set ? setLogo(p.set.logoUrl) : null
   const price = formatEur(p.priceEur)
@@ -29,7 +31,7 @@ export function ProductTile({ p, extra }: { p: TileProduct; extra?: React.ReactN
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logo} alt="" loading="lazy" className="max-h-12 max-w-[80%] object-contain opacity-70" />
             )}
-            <span className="text-xs font-semibold text-slate-400">{KIND_LABEL[p.kind]}</span>
+            <span className="text-xs font-semibold text-slate-400">{t(KIND_LABEL[p.kind])}</span>
           </div>
         )}
       </div>

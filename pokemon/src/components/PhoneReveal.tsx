@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { revealPhone } from '@/app/actions/phone'
+import { useT } from '@/lib/i18n/client'
 
 export function PhoneReveal({ ownerId }: { ownerId: string }) {
+  const t = useT()
   const [res, setRes] = useState<{ phone: string } | { error: string } | null>(null)
   const [pending, start] = useTransition()
   if (res && 'phone' in res)
@@ -20,7 +22,7 @@ export function PhoneReveal({ ownerId }: { ownerId: string }) {
         onClick={() => start(async () => setRes(await revealPhone(ownerId)))}
         className="rounded-full border border-slate-300 px-3 py-1 text-sm hover:border-yellow-400 disabled:opacity-50 dark:border-slate-700"
       >
-        📞 {pending ? '…' : 'Zobrazit číslo'}
+        📞 {pending ? '…' : t('Zobrazit číslo')}
       </button>
       {res && 'error' in res && <span className="text-xs text-red-600">{res.error}</span>}
     </span>

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { AddToCart } from '@/components/AddToCart'
+import { getT } from '@/lib/i18n/server'
 
 const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' } as const
 const CONDITION = { MINT: 'Jako nová', LIGHT_PLAYED: 'Mírně hraná', DAMAGED: 'Poškozená' } as const
@@ -10,6 +11,7 @@ const OFFER_ORDER = { GIFT: 0, SELL: 1, TRADE: 2 } as const
 
 /** Kdo kartu nabízí (kusy "navíc" ve sbírkách). Omezené a zablokované účty se nezobrazují. */
 export async function CardOffers({ cardId }: { cardId: string }) {
+  const t = await getT()
   const viewer = await getCurrentUser()
   const offers = await prisma.collectionItem.findMany({
     where: {
@@ -29,10 +31,10 @@ export async function CardOffers({ cardId }: { cardId: string }) {
 
   return (
     <section className="mt-10">
-      <h2 className="text-xl font-bold">Kdo ji nabízí</h2>
+      <h2 className="text-xl font-bold">{t('Kdo ji nabízí')}</h2>
       {offers.length === 0 ? (
         <p className="mt-3 rounded-2xl border border-dashed border-slate-300 p-6 text-center text-slate-500 dark:border-slate-700">
-          Zatím ji nikdo nenabízí. Až si ji někdo přidá do sbírky jako „navíc“, objeví se tady.
+          {t('Zatím ji nikdo nenabízí. Až si ji někdo přidá do sbírky jako „navíc“, objeví se tady.')}
         </p>
       ) : (
         <ul className="mt-3 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
@@ -47,12 +49,12 @@ export async function CardOffers({ cardId }: { cardId: string }) {
                     href={`/u/${encodeURIComponent(o.user.nickname)}?nahlasit=1#nahlasit`}
                     className="ml-2 text-xs text-slate-400 hover:text-red-600 hover:underline"
                   >
-                    nahlásit
+                    {t('nahlásit')}
                   </Link>
                 )}
-                <span className="text-sm text-slate-500"> · {o.user.city ?? o.user.region ?? 'neuvedeno'}</span>
+                <span className="text-sm text-slate-500"> · {o.user.city ?? o.user.region ?? t('neuvedeno')}</span>
                 <p className="text-xs text-slate-500">
-                  {[VARIANT[o.variant], CONDITION[o.condition], o.language.toUpperCase(), o.spareQty > 1 && `${o.spareQty} ks`]
+                  {[t(VARIANT[o.variant]), t(CONDITION[o.condition]), o.language.toUpperCase(), o.spareQty > 1 && t('{n} ks', { n: o.spareQty })]
                     .filter(Boolean)
                     .join(' · ')}
                   {o.note && <span className="italic"> · „{o.note}“</span>}
@@ -62,13 +64,13 @@ export async function CardOffers({ cardId }: { cardId: string }) {
                 {o.offerType === 'SELL' && o.priceCzk != null
                   ? `${o.priceCzk.toLocaleString('cs-CZ')} Kč`
                   : o.offerType === 'GIFT'
-                    ? 'Daruji za poštovné'
-                    : 'Vyměním'}
+                    ? t('Daruji za poštovné')
+                    : t('Vyměním')}
                 {viewer && viewer.id !== o.userId ? (
                   <AddToCart collectionItemId={o.id} />
                 ) : !viewer ? (
                   <Link href="/prihlaseni" className="text-sm font-normal underline">
-                    Přihlas se
+                    {t('Přihlas se')}
                   </Link>
                 ) : null}
               </span>

@@ -103,6 +103,7 @@ model User {
 
   // Denní e-mail „někdo nabízí kartu, která ti chybí“ (jde vypnout v Můj účet).
   matchEmails   Boolean   @default(true)
+  locale        String    @default("cs") @db.VarChar(5) // jazyk webu a e-mailů: cs / sk / en
   matchDigestAt DateTime? // do kdy už jsme shody poslali
   linksApprovedAt DateTime? // u nezletilých schvaluje rodič
 

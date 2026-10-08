@@ -10,6 +10,8 @@ import { CardImg } from '@/components/CardImg'
 import { splitBase } from '@/lib/card-number'
 import { BuyBadge } from '@/components/CollectionOverview'
 import { ensureEurCzk } from '@/lib/fx'
+import { getT, getLocale } from '@/lib/i18n/server'
+import { LOCALE_INFO } from '@/lib/i18n/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,21 +47,23 @@ async function load(nickname: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const t = await getT()
   const d = await load((await params).nickname)
-  if (!d) return { title: 'Profil nenalezen' }
-  const title = `Co hledá ${d.user.nickname}`
-  const description = `Chybí ${d.cardCount} karet${d.products.length ? ` a ${d.products.length} produktů` : ''}. Máš něco z toho? Napiš přes pokemon.jede.online.`
+  if (!d) return { title: t('Profil nenalezen') }
+  const title = t('Co hledá {name}', { name: d.user.nickname })
+  const description = `${t('Chybí {count} karet', { count: d.cardCount })}${d.products.length ? ` ${t('a {count} produktů', { count: d.products.length })}` : ''}. ${t('Máš něco z toho? Napiš přes pokemon.jede.online.')}`
   return {
     title,
     description,
     robots: d.user.indexable ? undefined : { index: false, follow: false },
     // Náhled při vložení odkazu na Facebook; obrázek dělá opengraph-image.tsx vedle.
-    openGraph: { title, description, type: 'website', siteName: 'Pokémon karty', locale: 'cs_CZ' },
+    openGraph: { title, description, type: 'website', siteName: t('Pokémon karty'), locale: LOCALE_INFO[await getLocale()].intl.replace('-', '_') },
   }
 }
 
 export default async function WantedPage({ params }: Props) {
   await ensureEurCzk()
+  const t = await getT()
   const d = await load((await params).nickname)
   if (!d) notFound()
   const viewer = await getCurrentUser()
@@ -68,33 +72,33 @@ export default async function WantedPage({ params }: Props) {
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <Link href={`/u/${encodeURIComponent(nick)}`} className="text-sm text-slate-500 hover:underline">
-        ← Profil {nick}
+        ← {t('Profil {name}', { name: nick })}
       </Link>
-      <h1 className="mt-3 text-3xl font-black tracking-tight">Co hledá {nick}</h1>
+      <h1 className="mt-3 text-3xl font-black tracking-tight">{t('Co hledá {name}', { name: nick })}</h1>
       <p className="mt-2 text-slate-600 dark:text-slate-300">
-        Chybí {d.cardCount} karet{d.products.length > 0 && ` a ${d.products.length} produktů`}.{' '}
+        {t('Chybí {count} karet', { count: d.cardCount })}{d.products.length > 0 && ` ${t('a {count} produktů', { count: d.products.length })}`}.{' '}
         {viewer ? (
           viewer.id !== d.user.id && (
             <>
-              Máš něco z toho? Označ to v sadě jako „Navíc“ a{' '}
+              {t('Máš něco z toho? Označ to v sadě jako „Navíc“ a')}{' '}
               <Link href={`/u/${encodeURIComponent(nick)}#shoda`} className="underline">
-                podívej se na shodu
+                {t('podívej se na shodu')}
               </Link>
               .
             </>
           )
         ) : (
           <>
-            Máš něco z toho?{' '}
+            {t('Máš něco z toho?')}{' '}
             <Link href="/registrace" className="font-semibold underline">
-              Zaregistruj se
+              {t('Zaregistruj se')}
             </Link>{' '}
-            a nabídni výměnu.
+            {t('a nabídni výměnu.')}
           </>
         )}
       </p>
 
-      {d.sets.length === 0 && d.products.length === 0 && <p className="mt-8 text-slate-500">Zatím nic.</p>}
+      {d.sets.length === 0 && d.products.length === 0 && <p className="mt-8 text-slate-500">{t('Zatím nic.')}</p>}
 
       {d.sets.map(({ set, cards }) => (
         <section key={set.id} className="mt-8">
@@ -129,7 +133,7 @@ export default async function WantedPage({ params }: Props) {
                   <div>
                     {set.officialCount > 0 && (
                       <h3 className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                        Base set (1–{set.officialCount}) · chybí {base.length}
+                        Base set (1–{set.officialCount}) · {t('chybí {count}', { count: base.length })}
                       </h3>
                     )}
                     {grid(base)}
@@ -138,7 +142,7 @@ export default async function WantedPage({ params }: Props) {
                 {extra.length > 0 && (
                   <div>
                     <h3 className="mb-2 text-sm font-semibold text-purple-700 dark:text-purple-400">
-                      Secret rare a karty mimo číslování · chybí {extra.length}
+                      {t('Secret rare a karty mimo číslování')} · {t('chybí {count}', { count: extra.length })}
                     </h3>
                     {grid(extra)}
                   </div>
@@ -151,7 +155,7 @@ export default async function WantedPage({ params }: Props) {
 
       {d.products.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-3 text-lg font-bold">Zapečetěné produkty</h2>
+          <h2 className="mb-3 text-lg font-bold">{t('Zapečetěné produkty')}</h2>
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
             {d.products.map((p) => (
               <li key={p.id}>

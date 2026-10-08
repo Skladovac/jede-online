@@ -2,6 +2,8 @@ import 'server-only'
 import type { OfferType, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import type { Place } from '@/lib/matches'
+import { getT } from '@/lib/i18n/server'
+import type { TFunc } from '@/lib/i18n/config'
 
 /** Tržiště: všechny nabídky (prodej / výměna) a poptávky „chci koupit“ na jednom místě. */
 
@@ -27,11 +29,13 @@ const userWhere = (place: Place): Prisma.UserWhereInput => ({
 })
 const userSelect = { nickname: true, city: true, region: true } as const
 
-const offerLabel = (t: OfferType, price: number | null) =>
-  t === 'SELL' ? (price ? `${price.toLocaleString('cs-CZ')} Kč` : 'prodám') : t === 'GIFT' ? 'daruji za poštovné' : 'vyměním'
-const buyLabel = (price: number | null) => (price ? `koupí do ${price.toLocaleString('cs-CZ')} Kč` : 'koupí (dohodou)')
+const offerLabel = (t: TFunc, type: OfferType, price: number | null) =>
+  type === 'SELL' ? (price ? `${price.toLocaleString('cs-CZ')} Kč` : t('prodám')) : type === 'GIFT' ? t('daruji za poštovné') : t('vyměním')
+const buyLabel = (t: TFunc, price: number | null) =>
+  price ? t('koupí do {price} Kč', { price: price.toLocaleString('cs-CZ') }) : t('koupí (dohodou)')
 
 export async function marketEntries(tab: MarketTab, place: Place, setId: string | null, page: number) {
+  const t = await getT()
   const users = userWhere(place)
   // Bereme víc z obou zdrojů (karty + produkty), slijeme podle času a ořízneme na stránku.
   const take = PAGE_SIZE * page + 1
@@ -59,7 +63,7 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         name: w.card.name,
         sub: `${w.card.set.name} · ${w.card.localId}`,
         image: { kind: 'card' as const, url: w.card.imageUrl },
-        label: buyLabel(w.maxPriceCzk),
+        label: buyLabel(t, w.maxPriceCzk),
         user: w.user,
         at: w.buyAt ?? w.updatedAt,
       })),
@@ -67,9 +71,9 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         key: `pw${w.id}`,
         href: `/produkt/${w.productId}`,
         name: w.product.name,
-        sub: 'zapečetěný produkt',
+        sub: t('zapečetěný produkt'),
         image: { kind: 'product' as const, url: w.product.imageUrl },
-        label: buyLabel(w.maxPriceCzk),
+        label: buyLabel(t, w.maxPriceCzk),
         user: w.user,
         at: w.buyAt ?? w.updatedAt,
       })),
@@ -98,7 +102,7 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         name: i.card.name,
         sub: `${i.card.set.name} · ${i.card.localId}`,
         image: { kind: 'card' as const, url: i.card.imageUrl },
-        label: (i.spareQty > 1 ? `${i.spareQty}× · ` : '') + offerLabel(i.offerType!, i.priceCzk),
+        label: (i.spareQty > 1 ? `${i.spareQty}× · ` : '') + offerLabel(t, i.offerType!, i.priceCzk),
         user: i.user,
         at: i.offeredAt ?? i.updatedAt,
       })),
@@ -106,9 +110,9 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         key: `p${i.id}`,
         href: `/produkt/${i.productId}`,
         name: i.product.name,
-        sub: `zapečetěný produkt · ${i.language.toUpperCase()}`,
+        sub: `${t('zapečetěný produkt')} · ${i.language.toUpperCase()}`,
         image: { kind: 'product' as const, url: i.product.imageUrl },
-        label: (i.spareQty > 1 ? `${i.spareQty}× · ` : '') + offerLabel(i.offerType!, i.priceCzk),
+        label: (i.spareQty > 1 ? `${i.spareQty}× · ` : '') + offerLabel(t, i.offerType!, i.priceCzk),
         user: i.user,
         at: i.offeredAt ?? i.updatedAt,
       })),

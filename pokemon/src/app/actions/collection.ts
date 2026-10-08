@@ -5,6 +5,7 @@ import type { Condition, OfferType, Variant } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { str, type FormState } from '@/lib/validation'
+import { getT } from '@/lib/i18n/server'
 
 const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']
 const CONDITIONS: Condition[] = ['MINT', 'LIGHT_PLAYED', 'DAMAGED']
@@ -66,11 +67,12 @@ export async function toggleWant(cardId: string): Promise<QuickState> {
 
 /** Režim "Navíc": +1 / −1 kus navíc (nabízený k výměně). Kus navíc znamená i kus vlastněný. */
 export async function changeSpare(cardId: string, delta: 1 | -1): Promise<QuickState> {
+  const t = await getT()
   const user = await requireUser()
   const items = await prisma.collectionItem.findMany({ where: { userId: user.id, cardId }, orderBy: { createdAt: 'asc' } })
   if (delta > 0) {
     if (!user.emailVerifiedAt)
-      return { ...(await quickState(user.id, cardId)), error: 'Kusy navíc můžeš nabízet po potvrzení e-mailu (odkaz je v Můj účet).' }
+      return { ...(await quickState(user.id, cardId)), error: t('Kusy navíc můžeš nabízet po potvrzení e-mailu (odkaz je v Můj účet).') }
     const item =
       items[0] ??
       (await prisma.collectionItem.create({
@@ -107,8 +109,9 @@ export async function changeSpare(cardId: string, delta: 1 | -1): Promise<QuickS
 
 /** Podrobná úprava jednoho řádku sbírky na detailu karty. */
 export async function saveItem(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await getCurrentUser()
-  if (!user) return { error: 'Přihlas se.' }
+  if (!user) return { error: t('Přihlas se.') }
   const cardId = str(fd, 'cardId')
   const id = str(fd, 'id')
   const variant = str(fd, 'variant') as Variant
@@ -119,26 +122,26 @@ export async function saveItem(_: FormState, fd: FormData): Promise<FormState> {
   const offerRaw = str(fd, 'offerType')
   const offerType = spareQty > 0 ? ((offerRaw || 'TRADE') as OfferType) : null
   // Nabízet může jen ověřený e-mail (jinak by šlo zakládat nabídky na cizí adresu).
-  if (spareQty > 0 && !user.emailVerifiedAt) return { error: 'Kusy navíc můžeš nabízet po potvrzení e-mailu (odkaz je v Můj účet).' }
+  if (spareQty > 0 && !user.emailVerifiedAt) return { error: t('Kusy navíc můžeš nabízet po potvrzení e-mailu (odkaz je v Můj účet).') }
   const priceRaw = str(fd, 'priceCzk')
   const priceCzk = offerType === 'SELL' ? Number(priceRaw) : null
   const note = str(fd, 'note')
 
   if (!VARIANTS.includes(variant) || !CONDITIONS.includes(condition) || !LANGS.includes(language))
-    return { error: 'Neplatná varianta, stav nebo jazyk.' }
-  if (offerType && !OFFERS.includes(offerType)) return { error: 'Neplatný typ nabídky.' }
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999) return { error: 'Počet kusů: 1–999.' }
+    return { error: t('Neplatná varianta, stav nebo jazyk.') }
+  if (offerType && !OFFERS.includes(offerType)) return { error: t('Neplatný typ nabídky.') }
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999) return { error: t('Počet kusů: 1–999.') }
   if (!Number.isInteger(spareQty) || spareQty < 0 || spareQty > quantity)
-    return { error: 'Kusů navíc nemůže být víc než kusů celkem.' }
+    return { error: t('Kusů navíc nemůže být víc než kusů celkem.') }
   if (offerType === 'SELL' && (!Number.isInteger(priceCzk) || priceCzk! < 1 || priceCzk! > 1_000_000))
-    return { error: 'Zadej cenu v celých korunách.' }
-  if (note.length > 30) return { error: 'Poznámka může mít nejvýš 30 znaků.' }
+    return { error: t('Zadej cenu v celých korunách.') }
+  if (note.length > 30) return { error: t('Poznámka může mít nejvýš 30 znaků.') }
 
   // Nákupní cena za kus (nepovinná, vidí jen majitel).
   const purchaseRaw = str(fd, 'purchasePriceCzk').replace(/\s/g, '')
   const purchasePriceCzk = purchaseRaw ? Number(purchaseRaw) : null
   if (purchasePriceCzk !== null && (!Number.isInteger(purchasePriceCzk) || purchasePriceCzk < 0 || purchasePriceCzk > 10_000_000))
-    return { error: 'Nákupní cenu zadej v celých korunách (nebo nech prázdnou).' }
+    return { error: t('Nákupní cenu zadej v celých korunách (nebo nech prázdnou).') }
   const data = { variant, condition, language, quantity, spareQty, offerType, priceCzk, note: note || null, purchasePriceCzk }
   // Čas zveřejnění nabídky jen při skutečné změně (nově navíc, jiný typ nebo cena), ne při úpravě poznámky.
   const prev = id ? await prisma.collectionItem.findFirst({ where: { id, userId: user.id } }) : null
@@ -161,21 +164,22 @@ export async function saveItem(_: FormState, fd: FormData): Promise<FormState> {
     }
   } else if (id) {
     const res = await prisma.collectionItem.updateMany({ where: { id, userId: user.id }, data: { ...data, ...stamp } })
-    if (!res.count) return { error: 'Položka nenalezena.' }
+    if (!res.count) return { error: t('Položka nenalezena.') }
   } else {
     await prisma.collectionItem.create({ data: { ...data, ...stamp, userId: user.id, cardId } })
   }
   await prisma.wantItem.deleteMany({ where: { userId: user.id, cardId, OR: [{ variant: null }, { variant }] } })
   revalidatePath(`/karta/${cardId}`)
-  return { ok: 'Uloženo.' }
+  return { ok: t('Uloženo.') }
 }
 
 export async function deleteItem(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await getCurrentUser()
-  if (!user) return { error: 'Přihlas se.' }
+  if (!user) return { error: t('Přihlas se.') }
   await prisma.collectionItem.deleteMany({ where: { id: str(fd, 'id'), userId: user.id } })
   revalidatePath(`/karta/${str(fd, 'cardId')}`)
-  return { ok: 'Odebráno ze sbírky.' }
+  return { ok: t('Odebráno ze sbírky.') }
 }
 
 /** Číslo karty v základní sadě (1–oficiální počet); secret rare a TG/GG/SV podsady mají číslo vyšší nebo s písmeny. */

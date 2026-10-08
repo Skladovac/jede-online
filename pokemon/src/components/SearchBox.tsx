@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useT } from '@/lib/i18n/client'
 
 type Hit = { id: string; href: string; name: string; number: string; set: string; image: string | null; price: string | null }
 
 export function SearchBox() {
   const router = useRouter()
+  const t = useT()
   const [q, setQ] = useState('')
   const [hits, setHits] = useState<Hit[]>([])
   const [open, setOpen] = useState(false)
@@ -20,7 +22,7 @@ export function SearchBox() {
       return
     }
     const ctrl = new AbortController()
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
         const res = await fetch(`/api/hledat?q=${encodeURIComponent(q.trim())}`, { signal: ctrl.signal })
         setHits(await res.json())
@@ -31,7 +33,7 @@ export function SearchBox() {
       }
     }, 200)
     return () => {
-      clearTimeout(t)
+      clearTimeout(timer)
       ctrl.abort()
     }
   }, [q])
@@ -72,8 +74,8 @@ export function SearchBox() {
               setActive((a) => Math.max(a - 1, -1))
             } else if (e.key === 'Escape') setOpen(false)
           }}
-          placeholder="Hledat: Charizard, SVI 045, Prismatic ETB…"
-          aria-label="Hledat kartu"
+          placeholder={t('Hledat: Charizard, SVI 045, Prismatic ETB…')}
+          aria-label={t('Hledat kartu')}
           autoComplete="off"
           className="w-full rounded-full border border-slate-300 bg-white px-4 py-2 text-sm outline-none transition focus:border-yellow-500 focus:ring-2 focus:ring-yellow-400/40 dark:border-slate-700 dark:bg-slate-900"
         />
@@ -82,7 +84,7 @@ export function SearchBox() {
       {open && q.trim().length >= 2 && (
         <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
           {hits.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-slate-500">Nic jsme nenašli.</p>
+            <p className="px-4 py-3 text-sm text-slate-500">{t('Nic jsme nenašli.')}</p>
           ) : (
             <ul>
               {hits.map((h, i) => (
@@ -115,7 +117,7 @@ export function SearchBox() {
                   onClick={() => go(`/hledat?q=${encodeURIComponent(q.trim())}`)}
                   className="w-full border-t border-slate-200 px-4 py-2.5 text-left text-sm font-medium text-yellow-700 dark:border-slate-700 dark:text-yellow-400"
                 >
-                  Všechny výsledky pro „{q.trim()}“ →
+                  {t('Všechny výsledky pro „{q}“', { q: q.trim() })} →
                 </button>
               </li>
             </ul>

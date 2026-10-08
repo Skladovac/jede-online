@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser, sha256 } from '@/lib/auth'
 import { str, type FormState } from '@/lib/validation'
+import { getT } from '@/lib/i18n/server'
 
 // Rodič se nepřihlašuje — autorizací je tajný odkaz z e-mailu (parentToken).
 async function childByToken(fd: FormData) {
@@ -15,14 +16,15 @@ async function childByToken(fd: FormData) {
 }
 
 export async function giveConsent(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const child = await childByToken(fd)
-  if (!child) return { error: 'Odkaz neplatí.' }
+  if (!child) return { error: t('Odkaz neplatí.') }
   // Dítě přihlášené ve stejném prohlížeči si souhlas samo udělit nemůže.
   if ((await getCurrentUser())?.id === child.id)
-    return { error: 'Souhlas musí udělit rodič ze svého zařízení. Dítě se nejdřív musí odhlásit.' }
+    return { error: t('Souhlas musí udělit rodič ze svého zařízení. Dítě se nejdřív musí odhlásit.') }
   const name = str(fd, 'parentName')
-  if (name.length < 3 || name.length > 80) return { error: 'Napište prosím své jméno a příjmení.' }
-  if (fd.get('confirm') !== 'on') return { error: 'Potvrďte prosím, že jste zákonný zástupce a souhlasíte.' }
+  if (name.length < 3 || name.length > 80) return { error: t('Napište prosím své jméno a příjmení.') }
+  if (fd.get('confirm') !== 'on') return { error: t('Potvrďte prosím, že jste zákonný zástupce a souhlasíte.') }
   await prisma.user.update({
     where: { id: child.id },
     data: {
@@ -33,12 +35,13 @@ export async function giveConsent(_: FormState, fd: FormData): Promise<FormState
     },
   })
   revalidatePath(`/rodic/${str(fd, 'token')}`)
-  return { ok: 'Děkujeme, souhlas je udělen. Účet je plně funkční.' }
+  return { ok: t('Děkujeme, souhlas je udělen. Účet je plně funkční.') }
 }
 
 export async function updateParentSettings(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const child = await childByToken(fd)
-  if (!child) return { error: 'Odkaz neplatí.' }
+  if (!child) return { error: t('Odkaz neplatí.') }
   const approveLinks = fd.get('approveLinks') === 'on'
   const clearLinks = fd.get('clearLinks') === 'on'
   await prisma.user.update({
@@ -52,25 +55,27 @@ export async function updateParentSettings(_: FormState, fd: FormData): Promise<
     },
   })
   revalidatePath(`/rodic/${str(fd, 'token')}`)
-  return { ok: 'Nastavení uloženo.' }
+  return { ok: t('Nastavení uloženo.') }
 }
 
 export async function revokeConsent(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const child = await childByToken(fd)
-  if (!child) return { error: 'Odkaz neplatí.' }
+  if (!child) return { error: t('Odkaz neplatí.') }
   await prisma.user.update({
     where: { id: child.id },
     data: { parentConsentAt: null, parentConsentName: null, indexable: false, linksApprovedAt: null },
   })
   await prisma.session.deleteMany({ where: { userId: child.id } })
   revalidatePath(`/rodic/${str(fd, 'token')}`)
-  return { ok: 'Souhlas byl odvolán. Účet je znovu omezený a dítě bylo odhlášeno.' }
+  return { ok: t('Souhlas byl odvolán. Účet je znovu omezený a dítě bylo odhlášeno.') }
 }
 
 export async function parentDeleteAccount(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const child = await childByToken(fd)
-  if (!child) return { error: 'Odkaz neplatí.' }
-  if (str(fd, 'confirmNick') !== child.nickname) return { error: 'Pro potvrzení opište přesně přezdívku účtu.' }
+  if (!child) return { error: t('Odkaz neplatí.') }
+  if (str(fd, 'confirmNick') !== child.nickname) return { error: t('Pro potvrzení opište přesně přezdívku účtu.') }
   await prisma.user.delete({ where: { id: child.id } })
   redirect('/?smazano=1')
 }

@@ -1,14 +1,17 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { parsePlace } from '@/lib/matches'
 import { marketEntries, type MarketTab } from '@/lib/market'
 import { COUNTRY_LABEL, REGIONS } from '@/lib/regions'
 import { cardImage, productImage } from '@/lib/format'
+import { getT } from '@/lib/i18n/server'
 
-export const metadata: Metadata = {
-  title: 'Tržiště',
-  description: 'Pokémon karty a produkty na prodej, na výměnu a poptávky „chci koupit“ od sběratelů z Česka a Slovenska.',
+export async function generateMetadata() {
+  const t = await getT()
+  return {
+    title: t('Tržiště'),
+    description: t('Pokémon karty a produkty na prodej, na výměnu a poptávky „chci koupit“ od sběratelů z Česka a Slovenska.'),
+  }
 }
 export const dynamic = 'force-dynamic'
 
@@ -21,8 +24,9 @@ const TABS: { id: MarketTab; label: string; hint: string; color: string }[] = [
 type Search = { tab?: string; kde?: string; sada?: string; strana?: string }
 
 export default async function MarketPage({ searchParams }: { searchParams: Promise<Search> }) {
+  const t = await getT()
   const sp = await searchParams
-  const tab = TABS.find((t) => t.id === sp.tab) ?? TABS[0]
+  const tab = TABS.find((x) => x.id === sp.tab) ?? TABS[0]
   const { key: kde, place } = parsePlace(sp.kde, null)
   const setId = sp.sada || null
   // Stránku omezíme (velké číslo by načetlo celou databázi).
@@ -49,44 +53,44 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="text-3xl font-black tracking-tight">Tržiště</h1>
+        <h1 className="text-3xl font-black tracking-tight">{t('Tržiště')}</h1>
         <div className="flex gap-4 text-sm font-medium">
           <Link href="/sberatele" className="text-yellow-700 hover:underline dark:text-yellow-400">
-            Najdi sběratele →
+            {t('Najdi sběratele →')}
           </Link>
           <Link href="/hodnoceni" className="text-yellow-700 hover:underline dark:text-yellow-400">
-            Nejlépe hodnocení →
+            {t('Nejlépe hodnocení →')}
           </Link>
         </div>
       </div>
 
       <nav className="mt-6 flex gap-2 overflow-x-auto border-b border-slate-200 dark:border-slate-800">
-        {TABS.map((t) => (
+        {TABS.map((x) => (
           <Link
-            key={t.id}
-            href={url({ tab: t.id, strana: '1' })}
+            key={x.id}
+            href={url({ tab: x.id, strana: '1' })}
             className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 font-semibold ${
-              t.id === tab.id ? 'border-yellow-400 text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              x.id === tab.id ? 'border-yellow-400 text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            {t.label}
+            {t(x.label)}
           </Link>
         ))}
       </nav>
-      <p className="mt-3 text-sm text-slate-500">{tab.hint}</p>
+      <p className="mt-3 text-sm text-slate-500">{t(tab.hint)}</p>
 
       <form className="mt-4 flex flex-wrap items-center gap-2 text-sm">
         {tab.id !== 'prodej' && <input type="hidden" name="tab" value={tab.id} />}
         <select
           name="kde"
           defaultValue={kde}
-          aria-label="Kde"
+          aria-label={t('Kde')}
           className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-900"
         >
-          <option value="vse">Celé Česko a Slovensko</option>
+          <option value="vse">{t('Celé Česko a Slovensko')}</option>
           {(['CZ', 'SK'] as const).map((c) => (
-            <optgroup key={c} label={COUNTRY_LABEL[c]}>
-              <option value={c}>Celé {c === 'CZ' ? 'Česko' : 'Slovensko'}</option>
+            <optgroup key={c} label={t(COUNTRY_LABEL[c])}>
+              <option value={c}>{c === 'CZ' ? t('Celé Česko') : t('Celé Slovensko')}</option>
               {REGIONS[c].map((r) => (
                 <option key={r} value={`r:${r}`}>
                   {r}
@@ -98,20 +102,20 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
         <select
           name="sada"
           defaultValue={setId ?? ''}
-          aria-label="Sada"
+          aria-label={t('Sada')}
           className="max-w-[16rem] rounded-lg border border-slate-300 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-900"
         >
-          <option value="">Všechny sady</option>
+          <option value="">{t('Všechny sady')}</option>
           {sets.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
             </option>
           ))}
         </select>
-        <button className="rounded-full bg-slate-900 px-4 py-1.5 font-semibold text-white dark:bg-yellow-400 dark:text-slate-900">Filtrovat</button>
+        <button className="rounded-full bg-slate-900 px-4 py-1.5 font-semibold text-white dark:bg-yellow-400 dark:text-slate-900">{t('Filtrovat')}</button>
         {(kde !== 'vse' || setId) && (
           <Link href={url({ kde: 'vse', sada: '', strana: '1' })} className="text-slate-500 underline">
-            zrušit filtr
+            {t('zrušit filtr')}
           </Link>
         )}
       </form>
@@ -135,7 +139,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
                   <p className="truncate text-xs text-slate-500">{e.sub}</p>
                   <p className={`truncate text-sm font-semibold ${tab.color}`}>{e.label}</p>
                   <p className="truncate text-xs text-slate-500">
-                    {e.user.nickname} · {e.user.city ?? e.user.region ?? 'neuvedeno'}
+                    {e.user.nickname} · {e.user.city ?? e.user.region ?? t('neuvedeno')}
                   </p>
                 </Link>
               </li>
@@ -145,8 +149,8 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
       ) : (
         <p className="mt-8 rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500 dark:border-slate-700">
           {tab.id === 'koupim'
-            ? 'Zatím tu nikdo nic nepoptává. U chybějící karty zaškrtni „💰 Chci koupit“ a budeš první.'
-            : 'Zatím tu nic není. Karty navíc nabídneš v sadě v režimu „Navíc“.'}
+            ? t('Zatím tu nikdo nic nepoptává. U chybějící karty zaškrtni „💰 Chci koupit“ a budeš první.')
+            : t('Zatím tu nic není. Karty navíc nabídneš v sadě v režimu „Navíc“.')}
         </p>
       )}
 
@@ -154,12 +158,12 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
         <div className="mt-8 flex justify-center gap-4 text-sm font-medium">
           {page > 1 && (
             <Link href={url({ strana: String(page - 1) })} className="underline">
-              ← Novější
+              ← {t('Novější')}
             </Link>
           )}
           {hasMore && (
             <Link href={url({ strana: String(page + 1) })} className="underline">
-              Starší →
+              {t('Starší')} →
             </Link>
           )}
         </div>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { setLogo } from '@/lib/format'
 import { CardBack } from '@/components/CardBack'
+import { getT } from '@/lib/i18n/server'
 
 type Props = {
   id: string
@@ -12,7 +13,8 @@ type Props = {
   releaseDate: Date | null
 }
 
-export function SetTile({ id, name, code, logoUrl, officialCount, cardCount, releaseDate }: Props) {
+export async function SetTile({ id, name, code, logoUrl, officialCount, cardCount, releaseDate }: Props) {
+  const t = await getT()
   const logo = setLogo(logoUrl)
   // Promo sady nemají oficiální počet (0) — ukážeme skutečný počet karet.
   const count = officialCount || cardCount
@@ -32,7 +34,7 @@ export function SetTile({ id, name, code, logoUrl, officialCount, cardCount, rel
       <div>
         <p className="font-semibold leading-tight group-hover:text-yellow-700 dark:group-hover:text-yellow-400">{name}</p>
         <p className="mt-1 text-xs text-slate-500">
-          {[code, `${count} karet`, releaseDate?.getFullYear()].filter(Boolean).join(' · ')}
+          {[code, t('{n} karet', { n: count }), releaseDate?.getFullYear()].filter(Boolean).join(' · ')}
         </p>
       </div>
     </Link>
