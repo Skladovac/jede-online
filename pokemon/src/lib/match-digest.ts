@@ -31,6 +31,8 @@ async function digest() {
   // Úklid: prošlá přihlášení a e-mailové odkazy.
   await prisma.session.deleteMany({ where: { expiresAt: { lt: now } } })
   await prisma.emailToken.deleteMany({ where: { expiresAt: { lt: new Date(now.getTime() - 7 * 86_400_000) } } })
+  // Anonymní otisky návštěvníků držíme jen 60 dní (denní součty zobrazení zůstávají).
+  await prisma.visitorDay.deleteMany({ where: { day: { lt: new Date(now.getTime() - 60 * 86_400_000) } } })
   const users = await prisma.user.findMany({
     where: {
       matchEmails: true,
