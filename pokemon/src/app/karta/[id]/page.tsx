@@ -6,6 +6,7 @@ import { safeDecode } from '@/lib/validation'
 import { cardImage, categoryLabel, formatEur, rarityLabel } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
 import { PriceStatsTable } from '@/components/PriceStatsTable'
+import { PriceChart } from '@/components/PriceChart'
 import { eurCzkDate } from '@/lib/fx'
 import type { PriceStats } from '@/lib/price-stats'
 import { CardOffers } from '@/components/CardOffers'
@@ -149,6 +150,7 @@ export default async function CardPage({ params }: Props) {
                 </div>
               ) : null
             })()}
+            <PriceChart cardId={card.id} stats={card.priceStats as PriceStats | null} />
             <PriceNote className="mt-4" />
             <p className="mt-1 text-xs text-slate-400">
               {card.priceUpdatedAt && <>{t('Ceny z {date}', { date: card.priceUpdatedAt.toLocaleDateString(LOCALE_INFO[locale].intl) })}</>}

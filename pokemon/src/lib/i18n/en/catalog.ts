@@ -189,5 +189,11 @@ const dict: Record<string, string> = {
   '{name} – seznam karet a ceny': '{name} – card list and prices',
   'Všech {n} karet sady {name} s cenami. Odklikej si, co máš, co ti chybí, a najdi sběratele na výměnu. Zdarma.': 'All {n} cards of the {name} set with prices. Tick off what you have and what you are missing, and find collectors to trade with. Free.',
   '{name}: orientační cena, kdo ho nabízí a kdo ho chce koupit. Sběratelé Pokémon karet z Česka a Slovenska.': '{name}: approximate price, who offers it and who wants to buy it. Pokémon card collectors from Czechia and Slovakia.',
+  'Vývoj ceny': 'Price history',
+  'Odhad z průměrů Cardmarketu (30 dní, 7 dní, 1 den, dnes). Přesná historie se ukládá každý den.': 'Estimate from Cardmarket averages (30 days, 7 days, 1 day, today). Exact history is recorded every day.',
+  'Zobrazení:': 'View:',
+  'Mřížka': 'Grid',
+  'Album': 'Album',
+  'Strana {page} z {pages}': 'Page {page} of {pages}',
 }
 export default dict

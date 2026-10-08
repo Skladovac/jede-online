@@ -90,7 +90,14 @@ const cardEur = (...c: (number | null | undefined)[]) => {
 
 /** Ceny karet podle idProduct z denního ceníku Cardmarketu: trend → avg7 → avg30 (nikdy `avg`), reverse = „-holo“. */
 async function refreshCardPrices(prices: Map<number, CmPrice>, at: Date, log: (m: string) => void) {
-  const cards = await prisma.card.findMany({ where: { cmProductId: { not: null } }, select: { id: true, cmProductId: true } })
+  const cards = await prisma.card.findMany({
+    where: { cmProductId: { not: null } },
+    select: { id: true, cmProductId: true, priceEur: true, priceReverseEur: true },
+  })
+  // Karty, které už nějakou historii mají (jinak uložíme první bod i beze změny ceny).
+  const withHistory = new Set((await prisma.cardPrice.findMany({ distinct: ['cardId'], select: { cardId: true } })).map((h) => h.cardId))
+  const day = new Date(`${new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Prague' }).format(at)}T00:00:00Z`)
+  const history: { cardId: string; day: Date; eur: Prisma.Decimal | null; reverseEur: Prisma.Decimal | null }[] = []
   let updated = 0
   for (let i = 0; i < cards.length; i += 200) {
     const batch = cards.slice(i, i + 200).flatMap((c) => {
@@ -98,12 +105,16 @@ async function refreshCardPrices(prices: Map<number, CmPrice>, at: Date, log: (m
       if (!p) return []
       const base = pickStats(p as Record<string, number | null>)
       const reverse = pickStats(p as Record<string, number | null>, '-holo')
+      const eur = cardEur(p.trend, p.avg7, p.avg30)
+      const reverseEur = cardEur(p['trend-holo'], p['avg7-holo'], p['avg30-holo'])
+      const changed = String(eur) !== String(c.priceEur) || String(reverseEur) !== String(c.priceReverseEur)
+      if (changed || !withHistory.has(c.id)) history.push({ cardId: c.id, day, eur, reverseEur })
       return [
         prisma.card.update({
           where: { id: c.id },
           data: {
-            priceEur: cardEur(p.trend, p.avg7, p.avg30),
-            priceReverseEur: cardEur(p['trend-holo'], p['avg7-holo'], p['avg30-holo']),
+            priceEur: eur,
+            priceReverseEur: reverseEur,
             priceStats: base || reverse ? { ...(base ?? {}), ...(reverse && { reverse }) } : Prisma.JsonNull,
             priceUpdatedAt: at,
           },
@@ -113,7 +124,9 @@ async function refreshCardPrices(prices: Map<number, CmPrice>, at: Date, log: (m
     if (batch.length) await prisma.$transaction(batch)
     updated += batch.length
   }
-  log(`[ceny] karty z ceníku Cardmarketu: ${updated} z ${cards.length}`)
+  for (let i = 0; i < history.length; i += 5000)
+    await prisma.cardPrice.createMany({ data: history.slice(i, i + 5000), skipDuplicates: true })
+  log(`[ceny] karty z ceníku Cardmarketu: ${updated} z ${cards.length}, do historie ${history.length}`)
 }
 
 export async function syncProducts(log: (m: string) => void = console.log) {
