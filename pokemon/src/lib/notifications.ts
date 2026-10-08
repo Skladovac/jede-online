@@ -15,3 +15,9 @@ export async function pushNotification(userId: string, n: { title: string; body?
     })
     .catch((err) => console.error('[upozorneni]', err))
 }
+
+/** Jazyk příjemce (pro překlad upozornění v době vytvoření). */
+export async function localeOf(userId: string) {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { locale: true } })
+  return u?.locale ?? 'cs'
+}

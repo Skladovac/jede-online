@@ -62,7 +62,7 @@ export async function updateProfile(_: FormState, fd: FormData): Promise<FormSta
     // Nový odkaz pro rodiče (v DB je jen otisk původního, ten poslat znovu nejde).
     const raw = randomToken()
     await prisma.user.update({ where: { id: user.id }, data: { parentToken: sha256(raw) } })
-    await sendParentLinksEmail(user.parentEmail, nickname, raw)
+    await sendParentLinksEmail(user.parentEmail, nickname, raw, user.locale)
   }
 
   revalidatePath('/ucet')
@@ -89,7 +89,7 @@ export async function changePassword(_: FormState, fd: FormData): Promise<FormSt
   await prisma.session.deleteMany({ where: { userId: user.id } }) // odhlásit všude…
   await prisma.emailToken.deleteMany({ where: { userId: user.id, kind: 'RESET' } })
   await createSession(user.id) // …kromě tohoto zařízení
-  await sendPasswordChangedEmail(user.email, user.nickname)
+  await sendPasswordChangedEmail(user.email, user.nickname, user.locale)
   return { ok: t('Heslo je změněné. Poslali jsme ti o tom e-mail.') }
 }
 

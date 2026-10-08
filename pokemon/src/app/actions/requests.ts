@@ -7,9 +7,9 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser, isLimited } from '@/lib/auth'
 import { ADMIN_EMAIL, APP_URL, esc, notify } from '@/lib/email'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
-import { pushNotification } from '@/lib/notifications'
+import { localeOf, pushNotification } from '@/lib/notifications'
 import { str, type FormState } from '@/lib/validation'
-import { getT } from '@/lib/i18n/server'
+import { getT, tFor } from '@/lib/i18n/server'
 
 const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' } as const
 const CONDITION = { MINT: 'jako nová', LIGHT_PLAYED: 'mírně hraná', DAMAGED: 'poškozená' } as const
@@ -220,22 +220,32 @@ export async function sendRequest(_: FormState, fd: FormData): Promise<FormState
     data: { status: 'PENDING', sentAt: new Date() },
   })
   if (!sent.count) redirect(`/poptavky/${req.id}`)
+  const ttTo = tFor(req.to.locale)
   await pushNotification(req.toId, {
     icon: '📩',
-    title: `Nová žádost o výměnu od ${user.nickname}`,
+    title: ttTo('Nová žádost o výměnu od {name}', { name: user.nickname }),
     body: wanted.map((w) => w.title).slice(0, 3).join(', ') + (wanted.length > 3 ? '…' : ''),
     url: `/poptavky/${req.id}`,
   })
   await notify(
     req.to.email,
     parentCc(req.to),
-    `Nová žádost o výměnu od ${user.nickname}`,
+    ttTo('Nová žádost o výměnu od {name}', { name: user.nickname }),
     [
-      `<strong>${esc(user.nickname)}</strong> má zájem o ${wanted.length === 1 ? 'tuto kartu' : `${wanted.length} karet`}:`,
-      wanted.map((w) => `• ${esc(w.title)} — ${w.quantity}× ${OFFER[w.offerType ?? 'TRADE']}${w.priceCzk ? ` za ${w.priceCzk} Kč` : ''}`).join('<br>'),
-      'Když žádost přijmete, uvidíte navzájem e-mail a domluvíte se na předání. Web neřeší platby ani dopravu.',
+      ttTo('<strong>{name}</strong> má zájem o {what}:', {
+        name: esc(user.nickname),
+        what: wanted.length === 1 ? ttTo('tuto kartu') : ttTo('{count} karet', { count: wanted.length }),
+      }),
+      wanted
+        .map(
+          (w) =>
+            `• ${esc(w.title)} — ${w.quantity}× ${ttTo(OFFER[w.offerType ?? 'TRADE'])}${w.priceCzk ? ` ${ttTo('za {price} Kč', { price: w.priceCzk })}` : ''}`,
+        )
+        .join('<br>'),
+      ttTo('Když žádost přijmete, uvidíte navzájem e-mail a domluvíte se na předání. Web neřeší platby ani dopravu.'),
     ],
-    { label: 'Zobrazit výměnu', url: `${APP_URL}/poptavky/${req.id}` },
+    { label: ttTo('Zobrazit výměnu'), url: `${APP_URL}/poptavky/${req.id}` },
+    req.to.locale,
   )
   revalidatePath('/', 'layout')
   redirect(`/poptavky/${req.id}?odeslano=1`)
@@ -259,38 +269,51 @@ export async function respondRequest(_: FormState, fd: FormData): Promise<FormSt
     data: { status: accept ? 'ACCEPTED' : 'DECLINED', respondedAt: new Date() },
   })
   if (!res.count) return { error: t('Žádost se mezitím změnila. Obnov stránku.') }
+  const ttFrom = tFor(req.from.locale)
   await pushNotification(req.fromId, {
     icon: accept ? '✅' : '❌',
-    title: accept ? `${user.nickname} přijal(a) tvoji žádost` : `${user.nickname} žádost odmítl(a)`,
-    body: accept ? 'Kontakt pro domluvu najdeš v detailu výměny.' : undefined,
+    title: accept
+      ? ttFrom('{name} přijal(a) tvoji žádost', { name: user.nickname })
+      : ttFrom('{name} žádost odmítl(a)', { name: user.nickname }),
+    body: accept ? ttFrom('Kontakt pro domluvu najdeš v detailu výměny.') : undefined,
     url: `/poptavky/${req.id}`,
   })
   await notify(
     req.from.email,
     parentCc(req.from),
-    accept ? `${user.nickname} přijal(a) tvoji žádost` : `${user.nickname} žádost odmítl(a)`,
+    accept
+      ? ttFrom('{name} přijal(a) tvoji žádost', { name: user.nickname })
+      : ttFrom('{name} žádost odmítl(a)', { name: user.nickname }),
     accept
       ? [
-          `<strong>${esc(user.nickname)}</strong> přijal(a) žádost. Kontakt pro domluvu: <strong>${esc(user.email)}</strong>${
-            user.isMinor && user.parentEmail ? ` (rodič: ${esc(user.parentEmail)})` : ''
-          }.`,
-          'Domluvte se na předání nebo zaslání. Až bude hotovo, potvrďte to na webu a ohodnoťte se.',
+          ttFrom('<strong>{name}</strong> přijal(a) žádost. Kontakt pro domluvu: <strong>{email}</strong>{parent}.', {
+            name: esc(user.nickname),
+            email: esc(user.email),
+            parent: user.isMinor && user.parentEmail ? ` ${ttFrom('(rodič: {email})', { email: esc(user.parentEmail) })}` : '',
+          }),
+          ttFrom('Domluvte se na předání nebo zaslání. Až bude hotovo, potvrďte to na webu a ohodnoťte se.'),
         ]
-      : ['Nevadí — zkus kartu najít u někoho jiného.'],
-    { label: 'Zobrazit výměnu', url: `${APP_URL}/poptavky/${req.id}` },
+      : [ttFrom('Nevadí — zkus kartu najít u někoho jiného.')],
+    { label: ttFrom('Zobrazit výměnu'), url: `${APP_URL}/poptavky/${req.id}` },
+    req.from.locale,
   )
-  if (accept)
+  if (accept) {
+    const tt = tFor(user.locale)
     await notify(
       user.email,
       parentCc(user),
-      `Kontakt na ${req.from.nickname}`,
+      tt('Kontakt na {name}', { name: req.from.nickname }),
       [
-        `Přijal(a) jsi žádost od <strong>${esc(req.from.nickname)}</strong>. Kontakt pro domluvu: <strong>${esc(req.from.email)}</strong>${
-          req.from.isMinor && req.from.parentEmail ? ` (rodič: ${esc(req.from.parentEmail)})` : ''
-        }.`,
+        tt('Přijal(a) jsi žádost od <strong>{name}</strong>. Kontakt pro domluvu: <strong>{email}</strong>{parent}.', {
+          name: esc(req.from.nickname),
+          email: esc(req.from.email),
+          parent: req.from.isMinor && req.from.parentEmail ? ` ${tt('(rodič: {email})', { email: esc(req.from.parentEmail) })}` : '',
+        }),
       ],
-      { label: 'Zobrazit výměnu', url: `${APP_URL}/poptavky/${req.id}` },
+      { label: tt('Zobrazit výměnu'), url: `${APP_URL}/poptavky/${req.id}` },
+      user.locale,
     )
+  }
   revalidatePath('/', 'layout')
   return { ok: accept ? t('Přijato. Kontakt najdeš níže a v e-mailu.') : t('Odmítnuto.') }
 }
@@ -307,11 +330,20 @@ export async function cancelRequest(_: FormState, fd: FormData): Promise<FormSta
   })
   if (!res.count) return { error: t('Výměnu už nejde zrušit.') }
   const other = req.fromId === user.id ? req.to : req.from
-  await pushNotification(other.id, { icon: '🚫', title: `${user.nickname} zrušil(a) výměnu`, url: `/poptavky/${req.id}` })
-  await notify(other.email, parentCc(other), `${user.nickname} zrušil(a) výměnu`, ['Výměna byla zrušena.'], {
-    label: 'Zobrazit',
-    url: `${APP_URL}/poptavky/${req.id}`,
+  const ttOther = tFor(other.locale)
+  await pushNotification(other.id, {
+    icon: '🚫',
+    title: ttOther('{name} zrušil(a) výměnu', { name: user.nickname }),
+    url: `/poptavky/${req.id}`,
   })
+  await notify(
+    other.email,
+    parentCc(other),
+    ttOther('{name} zrušil(a) výměnu', { name: user.nickname }),
+    [ttOther('Výměna byla zrušena.')],
+    { label: ttOther('Zobrazit'), url: `${APP_URL}/poptavky/${req.id}` },
+    other.locale,
+  )
   revalidatePath('/', 'layout')
   return { ok: t('Zrušeno.') }
 }
@@ -373,20 +405,24 @@ export async function markDone(_: FormState, fd: FormData): Promise<FormState> {
   const fresh = await prisma.tradeRequest.findUnique({ where: { id: req.id }, select: { status: true } })
   const otherId = req.fromId === user.id ? req.toId : req.fromId
   if (completed)
-    for (const uid of [req.fromId, req.toId])
+    for (const uid of [req.fromId, req.toId]) {
+      const tt = tFor(await localeOf(uid))
       await pushNotification(uid, {
         icon: '🎉',
-        title: 'Výměna je dokončená',
-        body: 'Nezapomeň druhou stranu ohodnotit.',
+        title: tt('Výměna je dokončená'),
+        body: tt('Nezapomeň druhou stranu ohodnotit.'),
         url: `/poptavky/${req.id}`,
       })
-  else if (fresh?.status === 'ACCEPTED')
+    }
+  else if (fresh?.status === 'ACCEPTED') {
+    const tt = tFor(await localeOf(otherId))
     await pushNotification(otherId, {
       icon: '📦',
-      title: `${user.nickname} potvrdil(a), že výměna proběhla`,
-      body: 'Potvrď to prosím taky, ať se kusy odečtou ze sbírek.',
+      title: tt('{name} potvrdil(a), že výměna proběhla', { name: user.nickname }),
+      body: tt('Potvrď to prosím taky, ať se kusy odečtou ze sbírek.'),
       url: `/poptavky/${req.id}`,
     })
+  }
   return {
     ok:
       completed || fresh?.status === 'COMPLETED'
@@ -417,9 +453,10 @@ export async function rateRequest(_: FormState, fd: FormData): Promise<FormState
     },
     update: { positive, tag: TAGS.includes(tag) ? tag : null },
   })
+  const ttTo = tFor(await localeOf(toId))
   await pushNotification(toId, {
     icon: positive ? '👍' : '👎',
-    title: `${user.nickname} tě ohodnotil(a) po výměně`,
+    title: ttTo('{name} tě ohodnotil(a) po výměně', { name: user.nickname }),
     url: `/poptavky/${req.id}`,
   })
   revalidatePath(`/poptavky/${req.id}`)

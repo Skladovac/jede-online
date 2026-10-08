@@ -10,7 +10,7 @@ import { pushNotification } from '@/lib/notifications'
 import { textProblem } from '@/lib/nickname-filter'
 import { TAG_LABEL } from '@/lib/rating-tags'
 import { str, type FormState } from '@/lib/validation'
-import { getT } from '@/lib/i18n/server'
+import { getT, tFor } from '@/lib/i18n/server'
 
 /**
  * Volné hodnocení od registrovaného uživatele (i po obchodu domluveném mimo web).
@@ -45,9 +45,10 @@ export async function rateUser(_: FormState, fd: FormData): Promise<FormState> {
   if (existing) await prisma.rating.update({ where: { id: existing.id }, data })
   else {
     await prisma.rating.create({ data: { ...data, fromId: user.id, toId: to.id } })
+    const tt = tFor(to.locale)
     await pushNotification(to.id, {
       icon: positive ? '👍' : '👎',
-      title: `${user.nickname} tě ohodnotil(a)`,
+      title: tt('{name} tě ohodnotil(a)', { name: user.nickname }),
       body: comment || undefined,
       url: `/u/${encodeURIComponent(to.nickname)}/hodnoceni`,
     })
@@ -55,12 +56,17 @@ export async function rateUser(_: FormState, fd: FormData): Promise<FormState> {
     await notify(
       to.email,
       to.isMinor && to.parentEmail ? [to.parentEmail] : [],
-      `${user.nickname} tě ohodnotil(a) ${positive ? '👍' : '👎'}`,
+      tt('{name} tě ohodnotil(a) {icon}', { name: user.nickname, icon: positive ? '👍' : '👎' }),
       [
-        `<strong>${esc(user.nickname)}</strong> ti dal(a) ${positive ? 'kladné 👍' : 'záporné 👎'} hodnocení${tag ? ` (${TAG_LABEL[tag]})` : ''}.`,
+        tt('<strong>{name}</strong> ti dal(a) {kind} hodnocení{tag}.', {
+          name: esc(user.nickname),
+          kind: positive ? tt('kladné 👍') : tt('záporné 👎'),
+          tag: tag ? ` (${tt(TAG_LABEL[tag])})` : '',
+        }),
         ...(comment ? [`„${esc(comment)}“`] : []),
       ],
-      { label: 'Zobrazit hodnocení', url: `${APP_URL}/u/${encodeURIComponent(to.nickname)}/hodnoceni` },
+      { label: tt('Zobrazit hodnocení'), url: `${APP_URL}/u/${encodeURIComponent(to.nickname)}/hodnoceni` },
+      to.locale,
     )
   }
   revalidatePath(`/u/${encodeURIComponent(to.nickname)}/hodnoceni`)
