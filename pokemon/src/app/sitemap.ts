@@ -5,11 +5,11 @@ import { prisma } from '@/lib/prisma'
 const BASE = 'https://pokemon.jede.online'
 const CHUNK = 20_000
 
-export const revalidate = 86400
+// Seznam souborů musí jít vytvořit už při sestavení (bez databáze): pevně 0–3 = až 60 000 karet; prázdný soubor nevadí.
+export const dynamic = 'force-dynamic'
 
-export async function generateSitemaps() {
-  const cards = await prisma.card.count()
-  return Array.from({ length: 1 + Math.ceil(cards / CHUNK) }, (_, id) => ({ id }))
+export function generateSitemaps() {
+  return [0, 1, 2, 3].map((id) => ({ id }))
 }
 
 export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {

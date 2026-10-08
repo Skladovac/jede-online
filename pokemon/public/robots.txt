@@ -17,3 +17,4 @@ Disallow: /hledat
 Sitemap: https://pokemon.jede.online/sitemap/0.xml
 Sitemap: https://pokemon.jede.online/sitemap/1.xml
 Sitemap: https://pokemon.jede.online/sitemap/2.xml
+Sitemap: https://pokemon.jede.online/sitemap/3.xml
