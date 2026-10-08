@@ -27,6 +27,8 @@ export async function generateMetadata(): Promise<Metadata> {
   appleWebApp: { capable: true, title: t('Pokémon karty'), statusBarStyle: 'default' },
   // Web je otevřený vyhledávačům (soukromé stránky mají vlastní noindex nebo vyžadují přihlášení).
   robots: { index: true, follow: true },
+  // Ověření v Google Search Console.
+  verification: { google: 'WbDOgMWEk6Xsoxhiz84m52ST6trhTHuVElDuAs9lavI' },
   }
 }
 
