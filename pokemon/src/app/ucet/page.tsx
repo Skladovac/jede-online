@@ -10,8 +10,12 @@ import { safeNext } from '@/lib/validation'
 import { Checkbox, Field, Submit, inputCls } from '@/components/ui'
 import { COUNTRY_LABEL, REGIONS } from '@/lib/regions'
 import { PasswordInput } from '@/components/PasswordInput'
+import { getT } from '@/lib/i18n/server'
 
-export const metadata: Metadata = { title: 'Můj účet' }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t('Můj účet') }
+}
 export const dynamic = 'force-dynamic'
 
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ vitej?: string; heslo?: string; next?: string }> }) {
@@ -20,50 +24,50 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const { vitej, heslo } = await searchParams
   const next = safeNext((await searchParams).next)
   const limited = isLimited(user)
+  const t = await getT()
   const linksPending = user.isMinor && !user.linksApprovedAt && (user.facebookUrl || user.instagramUrl || user.aukroUrl)
 
   return (
     <main className="mx-auto max-w-2xl space-y-8 px-4 py-10">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight">Ahoj, {user.nickname}!</h1>
+          <h1 className="text-3xl font-black tracking-tight">{t('Ahoj, {name}!', { name: user.nickname })}</h1>
           {!limited && (
             <Link href={`/u/${encodeURIComponent(user.nickname)}`} className="text-sm underline">
-              Zobrazit můj veřejný profil
+              {t('Zobrazit můj veřejný profil')}
             </Link>
           )}
         </div>
         <form action={logout}>
-          <button className="text-sm text-slate-500 underline">Odhlásit</button>
+          <button className="text-sm text-slate-500 underline">{t('Odhlásit')}</button>
         </form>
       </div>
 
       {vitej && (
         <Notice tone="ok">
-          Účet je založený. Poslali jsme ti e-mail s odkazem pro potvrzení. Když ho nevidíš, podívej se do složky Spam /
-          Nevyžádaná pošta a označ ho jako „není spam“.
+          {t('Účet je založený. Poslali jsme ti e-mail s odkazem pro potvrzení. Když ho nevidíš, podívej se do složky Spam / Nevyžádaná pošta a označ ho jako „není spam“.')}
           {next && (
             <>
               {' '}
-              Po potvrzení tě odkaz vrátí zpátky na stránku, odkud jsi přišel(a).{' '}
+              {t('Po potvrzení tě odkaz vrátí zpátky na stránku, odkud jsi přišel(a).')}{' '}
               <Link href={next} className="font-semibold underline">
-                Zpět tam →
+                {t('Zpět tam →')}
               </Link>
             </>
           )}
         </Notice>
       )}
-      {heslo && <Notice tone="ok">Nové heslo je uložené.</Notice>}
+      {heslo && <Notice tone="ok">{t('Nové heslo je uložené.')}</Notice>}
 
       {limited && (
         <Notice tone="warn">
-          <p className="font-semibold">Čekáme na souhlas rodiče</p>
+          <p className="font-semibold">{t('Čekáme na souhlas rodiče')}</p>
           <p className="mt-1">
-            Poslali jsme e-mail na <strong>{user.parentEmail}</strong>. Do schválení si můžeš procházet katalog, ale tvůj
-            profil není vidět a nejde posílat nabídky. E-mail může skončit ve složce Spam / Nevyžádaná pošta.
+            {t('Poslali jsme e-mail na')} <strong>{user.parentEmail}</strong>.{' '}
+            {t('Do schválení si můžeš procházet katalog, ale tvůj profil není vidět a nejde posílat nabídky. E-mail může skončit ve složce Spam / Nevyžádaná pošta.')}
           </p>
           <ActionForm action={resendParent} className="mt-3 space-y-3">
-            <Submit variant="ghost">Poslat rodiči e-mail znovu</Submit>
+            <Submit variant="ghost">{t('Poslat rodiči e-mail znovu')}</Submit>
           </ActionForm>
         </Notice>
       )}
@@ -71,24 +75,24 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       {!user.emailVerifiedAt && (
         <Notice tone="warn">
           <p>
-            Tvůj e-mail <strong>{user.email}</strong> zatím není potvrzený. Odkaz najdeš v e-mailu od Pokémon karty
-            (noreply@jede.online) — podívej se i do složky Spam / Nevyžádaná pošta.
+            {t('Tvůj e-mail')} <strong>{user.email}</strong>{' '}
+            {t('zatím není potvrzený. Odkaz najdeš v e-mailu od Pokémon karty (noreply@jede.online) — podívej se i do složky Spam / Nevyžádaná pošta.')}
           </p>
           <ActionForm action={resendVerify} className="mt-3 space-y-3">
-            <Submit variant="ghost">Poslat potvrzovací e-mail znovu</Submit>
+            <Submit variant="ghost">{t('Poslat potvrzovací e-mail znovu')}</Submit>
           </ActionForm>
         </Notice>
       )}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="mb-5 text-lg font-bold">Profil</h2>
+        <h2 className="mb-5 text-lg font-bold">{t('Profil')}</h2>
         <ActionForm action={updateProfile}>
-          <Field label="Přezdívka">
+          <Field label={t('Přezdívka')}>
             <input name="nickname" required defaultValue={user.nickname} className={inputCls} />
           </Field>
-          <p className="text-sm text-slate-500">Země: {COUNTRY_LABEL[user.country]}</p>
+          <p className="text-sm text-slate-500">{t('Země: {country}', { country: t(COUNTRY_LABEL[user.country]) })}</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Kraj">
+            <Field label={t('Kraj')}>
               <select name="region" defaultValue={user.region ?? ''} className={inputCls}>
                 <option value="">–</option>
                 {REGIONS[user.country].map((r) => (
@@ -96,82 +100,82 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                 ))}
               </select>
             </Field>
-            <Field label="Město">
+            <Field label={t('Město')}>
               <input name="city" maxLength={60} defaultValue={user.city ?? ''} className={inputCls} />
             </Field>
           </div>
 
           <fieldset className="space-y-3">
-            <legend className="mb-2 text-sm font-medium">Odkazy (nepovinné)</legend>
+            <legend className="mb-2 text-sm font-medium">{t('Odkazy (nepovinné)')}</legend>
             {user.isMinor && (
-              <p className="text-xs text-slate-500">Odkazy se ostatním zobrazí až po schválení rodičem.</p>
+              <p className="text-xs text-slate-500">{t('Odkazy se ostatním zobrazí až po schválení rodičem.')}</p>
             )}
             <input name="facebookUrl" placeholder="facebook.com/…" defaultValue={user.facebookUrl ?? ''} className={inputCls} />
             <input name="instagramUrl" placeholder="instagram.com/…" defaultValue={user.instagramUrl ?? ''} className={inputCls} />
             <input name="aukroUrl" placeholder="aukro.cz/…" defaultValue={user.aukroUrl ?? ''} className={inputCls} />
-            {linksPending && <p className="text-xs text-yellow-700 dark:text-yellow-400">Odkazy čekají na schválení rodičem.</p>}
+            {linksPending && <p className="text-xs text-yellow-700 dark:text-yellow-400">{t('Odkazy čekají na schválení rodičem.')}</p>}
           </fieldset>
 
           {isAdult(user) && (
             <Field
-              label="Telefon (nepovinné)"
-              hint="Uvidí ho jen přihlášení uživatelé s ověřeným e-mailem po kliknutí na „Zobrazit číslo“. Každé zobrazení zaznamenáváme. Smazáním pole číslo z webu zmizí."
+              label={t('Telefon (nepovinné)')}
+              hint={t('Uvidí ho jen přihlášení uživatelé s ověřeným e-mailem po kliknutí na „Zobrazit číslo“. Každé zobrazení zaznamenáváme. Smazáním pole číslo z webu zmizí.')}
             >
               <input name="phone" type="tel" inputMode="tel" maxLength={20} placeholder="+420 777 123 456" defaultValue={user.phone ?? ''} className={inputCls} />
             </Field>
           )}
 
           <Checkbox name="matchEmails" defaultChecked={user.matchEmails}>
-            Pošli mi jednou denně e-mail, když někdo nabídne kartu, která mi chybí.
+            {t('Pošli mi jednou denně e-mail, když někdo nabídne kartu, která mi chybí.')}
           </Checkbox>
 
           {user.isMinor ? (
             <p className="text-sm text-slate-500">
-              Dohledatelnost přes Google: {user.indexable ? 'zapnutá' : 'vypnutá'} (nastavuje rodič).
+              {user.indexable ? t('Dohledatelnost přes Google: zapnutá (nastavuje rodič).') : t('Dohledatelnost přes Google: vypnutá (nastavuje rodič).')}
             </p>
           ) : (
             <Checkbox name="indexable" defaultChecked={user.indexable}>
-              Chci, aby můj profil šlo najít přes Google.
+              {t('Chci, aby můj profil šlo najít přes Google.')}
             </Checkbox>
           )}
-          <Submit>Uložit</Submit>
+          <Submit>{t('Uložit')}</Submit>
         </ActionForm>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="mb-1 text-lg font-bold">Přihlášení</h2>
+        <h2 className="mb-1 text-lg font-bold">{t('Přihlášení')}</h2>
         <p className="mb-5 text-sm">
-          Přihlašuješ se e-mailem <strong className="break-all">{user.email}</strong>
-          {user.emailVerifiedAt ? ' ✓' : ' (zatím nepotvrzený)'}
+          {t('Přihlašuješ se e-mailem')} <strong className="break-all">{user.email}</strong>
+          {user.emailVerifiedAt ? ' ✓' : ` ${t('(zatím nepotvrzený)')}`}
         </p>
-        <h3 className="mb-3 font-semibold">Změnit heslo</h3>
+        <h3 className="mb-3 font-semibold">{t('Změnit heslo')}</h3>
         <ActionForm action={changePassword} className="space-y-3">
-          <Field label="Současné heslo">
+          <Field label={t('Současné heslo')}>
             <PasswordInput name="current" autoComplete="current-password" />
           </Field>
-          <Field label="Nové heslo">
+          <Field label={t('Nové heslo')}>
             <PasswordInput name="password" autoComplete="new-password" />
           </Field>
-          <Field label="Nové heslo znovu">
+          <Field label={t('Nové heslo znovu')}>
             <PasswordInput name="password2" autoComplete="new-password" />
           </Field>
           <div className="flex flex-wrap items-center gap-4">
-            <Submit>Změnit heslo</Submit>
+            <Submit>{t('Změnit heslo')}</Submit>
             <Link href="/zapomenute-heslo" className="text-sm underline">
-              Nepamatuješ si současné heslo?
+              {t('Nepamatuješ si současné heslo?')}
             </Link>
           </div>
         </ActionForm>
       </section>
 
       <section className="rounded-2xl border border-red-200 p-5 dark:border-red-500/30">
-        <h2 className="text-lg font-bold">Smazat účet</h2>
-        <p className="mb-4 mt-1 text-sm text-slate-500">Smaže profil, sbírku i všechny údaje. Nejde vrátit.</p>
+        <h2 className="text-lg font-bold">{t('Smazat účet')}</h2>
+        <p className="mb-4 mt-1 text-sm text-slate-500">{t('Smaže profil, sbírku i všechny údaje. Nejde vrátit.')}</p>
         <ActionForm action={deleteAccount} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <Field label="Pro potvrzení zadej heslo">
+          <Field label={t('Pro potvrzení zadej heslo')}>
             <PasswordInput autoComplete="current-password" />
           </Field>
-          <Submit variant="danger">Smazat účet</Submit>
+          <Submit variant="danger">{t('Smazat účet')}</Submit>
         </ActionForm>
       </section>
     </main>

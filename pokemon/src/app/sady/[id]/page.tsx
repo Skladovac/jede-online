@@ -13,6 +13,8 @@ import { ProductTile } from '@/components/ProductTile'
 import { CardBack } from '@/components/CardBack'
 import type { QuickState } from '@/app/actions/collection'
 import { ensureEurCzk } from '@/lib/fx'
+import { getT, getLocale } from '@/lib/i18n/server'
+import { LOCALE_INFO } from '@/lib/i18n/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,11 +29,14 @@ async function getSet(id: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const set = await getSet((await params).id)
-  return { title: set ? set.name : 'Sada nenalezena' }
+  const t = await getT()
+  return { title: set ? set.name : t('Sada nenalezena') }
 }
 
 export default async function SetPage({ params, searchParams }: Props) {
   await ensureEurCzk() // kurz ČNB pro korunové částky u cen
+  const t = await getT()
+  const locale = await getLocale()
   const [set, user] = await Promise.all([getSet((await params).id), getCurrentUser()])
   if (!set) notFound()
   // Postup přihlášeného (base / complete / master); po změně v mřížce se obnoví při dalším načtení stránky.
@@ -47,8 +52,10 @@ export default async function SetPage({ params, searchParams }: Props) {
   const meta = [
     set.series,
     set.code,
-    set.officialCount ? `${set.officialCount} karet (${set.cardCount} včetně secret)` : `${set.cardCount} karet`,
-    set.releaseDate?.toLocaleDateString('cs-CZ'),
+    set.officialCount
+      ? t('{n} karet ({total} včetně secret)', { n: set.officialCount, total: set.cardCount })
+      : t('{n} karet', { n: set.cardCount }),
+    set.releaseDate?.toLocaleDateString(LOCALE_INFO[locale].intl),
   ]
 
   // Stav sbírky přihlášeného uživatele pro karty této sady.
@@ -70,7 +77,7 @@ export default async function SetPage({ params, searchParams }: Props) {
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <Link href="/sady" className="text-sm text-slate-500 hover:underline">
-        ← Všechny sady
+        ← {t('Všechny sady')}
       </Link>
       <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
         {logo ? (
@@ -92,13 +99,13 @@ export default async function SetPage({ params, searchParams }: Props) {
 
       <nav className="mt-6 flex gap-2 border-b border-slate-200 dark:border-slate-800">
         {[
-          ['karty', `Karty (${cards.length})`],
-          ['produkty', `Produkty (${products.length})`],
-        ].map(([t, label]) => (
+          ['karty', t('Karty ({n})', { n: cards.length })],
+          ['produkty', t('Produkty ({n})', { n: products.length })],
+        ].map(([k, label]) => (
           <Link
-            key={t}
-            href={`/sady/${encodeURIComponent(set.id)}${t === 'produkty' ? '?tab=produkty' : ''}`}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-semibold ${tab === t ? 'border-yellow-500' : 'border-transparent text-slate-500'}`}
+            key={k}
+            href={`/sady/${encodeURIComponent(set.id)}${k === 'produkty' ? '?tab=produkty' : ''}`}
+            className={`-mb-px border-b-2 px-4 py-2 text-sm font-semibold ${tab === k ? 'border-yellow-500' : 'border-transparent text-slate-500'}`}
           >
             {label}
           </Link>
@@ -115,7 +122,7 @@ export default async function SetPage({ params, searchParams }: Props) {
             ))}
           </ul>
         ) : (
-          <p className="mt-6 text-slate-500">K této sadě zatím nemáme žádné produkty.</p>
+          <p className="mt-6 text-slate-500">{t('K této sadě zatím nemáme žádné produkty.')}</p>
         )
       ) : (
       <SetGrid

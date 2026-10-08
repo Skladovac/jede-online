@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { cardImage } from '@/lib/format'
+import { getT } from '@/lib/i18n/server'
 
 const OFFER = { TRADE: 'vyměním', SELL: 'prodám', GIFT: 'daruji' } as const
 
 /** Hlavní stránka: nejnovější nabídky karet (i pro nepřihlášené — web má působit živě). */
 export async function LatestOffers({ take = 12 }: { take?: number }) {
+  const t = await getT()
   const offers = await prisma.collectionItem.findMany({
     where: {
       spareQty: { gt: 0 },
@@ -22,9 +24,9 @@ export async function LatestOffers({ take = 12 }: { take?: number }) {
   return (
     <section className="mb-12">
       <div className="mb-4 flex items-baseline justify-between">
-        <h2 className="text-xl font-bold">Nejnovější nabídky</h2>
+        <h2 className="text-xl font-bold">{t('Nejnovější nabídky')}</h2>
         <Link href="/trziste" className="text-sm font-medium text-yellow-700 hover:underline dark:text-yellow-400">
-          Celé tržiště →
+          {t('Celé tržiště')} →
         </Link>
       </div>
       <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
@@ -42,7 +44,7 @@ export async function LatestOffers({ take = 12 }: { take?: number }) {
                 <p className="mt-1 truncate text-xs font-medium">{o.card.name}</p>
                 <p className="truncate text-xs text-slate-500">{o.card.set.name}</p>
                 <p className="truncate text-xs font-semibold text-blue-700 dark:text-blue-400">
-                  {o.offerType === 'SELL' && o.priceCzk ? `${o.priceCzk} Kč` : OFFER[o.offerType!]} · {o.user.nickname}
+                  {o.offerType === 'SELL' && o.priceCzk ? `${o.priceCzk} Kč` : t(OFFER[o.offerType!])} · {o.user.nickname}
                 </p>
               </Link>
             </li>

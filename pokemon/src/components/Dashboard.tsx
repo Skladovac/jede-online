@@ -3,14 +3,16 @@ import { prisma } from '@/lib/prisma'
 import { portfolio, saveSnapshot } from '@/lib/portfolio'
 import { cardImage } from '@/lib/format'
 import { CardImg } from '@/components/CardImg'
+import { getT, getLocale } from '@/lib/i18n/server'
+import { LOCALE_INFO, type TFunc } from '@/lib/i18n/config'
 
 const kc = (n: number) => `${n.toLocaleString('cs-CZ')} Kč`
 const box = 'rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900'
 
 /** Graf vývoje hodnoty (jednoduchá čára v SVG, bez knihoven). */
-function ValueChart({ points }: { points: { day: Date; valueCzk: number }[] }) {
+function ValueChart({ points, t, intl }: { points: { day: Date; valueCzk: number }[]; t: TFunc; intl: string }) {
   if (points.length < 2)
-    return <p className="text-sm text-slate-500">Graf se začne plnit — hodnotu ukládáme jednou denně. Za pár dní tu uvidíš vývoj.</p>
+    return <p className="text-sm text-slate-500">{t('Graf se začne plnit — hodnotu ukládáme jednou denně. Za pár dní tu uvidíš vývoj.')}</p>
   const W = 600
   const H = 140
   const vals = points.map((p) => p.valueCzk)
@@ -21,10 +23,10 @@ function ValueChart({ points }: { points: { day: Date; valueCzk: number }[] }) {
   const y = (v: number) => H - 8 - ((v - min) / span) * (H - 24)
   const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.valueCzk).toFixed(1)}`).join(' ')
   const up = vals[vals.length - 1] >= vals[0]
-  const fmt = (dt: Date) => dt.toLocaleDateString('cs-CZ', { timeZone: 'UTC', day: 'numeric', month: 'numeric' })
+  const fmt = (dt: Date) => dt.toLocaleDateString(intl, { timeZone: 'UTC', day: 'numeric', month: 'numeric' })
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-36 w-full" role="img" aria-label="Vývoj hodnoty sbírky">
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-36 w-full" role="img" aria-label={t('Vývoj hodnoty sbírky')}>
         <path d={`${d} L${x(points.length - 1)},${H} L${x(0)},${H} Z`} className={up ? 'fill-green-500/10' : 'fill-red-500/10'} />
         <path d={d} fill="none" strokeWidth="2.5" className={up ? 'stroke-green-500' : 'stroke-red-500'} />
       </svg>
@@ -42,6 +44,8 @@ function ValueChart({ points }: { points: { day: Date; valueCzk: number }[] }) {
 
 /** Přehled nahoře v „Moje sbírka“: hodnota, investice, vývoj, nejcennější karty, sady a poslední aktivita. */
 export async function Dashboard({ userId }: { userId: string }) {
+  const t = await getT()
+  const intl = LOCALE_INFO[await getLocale()].intl
   const p = await portfolio(userId)
   // Dnešní snímek (graf se tak začne plnit hned od prvního otevření).
   await saveSnapshot(userId, p.valueCzk, p.investedCzk)
@@ -78,59 +82,59 @@ export async function Dashboard({ userId }: { userId: string }) {
     <section className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <div className={`${box} border-yellow-300 bg-yellow-50 dark:border-yellow-500/30 dark:bg-yellow-400/10`}>
-          <p className="text-xs text-slate-600 dark:text-slate-300">Hodnota sbírky</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300">{t('Hodnota sbírky')}</p>
           <p className="text-3xl font-black">{kc(p.valueCzk)}</p>
           <p className="text-xs text-slate-500">
             ≈ {p.valueEur.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })} €
-            {p.productsCzk > 0 && ` · z toho produkty ${kc(p.productsCzk)}`}
+            {p.productsCzk > 0 && ` · ${t('z toho produkty {price}', { price: kc(p.productsCzk) })}`}
             {change !== null && (
               <span className={change >= 0 ? ' text-green-700 dark:text-green-400' : ' text-red-600'}>
                 {' '}
                 · {change >= 0 ? '+' : ''}
-                {kc(change)} za měsíc
+                {kc(change)} {t('za měsíc')}
               </span>
             )}
           </p>
         </div>
         <div className={box}>
-          <p className="text-xs text-slate-500">Investováno</p>
+          <p className="text-xs text-slate-500">{t('Investováno')}</p>
           {p.investedCzk ? (
             <>
               <p className="text-3xl font-black">{kc(p.investedCzk)}</p>
               <p className={`text-xs font-semibold ${profit! >= 0 ? 'text-green-700 dark:text-green-400' : 'text-red-600'}`}>
-                {profit! >= 0 ? 'Zisk' : 'Ztráta'} {profit! >= 0 ? '+' : ''}
-                {kc(profit!)} (dnes mají hodnotu {kc(p.investedValueCzk)})
+                {profit! >= 0 ? t('Zisk') : t('Ztráta')} {profit! >= 0 ? '+' : ''}
+                {kc(profit!)} ({t('dnes mají hodnotu {price}', { price: kc(p.investedValueCzk) })})
               </p>
             </>
           ) : (
             <p className="mt-1 text-sm text-slate-500">
-              U karty nebo produktu vyplň „Koupeno za“ a uvidíš, kolik jsi investoval(a) a jaký máš zisk.
+              {t('U karty nebo produktu vyplň „Koupeno za“ a uvidíš, kolik jsi investoval(a) a jaký máš zisk.')}
             </p>
           )}
         </div>
         <div className={box}>
-          <p className="text-xs text-slate-500">Výměny</p>
+          <p className="text-xs text-slate-500">{t('Výměny')}</p>
           <p className="text-3xl font-black">{waiting}</p>
           <p className="text-xs text-slate-500">
             {waiting ? (
               <Link href="/poptavky" className="font-semibold text-red-600 underline">
-                čeká na tvou odpověď →
+                {t('čeká na tvou odpověď →')}
               </Link>
             ) : (
-              'nic nečeká na odpověď'
+              t('nic nečeká na odpověď')
             )}
           </p>
         </div>
       </div>
 
       <div className={box}>
-        <h2 className="mb-2 font-bold">Vývoj hodnoty</h2>
-        <ValueChart points={history} />
+        <h2 className="mb-2 font-bold">{t('Vývoj hodnoty')}</h2>
+        <ValueChart points={history} t={t} intl={intl} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className={box}>
-          <h2 className="mb-3 font-bold">Nejcennější karty</h2>
+          <h2 className="mb-3 font-bold">{t('Nejcennější karty')}</h2>
           {p.topCards.length ? (
             <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6 lg:grid-cols-3">
               {p.topCards.map((c) => (
@@ -149,11 +153,11 @@ export async function Dashboard({ userId }: { userId: string }) {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-500">Zatím žádné karty s cenou.</p>
+            <p className="text-sm text-slate-500">{t('Zatím žádné karty s cenou.')}</p>
           )}
         </div>
         <div className={box}>
-          <h2 className="mb-3 font-bold">Hodnota po sadách</h2>
+          <h2 className="mb-3 font-bold">{t('Hodnota po sadách')}</h2>
           {p.bySet.length ? (
             <ul className="space-y-2 text-sm">
               {p.bySet.map((s) => (
@@ -171,16 +175,16 @@ export async function Dashboard({ userId }: { userId: string }) {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-500">Zatím nic.</p>
+            <p className="text-sm text-slate-500">{t('Zatím nic.')}</p>
           )}
         </div>
       </div>
 
       <div className={box}>
-        <h2 className="mb-3 font-bold">Poslední aktivita</h2>
+        <h2 className="mb-3 font-bold">{t('Poslední aktivita')}</h2>
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Naposledy přidané</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t('Naposledy přidané')}</p>
             {recent.length ? (
               <ul className="space-y-1 text-sm">
                 {recent.map((r) => (
@@ -188,35 +192,35 @@ export async function Dashboard({ userId }: { userId: string }) {
                     <Link href={`/karta/${encodeURIComponent(r.card.id)}`} className="truncate hover:underline">
                       {r.card.name} <span className="text-slate-400">· {r.card.set.name}</span>
                     </Link>
-                    <span className="shrink-0 text-xs text-slate-400">{r.createdAt.toLocaleDateString('cs-CZ')}</span>
+                    <span className="shrink-0 text-xs text-slate-400">{r.createdAt.toLocaleDateString(intl)}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500">Zatím nic.</p>
+              <p className="text-sm text-slate-500">{t('Zatím nic.')}</p>
             )}
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Dokončené výměny</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t('Dokončené výměny')}</p>
             {trades.length ? (
               <ul className="space-y-1 text-sm">
-                {trades.map((t) => (
-                  <li key={t.id}>
-                    <Link href={`/poptavky/${t.id}`} className="hover:underline">
-                      s {t.fromId === userId ? t.to.nickname : t.from.nickname}
+                {trades.map((tr) => (
+                  <li key={tr.id}>
+                    <Link href={`/poptavky/${tr.id}`} className="hover:underline">
+                      {t('s {name}', { name: tr.fromId === userId ? tr.to.nickname : tr.from.nickname })}
                     </Link>{' '}
                     <span className="text-xs text-slate-400">
-                      · {t._count.items} {t._count.items === 1 ? 'položka' : t._count.items <= 4 ? 'položky' : 'položek'}
+                      · {tr._count.items} {tr._count.items === 1 ? t('položka') : tr._count.items <= 4 ? t('položky') : t('položek')}
                     </span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500">Zatím žádné.</p>
+              <p className="text-sm text-slate-500">{t('Zatím žádné.')}</p>
             )}
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Nová hodnocení</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t('Nová hodnocení')}</p>
             {ratings.length ? (
               <ul className="space-y-1 text-sm">
                 {ratings.map((r) => (
@@ -227,7 +231,7 @@ export async function Dashboard({ userId }: { userId: string }) {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500">Zatím žádná.</p>
+              <p className="text-sm text-slate-500">{t('Zatím žádná.')}</p>
             )}
           </div>
         </div>

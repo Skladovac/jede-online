@@ -5,6 +5,7 @@ import type { Condition, Variant } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { str, type FormState } from '@/lib/validation'
+import { getT } from '@/lib/i18n/server'
 
 const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']
 const CONDITIONS: Condition[] = ['MINT', 'LIGHT_PLAYED', 'DAMAGED']
@@ -22,13 +23,14 @@ function parsePrice(raw: string): { price: number | null } | { error: string } {
  * Když karta ještě není mezi chybějícími, přidá ji tam. buy=off poptávku zruší (karta dál chybí).
  */
 export async function saveCardBuy(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await getCurrentUser()
-  if (!user) return { error: 'Přihlas se.' }
+  if (!user) return { error: t('Přihlas se.') }
   const cardId = str(fd, 'cardId')
   const buy = fd.get('buy') === 'on'
-  if (buy && !user.emailVerifiedAt) return { error: 'Poptávku „chci koupit“ můžeš zveřejnit po potvrzení e-mailu.' }
+  if (buy && !user.emailVerifiedAt) return { error: t('Poptávku „chci koupit“ můžeš zveřejnit po potvrzení e-mailu.') }
   const priceRes = parsePrice(str(fd, 'maxPriceCzk'))
-  if ('error' in priceRes) return { error: priceRes.error }
+  if ('error' in priceRes) return { error: t(priceRes.error) }
   const variantRaw = str(fd, 'variant') as Variant
   const conditionRaw = str(fd, 'minCondition') as Condition
   const languageRaw = str(fd, 'language')
@@ -48,23 +50,24 @@ export async function saveCardBuy(_: FormState, fd: FormData): Promise<FormState
     await prisma.wantItem.deleteMany({ where: { userId: user.id, cardId, id: { not: existing.id } } })
     await prisma.wantItem.update({ where: { id: existing.id }, data: { ...data, ...stamp, variant } })
   } else {
-    if (!(await prisma.card.findUnique({ where: { id: cardId }, select: { id: true } }))) return { error: 'Karta nenalezena.' }
+    if (!(await prisma.card.findUnique({ where: { id: cardId }, select: { id: true } }))) return { error: t('Karta nenalezena.') }
     await prisma.wantItem.create({ data: { ...data, ...stamp, variant, userId: user.id, cardId } })
   }
   revalidatePath(`/karta/${cardId}`)
-  return { ok: buy ? 'Uloženo. Ostatní uvidí, že tuhle kartu chceš koupit.' : 'Uloženo, karta zůstává mezi chybějícími.' }
+  return { ok: buy ? t('Uloženo. Ostatní uvidí, že tuhle kartu chceš koupit.') : t('Uloženo, karta zůstává mezi chybějícími.') }
 }
 
 /** „Chci koupit“ u produktu (ETB, booster box…). */
 export async function saveProductBuy(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await getCurrentUser()
-  if (!user) return { error: 'Přihlas se.' }
+  if (!user) return { error: t('Přihlas se.') }
   const productId = Number(str(fd, 'productId'))
-  if (!Number.isInteger(productId) || productId < 1 || productId > 2_147_483_647) return { error: 'Produkt nenalezen.' }
+  if (!Number.isInteger(productId) || productId < 1 || productId > 2_147_483_647) return { error: t('Produkt nenalezen.') }
   const buy = fd.get('buy') === 'on'
-  if (buy && !user.emailVerifiedAt) return { error: 'Poptávku „chci koupit“ můžeš zveřejnit po potvrzení e-mailu.' }
+  if (buy && !user.emailVerifiedAt) return { error: t('Poptávku „chci koupit“ můžeš zveřejnit po potvrzení e-mailu.') }
   const priceRes = parsePrice(str(fd, 'maxPriceCzk'))
-  if ('error' in priceRes) return { error: priceRes.error }
+  if ('error' in priceRes) return { error: t(priceRes.error) }
   const data = { buy, maxPriceCzk: buy ? priceRes.price : null }
   const existing = await prisma.productWant.findUnique({ where: { userId_productId: { userId: user.id, productId } } })
   const stamp = buy && (!existing?.buy || existing.maxPriceCzk !== data.maxPriceCzk) ? { buyAt: new Date() } : {}
@@ -74,5 +77,5 @@ export async function saveProductBuy(_: FormState, fd: FormData): Promise<FormSt
     update: { ...data, ...stamp },
   })
   revalidatePath(`/produkt/${productId}`)
-  return { ok: buy ? 'Uloženo. Ostatní uvidí, že tenhle produkt chceš koupit.' : 'Uloženo.' }
+  return { ok: buy ? t('Uloženo. Ostatní uvidí, že tenhle produkt chceš koupit.') : t('Uloženo.') }
 }

@@ -17,6 +17,7 @@ import { Submit } from '@/components/ui'
 import { ProductItemForm } from '@/components/ProductItemForm'
 import { AddToCart } from '@/components/AddToCart'
 import { ensureEurCzk } from '@/lib/fx'
+import { getT } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,13 +31,15 @@ async function getProduct(id: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await getProduct((await params).id)
-  return { title: p ? p.name : 'Produkt nenalezen' }
+  const t = await getT()
+  return { title: p ? p.name : t('Produkt nenalezen') }
 }
 
 const OFFER_ORDER = { GIFT: 0, SELL: 1, TRADE: 2 } as const
 
 export default async function ProductPage({ params }: Props) {
   await ensureEurCzk() // kurz ČNB pro korunové částky u cen
+  const t = await getT()
   const p = await getProduct((await params).id)
   if (!p) notFound()
   const viewer = await getCurrentUser()
@@ -67,7 +70,7 @@ export default async function ProductPage({ params }: Props) {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <Link href={p.set ? `/sady/${encodeURIComponent(p.set.id)}?tab=produkty` : '/produkty'} className="text-sm text-slate-500 hover:underline">
-        ← {p.set ? p.set.name : 'Produkty'}
+        ← {p.set ? p.set.name : t('Produkty')}
       </Link>
       <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,360px)_1fr]">
         <div className="mx-auto grid aspect-square w-full max-w-[360px] place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
@@ -80,19 +83,19 @@ export default async function ProductPage({ params }: Props) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logo} alt="" className="max-h-20 max-w-[80%] object-contain" />
               )}
-              <span className="text-sm font-semibold text-slate-400">{KIND_LABEL[p.kind]}</span>
-              <span className="text-xs text-slate-400">Obrázek zatím nemáme</span>
+              <span className="text-sm font-semibold text-slate-400">{t(KIND_LABEL[p.kind])}</span>
+              <span className="text-xs text-slate-400">{t('Obrázek zatím nemáme')}</span>
             </div>
           )}
         </div>
         <div>
           <h1 className="text-3xl font-black tracking-tight">{p.name}</h1>
           <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
-            <dt className="text-slate-500">Typ</dt>
-            <dd>{KIND_LABEL[p.kind]}</dd>
+            <dt className="text-slate-500">{t('Typ')}</dt>
+            <dd>{t(KIND_LABEL[p.kind])}</dd>
             {p.set && (
               <>
-                <dt className="text-slate-500">Sada</dt>
+                <dt className="text-slate-500">{t('Sada')}</dt>
                 <dd>
                   <Link href={`/sady/${encodeURIComponent(p.set.id)}`} className="font-medium hover:underline">
                     {p.set.name}
@@ -100,25 +103,25 @@ export default async function ProductPage({ params }: Props) {
                 </dd>
               </>
             )}
-            <dt className="text-slate-500">Stav</dt>
-            <dd>Originálně zapečetěno</dd>
+            <dt className="text-slate-500">{t('Stav')}</dt>
+            <dd>{t('Originálně zapečetěno')}</dd>
             {wantCount > 0 && (
               <>
-                <dt className="text-slate-500">Shání</dt>
-                <dd>{wantCount} sběratelů</dd>
+                <dt className="text-slate-500">{t('Shání')}</dt>
+                <dd>{t('{n} sběratelů', { n: wantCount })}</dd>
               </>
             )}
           </dl>
           <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Orientační cena</h2>
-            <p className="mt-3 text-2xl font-bold">{price ? `≈ ${price}` : 'Cena zatím není k dispozici.'}</p>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{t('Orientační cena')}</h2>
+            <p className="mt-3 text-2xl font-bold">{price ? `≈ ${price}` : t('Cena zatím není k dispozici.')}</p>
             {p.priceStats && (
               <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-800">
                 <PriceStatsTable stats={p.priceStats as PriceStats} title="Cardmarket" />
               </div>
             )}
             <PriceNote className="mt-4" />
-            {eurCzkDate() && <p className="mt-1 text-xs text-slate-400">Kurz ČNB ze dne {eurCzkDate()}</p>}
+            {eurCzkDate() && <p className="mt-1 text-xs text-slate-400">{t('Kurz ČNB ze dne {date}', { date: eurCzkDate()! })}</p>}
           </section>
         </div>
       </div>
@@ -126,11 +129,11 @@ export default async function ProductPage({ params }: Props) {
       {viewer ? (
         <section className="mt-8 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-bold">Moje sbírka</h2>
+            <h2 className="text-xl font-bold">{t('Moje sbírka')}</h2>
             {!mine.length && (
               <ActionForm action={toggleProductWant} className="flex items-center gap-2">
                 <input type="hidden" name="productId" value={p.id} />
-                <Submit variant={want ? 'primary' : 'ghost'}>{want ? '★ Sháním' : '☆ Sháním'}</Submit>
+                <Submit variant={want ? 'primary' : 'ghost'}>{want ? `★ ${t('Sháním')}` : `☆ ${t('Sháním')}`}</Submit>
               </ActionForm>
             )}
           </div>
@@ -140,7 +143,7 @@ export default async function ProductPage({ params }: Props) {
           ))}
           <details open={!mine.length}>
             <summary className="cursor-pointer text-sm font-medium text-yellow-700 dark:text-yellow-400">
-              {mine.length ? '+ Přidat v jiném jazyce' : 'Přidat do sbírky / nabídnout'}
+              {mine.length ? `+ ${t('Přidat v jiném jazyce')}` : t('Přidat do sbírky / nabídnout')}
             </summary>
             <div className="mt-3">
               <ProductItemForm
@@ -153,19 +156,19 @@ export default async function ProductPage({ params }: Props) {
       ) : (
         <p className="mt-8 rounded-xl bg-yellow-50 px-4 py-3 text-sm text-yellow-900 dark:bg-yellow-400/10 dark:text-yellow-100">
           <Link href="/prihlaseni" className="font-semibold underline">
-            Přihlas se
+            {t('Přihlas se')}
           </Link>{' '}
-          a přidej si produkt do sbírky, mezi hledané nebo ho nabídni.
+          {t('a přidej si produkt do sbírky, mezi hledané nebo ho nabídni.')}
         </p>
       )}
 
       <ProductBuyers productId={p.id} />
 
       <section className="mt-10">
-        <h2 className="text-xl font-bold">Kdo ho nabízí</h2>
+        <h2 className="text-xl font-bold">{t('Kdo ho nabízí')}</h2>
         {offers.length === 0 ? (
           <p className="mt-3 rounded-2xl border border-dashed border-slate-300 p-6 text-center text-slate-500 dark:border-slate-700">
-            Zatím ho nikdo nenabízí.
+            {t('Zatím ho nikdo nenabízí.')}
           </p>
         ) : (
           <ul className="mt-3 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
@@ -180,12 +183,12 @@ export default async function ProductPage({ params }: Props) {
                       href={`/u/${encodeURIComponent(o.user.nickname)}?nahlasit=1#nahlasit`}
                       className="ml-2 text-xs text-slate-400 hover:text-red-600 hover:underline"
                     >
-                      nahlásit
+                      {t('nahlásit')}
                     </Link>
                   )}
-                  <span className="text-sm text-slate-500"> · {o.user.city ?? o.user.region ?? 'neuvedeno'}</span>
+                  <span className="text-sm text-slate-500"> · {o.user.city ?? o.user.region ?? t('neuvedeno')}</span>
                   <p className="text-xs text-slate-500">
-                    {[o.language.toUpperCase(), o.spareQty > 1 && `${o.spareQty} ks`].filter(Boolean).join(' · ')}
+                    {[o.language.toUpperCase(), o.spareQty > 1 && t('{n} ks', { n: o.spareQty })].filter(Boolean).join(' · ')}
                     {o.note && <span className="italic"> · „{o.note}“</span>}
                   </p>
                 </div>
@@ -193,8 +196,8 @@ export default async function ProductPage({ params }: Props) {
                   {o.offerType === 'SELL' && o.priceCzk != null
                     ? `${o.priceCzk.toLocaleString('cs-CZ')} Kč`
                     : o.offerType === 'GIFT'
-                      ? 'Daruji za poštovné'
-                      : 'Vyměním'}
+                      ? t('Daruji za poštovné')
+                      : t('Vyměním')}
                   {viewer && viewer.id !== o.userId && <AddToCart productItemId={o.id} />}
                 </span>
               </li>

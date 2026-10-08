@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useT } from '@/lib/i18n/client'
 
 /** Odkaz k zkopírování (např. na Facebook). Na mobilu nabídne i systémové sdílení. */
 export function CopyLink({ url, title }: { url: string; title: string }) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
   const [canShare, setCanShare] = useState(false)
   useEffect(() => setCanShare('share' in navigator), [])
@@ -42,11 +44,11 @@ export function CopyLink({ url, title }: { url: string; title: string }) {
         onClick={copy}
         className="rounded-full bg-yellow-400 px-4 py-1.5 text-sm font-semibold text-slate-900 hover:bg-yellow-300"
       >
-        {copied ? 'Zkopírováno ✓' : 'Zkopírovat'}
+        {copied ? t('Zkopírováno ✓') : t('Zkopírovat')}
       </button>
       {canShare && (
         <button type="button" onClick={share} className="rounded-full border border-slate-300 px-4 py-1.5 text-sm dark:border-slate-700">
-          Sdílet
+          {t('Sdílet')}
         </button>
       )}
     </div>

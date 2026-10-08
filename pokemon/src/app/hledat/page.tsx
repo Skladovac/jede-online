@@ -5,6 +5,7 @@ import { ProductTile } from '@/components/ProductTile'
 import { cardImage, formatEur } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
 import { ensureEurCzk } from '@/lib/fx'
+import { getT } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,28 +13,30 @@ type Props = { searchParams: Promise<{ q?: string }> }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { q } = await searchParams
-  return { title: q ? `Hledání: ${q}` : 'Hledání' }
+  const t = await getT()
+  return { title: q ? t('Hledání: {q}', { q }) : t('Hledání') }
 }
 
 export default async function SearchPage({ searchParams }: Props) {
+  const t = await getT()
   await ensureEurCzk() // kurz ČNB pro korunové částky u cen
   const q = ((await searchParams).q ?? '').trim()
   const [hits, products] = await Promise.all([searchCards(q, 60), searchProducts(q, 24)])
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl font-black tracking-tight">{q ? <>Výsledky pro „{q}“</> : 'Hledání'}</h1>
+      <h1 className="text-2xl font-black tracking-tight">{q ? t('Výsledky pro „{q}“', { q }) : t('Hledání')}</h1>
       <p className="mt-1 text-sm text-slate-500">
         {q.length < 2
-          ? 'Napiš aspoň 2 znaky. Hledat jde podle jména (Charizard) nebo kódu z karty (SVI 045, 045/198).'
+          ? t('Napiš aspoň 2 znaky. Hledat jde podle jména (Charizard) nebo kódu z karty (SVI 045, 045/198).')
           : hits.length === 60
-            ? 'Zobrazujeme prvních 60 výsledků, upřesni hledání.'
-            : `${hits.length} karet`}
+            ? t('Zobrazujeme prvních 60 výsledků, upřesni hledání.')
+            : `${hits.length} ${t('karet')}`}
       </p>
 
       {q.length >= 2 && hits.length === 0 && products.length === 0 && (
         <p className="mt-8 text-slate-500">
-          Nic jsme nenašli. Zkus jen část jména nebo kód sady a číslo z dolního rohu karty.
+          {t('Nic jsme nenašli. Zkus jen část jména nebo kód sady a číslo z dolního rohu karty.')}
         </p>
       )}
 
@@ -64,7 +67,7 @@ export default async function SearchPage({ searchParams }: Props) {
       </ul>
       {products.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-4 text-xl font-bold">Produkty ({products.length})</h2>
+          <h2 className="mb-4 text-xl font-bold">{t('Produkty')} ({products.length})</h2>
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {products.map((p) => (
               <li key={p.id}>

@@ -9,6 +9,7 @@ import { ADMIN_EMAIL, APP_URL, esc, notify } from '@/lib/email'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { pushNotification } from '@/lib/notifications'
 import { str, type FormState } from '@/lib/validation'
+import { getT } from '@/lib/i18n/server'
 
 const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' } as const
 const CONDITION = { MINT: 'jako nová', LIGHT_PLAYED: 'mírně hraná', DAMAGED: 'poškozená' } as const
@@ -73,23 +74,24 @@ async function draftFor(fromId: string, toId: string) {
 
 /** "Chci" u nabídky: přidá kus do košíku (rozpracované poptávky) u daného prodávajícího. */
 export async function addToCart(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await getCurrentUser()
-  if (!user) return { error: 'Nejdřív se přihlas.' }
+  if (!user) return { error: t('Nejdřív se přihlas.') }
   if (str(fd, 'productItemId')) return addProductToCart(user, str(fd, 'productItemId'))
   const item = await prisma.collectionItem.findUnique({
     where: { id: str(fd, 'collectionItemId') },
     include: { ...itemInclude, user: true },
   })
   if (!item || item.spareQty < 1 || !item.offerType || item.hiddenAt || !visible(item.user))
-    return { error: 'Nabídka už neplatí.' }
-  if (item.userId === user.id) return { error: 'Tohle je tvoje vlastní nabídka.' }
+    return { error: t('Nabídka už neplatí.') }
+  if (item.userId === user.id) return { error: t('Tohle je tvoje vlastní nabídka.') }
 
   const draft = await draftFor(user.id, item.userId)
   const existing = await prisma.tradeRequestItem.findFirst({
     where: { requestId: draft.id, collectionItemId: item.id, fromRequester: false },
   })
   if (existing) {
-    if (existing.quantity >= item.spareQty) return { ok: 'Už máš v košíku všechny nabízené kusy.' }
+    if (existing.quantity >= item.spareQty) return { ok: t('Už máš v košíku všechny nabízené kusy.') }
     await prisma.tradeRequestItem.update({ where: { id: existing.id }, data: { quantity: existing.quantity + 1 } })
   } else {
     await prisma.tradeRequestItem.create({
@@ -97,20 +99,21 @@ export async function addToCart(_: FormState, fd: FormData): Promise<FormState> 
     })
   }
   revalidatePath('/', 'layout')
-  return { ok: 'Přidáno do košíku.' }
+  return { ok: t('Přidáno do košíku.') }
 }
 
 async function addProductToCart(user: User, productItemId: string): Promise<FormState> {
+  const t = await getT()
   const item = await prisma.productItem.findUnique({ where: { id: productItemId }, include: { ...productInclude, user: true } })
   if (!item || item.spareQty < 1 || !item.offerType || item.hiddenAt || !visible(item.user))
-    return { error: 'Nabídka už neplatí.' }
-  if (item.userId === user.id) return { error: 'Tohle je tvoje vlastní nabídka.' }
+    return { error: t('Nabídka už neplatí.') }
+  if (item.userId === user.id) return { error: t('Tohle je tvoje vlastní nabídka.') }
   const draft = await draftFor(user.id, item.userId)
   const existing = await prisma.tradeRequestItem.findFirst({
     where: { requestId: draft.id, productItemId: item.id, fromRequester: false },
   })
   if (existing) {
-    if (existing.quantity >= item.spareQty) return { ok: 'Už máš v košíku všechny nabízené kusy.' }
+    if (existing.quantity >= item.spareQty) return { ok: t('Už máš v košíku všechny nabízené kusy.') }
     await prisma.tradeRequestItem.update({ where: { id: existing.id }, data: { quantity: existing.quantity + 1 } })
   } else {
     await prisma.tradeRequestItem.create({
@@ -118,18 +121,19 @@ async function addProductToCart(user: User, productItemId: string): Promise<Form
     })
   }
   revalidatePath('/', 'layout')
-  return { ok: 'Přidáno do košíku.' }
+  return { ok: t('Přidáno do košíku.') }
 }
 
 export async function setCartQty(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await requireUser()
   const row = await prisma.tradeRequestItem.findUnique({
     where: { id: str(fd, 'itemId') },
     include: { request: true, collectionItem: true, productItem: true },
   })
-  if (!row || row.request.fromId !== user.id || row.request.status !== 'DRAFT') return { error: 'Položka nenalezena.' }
+  if (!row || row.request.fromId !== user.id || row.request.status !== 'DRAFT') return { error: t('Položka nenalezena.') }
   const qty = Number(str(fd, 'quantity'))
-  if (!Number.isInteger(qty) || qty > 999) return { error: 'Neplatný počet kusů.' }
+  if (!Number.isInteger(qty) || qty > 999) return { error: t('Neplatný počet kusů.') }
   if (qty <= 0) {
     await prisma.tradeRequestItem.delete({ where: { id: row.id } })
     // Prázdný košík u prodávajícího zmizí.
@@ -145,24 +149,25 @@ export async function setCartQty(_: FormState, fd: FormData): Promise<FormState>
 
 /** Kupující nabídne na výměnu svůj kus navíc (jen kusy navíc ze své sbírky). */
 export async function offerMyItem(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await requireUser()
   const req = await prisma.tradeRequest.findUnique({ where: { id: str(fd, 'requestId') } })
-  if (!req || req.fromId !== user.id || req.status !== 'DRAFT') return { error: 'Výměna nenalezena.' }
+  if (!req || req.fromId !== user.id || req.status !== 'DRAFT') return { error: t('Výměna nenalezena.') }
   // Hodnota "c:<id>" = karta, "p:<id>" = produkt.
   const [kind, id] = str(fd, 'mine').split(':')
   if (kind === 'p') {
     const mine = await prisma.productItem.findUnique({ where: { id }, include: productInclude })
-    if (!mine || mine.userId !== user.id || mine.spareQty < 1) return { error: 'Vyber svůj kus navíc.' }
+    if (!mine || mine.userId !== user.id || mine.spareQty < 1) return { error: t('Vyber svůj kus navíc.') }
     if (await prisma.tradeRequestItem.findFirst({ where: { requestId: req.id, productItemId: mine.id, fromRequester: true } }))
-      return { ok: 'Už je nabídnutý.' }
+      return { ok: t('Už je nabídnutý.') }
     await prisma.tradeRequestItem.create({
       data: { requestId: req.id, productItemId: mine.id, fromRequester: true, ...snapshotProduct(mine), offerType: 'TRADE', priceCzk: null },
     })
   } else {
     const mine = await prisma.collectionItem.findUnique({ where: { id }, include: itemInclude })
-    if (!mine || mine.userId !== user.id || mine.spareQty < 1) return { error: 'Vyber svůj kus navíc.' }
+    if (!mine || mine.userId !== user.id || mine.spareQty < 1) return { error: t('Vyber svůj kus navíc.') }
     if (await prisma.tradeRequestItem.findFirst({ where: { requestId: req.id, collectionItemId: mine.id, fromRequester: true } }))
-      return { ok: 'Už je nabídnutý.' }
+      return { ok: t('Už je nabídnutý.') }
     await prisma.tradeRequestItem.create({
       data: { requestId: req.id, collectionItemId: mine.id, fromRequester: true, ...snapshot(mine), offerType: 'TRADE', priceCzk: null },
     })
@@ -174,10 +179,11 @@ export async function offerMyItem(_: FormState, fd: FormData): Promise<FormState
 // ── Odeslání a odpověď ─────────────────────────────────────────────
 
 export async function sendRequest(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await requireUser()
-  if (isLimited(user)) return { error: 'Žádosti o výměnu půjde posílat, až rodič potvrdí tvůj účet.' }
-  if (!user.emailVerifiedAt) return { error: 'Nejdřív potvrď svůj e-mail (odkaz najdeš na stránce Můj účet).' }
-  if (!rateLimit(`request:${user.id}`, 20, 24 * 60 * 60_000)) return { error: 'Dnes už jsi poslal(a) hodně žádostí.' }
+  if (isLimited(user)) return { error: t('Žádosti o výměnu půjde posílat, až rodič potvrdí tvůj účet.') }
+  if (!user.emailVerifiedAt) return { error: t('Nejdřív potvrď svůj e-mail (odkaz najdeš na stránce Můj účet).') }
+  if (!rateLimit(`request:${user.id}`, 20, 24 * 60 * 60_000)) return { error: t('Dnes už jsi poslal(a) hodně žádostí.') }
 
   const req = await prisma.tradeRequest.findUnique({
     where: { id: str(fd, 'requestId') },
@@ -186,8 +192,8 @@ export async function sendRequest(_: FormState, fd: FormData): Promise<FormState
       items: { include: { collectionItem: { include: itemInclude }, productItem: { include: productInclude } } },
     },
   })
-  if (!req || req.fromId !== user.id || req.status !== 'DRAFT') return { error: 'Výměna nenalezena.' }
-  if (!visible(req.to)) return { error: 'Tento uživatel teď žádosti nepřijímá.' }
+  if (!req || req.fromId !== user.id || req.status !== 'DRAFT') return { error: t('Výměna nenalezena.') }
+  if (!visible(req.to)) return { error: t('Tento uživatel teď žádosti nepřijímá.') }
 
   // Aktualizovat snapshot podle současného stavu nabídek; zmizelé položky vyřadit.
   for (const it of req.items) {
@@ -206,7 +212,7 @@ export async function sendRequest(_: FormState, fd: FormData): Promise<FormState
     })
   }
   const wanted = await prisma.tradeRequestItem.findMany({ where: { requestId: req.id, fromRequester: false } })
-  if (!wanted.length) return { error: 'Nabídky v košíku už neplatí.' }
+  if (!wanted.length) return { error: t('Nabídky v košíku už neplatí.') }
 
   // Podmíněně: dvojí odeslání nesmí poslat dva e-maily.
   const sent = await prisma.tradeRequest.updateMany({
@@ -236,22 +242,23 @@ export async function sendRequest(_: FormState, fd: FormData): Promise<FormState
 }
 
 export async function respondRequest(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await requireUser()
   const accept = str(fd, 'decision') === 'accept'
   const req = await prisma.tradeRequest.findUnique({ where: { id: str(fd, 'requestId') }, include: { from: true } })
-  if (!req || req.toId !== user.id || req.status !== 'PENDING') return { error: 'Výměna nenalezena.' }
-  if (accept && isLimited(user)) return { error: 'Nejdřív musí rodič potvrdit tvůj účet.' }
+  if (!req || req.toId !== user.id || req.status !== 'PENDING') return { error: t('Výměna nenalezena.') }
+  if (accept && isLimited(user)) return { error: t('Nejdřív musí rodič potvrdit tvůj účet.') }
   // Kontakt (u dětí i rodiče) nesmí dostat zablokovaný nebo omezený žadatel.
   if (accept && (!visible(req.from) || !req.from.emailVerifiedAt)) {
     await prisma.tradeRequest.updateMany({ where: { id: req.id, status: 'PENDING' }, data: { status: 'CANCELLED' } })
-    return { error: 'Tento uživatel už žádosti posílat nemůže. Žádost jsme zrušili.' }
+    return { error: t('Tento uživatel už žádosti posílat nemůže. Žádost jsme zrušili.') }
   }
 
   const res = await prisma.tradeRequest.updateMany({
     where: { id: req.id, status: 'PENDING' },
     data: { status: accept ? 'ACCEPTED' : 'DECLINED', respondedAt: new Date() },
   })
-  if (!res.count) return { error: 'Žádost se mezitím změnila. Obnov stránku.' }
+  if (!res.count) return { error: t('Žádost se mezitím změnila. Obnov stránku.') }
   await pushNotification(req.fromId, {
     icon: accept ? '✅' : '❌',
     title: accept ? `${user.nickname} přijal(a) tvoji žádost` : `${user.nickname} žádost odmítl(a)`,
@@ -285,19 +292,20 @@ export async function respondRequest(_: FormState, fd: FormData): Promise<FormSt
       { label: 'Zobrazit výměnu', url: `${APP_URL}/poptavky/${req.id}` },
     )
   revalidatePath('/', 'layout')
-  return { ok: accept ? 'Přijato. Kontakt najdeš níže a v e-mailu.' : 'Odmítnuto.' }
+  return { ok: accept ? t('Přijato. Kontakt najdeš níže a v e-mailu.') : t('Odmítnuto.') }
 }
 
 export async function cancelRequest(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await requireUser()
   const req = await prisma.tradeRequest.findUnique({ where: { id: str(fd, 'requestId') }, include: { from: true, to: true } })
   if (!req || (req.fromId !== user.id && req.toId !== user.id) || !['PENDING', 'ACCEPTED'].includes(req.status))
-    return { error: 'Výměnu už nejde zrušit.' }
+    return { error: t('Výměnu už nejde zrušit.') }
   const res = await prisma.tradeRequest.updateMany({
     where: { id: req.id, status: { in: ['PENDING', 'ACCEPTED'] } },
     data: { status: 'CANCELLED' },
   })
-  if (!res.count) return { error: 'Výměnu už nejde zrušit.' }
+  if (!res.count) return { error: t('Výměnu už nejde zrušit.') }
   const other = req.fromId === user.id ? req.to : req.from
   await pushNotification(other.id, { icon: '🚫', title: `${user.nickname} zrušil(a) výměnu`, url: `/poptavky/${req.id}` })
   await notify(other.email, parentCc(other), `${user.nickname} zrušil(a) výměnu`, ['Výměna byla zrušena.'], {
@@ -305,15 +313,16 @@ export async function cancelRequest(_: FormState, fd: FormData): Promise<FormSta
     url: `${APP_URL}/poptavky/${req.id}`,
   })
   revalidatePath('/', 'layout')
-  return { ok: 'Zrušeno.' }
+  return { ok: t('Zrušeno.') }
 }
 
 /** Obě strany potvrdí, že výměna proběhla. Pak se kusy odečtou ze sbírek (právě jednou). */
 export async function markDone(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await requireUser()
   const req = await prisma.tradeRequest.findUnique({ where: { id: str(fd, 'requestId') } })
   if (!req || req.status !== 'ACCEPTED' || (req.fromId !== user.id && req.toId !== user.id))
-    return { error: 'Výměna nenalezena.' }
+    return { error: t('Výměna nenalezena.') }
   const mine = req.fromId === user.id ? { fromDoneAt: new Date() } : { toDoneAt: new Date() }
 
   const completed = await prisma.$transaction(async (tx) => {
@@ -381,16 +390,17 @@ export async function markDone(_: FormState, fd: FormData): Promise<FormState> {
   return {
     ok:
       completed || fresh?.status === 'COMPLETED'
-        ? 'Hotovo! Kusy jsme odečetli ze sbírek. Nezapomeň druhou stranu ohodnotit.'
-        : 'Díky, čekáme ještě na potvrzení druhé strany.',
+        ? t('Hotovo! Kusy jsme odečetli ze sbírek. Nezapomeň druhou stranu ohodnotit.')
+        : t('Díky, čekáme ještě na potvrzení druhé strany.'),
   }
 }
 
 export async function rateRequest(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await requireUser()
   const req = await prisma.tradeRequest.findUnique({ where: { id: str(fd, 'requestId') } })
   if (!req || req.status !== 'COMPLETED' || (req.fromId !== user.id && req.toId !== user.id))
-    return { error: 'Hodnotit jde jen dokončenou výměnu.' }
+    return { error: t('Hodnotit jde jen dokončenou výměnu.') }
   const tag = str(fd, 'tag') as RatingTag
   const positive = str(fd, 'positive') === '1'
   const toId = req.fromId === user.id ? req.toId : req.fromId
@@ -413,16 +423,17 @@ export async function rateRequest(_: FormState, fd: FormData): Promise<FormState
     url: `/poptavky/${req.id}`,
   })
   revalidatePath(`/poptavky/${req.id}`)
-  return { ok: 'Díky za hodnocení.' }
+  return { ok: t('Díky za hodnocení.') }
 }
 
 export async function reportUser(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await requireUser()
-  if (!rateLimit(`report:${await clientIp()}`, 5, 60 * 60_000)) return { error: 'Příliš mnoho hlášení, zkus to později.' }
+  if (!rateLimit(`report:${await clientIp()}`, 5, 60 * 60_000)) return { error: t('Příliš mnoho hlášení, zkus to později.') }
   const against = await prisma.user.findUnique({ where: { id: str(fd, 'againstId') } })
   const reason = str(fd, 'reason')
-  if (!against || against.id === user.id) return { error: 'Uživatel nenalezen.' }
-  if (reason.length < 10 || reason.length > 500) return { error: 'Popiš prosím, co se stalo (10–500 znaků).' }
+  if (!against || against.id === user.id) return { error: t('Uživatel nenalezen.') }
+  if (reason.length < 10 || reason.length > 500) return { error: t('Popiš prosím, co se stalo (10–500 znaků).') }
   await prisma.report.create({ data: { fromId: user.id, againstId: against.id, reason } })
   await notify(
     ADMIN_EMAIL,
@@ -430,5 +441,5 @@ export async function reportUser(_: FormState, fd: FormData): Promise<FormState>
     `Nahlášení uživatele ${against.nickname}`,
     [`Nahlásil(a): ${esc(user.nickname)} (${esc(user.email)})`, `Kdo: ${esc(against.nickname)} (${esc(against.email)})`, esc(reason)],
   )
-  return { ok: 'Díky, nahlášení jsme dostali a podíváme se na to.' }
+  return { ok: t('Díky, nahlášení jsme dostali a podíváme se na to.') }
 }

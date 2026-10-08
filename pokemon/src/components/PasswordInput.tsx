@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { inputCls } from '@/components/ui'
+import { useT } from '@/lib/i18n/client'
 
 /** Pole pro heslo s tlačítkem „zobrazit“ (hlavně kvůli dětem a mobilům, kde se snadno překlepne). */
 export function PasswordInput({
@@ -14,6 +15,7 @@ export function PasswordInput({
   minLength?: number
 }) {
   const [show, setShow] = useState(false)
+  const t = useT()
   return (
     <div className="relative">
       <input
@@ -27,11 +29,11 @@ export function PasswordInput({
       <button
         type="button"
         onClick={() => setShow((s) => !s)}
-        aria-label={show ? 'Skrýt heslo' : 'Zobrazit heslo'}
+        aria-label={show ? t('Skrýt heslo') : t('Zobrazit heslo')}
         aria-pressed={show}
         className="absolute inset-y-0 right-0 px-3 text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
       >
-        {show ? 'Skrýt' : 'Zobrazit'}
+        {show ? t('Skrýt') : t('Zobrazit')}
       </button>
     </div>
   )

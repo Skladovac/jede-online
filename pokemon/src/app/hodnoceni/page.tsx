@@ -1,17 +1,21 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import { topRated } from '@/lib/market'
+import { getT } from '@/lib/i18n/server'
 
-export const metadata: Metadata = { title: 'Nejlépe hodnocení sběratelé' }
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('Nejlépe hodnocení sběratelé') }
+}
 export const dynamic = 'force-dynamic'
 
 export default async function TopRatedPage() {
+  const t = await getT()
   const rows = await topRated(50)
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-3xl font-black tracking-tight">Nejlépe hodnocení sběratelé</h1>
+      <h1 className="text-3xl font-black tracking-tight">{t('Nejlépe hodnocení sběratelé')}</h1>
       <p className="mt-2 text-slate-600 dark:text-slate-300">
-        Řazeno podle počtu kladných hodnocení. ✓ = hodnocení z výměn přes web (ověřené).
+        {t('Řazeno podle počtu kladných hodnocení. ✓ = hodnocení z výměn přes web (ověřené).')}
       </p>
       {rows.length ? (
         <ol className="mt-6 space-y-2">
@@ -26,7 +30,7 @@ export default async function TopRatedPage() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{r.user.nickname}</span>
-                  <span className="text-xs text-slate-500">{r.user.city ?? r.user.region ?? 'neuvedeno'}</span>
+                  <span className="text-xs text-slate-500">{r.user.city ?? r.user.region ?? t('neuvedeno')}</span>
                 </span>
                 <span className="text-right text-sm">
                   <span className="font-semibold text-green-700 dark:text-green-400">👍 {r.pos}</span>
@@ -40,7 +44,7 @@ export default async function TopRatedPage() {
           ))}
         </ol>
       ) : (
-        <p className="mt-8 text-slate-500">Zatím tu nikdo není. Hodnocení přibudou po prvních výměnách.</p>
+        <p className="mt-8 text-slate-500">{t('Zatím tu nikdo není. Hodnocení přibudou po prvních výměnách.')}</p>
       )}
     </main>
   )

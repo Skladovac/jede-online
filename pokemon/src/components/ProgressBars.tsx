@@ -1,4 +1,5 @@
 import type { Progress } from '@/lib/progress'
+import { getT } from '@/lib/i18n/server'
 
 const ROWS = [
   ['base', 'Base', 'základní karty 1–oficiální počet', 'bg-green-500'],
@@ -7,7 +8,8 @@ const ROWS = [
 ] as const
 
 /** Tři postupy sady vedle sebe (base / complete / master). compact = jeden řádek pro výpis sad. */
-export function ProgressBars({ p, compact = false }: { p: Progress; compact?: boolean }) {
+export async function ProgressBars({ p, compact = false }: { p: Progress; compact?: boolean }) {
+  const t = await getT()
   const rows = ROWS.filter(([k]) => p[k])
   if (compact)
     return (
@@ -29,7 +31,7 @@ export function ProgressBars({ p, compact = false }: { p: Progress; compact?: bo
         const v = p[k]!
         const pct = v.total ? Math.round((v.owned / v.total) * 100) : 0
         return (
-          <div key={k} title={hint} className="rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
+          <div key={k} title={t(hint)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-baseline justify-between text-sm">
               <span className="font-semibold">{label}</span>
               <span className="text-slate-500">
@@ -39,7 +41,7 @@ export function ProgressBars({ p, compact = false }: { p: Progress; compact?: bo
             <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
               <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
             </div>
-            <p className="mt-1 text-[11px] text-slate-400">{hint}</p>
+            <p className="mt-1 text-[11px] text-slate-400">{t(hint)}</p>
           </div>
         )
       })}

@@ -1,7 +1,10 @@
 /** Zadní strana karty (vlastní kresba) jako náhrada za chybějící logo sady. */
-export function CardBack({ className = 'h-16' }: { className?: string }) {
+import { getT } from '@/lib/i18n/server'
+
+export async function CardBack({ className = 'h-16' }: { className?: string }) {
+  const t = await getT()
   return (
-    <svg viewBox="0 0 63 88" className={`${className} w-auto drop-shadow-sm`} role="img" aria-label="Zadní strana karty">
+    <svg viewBox="0 0 63 88" className={`${className} w-auto drop-shadow-sm`} role="img" aria-label={t('Zadní strana karty')}>
       <defs>
         <radialGradient id="cb-bg" cx="50%" cy="45%" r="70%">
           <stop offset="0" stopColor="#3b82f6" />

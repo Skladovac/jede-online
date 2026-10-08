@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useRef, useState, useTransition } from 'react'
+import { useT } from '@/lib/i18n/client'
 import { changeSpare, clearSetWanted, markByNumbers, markRestWanted, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
 
 export type GridCard = { id: string; localId: string; name: string; image: string | null; price: string | null }
@@ -34,6 +35,7 @@ export function SetGrid({
   // Počet karet základní sady (bez secret rare); 0 = sada ho nemá (promo).
   baseCount: number
 }) {
+  const t = useT()
   const [mode, setMode] = useState<Mode>('view')
   const [state, setState] = useState(initial)
   const [, startTransition] = useTransition()
@@ -63,7 +65,7 @@ export function SetGrid({
         }
       } catch {
         setState((s) => ({ ...s, [cardId]: prev }))
-        setError('Uložení se nepovedlo. Jsi přihlášený?')
+        setError(t('Uložení se nepovedlo. Jsi přihlášený?'))
       } finally {
         inFlight.current.delete(cardId)
       }
@@ -92,19 +94,22 @@ export function SetGrid({
         return next
       })
       setNumbersInfo(
-        `Označeno: ${res.ids.length} ${res.ids.length === 1 ? 'karta' : res.ids.length >= 2 && res.ids.length <= 4 ? 'karty' : 'karet'}.` + (res.notFound.length ? ` Nenalezeno: ${res.notFound.slice(0, 10).join(', ')}.` : ''),
+        t('Označeno: {n} {cards}.', {
+          n: res.ids.length,
+          cards: res.ids.length === 1 ? t('karta') : res.ids.length >= 2 && res.ids.length <= 4 ? t('karty') : t('karet'),
+        }) + (res.notFound.length ? ' ' + t('Nenalezeno: {list}.', { list: res.notFound.slice(0, 10).join(', ') }) : ''),
       )
       setNumbers('')
       setError(null)
     } catch {
-      setError('Uložení se nepovedlo. Jsi přihlášený?')
+      setError(t('Uložení se nepovedlo. Jsi přihlášený?'))
     } finally {
       setBulkBusy(false)
     }
   }
 
   async function bulk(kind: 'all' | 'base' | 'clear') {
-    if (kind === 'clear' && !confirm('Zrušit všechny chybějící karty v této sadě?')) return
+    if (kind === 'clear' && !confirm(t('Zrušit všechny chybějící karty v této sadě?'))) return
     setBulkBusy(true)
     try {
       const wantedIds = kind === 'clear' ? [] : await markRestWanted(setId, kind === 'base')
@@ -120,7 +125,7 @@ export function SetGrid({
       })
       setError(null)
     } catch {
-      setError('Uložení se nepovedlo. Jsi přihlášený?')
+      setError(t('Uložení se nepovedlo. Jsi přihlášený?'))
     } finally {
       setBulkBusy(false)
     }
@@ -154,11 +159,11 @@ export function SetGrid({
                     : 'border border-slate-300 dark:border-slate-700'
                 }`}
               >
-                {m.label}
+                {t(m.label)}
               </button>
             ))}
           </div>
-          <p className="mt-2 text-xs text-slate-500">{MODES.find((m) => m.id === mode)!.hint}</p>
+          <p className="mt-2 text-xs text-slate-500">{t(MODES.find((m) => m.id === mode)!.hint)}</p>
           {(mode === 'want' || mode === 'owned') && (
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
               <button
@@ -167,7 +172,7 @@ export function SetGrid({
                 onClick={() => bulk('all')}
                 className="rounded-full bg-orange-500 px-3 py-1 font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
               >
-                {bulkBusy ? 'Ukládám…' : 'Vše, co nemám, mi chybí'}
+                {bulkBusy ? t('Ukládám…') : t('Vše, co nemám, mi chybí')}
               </button>
               {hasSecret && (
                 <button
@@ -176,12 +181,12 @@ export function SetGrid({
                   onClick={() => bulk('base')}
                   className="rounded-full border border-orange-400 px-3 py-1 font-semibold text-orange-700 disabled:opacity-50 dark:text-orange-300"
                 >
-                  Jen základní 1–{baseCount} (bez secret)
+                  {t('Jen základní 1–{n} (bez secret)', { n: baseCount })}
                 </button>
               )}
               {wantCount > 0 && (
                 <button type="button" disabled={bulkBusy} onClick={() => bulk('clear')} className="underline">
-                  Zrušit chybějící v sadě
+                  {t('Zrušit chybějící v sadě')}
                 </button>
               )}
             </div>
@@ -197,14 +202,14 @@ export function SetGrid({
               <input
                 value={numbers}
                 onChange={(e) => setNumbers(e.target.value)}
-                placeholder="Čísla karet: 1, 5, 23-30, 145"
+                placeholder={t('Čísla karet: 1, 5, 23-30, 145')}
                 className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
               />
               <button
                 disabled={bulkBusy || !numbers.trim()}
                 className="rounded-full bg-slate-900 px-3 py-1.5 font-semibold text-white disabled:opacity-50 dark:bg-yellow-400 dark:text-slate-900"
               >
-                {mode === 'owned' ? 'Označit jako Mám' : 'Označit jako Chybí'}
+                {mode === 'owned' ? t('Označit jako Mám') : t('Označit jako Chybí')}
               </button>
               {numbersInfo && <span className="w-full text-slate-500">{numbersInfo}</span>}
             </form>
@@ -217,17 +222,17 @@ export function SetGrid({
               />
             </div>
             <span className="shrink-0 font-medium">
-              Mám {ownedCount}/{officialCount} · chybí {wantCount} · navíc {spareCount}
+              {t('Mám {owned}/{total} · chybí {want} · navíc {spare}', { owned: ownedCount, total: officialCount, want: wantCount, spare: spareCount })}
             </span>
           </div>
-          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          {error && <p className="mt-2 text-xs text-red-600">{t(error)}</p>}
         </div>
       ) : (
         <p className="rounded-xl bg-yellow-50 px-4 py-3 text-sm text-yellow-900 dark:bg-yellow-400/10 dark:text-yellow-100">
           <Link href="/prihlaseni" className="font-semibold underline">
-            Přihlas se
+            {t('Přihlas se')}
           </Link>{' '}
-          a odklikávej si, které karty máš, které ti chybí a které máš navíc.
+          {t('a odklikávej si, které karty máš, které ti chybí a které máš navíc.')}
         </p>
       )}
 
@@ -251,8 +256,8 @@ export function SetGrid({
                 )}
                 <div className="absolute left-1 top-1 flex flex-col gap-1">
                   {s.owned > 0 && <Badge className="bg-green-600">✓ {s.owned > 1 ? s.owned : ''}</Badge>}
-                  {s.want && <Badge className="bg-orange-500">chybí</Badge>}
-                  {s.spare > 0 && <Badge className="bg-blue-600">+{s.spare} navíc</Badge>}
+                  {s.want && <Badge className="bg-orange-500">{t('chybí')}</Badge>}
+                  {s.spare > 0 && <Badge className="bg-blue-600">+{s.spare} {t('navíc')}</Badge>}
                 </div>
               </div>
               <p className="mt-1.5 truncate text-xs font-medium">
@@ -275,7 +280,7 @@ export function SetGrid({
               {mode === 'spare' && s.spare > 0 && (
                 <button
                   type="button"
-                  aria-label="Ubrat kus navíc"
+                  aria-label={t('Ubrat kus navíc')}
                   onClick={() =>
                     apply(c.id, { ...s, spare: s.spare - 1, owned: Math.max(s.owned - 1, 0) }, () => changeSpare(c.id, -1))
                   }

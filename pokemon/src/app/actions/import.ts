@@ -7,6 +7,7 @@ import { getCurrentUser, isLimited } from '@/lib/auth'
 import { parseCsv } from '@/lib/csv'
 import { rateLimit } from '@/lib/rate-limit'
 import type { FormState } from '@/lib/validation'
+import { getT } from '@/lib/i18n/server'
 
 const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']
 const CONDITIONS: Condition[] = ['MINT', 'LIGHT_PLAYED', 'DAMAGED']
@@ -31,15 +32,16 @@ const int = (s: string | undefined, min = 0, max = 1_000_000) => {
  * (počet kusů se nastaví podle souboru), nic se nemaže.
  */
 export async function importCollection(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
   const user = await getCurrentUser()
-  if (!user) return { error: 'Přihlas se.' }
-  if (!rateLimit(`import:${user.id}`, 10, 60 * 60_000)) return { error: 'Příliš mnoho importů. Zkus to za hodinu.' }
+  if (!user) return { error: t('Přihlas se.') }
+  if (!rateLimit(`import:${user.id}`, 10, 60 * 60_000)) return { error: t('Příliš mnoho importů. Zkus to za hodinu.') }
   const file = fd.get('file')
-  if (!(file instanceof File) || !file.size) return { error: 'Vyber soubor CSV.' }
-  if (file.size > 2_000_000) return { error: 'Soubor je moc velký (max. 2 MB).' }
+  if (!(file instanceof File) || !file.size) return { error: t('Vyber soubor CSV.') }
+  if (file.size > 2_000_000) return { error: t('Soubor je moc velký (max. 2 MB).') }
 
   const rows = parseCsv(await file.text())
-  if (!rows.length) return { error: 'Soubor je prázdný.' }
+  if (!rows.length) return { error: t('Soubor je prázdný.') }
   const head = rows[0].map(key)
   const hasHeader = head.some((h) => ['typ', 'cislo', 'sada', 'kodsady', 'id', 'kusu'].includes(h))
   const col = (name: string) => head.indexOf(key(name))
@@ -97,7 +99,7 @@ export async function importCollection(_: FormState, fd: FormData): Promise<Form
       if (typ === 'produkt' || typ === 'chybiprodukt') {
         const productId = int(get(r, 'id'), 1, 2_147_483_647)
         if (!productId || !(await prisma.product.findUnique({ where: { id: productId }, select: { id: true } }))) {
-          errors.push(`řádek ${line}: produkt nenalezen`)
+          errors.push(t('řádek {line}: produkt nenalezen', { line }))
           continue
         }
         if (typ === 'chybiprodukt') {
@@ -127,7 +129,7 @@ export async function importCollection(_: FormState, fd: FormData): Promise<Form
 
       const card = await findCard(r)
       if (!card) {
-        errors.push(`řádek ${line}: karta nenalezena (${[get(r, 'kod_sady') || get(r, 'sada'), get(r, 'cislo')].filter(Boolean).join(' ')})`)
+        errors.push(t('řádek {line}: karta nenalezena ({ref})', { line, ref: [get(r, 'kod_sady') || get(r, 'sada'), get(r, 'cislo')].filter(Boolean).join(' ') }))
         continue
       }
       if (typ === 'chybi') {
@@ -172,13 +174,13 @@ export async function importCollection(_: FormState, fd: FormData): Promise<Form
       await prisma.wantItem.deleteMany({ where: { userId: user.id, cardId: card.id, OR: [{ variant: null }, { variant }] } })
       cards++
     } catch {
-      errors.push(`řádek ${line}: nepodařilo se uložit`)
+      errors.push(t('řádek {line}: nepodařilo se uložit', { line }))
     }
   }
   revalidatePath('/sbirka')
-  const parts = [cards && `${cards}× karta`, products && `${products}× produkt`, wants && `${wants}× chybí`].filter(Boolean)
-  const msg = `Hotovo: ${parts.length ? parts.join(', ') : 'nic nového'}.${rows.length - (hasHeader ? 1 : 0) > MAX_ROWS ? ` Načteno jen prvních ${MAX_ROWS} řádků.` : ''}`
+  const parts = [cards && t('{n}× karta', { n: cards }), products && t('{n}× produkt', { n: products }), wants && t('{n}× chybí', { n: wants })].filter(Boolean)
+  const msg = `${t('Hotovo: {parts}.', { parts: parts.length ? parts.join(', ') : t('nic nového') })}${rows.length - (hasHeader ? 1 : 0) > MAX_ROWS ? ` ${t('Načteno jen prvních {max} řádků.', { max: MAX_ROWS })}` : ''}`
   return errors.length
-    ? { ok: `${msg} Nenačteno ${errors.length}: ${errors.slice(0, 12).join('; ')}${errors.length > 12 ? '…' : ''}` }
+    ? { ok: `${msg} ${t('Nenačteno {count}:', { count: errors.length })} ${errors.slice(0, 12).join('; ')}${errors.length > 12 ? '…' : ''}` }
     : { ok: msg }
 }

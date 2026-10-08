@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useT } from '@/lib/i18n/client'
 
 type PromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
 
 /** Tlačítko / návod „Přidat na plochu“. Android (Chrome) nabídne instalaci, iPhone dostane návod. */
 export function InstallApp() {
+  const t = useT()
   const [prompt, setPrompt] = useState<PromptEvent | null>(null)
   const [ios, setIos] = useState(false)
   const [installed, setInstalled] = useState(false)
@@ -35,19 +37,19 @@ export function InstallApp() {
   return (
     <span className="inline">
       <button type="button" onClick={click} className="underline">
-        📱 Aplikace do mobilu
+        📱 {t('Aplikace do mobilu')}
       </button>
       {help && (
         <span className="mt-2 block rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
           {ios ? (
             <>
-              iPhone: otevři web v <strong>Safari</strong>, klepni na <strong>Sdílet</strong> (čtvereček se šipkou) a vyber{' '}
-              <strong>Přidat na plochu</strong>.
+              {t('iPhone: otevři web v')} <strong>Safari</strong>, {t('klepni na')} <strong>{t('Sdílet')}</strong>{' '}
+              {t('(čtvereček se šipkou) a vyber')} <strong>{t('Přidat na plochu')}</strong>.
             </>
           ) : (
             <>
-              Android: v <strong>Chrome</strong> otevři menu <strong>⋮</strong> a vyber <strong>Přidat na plochu</strong>{' '}
-              (nebo <strong>Nainstalovat aplikaci</strong>).
+              {t('Android: v')} <strong>Chrome</strong> {t('otevři menu')} <strong>⋮</strong> {t('a vyber')}{' '}
+              <strong>{t('Přidat na plochu')}</strong> ({t('nebo')} <strong>{t('Nainstalovat aplikaci')}</strong>).
             </>
           )}
         </span>

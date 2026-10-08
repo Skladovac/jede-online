@@ -6,6 +6,7 @@ import { ActionForm } from '@/components/ActionForm'
 import { Submit } from '@/components/ui'
 import { ItemForm } from '@/components/ItemForm'
 import { CardBuyForm } from '@/components/BuyForm'
+import { getT } from '@/lib/i18n/server'
 
 type CardVariants = {
   id: string
@@ -19,14 +20,15 @@ type CardVariants = {
 
 /** "Moje sbírka" na detailu karty: kolik kusů mám, v jaké variantě a stavu, co nabízím. */
 export async function MyCardPanel({ card }: { card: CardVariants }) {
+  const t = await getT()
   const user = await getCurrentUser()
   if (!user) {
     return (
       <p className="mt-8 rounded-xl bg-yellow-50 px-4 py-3 text-sm text-yellow-900 dark:bg-yellow-400/10 dark:text-yellow-100">
         <Link href="/prihlaseni" className="font-semibold underline">
-          Přihlas se
+          {t('Přihlas se')}
         </Link>{' '}
-        a přidej si kartu do sbírky nebo mezi chybějící.
+        {t('a přidej si kartu do sbírky nebo mezi chybějící.')}
       </p>
     )
   }
@@ -48,11 +50,11 @@ export async function MyCardPanel({ card }: { card: CardVariants }) {
   return (
     <section className="mt-8 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold">Moje sbírka</h2>
+        <h2 className="text-xl font-bold">{t('Moje sbírka')}</h2>
         {!items.length && (
           <ActionForm action={toggleWantForm} className="flex items-center gap-2">
             <input type="hidden" name="cardId" value={card.id} />
-            <Submit variant={want ? 'primary' : 'ghost'}>{want ? '★ Na seznamu chybějících' : '☆ Chybí mi'}</Submit>
+            <Submit variant={want ? 'primary' : 'ghost'}>{want ? `★ ${t('Na seznamu chybějících')}` : `☆ ${t('Chybí mi')}`}</Submit>
           </ActionForm>
         )}
       </div>
@@ -63,7 +65,7 @@ export async function MyCardPanel({ card }: { card: CardVariants }) {
       ))}
       <details className="group" open={!items.length}>
         <summary className="cursor-pointer text-sm font-medium text-yellow-700 dark:text-yellow-400">
-          {items.length ? '+ Přidat další kus (jiná varianta, stav nebo jazyk)' : 'Přidat do sbírky'}
+          {items.length ? `+ ${t('Přidat další kus (jiná varianta, stav nebo jazyk)')}` : t('Přidat do sbírky')}
         </summary>
         <div className="mt-3">
           <ItemForm

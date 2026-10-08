@@ -2,9 +2,11 @@ import Link from 'next/link'
 import type { Collector } from '@/lib/matches'
 import { cardImage } from '@/lib/format'
 import { COUNTRY_LABEL } from '@/lib/regions'
+import { getT } from '@/lib/i18n/server'
 
 /** Žebříček sběratelů podle shod (stránka /sberatele a blok na hlavní stránce). */
-export function CollectorList({ collectors }: { collectors: Collector[] }) {
+export async function CollectorList({ collectors }: { collectors: Collector[] }) {
+  const t = await getT()
   return (
     <ul className="space-y-3">
       {collectors.map((c) => (
@@ -20,22 +22,22 @@ export function CollectorList({ collectors }: { collectors: Collector[] }) {
               <span className="font-bold">{c.user.nickname}</span>
               {c.trade && (
                 <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800 dark:bg-green-400/10 dark:text-green-300">
-                  🔁 Výměna možná
+                  🔁 {t('Výměna možná')}
                 </span>
               )}
               <span className="text-xs text-slate-500">
-                {[c.user.city, c.user.region, COUNTRY_LABEL[c.user.country]].filter(Boolean).join(', ')}
+                {[c.user.city, c.user.region, t(COUNTRY_LABEL[c.user.country])].filter(Boolean).join(', ')}
                 {c.rating.pos + c.rating.neg > 0 && ` · 👍 ${c.rating.pos} · 👎 ${c.rating.neg}`}
               </span>
             </div>
             <p className="mt-2 text-sm">
               {c.offered > 0 && (
-                <span className="font-semibold text-blue-700 dark:text-blue-400">nabízí {c.offered} z toho, co ti chybí</span>
+                <span className="font-semibold text-blue-700 dark:text-blue-400">{t('nabízí {n} z toho, co ti chybí', { n: c.offered })}</span>
               )}
               {c.offered > 0 && c.owned > 0 && ' · '}
-              {c.owned > 0 && <span className="text-slate-600 dark:text-slate-300">{c.owned} má ve sbírce (můžeš se zeptat)</span>}
+              {c.owned > 0 && <span className="text-slate-600 dark:text-slate-300">{t('{n} má ve sbírce (můžeš se zeptat)', { n: c.owned })}</span>}
               {c.theyWant > 0 && (
-                <span className="text-slate-600 dark:text-slate-300"> · shání {c.theyWant} z tvých nabídek</span>
+                <span className="text-slate-600 dark:text-slate-300"> · {t('shání {n} z tvých nabídek', { n: c.theyWant })}</span>
               )}
             </p>
             {c.preview.length > 0 && (
