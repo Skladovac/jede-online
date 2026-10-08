@@ -6,6 +6,7 @@ import { CollectionOverview } from '@/components/CollectionOverview'
 import { ensureEurCzk } from '@/lib/fx'
 import { CopyLink } from '@/components/CopyLink'
 import { Dashboard } from '@/components/Dashboard'
+import { ImportExport } from '@/components/ImportExport'
 import { interestInMyCards } from '@/lib/interest'
 import { cardImage } from '@/lib/format'
 import Link from 'next/link'
@@ -80,6 +81,9 @@ export default async function MyCollectionPage() {
       )}
       <div className="mt-6">
         <CollectionOverview data={data} own />
+      </div>
+      <div className="mt-10">
+        <ImportExport />
       </div>
     </main>
   )
