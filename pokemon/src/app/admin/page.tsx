@@ -74,8 +74,8 @@ export default async function AdminHome() {
           <Tile label="Nabídky karet" value={cardOffers} />
           <Tile label="Nabídky produktů" value={productOffers} />
           <Tile label="Hledané karty" value={wants} />
-          <Tile label="Poptávky čekají" value={req.PENDING ?? 0} />
-          <Tile label="Poptávky přijaté" value={req.ACCEPTED ?? 0} />
+          <Tile label="Výměny čekají" value={req.PENDING ?? 0} />
+          <Tile label="Výměny přijaté" value={req.ACCEPTED ?? 0} />
           <Tile label="Dokončené výměny" value={req.COMPLETED ?? 0} />
           <Tile label="V košících" value={req.DRAFT ?? 0} />
         </div>

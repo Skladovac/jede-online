@@ -37,7 +37,7 @@ export async function SiteHeader() {
           </Link>
           {user ? (
             <>
-              {/* Na mobilu je Sbírka v menu pod přezdívkou (do lišty se nevejde vedle Tržiště a Poptávek). */}
+              {/* Na mobilu je Sbírka v menu pod přezdívkou (do lišty se nevejde vedle Tržiště a Výměn). */}
               <Link href="/sbirka" className="hidden hover:text-yellow-600 dark:hover:text-yellow-400 sm:inline">
                 Sbírka
               </Link>
@@ -45,7 +45,7 @@ export async function SiteHeader() {
                 Sběratelé
               </Link>
               <Link href="/poptavky" className="relative hover:text-yellow-600 dark:hover:text-yellow-400">
-                Poptávky
+                Výměny
                 {pendingCount > 0 && <Dot n={pendingCount} />}
               </Link>
               <Link href="/kosik" aria-label="Košík" className="relative hover:text-yellow-600 dark:hover:text-yellow-400">

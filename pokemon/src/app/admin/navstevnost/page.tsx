@@ -14,7 +14,7 @@ const SECTION: Record<string, string> = {
   sbirka: 'Moje sbírka',
   hledat: 'Hledání',
   hodnoceni: 'Žebříček hodnocení',
-  poptavky: 'Poptávky',
+  poptavky: 'Výměny',
   kosik: 'Košík',
   registrace: 'Registrace',
   prihlaseni: 'Přihlášení',

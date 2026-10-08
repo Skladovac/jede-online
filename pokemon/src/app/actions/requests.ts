@@ -146,7 +146,7 @@ export async function setCartQty(_: FormState, fd: FormData): Promise<FormState>
 export async function offerMyItem(_: FormState, fd: FormData): Promise<FormState> {
   const user = await requireUser()
   const req = await prisma.tradeRequest.findUnique({ where: { id: str(fd, 'requestId') } })
-  if (!req || req.fromId !== user.id || req.status !== 'DRAFT') return { error: 'Poptávka nenalezena.' }
+  if (!req || req.fromId !== user.id || req.status !== 'DRAFT') return { error: 'Výměna nenalezena.' }
   // Hodnota "c:<id>" = karta, "p:<id>" = produkt.
   const [kind, id] = str(fd, 'mine').split(':')
   if (kind === 'p') {
@@ -174,9 +174,9 @@ export async function offerMyItem(_: FormState, fd: FormData): Promise<FormState
 
 export async function sendRequest(_: FormState, fd: FormData): Promise<FormState> {
   const user = await requireUser()
-  if (isLimited(user)) return { error: 'Poptávky půjde posílat, až rodič potvrdí tvůj účet.' }
+  if (isLimited(user)) return { error: 'Žádosti o výměnu půjde posílat, až rodič potvrdí tvůj účet.' }
   if (!user.emailVerifiedAt) return { error: 'Nejdřív potvrď svůj e-mail (odkaz najdeš na stránce Můj účet).' }
-  if (!rateLimit(`request:${user.id}`, 20, 24 * 60 * 60_000)) return { error: 'Dnes už jsi poslal(a) hodně poptávek.' }
+  if (!rateLimit(`request:${user.id}`, 20, 24 * 60 * 60_000)) return { error: 'Dnes už jsi poslal(a) hodně žádostí.' }
 
   const req = await prisma.tradeRequest.findUnique({
     where: { id: str(fd, 'requestId') },
@@ -185,8 +185,8 @@ export async function sendRequest(_: FormState, fd: FormData): Promise<FormState
       items: { include: { collectionItem: { include: itemInclude }, productItem: { include: productInclude } } },
     },
   })
-  if (!req || req.fromId !== user.id || req.status !== 'DRAFT') return { error: 'Poptávka nenalezena.' }
-  if (!visible(req.to)) return { error: 'Tento uživatel teď poptávky nepřijímá.' }
+  if (!req || req.fromId !== user.id || req.status !== 'DRAFT') return { error: 'Výměna nenalezena.' }
+  if (!visible(req.to)) return { error: 'Tento uživatel teď žádosti nepřijímá.' }
 
   // Aktualizovat snapshot podle současného stavu nabídek; zmizelé položky vyřadit.
   for (const it of req.items) {
@@ -216,13 +216,13 @@ export async function sendRequest(_: FormState, fd: FormData): Promise<FormState
   await notify(
     req.to.email,
     parentCc(req.to),
-    `Nová poptávka od ${user.nickname}`,
+    `Nová žádost o výměnu od ${user.nickname}`,
     [
       `<strong>${esc(user.nickname)}</strong> má zájem o ${wanted.length === 1 ? 'tuto kartu' : `${wanted.length} karet`}:`,
       wanted.map((w) => `• ${esc(w.title)} — ${w.quantity}× ${OFFER[w.offerType ?? 'TRADE']}${w.priceCzk ? ` za ${w.priceCzk} Kč` : ''}`).join('<br>'),
-      'Když poptávku přijmete, uvidíte navzájem e-mail a domluvíte se na předání. Web neřeší platby ani dopravu.',
+      'Když žádost přijmete, uvidíte navzájem e-mail a domluvíte se na předání. Web neřeší platby ani dopravu.',
     ],
-    { label: 'Zobrazit poptávku', url: `${APP_URL}/poptavky/${req.id}` },
+    { label: 'Zobrazit výměnu', url: `${APP_URL}/poptavky/${req.id}` },
   )
   revalidatePath('/', 'layout')
   redirect(`/poptavky/${req.id}?odeslano=1`)
@@ -232,32 +232,32 @@ export async function respondRequest(_: FormState, fd: FormData): Promise<FormSt
   const user = await requireUser()
   const accept = str(fd, 'decision') === 'accept'
   const req = await prisma.tradeRequest.findUnique({ where: { id: str(fd, 'requestId') }, include: { from: true } })
-  if (!req || req.toId !== user.id || req.status !== 'PENDING') return { error: 'Poptávka nenalezena.' }
+  if (!req || req.toId !== user.id || req.status !== 'PENDING') return { error: 'Výměna nenalezena.' }
   if (accept && isLimited(user)) return { error: 'Nejdřív musí rodič potvrdit tvůj účet.' }
   // Kontakt (u dětí i rodiče) nesmí dostat zablokovaný nebo omezený žadatel.
   if (accept && (!visible(req.from) || !req.from.emailVerifiedAt)) {
     await prisma.tradeRequest.updateMany({ where: { id: req.id, status: 'PENDING' }, data: { status: 'CANCELLED' } })
-    return { error: 'Tento uživatel už poptávky posílat nemůže. Poptávku jsme zrušili.' }
+    return { error: 'Tento uživatel už žádosti posílat nemůže. Žádost jsme zrušili.' }
   }
 
   const res = await prisma.tradeRequest.updateMany({
     where: { id: req.id, status: 'PENDING' },
     data: { status: accept ? 'ACCEPTED' : 'DECLINED', respondedAt: new Date() },
   })
-  if (!res.count) return { error: 'Poptávka se mezitím změnila. Obnov stránku.' }
+  if (!res.count) return { error: 'Žádost se mezitím změnila. Obnov stránku.' }
   await notify(
     req.from.email,
     parentCc(req.from),
-    accept ? `${user.nickname} přijal(a) tvoji poptávku` : `${user.nickname} poptávku odmítl(a)`,
+    accept ? `${user.nickname} přijal(a) tvoji žádost` : `${user.nickname} žádost odmítl(a)`,
     accept
       ? [
-          `<strong>${esc(user.nickname)}</strong> přijal(a) poptávku. Kontakt pro domluvu: <strong>${esc(user.email)}</strong>${
+          `<strong>${esc(user.nickname)}</strong> přijal(a) žádost. Kontakt pro domluvu: <strong>${esc(user.email)}</strong>${
             user.isMinor && user.parentEmail ? ` (rodič: ${esc(user.parentEmail)})` : ''
           }.`,
           'Domluvte se na předání nebo zaslání. Až bude hotovo, potvrďte to na webu a ohodnoťte se.',
         ]
       : ['Nevadí — zkus kartu najít u někoho jiného.'],
-    { label: 'Zobrazit poptávku', url: `${APP_URL}/poptavky/${req.id}` },
+    { label: 'Zobrazit výměnu', url: `${APP_URL}/poptavky/${req.id}` },
   )
   if (accept)
     await notify(
@@ -265,11 +265,11 @@ export async function respondRequest(_: FormState, fd: FormData): Promise<FormSt
       parentCc(user),
       `Kontakt na ${req.from.nickname}`,
       [
-        `Přijal(a) jsi poptávku od <strong>${esc(req.from.nickname)}</strong>. Kontakt pro domluvu: <strong>${esc(req.from.email)}</strong>${
+        `Přijal(a) jsi žádost od <strong>${esc(req.from.nickname)}</strong>. Kontakt pro domluvu: <strong>${esc(req.from.email)}</strong>${
           req.from.isMinor && req.from.parentEmail ? ` (rodič: ${esc(req.from.parentEmail)})` : ''
         }.`,
       ],
-      { label: 'Zobrazit poptávku', url: `${APP_URL}/poptavky/${req.id}` },
+      { label: 'Zobrazit výměnu', url: `${APP_URL}/poptavky/${req.id}` },
     )
   revalidatePath('/', 'layout')
   return { ok: accept ? 'Přijato. Kontakt najdeš níže a v e-mailu.' : 'Odmítnuto.' }
@@ -279,14 +279,14 @@ export async function cancelRequest(_: FormState, fd: FormData): Promise<FormSta
   const user = await requireUser()
   const req = await prisma.tradeRequest.findUnique({ where: { id: str(fd, 'requestId') }, include: { from: true, to: true } })
   if (!req || (req.fromId !== user.id && req.toId !== user.id) || !['PENDING', 'ACCEPTED'].includes(req.status))
-    return { error: 'Poptávku už nejde zrušit.' }
+    return { error: 'Výměnu už nejde zrušit.' }
   const res = await prisma.tradeRequest.updateMany({
     where: { id: req.id, status: { in: ['PENDING', 'ACCEPTED'] } },
     data: { status: 'CANCELLED' },
   })
-  if (!res.count) return { error: 'Poptávku už nejde zrušit.' }
+  if (!res.count) return { error: 'Výměnu už nejde zrušit.' }
   const other = req.fromId === user.id ? req.to : req.from
-  await notify(other.email, parentCc(other), `${user.nickname} zrušil(a) poptávku`, ['Poptávka byla zrušena.'], {
+  await notify(other.email, parentCc(other), `${user.nickname} zrušil(a) výměnu`, ['Výměna byla zrušena.'], {
     label: 'Zobrazit',
     url: `${APP_URL}/poptavky/${req.id}`,
   })
@@ -299,7 +299,7 @@ export async function markDone(_: FormState, fd: FormData): Promise<FormState> {
   const user = await requireUser()
   const req = await prisma.tradeRequest.findUnique({ where: { id: str(fd, 'requestId') } })
   if (!req || req.status !== 'ACCEPTED' || (req.fromId !== user.id && req.toId !== user.id))
-    return { error: 'Poptávka nenalezena.' }
+    return { error: 'Výměna nenalezena.' }
   const mine = req.fromId === user.id ? { fromDoneAt: new Date() } : { toDoneAt: new Date() }
 
   const completed = await prisma.$transaction(async (tx) => {

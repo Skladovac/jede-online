@@ -107,7 +107,7 @@ export function MatchSection({ data, nickname }: { data: Data; nickname: string 
             ))}
           </ul>
           <p className="mt-3 text-xs text-slate-500">
-            Když si od něj dáš něco do košíku, můžeš k poptávce přidat i své karty navíc na výměnu.
+            Když si od něj dáš něco do košíku, můžeš k žádosti přidat i své karty navíc na výměnu.
           </p>
         </>
       )}

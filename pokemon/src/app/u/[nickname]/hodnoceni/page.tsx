@@ -114,7 +114,7 @@ export default async function RatingsPage({ params }: Props) {
             </p>
           ) : tradeRated ? (
             <p className="mt-2 text-sm text-slate-500">
-              {nick} už máš ohodnoceného po výměně přes web (✓). Hodnocení upravíš v detailu poptávky.
+              {nick} už máš ohodnoceného po výměně přes web (✓). Hodnocení upravíš v detailu výměny.
             </p>
           ) : !canRate ? (
             <p className="mt-2 text-sm text-slate-500">
