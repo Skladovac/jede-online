@@ -2,6 +2,7 @@ import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { APP_URL, esc, notify } from '@/lib/email'
 import { pushNotification } from '@/lib/notifications'
+import { tFor } from '@/lib/i18n/server'
 
 const OFFER = { TRADE: 'vymění', SELL: 'prodá', GIFT: 'daruje' } as const
 const MAX_LINES = 12
@@ -53,12 +54,13 @@ async function digest() {
         },
       ],
     },
-    select: { id: true, email: true, nickname: true, isMinor: true, parentEmail: true, matchDigestAt: true },
+    select: { id: true, email: true, nickname: true, isMinor: true, parentEmail: true, matchDigestAt: true, locale: true },
   })
   let sent = 0
   let failed = 0
   for (const u of users) {
     try {
+    const tt = tFor(u.locale)
     // První souhrn: posledních 24 hodin (ne celá historie).
     const since = u.matchDigestAt ?? new Date(now.getTime() - 24 * 3_600_000)
     const [cards, products] = await Promise.all([
@@ -97,9 +99,9 @@ async function digest() {
     const deal = (max: number | null | undefined, offerType: string | null, price: number | null) =>
       max != null && (offerType !== 'SELL' || (price != null && price <= max))
     const offerLine = (name: string, seller: string, offerType: string | null, price: number | null, max: number | null | undefined) =>
-      `${deal(max, offerType, price) ? '✅' : '•'} ${name} — ${esc(seller)} ${OFFER[offerType as keyof typeof OFFER]}${
-        offerType === 'SELL' && price ? ` za ${price} Kč` : ''
-      }${deal(max, offerType, price) ? ` <strong>(tvoje cena: do ${max} Kč)</strong>` : ''}`
+      `${deal(max, offerType, price) ? '✅' : '•'} ${name} — ${esc(seller)} ${tt(OFFER[offerType as keyof typeof OFFER])}${
+        offerType === 'SELL' && price ? ` ${tt('za {price} Kč', { price })}` : ''
+      }${deal(max, offerType, price) ? ` ${tt('<strong>(tvoje cena: do {max} Kč)</strong>', { max: max ?? '' })}` : ''}`
     const rows = [
       ...cards.map((i) => ({
         deal: deal(cardMax.get(i.cardId), i.offerType, i.priceCzk),
@@ -146,10 +148,11 @@ async function digest() {
     const buyLines = [
       ...buyCards.map(
         (w) =>
-          `• <strong>${esc(w.card.name)}</strong> (${esc(w.card.set.name)} ${esc(w.card.localId)}) — ${esc(w.user.nickname)} koupí${w.maxPriceCzk ? ` za max. ${w.maxPriceCzk} Kč` : ''}`,
+          `• <strong>${esc(w.card.name)}</strong> (${esc(w.card.set.name)} ${esc(w.card.localId)}) — ${esc(w.user.nickname)} ${tt('koupí')}${w.maxPriceCzk ? ` ${tt('za max. {price} Kč', { price: w.maxPriceCzk })}` : ''}`,
       ),
       ...buyProducts.map(
-        (w) => `• <strong>${esc(w.product.name)}</strong> — ${esc(w.user.nickname)} koupí${w.maxPriceCzk ? ` za max. ${w.maxPriceCzk} Kč` : ''}`,
+        (w) =>
+          `• <strong>${esc(w.product.name)}</strong> — ${esc(w.user.nickname)} ${tt('koupí')}${w.maxPriceCzk ? ` ${tt('za max. {price} Kč', { price: w.maxPriceCzk })}` : ''}`,
       ),
     ]
 
@@ -158,38 +161,45 @@ async function digest() {
       if (lines.length)
         await pushNotification(u.id, {
           icon: deals ? '✅' : '🔔',
-          title: deals ? `${deals}× nabídka za tvou cenu nebo levněji` : `Nové nabídky toho, co ti chybí (${lines.length})`,
-          body: rows.map((r) => r.line.replace(/<[^>]+>/g, '').replace(/^[•✅]\s*/, '')).slice(0, 3).join(' · '),
+          title: deals
+            ? tt('{count}× nabídka za tvou cenu nebo levněji', { count: deals })
+            : tt('Nové nabídky toho, co ti chybí ({count})', { count: lines.length }),
+          body: rows.map((r) => r.line.replace(/<[^>]+>/g, '').replace(/&#(\d+);/g, (_, c) => String.fromCharCode(Number(c))).replace(/^[•✅]\s*/, '')).slice(0, 3).join(' · '),
           url: '/sberatele?kde=vse',
         })
       if (buyLines.length)
         await pushNotification(u.id, {
           icon: '💰',
-          title: `Někdo chce koupit, co nabízíš (${buyLines.length})`,
-          body: buyLines.map((l) => l.replace(/<[^>]+>/g, '').replace(/^•\s*/, '')).slice(0, 3).join(' · '),
+          title: tt('Někdo chce koupit, co nabízíš ({count})', { count: buyLines.length }),
+          body: buyLines.map((l) => l.replace(/<[^>]+>/g, '').replace(/&#(\d+);/g, (_, c) => String.fromCharCode(Number(c))).replace(/^•\s*/, '')).slice(0, 3).join(' · '),
           url: '/sbirka',
         })
-      const more = lines.length > MAX_LINES ? `<br>…a dalších ${lines.length - MAX_LINES}.` : ''
+      const more = lines.length > MAX_LINES ? `<br>${tt('…a dalších {count}.', { count: lines.length - MAX_LINES })}` : ''
       const ok = await notify(
         u.email,
         // U dětí jde kopie rodiči, stejně jako u poptávek.
         u.isMinor && u.parentEmail ? [u.parentEmail] : [],
         deals
-          ? `✅ ${deals === 1 ? 'Nabídka' : `${deals} nabídky`} za tvou cenu nebo levněji`
+          ? deals === 1
+            ? tt('✅ Nabídka za tvou cenu nebo levněji')
+            : tt('✅ {count} nabídky za tvou cenu nebo levněji', { count: deals })
           : lines.length
             ? lines.length === 1
-              ? 'Někdo nabízí, co ti chybí'
-              : `Nové nabídky toho, co ti chybí (${lines.length})`
-            : 'Někdo chce koupit, co nabízíš',
+              ? tt('Někdo nabízí, co ti chybí')
+              : tt('Nové nabídky toho, co ti chybí ({count})', { count: lines.length })
+            : tt('Někdo chce koupit, co nabízíš'),
         [
-          `Ahoj <strong>${esc(u.nickname)}</strong>,`,
-          ...(lines.length ? ['od posledního e-mailu se objevily nabídky toho, co sháníš:', lines.slice(0, MAX_LINES).join('<br>') + more] : []),
-          ...(buyLines.length ? ['💰 <strong>Někdo chce koupit, co nabízíš:</strong>', buyLines.slice(0, MAX_LINES).join('<br>')] : []),
-          `<small>Tyto e-maily můžeš vypnout v <a href="${APP_URL}/ucet">Můj účet</a>.</small>`,
+          tt('Ahoj <strong>{name}</strong>,', { name: esc(u.nickname) }),
+          ...(lines.length
+            ? [tt('od posledního e-mailu se objevily nabídky toho, co sháníš:'), lines.slice(0, MAX_LINES).join('<br>') + more]
+            : []),
+          ...(buyLines.length ? [tt('💰 <strong>Někdo chce koupit, co nabízíš:</strong>'), buyLines.slice(0, MAX_LINES).join('<br>')] : []),
+          tt('<small>Tyto e-maily můžeš vypnout v <a href="{url}">Můj účet</a>.</small>', { url: `${APP_URL}/ucet` }),
         ],
         lines.length
-          ? { label: 'Zobrazit, kdo to nabízí', url: `${APP_URL}/sberatele?kde=vse` }
-          : { label: 'Otevřít moji sbírku', url: `${APP_URL}/sbirka` },
+          ? { label: tt('Zobrazit, kdo to nabízí'), url: `${APP_URL}/sberatele?kde=vse` }
+          : { label: tt('Otevřít moji sbírku'), url: `${APP_URL}/sbirka` },
+        u.locale,
       )
       if (!ok) {
         // Nedoručeno (např. denní limit Brevo) — nechat na příště, nic se neztratí.

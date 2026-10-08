@@ -85,8 +85,8 @@ export async function register(_: FormState, fd: FormData): Promise<FormState> {
   })
 
   const next = safeNext(str(fd, 'next'))
-  await sendVerifyEmail(email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72), next)
-  if (isMinor && parentRaw) await sendParentConsentEmail(parentEmail, user.nickname, parentRaw)
+  await sendVerifyEmail(email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72), next, user.locale)
+  if (isMinor && parentRaw) await sendParentConsentEmail(parentEmail, user.nickname, parentRaw, user.locale)
 
   await createSession(user.id)
   // Nový uživatel na hlavní stránku s průvodcem „Jak začít“ (nebo zpět tam, odkud přišel).
@@ -129,7 +129,7 @@ export async function requestReset(_: FormState, fd: FormData): Promise<FormStat
   if (!rateLimit(`reset:${await clientIp()}`, 5, 60 * 60_000) || !rateLimit(`reset-acc:${email}`, 3, 60 * 60_000))
     return { error: t('Příliš mnoho žádostí. Zkus to za hodinu.') }
   const user = await prisma.user.findUnique({ where: { email } })
-  if (user && !user.bannedAt) await sendResetEmail(email, await createEmailToken(user.id, 'RESET', 1))
+  if (user && !user.bannedAt) await sendResetEmail(email, await createEmailToken(user.id, 'RESET', 1), user.locale)
   return { ok: t('Pokud je e-mail zaregistrovaný, poslali jsme na něj odkaz pro nové heslo. Když nedorazí, podívej se i do složky Spam / Nevyžádaná pošta.') }
 }
 
@@ -143,7 +143,7 @@ export async function resetPassword(_: FormState, fd: FormData): Promise<FormSta
   const user = await prisma.user.update({ where: { id: userId }, data: { passwordHash: await hashPassword(password) } })
   await prisma.session.deleteMany({ where: { userId } }) // odhlásit všude
   await prisma.emailToken.deleteMany({ where: { userId, kind: 'RESET' } }) // ostatní odkazy na obnovu přestanou platit
-  await sendPasswordChangedEmail(user.email, user.nickname)
+  await sendPasswordChangedEmail(user.email, user.nickname, user.locale)
   await createSession(userId)
   redirect('/ucet?heslo=1')
 }
@@ -153,7 +153,7 @@ export async function resendVerify(): Promise<FormState> {
   const user = await getCurrentUser()
   if (!user || user.emailVerifiedAt) return undefined
   if (!rateLimit(`verify:${user.id}`, 3, 60 * 60_000)) return { error: t('E-mail už jsme poslali. Podívej se i do složky Spam / Nevyžádaná pošta.') }
-  await sendVerifyEmail(user.email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72))
+  await sendVerifyEmail(user.email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72), null, user.locale)
   return { ok: t('Poslali jsme nový potvrzovací e-mail. Nevidíš ho? Podívej se i do složky Spam / Nevyžádaná pošta.') }
 }
 
@@ -165,6 +165,6 @@ export async function resendParent(): Promise<FormState> {
   // Nový odkaz (starý přestane platit) — čistý token v DB není, uložený je jen otisk.
   const raw = randomToken()
   await prisma.user.update({ where: { id: user.id }, data: { parentToken: sha256(raw) } })
-  await sendParentConsentEmail(user.parentEmail, user.nickname, raw)
+  await sendParentConsentEmail(user.parentEmail, user.nickname, raw, user.locale)
   return { ok: t('E-mail rodiči jsme poslali znovu. Ať se podívá i do složky Spam / Nevyžádaná pošta.') }
 }
