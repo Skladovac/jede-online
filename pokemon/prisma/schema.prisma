@@ -513,3 +513,13 @@ model Notification {
 
   @@index([userId, createdAt])
 }
+
+// Historie ceny karty (graf na detailu). Ukládá se jen den, kdy se cena změnila (+ první den), ať tabulka neroste zbytečně.
+model CardPrice {
+  cardId     String
+  day        DateTime @db.Date
+  eur        Decimal? @db.Decimal(10, 2)
+  reverseEur Decimal? @db.Decimal(10, 2)
+
+  @@id([cardId, day])
+}

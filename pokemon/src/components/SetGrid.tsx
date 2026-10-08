@@ -37,6 +37,11 @@ export function SetGrid({
 }) {
   const t = useT()
   const [mode, setMode] = useState<Mode>('view')
+  // Zobrazení: mřížka, nebo album po 9 kartách (stránky jako v pořadači, prázdné kapsy = karty, které nemám).
+  const [layout, setLayout] = useState<'grid' | 'album'>('grid')
+  const [page, setPage] = useState(0)
+  const PER_PAGE = 9
+  const pages = Math.max(1, Math.ceil(cards.length / PER_PAGE))
   const [state, setState] = useState(initial)
   const [, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -236,7 +241,99 @@ export function SetGrid({
         </p>
       )}
 
-      <ul className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+      <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-slate-500">{t('Zobrazení:')}</span>
+        {(
+          [
+            ['grid', t('Mřížka')],
+            ['album', t('Album')],
+          ] as const
+        ).map(([l, label]) => (
+          <button
+            key={l}
+            type="button"
+            onClick={() => setLayout(l)}
+            className={`rounded-full px-3 py-1 font-medium ${layout === l ? 'bg-slate-900 text-white dark:bg-yellow-400 dark:text-slate-900' : 'border border-slate-300 dark:border-slate-700'}`}
+          >
+            {l === 'album' ? '📖 ' : '▦ '}
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {layout === 'album' && (
+        <div className="mx-auto mt-4 max-w-xl">
+          {/* Stránka alba: 3×3 kapsy jako v pořadači. Prázdná kapsa = karta, kterou nemám. */}
+          <div className="grid grid-cols-3 gap-2 rounded-2xl border-4 border-slate-700 bg-slate-800 p-3 shadow-inner sm:gap-3 sm:p-4">
+            {cards.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE).map((c) => {
+              const s = state[c.id] ?? { owned: 0, spare: 0, want: false }
+              const pocket = s.owned ? (
+                <div className="relative aspect-[63/88] overflow-hidden rounded-md bg-slate-900 shadow-md ring-1 ring-white/20">
+                  {c.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.image} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="grid h-full place-items-center p-2 text-center text-xs text-slate-300">{c.name}</div>
+                  )}
+                  {/* Lesk fólie kapsy. */}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-transparent" />
+                </div>
+              ) : (
+                <div
+                  className={`relative grid aspect-[63/88] place-items-center overflow-hidden rounded-md border-2 border-dashed p-1 text-center ${
+                    s.want ? 'border-orange-400 bg-orange-500/10' : 'border-slate-500 bg-slate-900/40'
+                  }`}
+                >
+                  {c.image && (
+                    // Obrys karty jen velmi slabě, ať je jasné, co do kapsy patří.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-10 grayscale" />
+                  )}
+                  <div className="relative">
+                    <p className="text-lg font-black text-slate-300 sm:text-2xl">{c.localId}</p>
+                    <p className="line-clamp-2 text-[10px] text-slate-400 sm:text-xs">{c.name}</p>
+                    {s.want && <p className="mt-1 text-[10px] font-semibold text-orange-300">{t('chybí')}</p>}
+                  </div>
+                </div>
+              )
+              return (
+                <div key={c.id}>
+                  {mode === 'view' || !loggedIn ? (
+                    <Link href={`/karta/${encodeURIComponent(c.id)}`} className="block">
+                      {pocket}
+                    </Link>
+                  ) : (
+                    <button type="button" onClick={() => onCard(c.id)} className="block w-full">
+                      {pocket}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-3 flex items-center justify-between text-sm">
+            <button
+              type="button"
+              disabled={page === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              className="rounded-full border border-slate-300 px-4 py-1.5 font-medium disabled:opacity-40 dark:border-slate-700"
+            >
+              ← {t('Předchozí')}
+            </button>
+            <span className="text-slate-500">{t('Strana {page} z {pages}', { page: page + 1, pages })}</span>
+            <button
+              type="button"
+              disabled={page >= pages - 1}
+              onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
+              className="rounded-full border border-slate-300 px-4 py-1.5 font-medium disabled:opacity-40 dark:border-slate-700"
+            >
+              {t('Další')} →
+            </button>
+          </div>
+        </div>
+      )}
+
+      <ul className={`mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 ${layout === 'album' ? 'hidden' : ''}`}>
         {cards.map((c) => {
           const s = state[c.id] ?? { owned: 0, spare: 0, want: false }
           // Neoznačené karty v režimu úprav ztlumené; chybějící šedé jen v obrázku, okraj zůstává oranžový.
