@@ -128,6 +128,7 @@ model User {
   bugReports     BugReport[]
   phoneViewsMade PhoneView[]    @relation("PhoneViewer")
   phoneViewsGot  PhoneView[]    @relation("PhoneOwner")
+  notifications  Notification[]
 
   @@index([country, region, city])
 }
@@ -491,4 +492,19 @@ model ValueSnapshot {
   investedCzk Int      @default(0)
 
   @@id([userId, day])
+}
+
+// Upozornění na webu (zvoneček v liště): nová žádost o výměnu, odpověď, hodnocení, shody…
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String    @db.VarChar(200)
+  body      String?   @db.VarChar(500)
+  url       String?   @db.VarChar(300)
+  icon      String?   @db.VarChar(8)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
 }

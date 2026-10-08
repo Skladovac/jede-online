@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser, isLimited } from '@/lib/auth'
 import { ADMIN_EMAIL, APP_URL, esc, notify } from '@/lib/email'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
+import { pushNotification } from '@/lib/notifications'
 import { str, type FormState } from '@/lib/validation'
 
 const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' } as const
@@ -213,6 +214,12 @@ export async function sendRequest(_: FormState, fd: FormData): Promise<FormState
     data: { status: 'PENDING', sentAt: new Date() },
   })
   if (!sent.count) redirect(`/poptavky/${req.id}`)
+  await pushNotification(req.toId, {
+    icon: '📩',
+    title: `Nová žádost o výměnu od ${user.nickname}`,
+    body: wanted.map((w) => w.title).slice(0, 3).join(', ') + (wanted.length > 3 ? '…' : ''),
+    url: `/poptavky/${req.id}`,
+  })
   await notify(
     req.to.email,
     parentCc(req.to),
@@ -245,6 +252,12 @@ export async function respondRequest(_: FormState, fd: FormData): Promise<FormSt
     data: { status: accept ? 'ACCEPTED' : 'DECLINED', respondedAt: new Date() },
   })
   if (!res.count) return { error: 'Žádost se mezitím změnila. Obnov stránku.' }
+  await pushNotification(req.fromId, {
+    icon: accept ? '✅' : '❌',
+    title: accept ? `${user.nickname} přijal(a) tvoji žádost` : `${user.nickname} žádost odmítl(a)`,
+    body: accept ? 'Kontakt pro domluvu najdeš v detailu výměny.' : undefined,
+    url: `/poptavky/${req.id}`,
+  })
   await notify(
     req.from.email,
     parentCc(req.from),
@@ -286,6 +299,7 @@ export async function cancelRequest(_: FormState, fd: FormData): Promise<FormSta
   })
   if (!res.count) return { error: 'Výměnu už nejde zrušit.' }
   const other = req.fromId === user.id ? req.to : req.from
+  await pushNotification(other.id, { icon: '🚫', title: `${user.nickname} zrušil(a) výměnu`, url: `/poptavky/${req.id}` })
   await notify(other.email, parentCc(other), `${user.nickname} zrušil(a) výměnu`, ['Výměna byla zrušena.'], {
     label: 'Zobrazit',
     url: `${APP_URL}/poptavky/${req.id}`,
@@ -348,6 +362,22 @@ export async function markDone(_: FormState, fd: FormData): Promise<FormState> {
   })
   revalidatePath(`/poptavky/${req.id}`)
   const fresh = await prisma.tradeRequest.findUnique({ where: { id: req.id }, select: { status: true } })
+  const otherId = req.fromId === user.id ? req.toId : req.fromId
+  if (completed)
+    for (const uid of [req.fromId, req.toId])
+      await pushNotification(uid, {
+        icon: '🎉',
+        title: 'Výměna je dokončená',
+        body: 'Nezapomeň druhou stranu ohodnotit.',
+        url: `/poptavky/${req.id}`,
+      })
+  else if (fresh?.status === 'ACCEPTED')
+    await pushNotification(otherId, {
+      icon: '📦',
+      title: `${user.nickname} potvrdil(a), že výměna proběhla`,
+      body: 'Potvrď to prosím taky, ať se kusy odečtou ze sbírek.',
+      url: `/poptavky/${req.id}`,
+    })
   return {
     ok:
       completed || fresh?.status === 'COMPLETED'
@@ -376,6 +406,11 @@ export async function rateRequest(_: FormState, fd: FormData): Promise<FormState
       tag: TAGS.includes(tag) ? tag : null,
     },
     update: { positive, tag: TAGS.includes(tag) ? tag : null },
+  })
+  await pushNotification(toId, {
+    icon: positive ? '👍' : '👎',
+    title: `${user.nickname} tě ohodnotil(a) po výměně`,
+    url: `/poptavky/${req.id}`,
   })
   revalidatePath(`/poptavky/${req.id}`)
   return { ok: 'Díky za hodnocení.' }

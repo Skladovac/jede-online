@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser, isLimited } from '@/lib/auth'
 import { APP_URL, esc, notify } from '@/lib/email'
 import { rateLimit } from '@/lib/rate-limit'
+import { pushNotification } from '@/lib/notifications'
 import { textProblem } from '@/lib/nickname-filter'
 import { TAG_LABEL } from '@/lib/rating-tags'
 import { str, type FormState } from '@/lib/validation'
@@ -42,6 +43,12 @@ export async function rateUser(_: FormState, fd: FormData): Promise<FormState> {
   if (existing) await prisma.rating.update({ where: { id: existing.id }, data })
   else {
     await prisma.rating.create({ data: { ...data, fromId: user.id, toId: to.id } })
+    await pushNotification(to.id, {
+      icon: positive ? '👍' : '👎',
+      title: `${user.nickname} tě ohodnotil(a)`,
+      body: comment || undefined,
+      url: `/u/${encodeURIComponent(to.nickname)}/hodnoceni`,
+    })
     // Upozornit hodnoceného (u dítěte kopie rodiči).
     await notify(
       to.email,
