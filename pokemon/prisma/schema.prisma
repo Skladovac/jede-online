@@ -198,6 +198,7 @@ model CollectionItem {
   offerType  OfferType?
   priceCzk   Int?
   hiddenAt   DateTime? // nabídku skryl správce
+  offeredAt  DateTime? // kdy byla nabídka zveřejněna (nebo se změnil typ/cena) — pro „nejnovější“ a denní e-mail
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
@@ -220,6 +221,7 @@ model WantItem {
   maxPriceCzk  Int?
   minCondition Condition?
   language     String? // null = je jedno jaký
+  buyAt        DateTime? // kdy byla poptávka „chci koupit“ zveřejněna (nebo se změnila cena)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
@@ -288,7 +290,7 @@ model TradeRequestItem {
 
 // Pozn.: migrace 20261010120000_pojistky přidává i částečné indexy, které Prisma neumí popsat:
 //  unikátní WantItem(userId, cardId) WHERE variant IS NULL, TradeRequest(fromId, toId) WHERE status='DRAFT',
-//  Rating(fromId, toId) WHERE requestId IS NULL a indexy nabídek/poptávek podle updatedAt.
+//  Rating(fromId, toId) WHERE requestId IS NULL a indexy nabídek/poptávek podle offeredAt/buyAt (migrace 20261011090000).
 
 enum RatingTag {
   FAST_SHIPPING
@@ -388,6 +390,7 @@ model ProductItem {
   priceCzk  Int?
   note      String?    @db.VarChar(30)
   hiddenAt  DateTime? // nabídku skryl správce
+  offeredAt DateTime? // kdy byla nabídka zveřejněna (nebo se změnil typ/cena)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -406,6 +409,7 @@ model ProductWant {
   // „Chci koupit“ s nejvyšší cenou (nepovinná).
   buy         Boolean  @default(false)
   maxPriceCzk Int?
+  buyAt       DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 

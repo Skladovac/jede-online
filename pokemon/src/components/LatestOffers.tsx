@@ -15,7 +15,7 @@ export async function LatestOffers({ take = 12 }: { take?: number }) {
       user: { bannedAt: null, OR: [{ isMinor: false }, { parentConsentAt: { not: null } }] },
     },
     include: { card: { include: { set: { select: { name: true } } } }, user: { select: { nickname: true } } },
-    orderBy: { updatedAt: 'desc' },
+    orderBy: { offeredAt: { sort: 'desc', nulls: 'last' } },
     take,
   })
   if (!offers.length) return null

@@ -79,7 +79,13 @@ export async function changeSpare(cardId: string, delta: 1 | -1): Promise<QuickS
     const spare = item.spareQty + 1
     await prisma.collectionItem.update({
       where: { id: item.id },
-      data: { spareQty: spare, quantity: Math.max(item.quantity, spare + 1), offerType: item.offerType ?? 'TRADE' },
+      data: {
+        spareQty: spare,
+        quantity: Math.max(item.quantity, spare + 1),
+        offerType: item.offerType ?? 'TRADE',
+        // Nová nabídka (dosud nic navíc) = čas zveřejnění; další kus navíc nabídku neposouvá.
+        ...(item.spareQty === 0 && { offeredAt: new Date() }),
+      },
     })
     await prisma.wantItem.deleteMany({ where: { userId: user.id, cardId, OR: [{ variant: null }, { variant: item.variant }] } })
   } else {
@@ -129,6 +135,10 @@ export async function saveItem(_: FormState, fd: FormData): Promise<FormState> {
   if (note.length > 30) return { error: 'Poznámka může mít nejvýš 30 znaků.' }
 
   const data = { variant, condition, language, quantity, spareQty, offerType, priceCzk, note: note || null }
+  // Čas zveřejnění nabídky jen při skutečné změně (nově navíc, jiný typ nebo cena), ne při úpravě poznámky.
+  const prev = id ? await prisma.collectionItem.findFirst({ where: { id, userId: user.id } }) : null
+  const offerChanged = spareQty > 0 && (!prev || prev.spareQty === 0 || prev.offerType !== offerType || prev.priceCzk !== priceCzk)
+  const stamp = offerChanged ? { offeredAt: new Date() } : {}
   // Stejná varianta + stav + jazyk = jeden řádek; při kolizi kusy sečteme.
   const clash = await prisma.collectionItem.findFirst({
     where: { userId: user.id, cardId, variant, condition, language, ...(id && { id: { not: id } }) },
@@ -137,7 +147,7 @@ export async function saveItem(_: FormState, fd: FormData): Promise<FormState> {
     const total = Math.min(clash.quantity + quantity, 999)
     await prisma.collectionItem.update({
       where: { id: clash.id },
-      data: { ...data, quantity: total, spareQty: Math.min(clash.spareQty + spareQty, total) },
+      data: { ...data, ...stamp, quantity: total, spareQty: Math.min(clash.spareQty + spareQty, total) },
     })
     if (id) {
       // Rozpracované poptávky na slučovaný řádek přesměrovat, ať se po výměně kusy odečtou.
@@ -145,10 +155,10 @@ export async function saveItem(_: FormState, fd: FormData): Promise<FormState> {
       await prisma.collectionItem.deleteMany({ where: { id, userId: user.id } })
     }
   } else if (id) {
-    const res = await prisma.collectionItem.updateMany({ where: { id, userId: user.id }, data })
+    const res = await prisma.collectionItem.updateMany({ where: { id, userId: user.id }, data: { ...data, ...stamp } })
     if (!res.count) return { error: 'Položka nenalezena.' }
   } else {
-    await prisma.collectionItem.create({ data: { ...data, userId: user.id, cardId } })
+    await prisma.collectionItem.create({ data: { ...data, ...stamp, userId: user.id, cardId } })
   }
   await prisma.wantItem.deleteMany({ where: { userId: user.id, cardId, OR: [{ variant: null }, { variant }] } })
   revalidatePath(`/karta/${cardId}`)

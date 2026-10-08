@@ -63,25 +63,25 @@ async function digest() {
       prisma.collectionItem.findMany({
         where: {
           ...offered,
-          updatedAt: { gt: since, lte: now },
+          offeredAt: { gt: since, lte: now },
           userId: { not: u.id },
           user: visibleSeller,
           card: { wants: { some: { userId: u.id } } },
         },
         include: { card: { include: { set: { select: { name: true } } } }, user: { select: { nickname: true } } },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { offeredAt: 'desc' },
         take: 50,
       }),
       prisma.productItem.findMany({
         where: {
           ...offered,
-          updatedAt: { gt: since, lte: now },
+          offeredAt: { gt: since, lte: now },
           userId: { not: u.id },
           user: visibleSeller,
           product: { wants: { some: { userId: u.id } } },
         },
         include: { product: { select: { name: true } }, user: { select: { nickname: true } } },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { offeredAt: 'desc' },
         take: 20,
       }),
     ])
@@ -121,7 +121,7 @@ async function digest() {
       prisma.wantItem.findMany({
         where: {
           buy: true,
-          updatedAt: { gt: since, lte: now },
+          buyAt: { gt: since, lte: now },
           userId: { not: u.id },
           user: visibleSeller,
           card: { items: { some: { userId: u.id, ...offered } } },
@@ -132,7 +132,7 @@ async function digest() {
       prisma.productWant.findMany({
         where: {
           buy: true,
-          updatedAt: { gt: since, lte: now },
+          buyAt: { gt: since, lte: now },
           userId: { not: u.id },
           user: visibleSeller,
           product: { items: { some: { userId: u.id, ...offered } } },

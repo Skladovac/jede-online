@@ -36,20 +36,23 @@ export async function saveProductItem(_: FormState, fd: FormData): Promise<FormS
   if (note.length > 30) return { error: 'Poznámka může mít nejvýš 30 znaků.' }
 
   const data = { language, quantity, spareQty, offerType, priceCzk, note: note || null }
+  const prev = id ? await prisma.productItem.findFirst({ where: { id, userId: user.id } }) : null
+  const offerChanged = spareQty > 0 && (!prev || prev.spareQty === 0 || prev.offerType !== offerType || prev.priceCzk !== priceCzk)
+  const stamp = offerChanged ? { offeredAt: new Date() } : {}
   const clash = await prisma.productItem.findFirst({
     where: { userId: user.id, productId, language, ...(id && { id: { not: id } }) },
   })
   if (clash) {
     await prisma.productItem.update({
       where: { id: clash.id },
-      data: { ...data, quantity: clash.quantity + quantity, spareQty: clash.spareQty + spareQty },
+      data: { ...data, ...stamp, quantity: clash.quantity + quantity, spareQty: clash.spareQty + spareQty },
     })
     if (id) await prisma.productItem.deleteMany({ where: { id, userId: user.id } })
   } else if (id) {
-    const res = await prisma.productItem.updateMany({ where: { id, userId: user.id }, data })
+    const res = await prisma.productItem.updateMany({ where: { id, userId: user.id }, data: { ...data, ...stamp } })
     if (!res.count) return { error: 'Položka nenalezena.' }
   } else {
-    await prisma.productItem.create({ data: { ...data, userId: user.id, productId } })
+    await prisma.productItem.create({ data: { ...data, ...stamp, userId: user.id, productId } })
   }
   await prisma.productWant.deleteMany({ where: { userId: user.id, productId } })
   revalidatePath(`/produkt/${productId}`)

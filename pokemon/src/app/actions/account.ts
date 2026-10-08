@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { createSession, destroySession, getCurrentUser, hashPassword, verifyPassword } from '@/lib/auth'
+import { createSession, destroySession, getCurrentUser, hashPassword, randomToken, sha256, verifyPassword } from '@/lib/auth'
 import { sendParentLinksEmail, sendPasswordChangedEmail } from '@/lib/email'
 import { rateLimit } from '@/lib/rate-limit'
 import { NICK_RE, SOCIAL_FIELDS, checkPassword, checkRegion, parsePhone, parseSocial, str, type FormState } from '@/lib/validation'
@@ -56,8 +56,12 @@ export async function updateProfile(_: FormState, fd: FormData): Promise<FormSta
     },
   })
 
-  if (linksChanged && hasLinks && user.isMinor && user.parentEmail && user.parentToken)
-    await sendParentLinksEmail(user.parentEmail, nickname, user.parentToken)
+  if (linksChanged && hasLinks && user.isMinor && user.parentEmail && user.parentToken) {
+    // Nový odkaz pro rodiče (v DB je jen otisk původního, ten poslat znovu nejde).
+    const raw = randomToken()
+    await prisma.user.update({ where: { id: user.id }, data: { parentToken: sha256(raw) } })
+    await sendParentLinksEmail(user.parentEmail, nickname, raw)
+  }
 
   revalidatePath('/ucet')
   return {
