@@ -27,6 +27,7 @@ const SKIP = new Set(['Pokémon Lot'])
 type CmProduct = { idProduct: number; name: string; categoryName: string; idExpansion: number; dateAdded: string }
 type CmPrice = {
   idProduct: number
+  [key: string]: number | null | undefined
   avg?: number | null
   low?: number | null
   trend?: number | null
@@ -82,13 +83,50 @@ const price = (p?: CmPrice) => {
   return v ? new Prisma.Decimal(v.toFixed(2)) : null
 }
 
+const cardEur = (...c: (number | null | undefined)[]) => {
+  const v = c.find((x) => x && x > 0)
+  return v ? new Prisma.Decimal(v.toFixed(2)) : null
+}
+
+/** Ceny karet podle idProduct z denního ceníku Cardmarketu: trend → avg7 → avg30 (nikdy `avg`), reverse = „-holo“. */
+async function refreshCardPrices(prices: Map<number, CmPrice>, at: Date, log: (m: string) => void) {
+  const cards = await prisma.card.findMany({ where: { cmProductId: { not: null } }, select: { id: true, cmProductId: true } })
+  let updated = 0
+  for (let i = 0; i < cards.length; i += 200) {
+    const batch = cards.slice(i, i + 200).flatMap((c) => {
+      const p = prices.get(c.cmProductId!)
+      if (!p) return []
+      const base = pickStats(p as Record<string, number | null>)
+      const reverse = pickStats(p as Record<string, number | null>, '-holo')
+      return [
+        prisma.card.update({
+          where: { id: c.id },
+          data: {
+            priceEur: cardEur(p.trend, p.avg7, p.avg30),
+            priceReverseEur: cardEur(p['trend-holo'], p['avg7-holo'], p['avg30-holo']),
+            priceStats: base || reverse ? { ...(base ?? {}), ...(reverse && { reverse }) } : Prisma.JsonNull,
+            priceUpdatedAt: at,
+          },
+        }),
+      ]
+    })
+    if (batch.length) await prisma.$transaction(batch)
+    updated += batch.length
+  }
+  log(`[ceny] karty z ceníku Cardmarketu: ${updated} z ${cards.length}`)
+}
+
 export async function syncProducts(log: (m: string) => void = console.log) {
-  const [{ products }, { priceGuides }, sets] = await Promise.all([
+  const [{ products }, { priceGuides, createdAt }, sets] = await Promise.all([
     getJson<{ products: CmProduct[] }>(`${CM}/productList/products_nonsingles_6.json`),
-    getJson<{ priceGuides: CmPrice[] }>(`${CM}/priceGuide/price_guide_6.json`),
+    getJson<{ priceGuides: CmPrice[]; createdAt?: string }>(`${CM}/priceGuide/price_guide_6.json`),
     prisma.cardSet.findMany({ where: { game: 'pokemon' }, select: { id: true, name: true } }),
   ])
   const prices = new Map(priceGuides.map((p) => [p.idProduct, p]))
+  // Ceny karet z téhož ceníku (TCGdex přebírá ceny se zpožděním, tenhle soubor Cardmarket vydává každou noc).
+  await refreshCardPrices(prices, createdAt ? new Date(createdAt) : new Date(), log).catch((err) =>
+    log(`[ceny] obnova cen karet selhala: ${(err as Error).message}`),
+  )
   // Indonéské (a indonésko-thajské) edice u nás nikdo nesbírá — do katalogu vůbec nepatří.
   const EXCLUDED_NAME = /\b(indonesian|thai)\b/i
   const list = products.filter((p) => !SKIP.has(p.categoryName) && !EXCLUDED_NAME.test(p.name))

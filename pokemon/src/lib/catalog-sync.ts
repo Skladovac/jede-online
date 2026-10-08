@@ -43,10 +43,11 @@ type TcgCard = {
   rarity?: string
   variants?: { normal?: boolean; holo?: boolean; reverse?: boolean; firstEdition?: boolean }
   // Podrobné varianty: reverse se vzorem Poké Ball / Master Ball má foil 'pokeball' / 'masterball'.
-  variants_detailed?: { type?: string; foil?: string }[]
+  variants_detailed?: { type?: string; foil?: string; thirdParty?: { cardmarket?: number } }[]
   pricing?: {
     cardmarket?: {
       updated?: string
+      idProduct?: number
       avg?: number | null
       low?: number | null
       trend?: number | null
@@ -176,6 +177,8 @@ export async function syncCatalog(
           return base || reverse ? { ...(base ?? {}), ...(reverse && { reverse }) } : Prisma.JsonNull
         })(),
         priceUpdatedAt: cm?.updated ? new Date(cm.updated) : null,
+        // Pro čerstvé ceny přímo z ceníku Cardmarketu (product-sync → refreshCardPrices).
+        cmProductId: cm?.idProduct ?? detail.variants_detailed?.find((x) => x.thirdParty?.cardmarket)?.thirdParty?.cardmarket ?? null,
       }),
     }
     const id = clean(brief.id)

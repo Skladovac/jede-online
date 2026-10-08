@@ -35,7 +35,12 @@ export async function saveProductItem(_: FormState, fd: FormData): Promise<FormS
     return { error: 'Zadej cenu v celých korunách.' }
   if (note.length > 30) return { error: 'Poznámka může mít nejvýš 30 znaků.' }
 
-  const data = { language, quantity, spareQty, offerType, priceCzk, note: note || null }
+  // Nákupní cena za kus (nepovinná, vidí jen majitel).
+  const purchaseRaw = str(fd, 'purchasePriceCzk').replace(/\s/g, '')
+  const purchasePriceCzk = purchaseRaw ? Number(purchaseRaw) : null
+  if (purchasePriceCzk !== null && (!Number.isInteger(purchasePriceCzk) || purchasePriceCzk < 0 || purchasePriceCzk > 10_000_000))
+    return { error: 'Nákupní cenu zadej v celých korunách (nebo nech prázdnou).' }
+  const data = { language, quantity, spareQty, offerType, priceCzk, note: note || null, purchasePriceCzk }
   const prev = id ? await prisma.productItem.findFirst({ where: { id, userId: user.id } }) : null
   const offerChanged = spareQty > 0 && (!prev || prev.spareQty === 0 || prev.offerType !== offerType || prev.priceCzk !== priceCzk)
   const stamp = offerChanged ? { offeredAt: new Date() } : {}

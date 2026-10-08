@@ -1,0 +1,237 @@
+import Link from 'next/link'
+import { prisma } from '@/lib/prisma'
+import { portfolio, saveSnapshot } from '@/lib/portfolio'
+import { cardImage } from '@/lib/format'
+import { CardImg } from '@/components/CardImg'
+
+const kc = (n: number) => `${n.toLocaleString('cs-CZ')} Kč`
+const box = 'rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900'
+
+/** Graf vývoje hodnoty (jednoduchá čára v SVG, bez knihoven). */
+function ValueChart({ points }: { points: { day: Date; valueCzk: number }[] }) {
+  if (points.length < 2)
+    return <p className="text-sm text-slate-500">Graf se začne plnit — hodnotu ukládáme jednou denně. Za pár dní tu uvidíš vývoj.</p>
+  const W = 600
+  const H = 140
+  const vals = points.map((p) => p.valueCzk)
+  const min = Math.min(...vals)
+  const max = Math.max(...vals)
+  const span = Math.max(max - min, 1)
+  const x = (i: number) => (i / (points.length - 1)) * (W - 8) + 4
+  const y = (v: number) => H - 8 - ((v - min) / span) * (H - 24)
+  const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.valueCzk).toFixed(1)}`).join(' ')
+  const up = vals[vals.length - 1] >= vals[0]
+  const fmt = (dt: Date) => dt.toLocaleDateString('cs-CZ', { timeZone: 'UTC', day: 'numeric', month: 'numeric' })
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-36 w-full" role="img" aria-label="Vývoj hodnoty sbírky">
+        <path d={`${d} L${x(points.length - 1)},${H} L${x(0)},${H} Z`} className={up ? 'fill-green-500/10' : 'fill-red-500/10'} />
+        <path d={d} fill="none" strokeWidth="2.5" className={up ? 'stroke-green-500' : 'stroke-red-500'} />
+      </svg>
+      <div className="flex justify-between text-xs text-slate-500">
+        <span>
+          {fmt(points[0].day)}: {kc(points[0].valueCzk)}
+        </span>
+        <span>
+          {fmt(points[points.length - 1].day)}: {kc(points[points.length - 1].valueCzk)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/** Přehled nahoře v „Moje sbírka“: hodnota, investice, vývoj, nejcennější karty, sady a poslední aktivita. */
+export async function Dashboard({ userId }: { userId: string }) {
+  const p = await portfolio(userId)
+  // Dnešní snímek (graf se tak začne plnit hned od prvního otevření).
+  await saveSnapshot(userId, p.valueCzk, p.investedCzk)
+  const [history, recent, trades, ratings, waiting] = await Promise.all([
+    prisma.valueSnapshot.findMany({
+      where: { userId, day: { gte: new Date(Date.now() - 180 * 86_400_000) } },
+      orderBy: { day: 'asc' },
+    }),
+    prisma.collectionItem.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+      select: { id: true, createdAt: true, card: { select: { id: true, name: true, imageUrl: true, set: { select: { name: true } } } } },
+    }),
+    prisma.tradeRequest.findMany({
+      where: { status: 'COMPLETED', OR: [{ fromId: userId }, { toId: userId }] },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+      include: { from: { select: { nickname: true } }, to: { select: { nickname: true } }, _count: { select: { items: true } } },
+    }),
+    prisma.rating.findMany({
+      where: { toId: userId, hiddenAt: null, from: { bannedAt: null } },
+      orderBy: { updatedAt: 'desc' },
+      take: 3,
+      include: { from: { select: { nickname: true } } },
+    }),
+    prisma.tradeRequest.count({ where: { toId: userId, status: 'PENDING' } }),
+  ])
+  const profit = p.investedCzk ? p.investedValueCzk - p.investedCzk : null
+  const monthAgo = history.find((h) => h.day.getTime() >= Date.now() - 31 * 86_400_000)
+  const change = monthAgo && history.length > 1 ? p.valueCzk - monthAgo.valueCzk : null
+
+  return (
+    <section className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className={`${box} border-yellow-300 bg-yellow-50 dark:border-yellow-500/30 dark:bg-yellow-400/10`}>
+          <p className="text-xs text-slate-600 dark:text-slate-300">Hodnota sbírky</p>
+          <p className="text-3xl font-black">{kc(p.valueCzk)}</p>
+          <p className="text-xs text-slate-500">
+            ≈ {p.valueEur.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })} €
+            {p.productsCzk > 0 && ` · z toho produkty ${kc(p.productsCzk)}`}
+            {change !== null && (
+              <span className={change >= 0 ? ' text-green-700 dark:text-green-400' : ' text-red-600'}>
+                {' '}
+                · {change >= 0 ? '+' : ''}
+                {kc(change)} za měsíc
+              </span>
+            )}
+          </p>
+        </div>
+        <div className={box}>
+          <p className="text-xs text-slate-500">Investováno</p>
+          {p.investedCzk ? (
+            <>
+              <p className="text-3xl font-black">{kc(p.investedCzk)}</p>
+              <p className={`text-xs font-semibold ${profit! >= 0 ? 'text-green-700 dark:text-green-400' : 'text-red-600'}`}>
+                {profit! >= 0 ? 'Zisk' : 'Ztráta'} {profit! >= 0 ? '+' : ''}
+                {kc(profit!)} (dnes mají hodnotu {kc(p.investedValueCzk)})
+              </p>
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-slate-500">
+              U karty nebo produktu vyplň „Koupeno za“ a uvidíš, kolik jsi investoval(a) a jaký máš zisk.
+            </p>
+          )}
+        </div>
+        <div className={box}>
+          <p className="text-xs text-slate-500">Výměny</p>
+          <p className="text-3xl font-black">{waiting}</p>
+          <p className="text-xs text-slate-500">
+            {waiting ? (
+              <Link href="/poptavky" className="font-semibold text-red-600 underline">
+                čeká na tvou odpověď →
+              </Link>
+            ) : (
+              'nic nečeká na odpověď'
+            )}
+          </p>
+        </div>
+      </div>
+
+      <div className={box}>
+        <h2 className="mb-2 font-bold">Vývoj hodnoty</h2>
+        <ValueChart points={history} />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className={box}>
+          <h2 className="mb-3 font-bold">Nejcennější karty</h2>
+          {p.topCards.length ? (
+            <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6 lg:grid-cols-3">
+              {p.topCards.map((c) => (
+                <li key={c.id}>
+                  <Link href={`/karta/${encodeURIComponent(c.id)}`} className="block">
+                    <div className="aspect-[63/88] overflow-hidden rounded-lg bg-slate-200 shadow-sm dark:bg-slate-800">
+                      <CardImg src={cardImage(c.imageUrl)} alt={c.name} />
+                    </div>
+                    <p className="mt-1 truncate text-xs font-medium">{c.name}</p>
+                    <p className="text-xs font-semibold text-green-700 dark:text-green-400">
+                      {kc(c.unitCzk)}
+                      {c.qty > 1 && ` · ${c.qty}×`}
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-slate-500">Zatím žádné karty s cenou.</p>
+          )}
+        </div>
+        <div className={box}>
+          <h2 className="mb-3 font-bold">Hodnota po sadách</h2>
+          {p.bySet.length ? (
+            <ul className="space-y-2 text-sm">
+              {p.bySet.map((s) => (
+                <li key={s.id}>
+                  <div className="flex justify-between gap-3">
+                    <Link href={`/sady/${encodeURIComponent(s.id)}`} className="truncate hover:underline">
+                      {s.name}
+                    </Link>
+                    <span className="shrink-0 font-semibold">{kc(s.czk)}</span>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div className="h-full rounded-full bg-yellow-400" style={{ width: `${(s.czk / Math.max(p.bySet[0].czk, 1)) * 100}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-slate-500">Zatím nic.</p>
+          )}
+        </div>
+      </div>
+
+      <div className={box}>
+        <h2 className="mb-3 font-bold">Poslední aktivita</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Naposledy přidané</p>
+            {recent.length ? (
+              <ul className="space-y-1 text-sm">
+                {recent.map((r) => (
+                  <li key={r.id} className="flex justify-between gap-2">
+                    <Link href={`/karta/${encodeURIComponent(r.card.id)}`} className="truncate hover:underline">
+                      {r.card.name} <span className="text-slate-400">· {r.card.set.name}</span>
+                    </Link>
+                    <span className="shrink-0 text-xs text-slate-400">{r.createdAt.toLocaleDateString('cs-CZ')}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-slate-500">Zatím nic.</p>
+            )}
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Dokončené výměny</p>
+            {trades.length ? (
+              <ul className="space-y-1 text-sm">
+                {trades.map((t) => (
+                  <li key={t.id}>
+                    <Link href={`/poptavky/${t.id}`} className="hover:underline">
+                      s {t.fromId === userId ? t.to.nickname : t.from.nickname}
+                    </Link>{' '}
+                    <span className="text-xs text-slate-400">
+                      · {t._count.items} {t._count.items === 1 ? 'položka' : t._count.items <= 4 ? 'položky' : 'položek'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-slate-500">Zatím žádné.</p>
+            )}
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Nová hodnocení</p>
+            {ratings.length ? (
+              <ul className="space-y-1 text-sm">
+                {ratings.map((r) => (
+                  <li key={r.id} className="truncate">
+                    {r.positive ? '👍' : '👎'} {r.from.nickname}
+                    {r.comment && <span className="text-slate-500"> · „{r.comment}“</span>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-slate-500">Zatím žádná.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

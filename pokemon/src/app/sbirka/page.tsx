@@ -5,6 +5,7 @@ import { collectionOverview } from '@/lib/collection-view'
 import { CollectionOverview } from '@/components/CollectionOverview'
 import { ensureEurCzk } from '@/lib/fx'
 import { CopyLink } from '@/components/CopyLink'
+import { Dashboard } from '@/components/Dashboard'
 import { interestInMyCards } from '@/lib/interest'
 import { cardImage } from '@/lib/format'
 import Link from 'next/link'
@@ -26,6 +27,9 @@ export default async function MyCollectionPage() {
           Dokud rodič nepotvrdí účet, tvoje nabídky ostatní neuvidí.
         </p>
       )}
+      <div className="mt-6">
+        <Dashboard userId={user.id} />
+      </div>
       {!isLimited(user) && data.totals.wanted > 0 && (
         <div className="mt-6 rounded-2xl border-2 border-orange-300 bg-orange-50 p-4 dark:border-orange-500/40 dark:bg-orange-500/10">
           {/* Oranžová = „chybí“ (stejně jako okraj chybějících karet v sadě). */}
