@@ -14,6 +14,7 @@ export type ItemData = {
   offerType: string | null
   priceCzk: number | null
   note: string | null
+  purchasePriceCzk?: number | null
 }
 
 const VARIANT_LABEL: Record<string, string> = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' }
@@ -90,6 +91,17 @@ export function ItemForm({ cardId, item, variants }: { cardId: string; item: Ite
           <label className="col-span-2 space-y-1 text-xs sm:col-span-1">
             <span className="text-slate-500">Poznámka (max 30)</span>
             <input name="note" maxLength={30} defaultValue={item.note ?? ''} className={small} />
+          </label>
+          <label className="space-y-1 text-xs">
+            <span className="text-slate-500">Koupeno za (Kč/ks)</span>
+            <input
+              name="purchasePriceCzk"
+              inputMode="numeric"
+              defaultValue={item.purchasePriceCzk ?? ''}
+              placeholder="nepovinné"
+              title="Vidíš jen ty — v přehledu ukáže investováno a zisk nebo ztrátu."
+              className={small}
+            />
           </label>
         </div>
         <p className="text-xs text-slate-400">📷 Fotka vlastní karty (kvůli stavu) — připravujeme.</p>

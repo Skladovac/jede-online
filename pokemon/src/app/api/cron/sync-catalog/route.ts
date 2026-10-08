@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { syncCatalog, type SyncStats } from '@/lib/catalog-sync'
 import { syncProducts } from '@/lib/product-sync'
+import { snapshotAll } from '@/lib/portfolio'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +38,8 @@ export async function POST(req: NextRequest) {
       last = s
       // Zapečetěné produkty (Cardmarket) — chyba tady nesmí shodit import karet.
       await syncProducts().catch((err) => console.error('[produkty] import selhal:', err))
+      // Denní snímek hodnoty sbírek až s čerstvými cenami.
+      await snapshotAll().catch((err) => console.error('[portfolio] snímky selhaly:', err))
     })
     .catch((err) => {
       console.error('[catalog] import selhal:', err)

@@ -13,6 +13,7 @@ export type ProductItemData = {
   offerType: string | null
   priceCzk: number | null
   note: string | null
+  purchasePriceCzk?: number | null
 }
 
 const small = inputCls.replace('py-2.5', 'py-2') + ' text-sm'
@@ -58,6 +59,17 @@ export function ProductItemForm({ productId, item }: { productId: number; item: 
           <label className="space-y-1 text-xs">
             <span className="text-slate-500">Poznámka (max 30)</span>
             <input name="note" maxLength={30} defaultValue={item.note ?? ''} className={small} />
+          </label>
+          <label className="space-y-1 text-xs">
+            <span className="text-slate-500">Koupeno za (Kč/ks)</span>
+            <input
+              name="purchasePriceCzk"
+              inputMode="numeric"
+              defaultValue={item.purchasePriceCzk ?? ''}
+              placeholder="nepovinné"
+              title="Vidíš jen ty — v přehledu ukáže investováno a zisk nebo ztrátu."
+              className={small}
+            />
           </label>
         </div>
 

@@ -56,6 +56,7 @@ model Card {
   // Podrobnosti z Cardmarketu: { low, trend, avg1, avg7, avg30, reverse?: {…} } v EUR
   priceStats      Json?
   priceUpdatedAt  DateTime?
+  cmProductId     Int? // idProduct na Cardmarketu — ceny se berou přímo z jeho denního ceníku (čerstvější než TCGdex)
 
   items     CollectionItem[]
   wants     WantItem[]
@@ -63,6 +64,7 @@ model Card {
 
   @@unique([setId, localId])
   @@index([name])
+  @@index([cmProductId])
 }
 
 // ── Uživatelé ───────────────────────────────────────────────────────
@@ -199,6 +201,7 @@ model CollectionItem {
   priceCzk   Int?
   hiddenAt   DateTime? // nabídku skryl správce
   offeredAt  DateTime? // kdy byla nabídka zveřejněna (nebo se změnil typ/cena) — pro „nejnovější“ a denní e-mail
+  purchasePriceCzk Int? // nepovinná nákupní cena za kus (přehled: investováno, zisk/ztráta) — vidí jen majitel
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
@@ -391,6 +394,7 @@ model ProductItem {
   note      String?    @db.VarChar(30)
   hiddenAt  DateTime? // nabídku skryl správce
   offeredAt DateTime? // kdy byla nabídka zveřejněna (nebo se změnil typ/cena)
+  purchasePriceCzk Int? // nepovinná nákupní cena za kus — vidí jen majitel
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -477,4 +481,14 @@ model VisitorDay {
   hash String   @db.Char(64)
 
   @@id([day, hash])
+}
+
+// Denní snímek hodnoty sbírky (graf vývoje v přehledu). Ukládá noční cron a první otevření přehledu za den.
+model ValueSnapshot {
+  userId      String
+  day         DateTime @db.Date
+  valueCzk    Int
+  investedCzk Int      @default(0)
+
+  @@id([userId, day])
 }
