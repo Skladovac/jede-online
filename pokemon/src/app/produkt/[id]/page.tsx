@@ -32,7 +32,9 @@ async function getProduct(id: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await getProduct((await params).id)
   const t = await getT()
-  return { title: p ? p.name : t('Produkt nenalezen') }
+  if (!p) return { title: t('Produkt nenalezen') }
+  const description = t('{name}: orientační cena, kdo ho nabízí a kdo ho chce koupit. Sběratelé Pokémon karet z Česka a Slovenska.', { name: p.name })
+  return { title: p.name, description, openGraph: { title: p.name, description } }
 }
 
 const OFFER_ORDER = { GIFT: 0, SELL: 1, TRADE: 2 } as const

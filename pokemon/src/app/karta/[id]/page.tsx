@@ -26,7 +26,25 @@ async function getCard(id: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const card = await getCard((await params).id)
   const t = await getT()
-  return { title: card ? `${card.name} (${card.set.name} ${card.localId})` : t('Karta nenalezena') }
+  if (!card) return { title: t('Karta nenalezena') }
+  await ensureEurCzk() // cena v Kč do popisu
+  // Popis pro Google: cena a kolik lidí kartu nabízí nebo chce koupit.
+  const [offers, buyers] = await Promise.all([
+    prisma.collectionItem.count({ where: { cardId: card.id, spareQty: { gt: 0 }, offerType: { not: null }, hiddenAt: null } }),
+    prisma.wantItem.count({ where: { cardId: card.id, buy: true } }),
+  ])
+  const price = card.priceEur ? formatEur(card.priceEur) : null
+  const title = t('{name} ({set} {num}) – cena a kdo ji nabízí', { name: card.name, set: card.set.name, num: card.localId })
+  const description = [
+    price && t('Orientační cena {price}.', { price }),
+    offers ? t('Nabízí ji {n} sběratelů z Česka a Slovenska.', { n: offers }) : t('Najdi sběratele, kteří ji nabízejí.'),
+    buyers && t('Koupit ji chce {n} sběratelů.', { n: buyers }),
+    t('Zdarma si veď sbírku a vyměňuj karty.'),
+  ]
+    .filter(Boolean)
+    .join(' ')
+  const img = cardImage(card.imageUrl, 'high')
+  return { title, description, openGraph: { title, description, ...(img && { images: [img.startsWith('/') ? `https://pokemon.jede.online${img}` : img] }) } }
 }
 
 export default async function CardPage({ params }: Props) {

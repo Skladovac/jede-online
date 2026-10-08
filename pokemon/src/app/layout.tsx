@@ -25,8 +25,8 @@ export async function generateMetadata(): Promise<Metadata> {
   },
   // iPhone: po „Přidat na plochu“ se web otevře jako aplikace přes celou obrazovku.
   appleWebApp: { capable: true, title: t('Pokémon karty'), statusBarStyle: 'default' },
-  // Uzavřená beta: nic se zatím neindexuje.
-  robots: { index: false, follow: false },
+  // Web je otevřený vyhledávačům (soukromé stránky mají vlastní noindex nebo vyžadují přihlášení).
+  robots: { index: true, follow: true },
   }
 }
 
