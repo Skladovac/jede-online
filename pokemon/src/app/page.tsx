@@ -41,7 +41,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
 
       <section className="py-12 sm:py-16">
         <p className="mb-3 inline-block rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-800 dark:bg-yellow-400/10 dark:text-yellow-300">
-          Uzavřené testování
+          Zkušební provoz · ve vývoji
         </p>
         <h1 className="max-w-2xl text-3xl font-black tracking-tight sm:text-5xl">
           Měj přehled o své sbírce a najdi karty, které ti chybí.

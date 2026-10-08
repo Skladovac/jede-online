@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="cs">
       <body className="min-h-dvh bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
         <div className="bg-yellow-400 px-4 py-1.5 text-center text-xs font-semibold text-slate-900">
-          Zkušební provoz · nekomerční komunitní projekt ve vývoji
+          Zkušební provoz · komunitní projekt ve vývoji, zdarma a bez reklam
         </div>
         <SiteHeader />
         {children}
