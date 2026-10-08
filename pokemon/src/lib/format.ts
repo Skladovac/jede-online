@@ -39,6 +39,9 @@ export function cardImage(url: string | null, size: 'low' | 'high' = 'low') {
   if (!url) return null
   // pokemontcg.io část obrázků přesunul na scrydex: ".../small" a ".../large", bez přípony.
   if (url.startsWith('https://images.scrydex.com/')) return size === 'high' ? url.replace(/\/small$/, '/large') : url
+  // Doplněné z TCGplayeru (30th Celebration a Classic Collection): uloženo bez přípony, servíruje nginx keš /img3/.
+  if (url.startsWith('https://tcgplayer-cdn.tcgplayer.com/'))
+    return '/img3/' + url.slice('https://tcgplayer-cdn.tcgplayer.com/'.length) + (size === 'high' ? '_in_1000x1000.jpg' : '_400w.jpg')
   if (url.startsWith(PTCG_ASSETS)) return viaProxy(size === 'high' ? url.replace(/\.png$/, '_hires.png') : url)
   return viaProxy(`${url}/${size}.webp`)
 }
