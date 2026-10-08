@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { syncCatalog, type SyncStats } from '@/lib/catalog-sync'
 import { syncProducts } from '@/lib/product-sync'
 import { snapshotAll } from '@/lib/portfolio'
+import { syncJapanese } from '@/lib/catalog-sync-ja'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,17 @@ export async function POST(req: NextRequest) {
   if (!authorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   if (running) return NextResponse.json({ status: 'already-running' }, { status: 409 })
 
+  // Jen japonské sady + obnova cen (ruční doplnění bez celého anglického importu).
+  if (req.nextUrl.searchParams.get('only') === 'japonske') {
+    running = syncJapanese()
+      .then(() => syncProducts())
+      .catch((err) => console.error('[ja] import selhal:', err))
+      .finally(() => {
+        running = null
+      })
+    return NextResponse.json({ status: 'started', only: 'japonske' }, { status: 202 })
+  }
+
   if (req.nextUrl.searchParams.get('only') === 'produkty') {
     running = syncProducts()
       .catch((err) => console.error('[produkty] import selhal:', err))
@@ -36,6 +48,8 @@ export async function POST(req: NextRequest) {
   running = syncCatalog()
     .then(async (s) => {
       last = s
+      // Japonské sady (SV + Mega) — chyba nesmí shodit zbytek.
+      await syncJapanese().catch((err) => console.error('[ja] import selhal:', err))
       // Zapečetěné produkty (Cardmarket) — chyba tady nesmí shodit import karet.
       await syncProducts().catch((err) => console.error('[produkty] import selhal:', err))
       // Denní snímek hodnoty sbírek až s čerstvými cenami.

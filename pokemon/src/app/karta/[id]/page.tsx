@@ -63,6 +63,7 @@ export default async function CardPage({ params }: Props) {
         </div>
         <div>
           <h1 className="text-3xl font-black tracking-tight">{card.name}</h1>
+          {card.nameOriginal && card.nameOriginal !== card.name && <p className="text-sm text-slate-500">{card.nameOriginal}</p>}
           <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
             <dt className="text-slate-500">{t('Sada')}</dt>
             <dd>
