@@ -42,13 +42,13 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
       prisma.wantItem.findMany({
         where: { buy: true, user: users, ...(setId && { card: { setId } }) },
         include: { card: { include: { set: { select: { name: true } } } }, user: { select: userSelect } },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { buyAt: { sort: 'desc', nulls: 'last' } },
         take,
       }),
       prisma.productWant.findMany({
         where: { buy: true, user: users, ...(setId && { product: { setId } }) },
         include: { product: true, user: { select: userSelect } },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { buyAt: { sort: 'desc', nulls: 'last' } },
         take,
       }),
     ])
@@ -61,7 +61,7 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         image: { kind: 'card' as const, url: w.card.imageUrl },
         label: buyLabel(w.maxPriceCzk),
         user: w.user,
-        at: w.updatedAt,
+        at: w.buyAt ?? w.updatedAt,
       })),
       ...products.map((w) => ({
         key: `pw${w.id}`,
@@ -71,7 +71,7 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         image: { kind: 'product' as const, url: w.product.imageUrl },
         label: buyLabel(w.maxPriceCzk),
         user: w.user,
-        at: w.updatedAt,
+        at: w.buyAt ?? w.updatedAt,
       })),
     ]
   } else {
@@ -81,13 +81,13 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
       prisma.collectionItem.findMany({
         where: { ...offered, user: users, ...(setId && { card: { setId } }) },
         include: { card: { include: { set: { select: { name: true } } } }, user: { select: userSelect } },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { offeredAt: { sort: 'desc', nulls: 'last' } },
         take,
       }),
       prisma.productItem.findMany({
         where: { ...offered, user: users, ...(setId && { product: { setId } }) },
         include: { product: true, user: { select: userSelect } },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { offeredAt: { sort: 'desc', nulls: 'last' } },
         take,
       }),
     ])
@@ -100,7 +100,7 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         image: { kind: 'card' as const, url: i.card.imageUrl },
         label: (i.spareQty > 1 ? `${i.spareQty}× · ` : '') + offerLabel(i.offerType!, i.priceCzk),
         user: i.user,
-        at: i.updatedAt,
+        at: i.offeredAt ?? i.updatedAt,
       })),
       ...products.map((i) => ({
         key: `p${i.id}`,
@@ -110,7 +110,7 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         image: { kind: 'product' as const, url: i.product.imageUrl },
         label: (i.spareQty > 1 ? `${i.spareQty}× · ` : '') + offerLabel(i.offerType!, i.priceCzk),
         user: i.user,
-        at: i.updatedAt,
+        at: i.offeredAt ?? i.updatedAt,
       })),
     ]
   }

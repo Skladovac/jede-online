@@ -41,13 +41,15 @@ export async function saveCardBuy(_: FormState, fd: FormData): Promise<FormState
   const variant = VARIANTS.includes(variantRaw) ? variantRaw : null
 
   const existing = await prisma.wantItem.findFirst({ where: { userId: user.id, cardId }, orderBy: { createdAt: 'asc' } })
+  // Čas zveřejnění poptávky jen když se nově zapnula nebo změnila cena.
+  const stamp = buy && (!existing?.buy || existing.maxPriceCzk !== data.maxPriceCzk) ? { buyAt: new Date() } : {}
   if (existing) {
     // Jedna poptávka na kartu: případné další řádky (jiná varianta) sloučíme do první.
     await prisma.wantItem.deleteMany({ where: { userId: user.id, cardId, id: { not: existing.id } } })
-    await prisma.wantItem.update({ where: { id: existing.id }, data: { ...data, variant } })
+    await prisma.wantItem.update({ where: { id: existing.id }, data: { ...data, ...stamp, variant } })
   } else {
     if (!(await prisma.card.findUnique({ where: { id: cardId }, select: { id: true } }))) return { error: 'Karta nenalezena.' }
-    await prisma.wantItem.create({ data: { ...data, variant, userId: user.id, cardId } })
+    await prisma.wantItem.create({ data: { ...data, ...stamp, variant, userId: user.id, cardId } })
   }
   revalidatePath(`/karta/${cardId}`)
   return { ok: buy ? 'Uloženo. Ostatní uvidí, že tuhle kartu chceš koupit.' : 'Uloženo, karta zůstává mezi chybějícími.' }
@@ -64,10 +66,12 @@ export async function saveProductBuy(_: FormState, fd: FormData): Promise<FormSt
   const priceRes = parsePrice(str(fd, 'maxPriceCzk'))
   if ('error' in priceRes) return { error: priceRes.error }
   const data = { buy, maxPriceCzk: buy ? priceRes.price : null }
+  const existing = await prisma.productWant.findUnique({ where: { userId_productId: { userId: user.id, productId } } })
+  const stamp = buy && (!existing?.buy || existing.maxPriceCzk !== data.maxPriceCzk) ? { buyAt: new Date() } : {}
   await prisma.productWant.upsert({
     where: { userId_productId: { userId: user.id, productId } },
-    create: { ...data, userId: user.id, productId },
-    update: data,
+    create: { ...data, ...stamp, userId: user.id, productId },
+    update: { ...data, ...stamp },
   })
   revalidatePath(`/produkt/${productId}`)
   return { ok: buy ? 'Uloženo. Ostatní uvidí, že tenhle produkt chceš koupit.' : 'Uloženo.' }

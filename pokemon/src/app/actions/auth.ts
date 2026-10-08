@@ -10,6 +10,7 @@ import {
   getCurrentUser,
   hashPassword,
   randomToken,
+  sha256,
   verifyPassword,
 } from '@/lib/auth'
 import { needsParentConsent, type CountryCode } from '@/lib/age'
@@ -58,6 +59,7 @@ export async function register(_: FormState, fd: FormData): Promise<FormState> {
   })
   if (taken) return fail(taken.email === email ? 'Tento e-mail už je zaregistrovaný.' : 'Tahle přezdívka už je obsazená.')
 
+  const parentRaw = isMinor ? randomToken() : null
   const user = await prisma.user.create({
     data: {
       email,
@@ -70,7 +72,8 @@ export async function register(_: FormState, fd: FormData): Promise<FormState> {
       city: fields.city || null,
       isMinor,
       parentEmail: isMinor ? parentEmail : null,
-      parentToken: isMinor ? randomToken() : null,
+      // V DB jen otisk; čistý odkaz jde jen rodiči e-mailem.
+      parentToken: parentRaw ? sha256(parentRaw) : null,
       // Dospělý rozhoduje o indexaci sám; u dítěte až rodič.
       indexable: !isMinor && fd.get('indexable') === 'on',
       acceptedTermsAt: new Date(),
@@ -79,7 +82,7 @@ export async function register(_: FormState, fd: FormData): Promise<FormState> {
 
   const next = safeNext(str(fd, 'next'))
   await sendVerifyEmail(email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72), next)
-  if (isMinor && user.parentToken) await sendParentConsentEmail(parentEmail, user.nickname, user.parentToken)
+  if (isMinor && parentRaw) await sendParentConsentEmail(parentEmail, user.nickname, parentRaw)
 
   await createSession(user.id)
   // Nový uživatel na hlavní stránku s průvodcem „Jak začít“ (nebo zpět tam, odkud přišel).
@@ -147,6 +150,9 @@ export async function resendParent(): Promise<FormState> {
   const user = await getCurrentUser()
   if (!user?.isMinor || user.parentConsentAt || !user.parentEmail || !user.parentToken) return undefined
   if (!rateLimit(`parent:${user.id}`, 3, 24 * 60 * 60_000)) return { error: 'E-mail rodiči už odešel. Ať se podívá i do složky Spam / Nevyžádaná pošta.' }
-  await sendParentConsentEmail(user.parentEmail, user.nickname, user.parentToken)
+  // Nový odkaz (starý přestane platit) — čistý token v DB není, uložený je jen otisk.
+  const raw = randomToken()
+  await prisma.user.update({ where: { id: user.id }, data: { parentToken: sha256(raw) } })
+  await sendParentConsentEmail(user.parentEmail, user.nickname, raw)
   return { ok: 'E-mail rodiči jsme poslali znovu. Ať se podívá i do složky Spam / Nevyžádaná pošta.' }
 }

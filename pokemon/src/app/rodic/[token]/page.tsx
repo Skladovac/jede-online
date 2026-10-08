@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { sha256 } from '@/lib/auth'
 import { giveConsent, parentDeleteAccount, revokeConsent, updateParentSettings } from '@/app/actions/parent'
 import { ActionForm } from '@/components/ActionForm'
 import { Checkbox, Field, Submit, inputCls } from '@/components/ui'
@@ -11,7 +12,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function ParentPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
-  const child = await prisma.user.findUnique({ where: { parentToken: token } })
+  // V DB je jen otisk odkazu (sha256), proto se příchozí token před hledáním zahashuje.
+  const child = await prisma.user.findUnique({ where: { parentToken: sha256(token) } })
   if (!child) notFound()
 
   const links = [

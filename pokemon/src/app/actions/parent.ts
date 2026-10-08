@@ -3,14 +3,15 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { getCurrentUser, sha256 } from '@/lib/auth'
 import { str, type FormState } from '@/lib/validation'
 
 // Rodič se nepřihlašuje — autorizací je tajný odkaz z e-mailu (parentToken).
 async function childByToken(fd: FormData) {
   const token = str(fd, 'token')
   if (!token) return null
-  return prisma.user.findUnique({ where: { parentToken: token } })
+  // V DB je jen otisk odkazu.
+  return prisma.user.findUnique({ where: { parentToken: sha256(token) } })
 }
 
 export async function giveConsent(_: FormState, fd: FormData): Promise<FormState> {
@@ -31,7 +32,7 @@ export async function giveConsent(_: FormState, fd: FormData): Promise<FormState
       // Odkazy, které dítě už vyplnilo, schvaluje rodič zvlášť (viz níže) — souhlas s účtem je nezahrnuje.
     },
   })
-  revalidatePath(`/rodic/${child.parentToken}`)
+  revalidatePath(`/rodic/${str(fd, 'token')}`)
   return { ok: 'Děkujeme, souhlas je udělen. Účet je plně funkční.' }
 }
 
@@ -50,7 +51,7 @@ export async function updateParentSettings(_: FormState, fd: FormData): Promise<
       ...(fd.get('clearCity') === 'on' && { city: null }),
     },
   })
-  revalidatePath(`/rodic/${child.parentToken}`)
+  revalidatePath(`/rodic/${str(fd, 'token')}`)
   return { ok: 'Nastavení uloženo.' }
 }
 
@@ -62,7 +63,7 @@ export async function revokeConsent(_: FormState, fd: FormData): Promise<FormSta
     data: { parentConsentAt: null, parentConsentName: null, indexable: false, linksApprovedAt: null },
   })
   await prisma.session.deleteMany({ where: { userId: child.id } })
-  revalidatePath(`/rodic/${child.parentToken}`)
+  revalidatePath(`/rodic/${str(fd, 'token')}`)
   return { ok: 'Souhlas byl odvolán. Účet je znovu omezený a dítě bylo odhlášeno.' }
 }
 
