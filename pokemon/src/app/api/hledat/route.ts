@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       href: `/karta/${encodeURIComponent(c.id)}`,
       id: c.id,
       name: c.name,
-      number: `${c.set.code ? c.set.code + ' ' : ''}${c.localId}/${c.set.officialCount}`,
+      number: `${c.set.code ? c.set.code + ' ' : ''}${c.localId}${c.set.officialCount ? `/${c.set.officialCount}` : ''}`,
       set: c.set.name,
       image: cardImage(c.imageUrl),
       price: formatEur(c.priceEur),
