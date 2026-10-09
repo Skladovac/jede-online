@@ -18,6 +18,7 @@ import { ProductItemForm } from '@/components/ProductItemForm'
 import { AddToCart } from '@/components/AddToCart'
 import { ensureEurCzk } from '@/lib/fx'
 import { getT } from '@/lib/i18n/server'
+import { BadgeIcon } from '@/components/Badges'
 
 export const dynamic = 'force-dynamic'
 
@@ -179,7 +180,8 @@ export default async function ProductPage({ params }: Props) {
                 <div className="min-w-0 flex-1">
                   <Link href={`/u/${encodeURIComponent(o.user.nickname)}`} className="font-semibold hover:underline">
                     {o.user.nickname}
-                  </Link>
+                  </Link>{' '}
+                <BadgeIcon nickname={o.user.nickname} />
                   {viewer && viewer.id !== o.userId && (
                     <Link
                       href={`/u/${encodeURIComponent(o.user.nickname)}?nahlasit=1#nahlasit`}

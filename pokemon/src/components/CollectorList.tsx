@@ -3,6 +3,7 @@ import type { Collector } from '@/lib/matches'
 import { cardImage } from '@/lib/format'
 import { COUNTRY_LABEL } from '@/lib/regions'
 import { getT } from '@/lib/i18n/server'
+import { BadgeIcon } from '@/components/Badges'
 
 /** Žebříček sběratelů podle shod (stránka /sberatele a blok na hlavní stránce). */
 export async function CollectorList({ collectors }: { collectors: Collector[] }) {
@@ -20,6 +21,7 @@ export async function CollectorList({ collectors }: { collectors: Collector[] })
                 {c.user.nickname.slice(0, 1).toUpperCase()}
               </span>
               <span className="font-bold">{c.user.nickname}</span>
+              <BadgeIcon nickname={c.user.nickname} />
               {c.trade && (
                 <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800 dark:bg-green-400/10 dark:text-green-300">
                   🔁 {t('Výměna možná')}

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { AddToCart } from '@/components/AddToCart'
 import { getT } from '@/lib/i18n/server'
+import { BadgeIcon } from '@/components/Badges'
 
 const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' } as const
 const CONDITION = { MINT: 'Jako nová', LIGHT_PLAYED: 'Mírně hraná', DAMAGED: 'Poškozená' } as const
@@ -43,7 +44,8 @@ export async function CardOffers({ cardId }: { cardId: string }) {
               <div className="min-w-0 flex-1">
                 <Link href={`/u/${encodeURIComponent(o.user.nickname)}`} className="font-semibold hover:underline">
                   {o.user.nickname}
-                </Link>
+                </Link>{' '}
+                <BadgeIcon nickname={o.user.nickname} />
                 {viewer && viewer.id !== o.userId && (
                   <Link
                     href={`/u/${encodeURIComponent(o.user.nickname)}?nahlasit=1#nahlasit`}

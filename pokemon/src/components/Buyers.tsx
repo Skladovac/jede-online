@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { CONDITION_LABEL, VARIANT_LABEL } from '@/lib/labels'
 import { getT } from '@/lib/i18n/server'
+import { BadgeIcon } from '@/components/Badges'
 
 const visibleUser = { bannedAt: null, OR: [{ isMinor: false }, { parentConsentAt: { not: null } }] }
 
@@ -35,7 +36,8 @@ async function BuyersList({ rows, kind }: { rows: Row[]; kind: 'card' | 'product
                 <div className="min-w-0 flex-1">
                   <Link href={`/u/${encodeURIComponent(r.user.nickname)}`} className="font-semibold hover:underline">
                     {r.user.nickname}
-                  </Link>
+                  </Link>{' '}
+                  <BadgeIcon nickname={r.user.nickname} />
                   <span className="text-sm text-slate-500"> · {r.user.city ?? r.user.region ?? t('neuvedeno')}</span>
                   {r.detail.length > 0 && <p className="text-xs text-slate-500">{r.detail.join(' · ')}</p>}
                 </div>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { topRated } from '@/lib/market'
 import { getT } from '@/lib/i18n/server'
+import { BadgeIcon } from '@/components/Badges'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -29,7 +30,10 @@ export default async function TopRatedPage() {
                   {i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">{r.user.nickname}</span>
+                  <span className="flex items-center gap-1.5 font-semibold">
+                    <span className="truncate">{r.user.nickname}</span>
+                    <BadgeIcon nickname={r.user.nickname} />
+                  </span>
                   <span className="text-xs text-slate-500">{r.user.city ?? r.user.region ?? t('neuvedeno')}</span>
                 </span>
                 <span className="text-right text-sm">

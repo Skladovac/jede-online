@@ -7,6 +7,7 @@ import { CollectorList } from '@/components/CollectorList'
 import { prisma } from '@/lib/prisma'
 import { ratingSummary } from '@/lib/ratings'
 import { getT } from '@/lib/i18n/server'
+import { BadgeIcon } from '@/components/Badges'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -43,6 +44,7 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
             {user.nickname.slice(0, 1).toUpperCase()}
           </span>
           <span className="font-bold">{user.nickname}</span>
+          <BadgeIcon nickname={user.nickname} />
           <span className="text-xs text-slate-500">
             {[user.city, user.region, t(COUNTRY_LABEL[user.country])].filter(Boolean).join(', ')}
             {summary.total > 0 ? ` · 👍 ${summary.pos} · 👎 ${summary.neg}` : ` · ${t('zatím bez hodnocení')}`}
