@@ -62,11 +62,11 @@ export default async function RatingsPage({ params }: Props) {
   const tradeRated = viewer && !own && ratings.some((r) => r.fromId === viewer.id && r.requestId)
   const canRate = viewer && !own && viewer.emailVerifiedAt && !isLimited(viewer)
   const nick = u.nickname
-  const back = `/u/${encodeURIComponent(nick)}/hodnoceni`
+  const back = `/@${encodeURIComponent(nick)}/hodnoceni`
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <Link href={`/u/${encodeURIComponent(nick)}`} className="text-sm text-slate-500 hover:underline">
+      <Link href={`/@${encodeURIComponent(nick)}`} className="text-sm text-slate-500 hover:underline">
         ← {t('Profil {name}', { name: nick })}
       </Link>
       <h1 className="mt-3 text-3xl font-black tracking-tight">{t('Hodnocení {name}', { name: nick })}</h1>
@@ -172,7 +172,7 @@ export default async function RatingsPage({ params }: Props) {
                   {r.from.bannedAt ? (
                     <span className="text-slate-400">{t('zablokovaný uživatel')}</span>
                   ) : (
-                    <Link href={`/u/${encodeURIComponent(r.from.nickname)}`} className="font-semibold hover:underline">
+                    <Link href={`/@${encodeURIComponent(r.from.nickname)}`} className="font-semibold hover:underline">
                       {r.from.nickname}
                     </Link>
                   )}
@@ -187,7 +187,7 @@ export default async function RatingsPage({ params }: Props) {
                 {r.comment && <p className="mt-2 whitespace-pre-wrap">„{r.comment}“</p>}
                 {own && !r.from.bannedAt && (
                   <Link
-                    href={`/u/${encodeURIComponent(r.from.nickname)}?nahlasit=1#nahlasit`}
+                    href={`/@${encodeURIComponent(r.from.nickname)}?nahlasit=1#nahlasit`}
                     className="mt-2 inline-block text-xs text-slate-400 hover:text-red-600 hover:underline"
                   >
                     {t('Nesedí? Nahlásit')}

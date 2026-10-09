@@ -105,7 +105,7 @@ export async function refreshBadges(userId: string) {
       icon: '🏅',
       title: gained.length === 1 ? tt('Získal(a) jsi odznak {badge}!', { badge: label(gained[0]) }) : tt('Získal(a) jsi nové odznaky!'),
       body: gained.length > 1 ? gained.map(label).join(', ') : undefined,
-      url: `/u/${encodeURIComponent(user.nickname)}#odznaky`,
+      url: `/@${encodeURIComponent(user.nickname)}#odznaky`,
     })
   }
   // Pozvaný se stal sběratelem → započítat zvoucímu (a přepočítat mu Ambasadora).

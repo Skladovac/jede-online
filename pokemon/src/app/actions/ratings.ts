@@ -50,7 +50,7 @@ export async function rateUser(_: FormState, fd: FormData): Promise<FormState> {
       icon: positive ? '👍' : '👎',
       title: tt('{name} tě ohodnotil(a)', { name: user.nickname }),
       body: comment || undefined,
-      url: `/u/${encodeURIComponent(to.nickname)}/hodnoceni`,
+      url: `/@${encodeURIComponent(to.nickname)}/hodnoceni`,
     })
     // Upozornit hodnoceného (u dítěte kopie rodiči).
     await notify(
@@ -65,10 +65,10 @@ export async function rateUser(_: FormState, fd: FormData): Promise<FormState> {
         }),
         ...(comment ? [`„${esc(comment)}“`] : []),
       ],
-      { label: tt('Zobrazit hodnocení'), url: `${APP_URL}/u/${encodeURIComponent(to.nickname)}/hodnoceni` },
+      { label: tt('Zobrazit hodnocení'), url: `${APP_URL}/@${encodeURIComponent(to.nickname)}/hodnoceni` },
       to.locale,
     )
   }
-  revalidatePath(`/u/${encodeURIComponent(to.nickname)}/hodnoceni`)
+  revalidatePath('/u/[nickname]/hodnoceni', 'page')
   return { ok: existing ? t('Hodnocení jsme upravili.') : t('Díky za hodnocení!') }
 }

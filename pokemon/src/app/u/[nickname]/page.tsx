@@ -97,7 +97,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
               </>
             )}{' '}
             ·{' '}
-            <Link href={`/u/${encodeURIComponent(user.nickname)}/hodnoceni`} className="font-medium text-yellow-700 underline dark:text-yellow-400">
+            <Link href={`/@${encodeURIComponent(user.nickname)}/hodnoceni`} className="font-medium text-yellow-700 underline dark:text-yellow-400">
               {pos + neg > 0 ? t('Zobrazit hodnocení') : t('Ohodnotit')}
             </Link>
           </p>
@@ -107,7 +107,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
               <>
                 {' '}
                 · 🎁 {t('Pozval(a):')}{' '}
-                <Link href={`/u/${encodeURIComponent(inviter.nickname)}`} className="underline">
+                <Link href={`/@${encodeURIComponent(inviter.nickname)}`} className="underline">
                   {inviter.nickname}
                 </Link>
               </>
@@ -145,7 +145,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       )}
 
       <p className="mt-6 text-sm">
-        <Link href={`/u/${encodeURIComponent(user.nickname)}/chybi`} className="font-medium text-yellow-700 hover:underline dark:text-yellow-400">
+        <Link href={`/@${encodeURIComponent(user.nickname)}/chybi`} className="font-medium text-yellow-700 hover:underline dark:text-yellow-400">
           {t('Co hledá {name}', { name: user.nickname })} →
         </Link>
       </p>

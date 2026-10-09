@@ -78,7 +78,7 @@ export default async function CartPage() {
           <section key={d.id} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
             <h2 className="text-lg font-bold">
               {t('Od')}{' '}
-              <Link href={`/u/${encodeURIComponent(d.to.nickname)}`} className="hover:underline">
+              <Link href={`/@${encodeURIComponent(d.to.nickname)}`} className="hover:underline">
                 {d.to.nickname}
               </Link>
               <span className="text-sm font-normal text-slate-500"> · {d.to.city ?? d.to.region ?? t('neuvedeno')}</span>

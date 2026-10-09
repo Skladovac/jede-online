@@ -36,7 +36,7 @@ export async function applyInvite(newUserId: string) {
     icon: '🎁',
     title: tt('{name} se zaregistroval(a) přes tvou pozvánku', { name: me.nickname }),
     body: tt('Započítá se ti, až si potvrdí e-mail a přidá aspoň {n} karet do sbírky.', { n: INVITE_MIN_CARDS }),
-    url: `/u/${encodeURIComponent(me.nickname)}`,
+    url: `/@${encodeURIComponent(me.nickname)}`,
   })
 }
 
@@ -59,7 +59,7 @@ export async function countInviteIfQualified(userId: string, distinctCards: numb
     await pushNotification(u.invitedById, {
       icon: '📣',
       title: tt('Pozvánka se započítala: {name} je teď plnohodnotný sběratel!', { name: u.nickname }),
-      url: `/u/${encodeURIComponent(u.nickname)}`,
+      url: `/@${encodeURIComponent(u.nickname)}`,
     })
   }
   return u.invitedById
@@ -113,7 +113,7 @@ export async function runFollowDigest() {
             count === 1
               ? tt('{name} přidal(a) novou nabídku', { name: n.nickname })
               : tt('{name} přidal(a) {count} nových nabídek', { name: n.nickname, count }),
-          url: `/u/${encodeURIComponent(n.nickname)}`,
+          url: `/@${encodeURIComponent(n.nickname)}`,
         })
         sent++
       }

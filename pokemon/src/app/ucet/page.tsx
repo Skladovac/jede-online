@@ -36,7 +36,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <div>
           <h1 className="text-3xl font-black tracking-tight">{t('Ahoj, {name}!', { name: user.nickname })}</h1>
           {!limited && (
-            <Link href={`/u/${encodeURIComponent(user.nickname)}`} className="text-sm underline">
+            <Link href={`/@${encodeURIComponent(user.nickname)}`} className="text-sm underline">
               {t('Zobrazit můj veřejný profil')}
             </Link>
           )}

@@ -49,7 +49,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
         <h1 className="text-3xl font-black tracking-tight">{u.nickname}</h1>
         {u.bannedAt && <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">ZABLOKOVÁN</span>}
         {u.isAdmin && <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white">admin</span>}
-        <Link href={`/u/${encodeURIComponent(u.nickname)}`} className="text-sm underline">
+        <Link href={`/@${encodeURIComponent(u.nickname)}`} className="text-sm underline">
           veřejný profil
         </Link>
       </div>
