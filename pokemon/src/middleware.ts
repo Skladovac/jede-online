@@ -21,4 +21,5 @@ export function middleware(req: NextRequest) {
   return NextResponse.next()
 }
 
-export const config = { matcher: ['/@:path*', '/%40:path*', '/u/:path*'] }
+// Vzor '/@:path*' Next.js nezachytí (znak @), proto širší matcher bez statických souborů a API.
+export const config = { matcher: ['/((?!_next/|api/|img/|favicon|icon|apple-icon|robots.txt|sitemap).*)'] }
