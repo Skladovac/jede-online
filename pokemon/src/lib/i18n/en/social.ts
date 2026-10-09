@@ -245,5 +245,7 @@ const dict: Record<string, string> = {
   'Prohlédnout tržiště': 'Browse the marketplace',
   'Založit účet zdarma': 'Create a free account',
   'Prohlížet nabídky a hodnocení můžeš i bez registrace.': 'You can browse offers and ratings without signing up.',
+  'Nabízím': 'Offering',
+  'Hledám': 'Looking for',
 }
 export default dict

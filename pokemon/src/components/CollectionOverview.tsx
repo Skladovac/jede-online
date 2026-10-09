@@ -114,12 +114,19 @@ function BySet<T>({
   )
 }
 
-export async function CollectionOverview({ data, own }: { data: Overview; own: boolean }) {
+/**
+ * Přehled sbírky. `view` (veřejný profil): ukázat jen „Nabízím“ nebo jen „Hledám“ — přepínač je nad tím,
+ * statistiky a sady jdou až pod vybraný seznam.
+ */
+export async function CollectionOverview({ data, own, view }: { data: Overview; own: boolean; view?: 'nabizim' | 'hledam' }) {
   const t = await getT()
-  const { sets, offers, wanted, totals, productItems, productWants } = data
+  const { sets, offers, wanted, totals } = data
+  const showOffers = view !== 'hledam'
+  const showWanted = view !== 'nabizim'
+  const productItems = view === 'nabizim' ? data.productItems.filter((i) => i.spareQty > 0 && i.offerType) : view === 'hledam' ? [] : data.productItems
+  const productWants = view === 'nabizim' ? [] : data.productWants
   const OFFER_SHORT = { TRADE: 'vyměním', SELL: 'prodám', GIFT: 'daruji' } as const
-  return (
-    <div className="space-y-10">
+  const stats = (
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           [t('Různých karet'), totals.cards],
@@ -133,7 +140,13 @@ export async function CollectionOverview({ data, own }: { data: Overview; own: b
           </div>
         ))}
       </dl>
+  )
+  return (
+    <div className="space-y-10">
+      {!view && stats}
 
+
+      {showOffers && (
       <section>
         <h2 className="mb-3 text-xl font-bold">{t('Nabízí')} ({offers.length})</h2>
         {offers.length ? (
@@ -153,7 +166,9 @@ export async function CollectionOverview({ data, own }: { data: Overview; own: b
           </p>
         )}
       </section>
+      )}
 
+      {showWanted && (
       <section>
         <h2 className="mb-3 text-xl font-bold">{t('Chybí')} ({wanted.length})</h2>
         {wanted.length ? (
@@ -169,8 +184,9 @@ export async function CollectionOverview({ data, own }: { data: Overview; own: b
           </p>
         )}
       </section>
+      )}
 
-      {(productItems.length > 0 || productWants.length > 0 || own) && (
+      {(productItems.length > 0 || productWants.length > 0 || (own && !view)) && (
         <section>
           <h2 className="mb-3 text-xl font-bold">{t('Zapečetěné produkty')}</h2>
           {productItems.length ? (
@@ -219,6 +235,8 @@ export async function CollectionOverview({ data, own }: { data: Overview; own: b
           )}
         </section>
       )}
+
+      {view && stats}
 
       <section>
         <h2 className="mb-3 text-xl font-bold">{t('Sady')}</h2>
