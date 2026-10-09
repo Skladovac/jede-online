@@ -114,6 +114,13 @@ model User {
   acceptedTermsAt DateTime?
   topBadge        String?   @db.VarChar(24) // nejlepší odznak pro ikonku u přezdívky, např. "reliable:3"
 
+  // Pozvánky: kdo mě pozval; započítá se (odznak Ambasador) až po ověření e-mailu, 10 kartách a u dětí souhlasu rodiče.
+  invitedById     String?
+  invitedBy       User?     @relation("Invites", fields: [invitedById], references: [id], onDelete: SetNull)
+  invited         User[]    @relation("Invites")
+  inviteCountedAt DateTime?
+  followDigestAt  DateTime? // do kdy už jsme poslali souhrn nových nabídek sledovaných
+
   isAdmin     Boolean  @default(false)
   bannedAt    DateTime?
   createdAt   DateTime @default(now())
@@ -137,8 +144,11 @@ model User {
   notifications  Notification[]
   oauthAccounts  OAuthAccount[]
   badges         UserBadge[]
+  following      Follow[]       @relation("Follower")
+  followers      Follow[]       @relation("Following")
 
   @@index([country, region, city])
+  @@index([invitedById])
 }
 
 // Přihlášení: v cookie je náhodný token, v DB jen jeho SHA-256 (únik DB ≠ převzetí relací).
@@ -552,4 +562,16 @@ model UserBadge {
   updatedAt DateTime @updatedAt
 
   @@id([userId, badge])
+}
+
+// Sledování sběratele (ručně tlačítkem, nebo automaticky oboustranně po registraci přes pozvánku).
+model Follow {
+  followerId  String
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+  @@index([followingId])
 }

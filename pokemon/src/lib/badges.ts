@@ -3,6 +3,7 @@ import { cache } from 'react'
 import { prisma } from '@/lib/prisma'
 import { setProgress } from '@/lib/progress'
 import { pushNotification } from '@/lib/notifications'
+import { countInviteIfQualified } from '@/lib/social'
 import { tFor } from '@/lib/i18n/server'
 import { BADGES, BADGE_BY_ID, LEVEL_NAME, PIONEER_UNTIL, badgeScore, levelFor, type BadgeId } from '@/lib/badges-def'
 
@@ -10,10 +11,10 @@ import { BADGES, BADGE_BY_ID, LEVEL_NAME, PIONEER_UNTIL, badgeScore, levelFor, t
 export async function badgeValues(userId: string): Promise<Record<BadgeId, number>> {
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { emailVerifiedAt: true, isMinor: true, parentConsentAt: true, createdAt: true },
+    select: { emailVerifiedAt: true, isMinor: true, parentConsentAt: true, createdAt: true, invitedById: true },
   })
   const owned = { userId, quantity: { gt: 0 } }
-  const [ratings, trades, cards, jaCards, sets] = await Promise.all([
+  const [ratings, trades, cards, jaCards, sets, invites] = await Promise.all([
     // Jen ověřená hodnocení z výměn přes web.
     prisma.rating.groupBy({
       by: ['positive'],
@@ -24,6 +25,7 @@ export async function badgeValues(userId: string): Promise<Record<BadgeId, numbe
     prisma.collectionItem.groupBy({ by: ['cardId'], where: owned }),
     prisma.collectionItem.groupBy({ by: ['cardId'], where: { ...owned, card: { set: { language: 'ja' } } } }),
     prisma.card.findMany({ where: { items: { some: owned } }, select: { setId: true }, distinct: ['setId'] }),
+    prisma.user.count({ where: { invitedById: userId, inviteCountedAt: { not: null }, bannedAt: null } }),
   ])
   const pos = ratings.find((r) => r.positive)?._count ?? 0
   const neg = ratings.find((r) => !r.positive)?._count ?? 0
@@ -40,6 +42,8 @@ export async function badgeValues(userId: string): Promise<Record<BadgeId, numbe
   return {
     reliable: pos + neg > 0 && pos / (pos + neg) >= 0.9 ? pos - neg : 0,
     trader: trades,
+    ambassador: invites,
+    invited: user.invitedById ? 1 : 0,
     master,
     complete,
     collector: cards.length,
@@ -104,6 +108,9 @@ export async function refreshBadges(userId: string) {
       url: `/u/${encodeURIComponent(user.nickname)}#odznaky`,
     })
   }
+  // Pozvaný se stal sběratelem → započítat zvoucímu (a přepočítat mu Ambasadora).
+  const inviter = await countInviteIfQualified(userId, values.collector)
+  if (inviter) await refreshBadges(inviter).catch((err) => console.error('[odznaky]', err))
   return { values, levels: current }
 }
 

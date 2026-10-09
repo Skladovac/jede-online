@@ -64,6 +64,9 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
           <Link href={`/u/${nick}/chybi`} className="text-yellow-700 hover:underline dark:text-yellow-400">
             {t('Co hledám (sdílet) →')}
           </Link>
+          <Link href="/ucet#pozvi" className="text-yellow-700 hover:underline dark:text-yellow-400">
+            {t('Pozvi kamaráda →')}
+          </Link>
         </div>
         {!user.region && (
           <p className="mt-2 text-xs text-slate-500">

@@ -54,6 +54,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
             'Katalog všech anglických sad od roku 1999, vlastní sbírka, seznam chybějících karet a výměny se sběrateli z Česka a Slovenska.',
           )}
         </p>
+        {!user && (
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/trziste" className="rounded-full bg-slate-900 px-6 py-3 font-bold text-white hover:bg-slate-700 dark:bg-yellow-400 dark:text-slate-900 dark:hover:bg-yellow-300">
+              🏷️ {t('Prohlédnout tržiště')}
+            </Link>
+            <Link href="/hodnoceni" className="rounded-full border-2 border-slate-900 px-6 py-3 font-bold hover:bg-slate-100 dark:border-yellow-400 dark:hover:bg-yellow-400/10">
+              ⭐ {t('Nejlépe hodnocení sběratelé')}
+            </Link>
+            <Link href="/registrace" className="self-center px-2 font-semibold text-yellow-700 underline dark:text-yellow-400">
+              {t('Založit účet zdarma')}
+            </Link>
+          </div>
+        )}
+        {!user && <p className="mt-3 text-sm text-slate-500">{t('Prohlížet nabídky a hodnocení můžeš i bez registrace.')}</p>}
         <p className="mt-6 text-sm text-slate-500">
           {setCount} {t('sad')} · {cardCount.toLocaleString('cs-CZ')} {t('karet')}
         </p>

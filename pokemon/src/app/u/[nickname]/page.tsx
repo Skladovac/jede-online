@@ -19,6 +19,7 @@ import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO } from '@/lib/i18n/config'
 import { BadgeIcon, BadgeShelf } from '@/components/Badges'
 import { refreshBadges } from '@/lib/badges'
+import { FollowButton } from '@/components/Social'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,11 +46,17 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   const user = await getProfile((await params).nickname)
   if (!user) notFound()
 
-  const [viewer, ratings, completed] = await Promise.all([
+  const [viewer, ratings, completed, followers, inviter] = await Promise.all([
     getCurrentUser(),
     prisma.rating.groupBy({ by: ['positive'], where: { toId: user.id, hiddenAt: null, from: { bannedAt: null } }, _count: true }),
     prisma.tradeRequest.count({ where: { status: 'COMPLETED', OR: [{ fromId: user.id }, { toId: user.id }] } }),
+    prisma.follow.count({ where: { followingId: user.id } }),
+    user.invitedById ? prisma.user.findFirst({ where: { id: user.invitedById, bannedAt: null }, select: { nickname: true } }) : null,
   ])
+  const iFollow =
+    viewer && viewer.id !== user.id
+      ? !!(await prisma.follow.findUnique({ where: { followerId_followingId: { followerId: viewer.id, followingId: user.id } } }))
+      : false
   // Vlastní profil: odznaky přepočítat hned (a ukázat i ty, které ještě chybí).
   const own = viewer?.id === user.id ? await refreshBadges(user.id).catch(() => null) : null
   const pos = ratings.find((r) => r.positive)?._count ?? 0
@@ -94,6 +101,23 @@ export default async function ProfilePage({ params, searchParams }: Props) {
               {pos + neg > 0 ? t('Zobrazit hodnocení') : t('Ohodnotit')}
             </Link>
           </p>
+          <p className="mt-1 text-sm text-slate-500">
+            👀 {t('Sledujících: {count}', { count: followers })}
+            {inviter && (
+              <>
+                {' '}
+                · 🎁 {t('Pozval(a):')}{' '}
+                <Link href={`/u/${encodeURIComponent(inviter.nickname)}`} className="underline">
+                  {inviter.nickname}
+                </Link>
+              </>
+            )}
+          </p>
+          {viewer?.id !== user.id && (
+            <div className="mt-3">
+              <FollowButton userId={user.id} following={iFollow} />
+            </div>
+          )}
         </div>
       </div>
 

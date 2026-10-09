@@ -3,7 +3,7 @@
  * Úrovně: 1 bronz, 2 stříbro, 3 zlato, 4 legendární. Jednorázové odznaky mají jen úroveň 1.
  */
 
-export type BadgeId = 'reliable' | 'trader' | 'master' | 'complete' | 'collector' | 'japanese' | 'pioneer' | 'verified'
+export type BadgeId = 'reliable' | 'trader' | 'ambassador' | 'invited' | 'master' | 'complete' | 'collector' | 'japanese' | 'pioneer' | 'verified'
 
 export type BadgeDef = {
   id: BadgeId
@@ -18,11 +18,13 @@ export type BadgeDef = {
 export const BADGES: BadgeDef[] = [
   { id: 'reliable', icon: '⭐', name: 'Spolehlivý', desc: 'Kladná minus záporná hodnocení z výměn přes web (aspoň 90 % kladných)', tiers: [3, 10, 30, 100] },
   { id: 'trader', icon: '🤝', name: 'Obchodník', desc: 'Dokončené výměny přes web', tiers: [1, 10, 50, 200] },
+  { id: 'ambassador', icon: '📣', name: 'Ambasador', desc: 'Pozvaní kamarádi, kteří se stali sběrateli (ověřený e-mail a aspoň 10 karet)', tiers: [1, 5, 20, 50] },
   { id: 'master', icon: '👑', name: 'Master set', desc: 'Sada se všemi kartami ve všech variantách', tiers: [null, null, null, 1] },
   { id: 'complete', icon: '📚', name: 'Kompletní set', desc: 'Sady s hotovým base setem', tiers: [1, 5, 15, null] },
   { id: 'collector', icon: '🃏', name: 'Sběratel', desc: 'Různé karty ve sbírce', tiers: [100, 500, 2000, 5000] },
   { id: 'japanese', icon: '🗾', name: 'Japonský sběratel', desc: 'Karty z japonských sad', tiers: [50, 250, 1000, null] },
   { id: 'pioneer', icon: '🎉', name: 'Průkopník', desc: 'Registrace ve zkušebním provozu (do konce roku 2026)' },
+  { id: 'invited', icon: '🎁', name: 'Pozvaný', desc: 'Přišel na web na pozvání kamaráda' },
   { id: 'verified', icon: '✅', name: 'Ověřený', desc: 'Potvrzený e-mail (u dětí i souhlas rodiče)' },
 ]
 

@@ -21,6 +21,7 @@ import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { EMAIL_RE, NICK_RE, checkPassword, checkRegion, safeNext, str, type FormState } from '@/lib/validation'
 import { nicknameProblem } from '@/lib/nickname-filter'
 import { getLocale, getT } from '@/lib/i18n/server'
+import { applyInvite } from '@/lib/social'
 
 export async function register(_: FormState, fd: FormData): Promise<FormState> {
   const t = await getT()
@@ -89,6 +90,7 @@ export async function register(_: FormState, fd: FormData): Promise<FormState> {
   await sendVerifyEmail(email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72), next, user.locale)
   if (isMinor && parentRaw) await sendParentConsentEmail(parentEmail, user.nickname, parentRaw, user.locale)
 
+  await applyInvite(user.id)
   await createSession(user.id)
   // Nový uživatel na hlavní stránku s průvodcem „Jak začít“ (nebo zpět tam, odkud přišel).
   redirect(next ? `/ucet?vitej=1&next=${encodeURIComponent(next)}` : '/?vitej=1')
@@ -244,6 +246,7 @@ export async function completeSocialSignup(_: FormState, fd: FormData): Promise<
   if (!emailVerified) await sendVerifyEmail(email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72), null, user.locale)
   if (isMinor && parentRaw) await sendParentConsentEmail(parentEmail, user.nickname, parentRaw, user.locale)
   jar.delete(OAUTH_PENDING_COOKIE)
+  await applyInvite(user.id)
   await createSession(user.id)
   const next = safeNext(pending.next)
   redirect(next && next !== '/' ? next : '/?vitej=1')
