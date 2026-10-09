@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser, sha256 } from '@/lib/auth'
 import { str, type FormState } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
+import { refreshBadgesSafe } from '@/lib/badges'
 
 // Rodič se nepřihlašuje — autorizací je tajný odkaz z e-mailu (parentToken).
 async function childByToken(fd: FormData) {
@@ -34,6 +35,7 @@ export async function giveConsent(_: FormState, fd: FormData): Promise<FormState
       // Odkazy, které dítě už vyplnilo, schvaluje rodič zvlášť (viz níže) — souhlas s účtem je nezahrnuje.
     },
   })
+  await refreshBadgesSafe(child.id)
   revalidatePath(`/rodic/${str(fd, 'token')}`)
   return { ok: t('Děkujeme, souhlas je udělen. Účet je plně funkční.') }
 }

@@ -17,6 +17,8 @@ import { PhoneReveal } from '@/components/PhoneReveal'
 import { MatchSection } from '@/components/MatchSection'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO } from '@/lib/i18n/config'
+import { BadgeIcon, BadgeShelf } from '@/components/Badges'
+import { refreshBadges } from '@/lib/badges'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +50,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
     prisma.rating.groupBy({ by: ['positive'], where: { toId: user.id, hiddenAt: null, from: { bannedAt: null } }, _count: true }),
     prisma.tradeRequest.count({ where: { status: 'COMPLETED', OR: [{ fromId: user.id }, { toId: user.id }] } }),
   ])
+  // Vlastní profil: odznaky přepočítat hned (a ukázat i ty, které ještě chybí).
+  const own = viewer?.id === user.id ? await refreshBadges(user.id).catch(() => null) : null
   const pos = ratings.find((r) => r.positive)?._count ?? 0
   const neg = ratings.find((r) => !r.positive)?._count ?? 0
 
@@ -69,7 +73,10 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           {user.nickname.slice(0, 1).toUpperCase()}
         </span>
         <div>
-          <h1 className="text-3xl font-black tracking-tight">{user.nickname}</h1>
+          <h1 className="flex items-center gap-2 text-3xl font-black tracking-tight">
+            {user.nickname}
+            <BadgeIcon nickname={user.nickname} />
+          </h1>
           <p className="text-sm text-slate-500">
             {[user.city, user.region, t(COUNTRY_LABEL[user.country])].filter(Boolean).join(', ')} · {t('členem od')}{' '}
             {user.createdAt.toLocaleDateString(LOCALE_INFO[locale].intl, { month: 'numeric', year: 'numeric' })}
@@ -106,6 +113,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           ))}
         </div>
       )}
+
+      <BadgeShelf userId={user.id} values={own?.values} />
 
       {viewer && viewer.id !== user.id && !isLimited(viewer) && (
         <MatchSection data={await pairMatches(viewer.id, user.id)} nickname={user.nickname} />

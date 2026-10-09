@@ -5,6 +5,7 @@ import { marketEntries, type MarketTab } from '@/lib/market'
 import { COUNTRY_LABEL, REGIONS } from '@/lib/regions'
 import { cardImage, productImage } from '@/lib/format'
 import { getT } from '@/lib/i18n/server'
+import { BadgeIcon } from '@/components/Badges'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -138,8 +139,11 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
                   <p className="mt-1.5 truncate text-sm font-medium">{e.name}</p>
                   <p className="truncate text-xs text-slate-500">{e.sub}</p>
                   <p className={`truncate text-sm font-semibold ${tab.color}`}>{e.label}</p>
-                  <p className="truncate text-xs text-slate-500">
-                    {e.user.nickname} · {e.user.city ?? e.user.region ?? t('neuvedeno')}
+                  <p className="flex items-center gap-1 text-xs text-slate-500">
+                    <span className="truncate">
+                      {e.user.nickname} · {e.user.city ?? e.user.region ?? t('neuvedeno')}
+                    </span>
+                    <BadgeIcon nickname={e.user.nickname} />
                   </p>
                 </Link>
               </li>

@@ -10,6 +10,7 @@ import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { localeOf, pushNotification } from '@/lib/notifications'
 import { str, type FormState } from '@/lib/validation'
 import { getT, tFor } from '@/lib/i18n/server'
+import { refreshBadgesSafe } from '@/lib/badges'
 
 const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' } as const
 const CONDITION = { MINT: 'jako nová', LIGHT_PLAYED: 'mírně hraná', DAMAGED: 'poškozená' } as const
@@ -404,6 +405,7 @@ export async function markDone(_: FormState, fd: FormData): Promise<FormState> {
   revalidatePath(`/poptavky/${req.id}`)
   const fresh = await prisma.tradeRequest.findUnique({ where: { id: req.id }, select: { status: true } })
   const otherId = req.fromId === user.id ? req.toId : req.fromId
+  if (completed) await refreshBadgesSafe(req.fromId, req.toId)
   if (completed)
     for (const uid of [req.fromId, req.toId]) {
       const tt = tFor(await localeOf(uid))
@@ -459,6 +461,7 @@ export async function rateRequest(_: FormState, fd: FormData): Promise<FormState
     title: ttTo('{name} tě ohodnotil(a) po výměně', { name: user.nickname }),
     url: `/poptavky/${req.id}`,
   })
+  await refreshBadgesSafe(toId)
   revalidatePath(`/poptavky/${req.id}`)
   return { ok: t('Díky za hodnocení.') }
 }

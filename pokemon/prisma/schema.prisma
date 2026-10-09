@@ -112,6 +112,7 @@ model User {
   linksApprovedAt DateTime? // u nezletilých schvaluje rodič
 
   acceptedTermsAt DateTime?
+  topBadge        String?   @db.VarChar(24) // nejlepší odznak pro ikonku u přezdívky, např. "reliable:3"
 
   isAdmin     Boolean  @default(false)
   bannedAt    DateTime?
@@ -135,6 +136,7 @@ model User {
   phoneViewsGot  PhoneView[]    @relation("PhoneOwner")
   notifications  Notification[]
   oauthAccounts  OAuthAccount[]
+  badges         UserBadge[]
 
   @@index([country, region, city])
 }
@@ -536,4 +538,18 @@ model OAuthAccount {
 
   @@unique([provider, providerId])
   @@index([userId])
+}
+
+// Odznaky: úroveň 1–4 (bronz, stříbro, zlato, legendární; jednorázové mají 1). Získané zůstávají navždy,
+// jen „Spolehlivý“ se přepočítává podle hodnocení (level může klesnout, maxLevel hlídá, ať upozornění nechodí znovu).
+model UserBadge {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge     String   @db.VarChar(20)
+  level     Int
+  maxLevel  Int
+  earnedAt  DateTime @default(now()) // kdy byla dosažena aktuální úroveň
+  updatedAt DateTime @updatedAt
+
+  @@id([userId, badge])
 }

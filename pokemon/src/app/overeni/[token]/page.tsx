@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { consumeEmailToken } from '@/lib/auth'
 import { safeNext } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
+import { refreshBadgesSafe } from '@/lib/badges'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
@@ -20,7 +21,10 @@ export default async function VerifyPage({
   searchParams: Promise<{ next?: string }>
 }) {
   const userId = await consumeEmailToken((await params).token, 'VERIFY')
-  if (userId) await prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } })
+  if (userId) {
+    await prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } })
+    await refreshBadgesSafe(userId)
+  }
   // Přišel z odkazu (např. „ohodnoť mě“) → po potvrzení rovnou zpátky.
   const next = safeNext((await searchParams).next)
   if (userId && next) redirect(next)
