@@ -179,7 +179,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <h2 className="text-lg font-bold">{t('Smazat účet')}</h2>
         <p className="mb-4 mt-1 text-sm text-slate-500">{t('Smaže profil, sbírku i všechny údaje. Nejde vrátit.')}</p>
         <ActionForm action={deleteAccount} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <Field label={oauth.length ? t('Pro potvrzení zadej heslo (nebo svou přezdívku, pokud se přihlašuješ přes Google/Facebook)') : t('Pro potvrzení zadej heslo')}>
+          <Field
+            label={t('Pro potvrzení zadej heslo')}
+            hint={oauth.length ? t('Přihlašuješ se přes Google/Facebook a heslo nemáš? Nastav si ho přes „Zapomenuté heslo“ — odkaz přijde na tvůj e-mail.') : undefined}
+          >
             <PasswordInput autoComplete="current-password" />
           </Field>
           <Submit variant="danger">{t('Smazat účet')}</Submit>
