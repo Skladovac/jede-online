@@ -23,7 +23,7 @@ import { FollowButton } from '@/components/Social'
 
 export const dynamic = 'force-dynamic'
 
-type Props = { params: Promise<{ nickname: string }>; searchParams?: Promise<{ nahlasit?: string }> }
+type Props = { params: Promise<{ nickname: string }>; searchParams?: Promise<{ nahlasit?: string; ukaz?: string }> }
 
 async function getProfile(nickname: string) {
   const user = await prisma.user.findFirst({
@@ -59,6 +59,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       : false
   // Vlastní profil: odznaky přepočítat hned (a ukázat i ty, které ještě chybí).
   const own = viewer?.id === user.id ? await refreshBadges(user.id).catch(() => null) : null
+  const overview = await collectionOverview(user.id)
+  const ukaz = (await searchParams)?.ukaz
   const pos = ratings.find((r) => r.positive)?._count ?? 0
   const neg = ratings.find((r) => !r.positive)?._count ?? 0
 
@@ -150,8 +152,32 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         </Link>
       </p>
 
-      <div className="mt-6">
-        <CollectionOverview data={await collectionOverview(user.id)} own={false} />
+      <div id="karty" className="mt-6 scroll-mt-20">
+        {(() => {
+          // Přepínač Nabízím / Hledám: výchozí je to, co má uživatel neprázdné (nabídky napřed). Volba je v URL, jde sdílet.
+          const counts = { nabizim: overview.offers.length + overview.productItems.filter((i) => i.spareQty > 0 && i.offerType).length, hledam: overview.wanted.length + overview.productWants.length }
+          const view = ukaz === 'hledam' || ukaz === 'nabizim' ? ukaz : counts.nabizim || !counts.hledam ? 'nabizim' : 'hledam'
+          const tab = (id: 'nabizim' | 'hledam', label: string, active: string, idle: string) => (
+            <Link
+              href={`/@${encodeURIComponent(user.nickname)}?ukaz=${id}#karty`}
+              scroll={false}
+              aria-current={view === id ? 'page' : undefined}
+              className={`flex-1 rounded-2xl px-4 py-4 text-center text-lg font-black transition sm:text-xl ${view === id ? active : idle}`}
+            >
+              {label}
+              <span className="ml-2 rounded-full bg-black/10 px-2 py-0.5 text-sm font-bold dark:bg-white/15">{counts[id]}</span>
+            </Link>
+          )
+          return (
+            <>
+              <div className="mb-8 flex gap-3">
+                {tab('nabizim', `🏷️ ${t('Nabízím')}`, 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-200 dark:ring-blue-500/30', 'border-2 border-blue-200 bg-white text-blue-700 hover:bg-blue-50 dark:border-blue-500/30 dark:bg-slate-900 dark:text-blue-300')}
+                {tab('hledam', `🔍 ${t('Hledám')}`, 'bg-orange-500 text-white shadow-lg ring-4 ring-orange-200 dark:ring-orange-500/30', 'border-2 border-orange-200 bg-white text-orange-700 hover:bg-orange-50 dark:border-orange-500/30 dark:bg-slate-900 dark:text-orange-300')}
+              </div>
+              <CollectionOverview data={overview} own={false} view={view} />
+            </>
+          )
+        })()}
       </div>
 
       {viewer && viewer.id !== user.id && (
