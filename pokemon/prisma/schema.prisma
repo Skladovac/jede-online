@@ -134,6 +134,7 @@ model User {
   phoneViewsMade PhoneView[]    @relation("PhoneViewer")
   phoneViewsGot  PhoneView[]    @relation("PhoneOwner")
   notifications  Notification[]
+  oauthAccounts  OAuthAccount[]
 
   @@index([country, region, city])
 }
@@ -522,4 +523,17 @@ model CardPrice {
   reverseEur Decimal? @db.Decimal(10, 2)
 
   @@id([cardId, day])
+}
+
+// Přihlášení přes Google / Facebook (propojený účet). Heslo uživatel mít nemusí.
+model OAuthAccount {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   String // google | facebook
+  providerId String // id uživatele u poskytovatele
+  createdAt  DateTime @default(now())
+
+  @@unique([provider, providerId])
+  @@index([userId])
 }

@@ -7,15 +7,16 @@ import { ActionForm } from '@/components/ActionForm'
 import { Field, Submit, inputCls } from '@/components/ui'
 import { PasswordInput } from '@/components/PasswordInput'
 import { getT } from '@/lib/i18n/server'
+import { SocialButtons } from '@/components/SocialButtons'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
   return { title: t('Přihlášení') }
 }
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; chyba?: string }> }) {
   if (await getCurrentUser()) redirect('/')
-  const { next } = await searchParams
+  const { next, chyba } = await searchParams
   const t = await getT()
   return (
     <main className="mx-auto max-w-md px-4 py-10">
@@ -26,6 +27,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           {t('Zaregistruj se')}
         </Link>
       </p>
+      {chyba && (
+        <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800 dark:bg-red-500/10 dark:text-red-200">
+          {chyba === 'blokovan' ? t('Tento účet je zablokovaný.') : t('Přihlášení přes Google nebo Facebook se nepovedlo. Zkus to prosím znovu.')}
+        </p>
+      )}
+      <SocialButtons next={next} />
       <ActionForm action={login}>
         <input type="hidden" name="next" value={next ?? ''} />
         <Field label={t('E-mail')}>

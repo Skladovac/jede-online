@@ -47,6 +47,14 @@ export default async function PrivacyPage() {
           )}
         </p>
 
+        <p>
+          {t('Přihlášení přes Google nebo Facebook: dostaneme jen vaše jméno, e-mail a identifikátor účtu u poskytovatele, nic dalšího (žádné příspěvky, přátele ani fotky). Propojení zrušíte smazáním účtu; postup najdete na stránce')}{' '}
+          <a href="/smazani-dat" className="underline">
+            {t('Smazání údajů')}
+          </a>
+          .
+        </p>
+
         <h2>{t('Děti')}</h2>
         <p>
           {t(

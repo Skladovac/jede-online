@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { startTransition, useActionState, useState } from 'react'
-import { register } from '@/app/actions/auth'
+import { completeSocialSignup, register } from '@/app/actions/auth'
 import { Alert, Checkbox, Field, inputCls } from '@/components/ui'
 import { needsParentConsent, CONSENT_AGE, type CountryCode } from '@/lib/age'
 import { REGIONS } from '@/lib/regions'
@@ -11,8 +11,9 @@ import { useT } from '@/lib/i18n/client'
 
 const MONTHS = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec']
 
-export function RegisterForm({ next }: { next?: string | null }) {
-  const [state, action, pending] = useActionState(register, undefined)
+/** social = dokončení registrace po přihlášení přes Google/Facebook (bez hesla, e-mail z účtu poskytovatele). */
+export function RegisterForm({ next, social }: { next?: string | null; social?: { email: string | null; provider: string } }) {
+  const [state, action, pending] = useActionState(social ? completeSocialSignup : register, undefined)
   const t = useT()
   const f = state?.fields ?? {}
   const [country, setCountry] = useState<CountryCode>((f.country as CountryCode) || 'CZ')
@@ -35,12 +36,24 @@ export function RegisterForm({ next }: { next?: string | null }) {
     >
       {next && <input type="hidden" name="next" value={next} />}
       <Alert state={state} />
-      <Field label={t('E-mail')}>
-        <input name="email" type="email" required autoComplete="email" defaultValue={f.email} className={inputCls} />
-      </Field>
-      <Field label={t('Heslo')} hint={t('Aspoň 8 znaků.')}>
-        <PasswordInput autoComplete="new-password" minLength={8} />
-      </Field>
+      {social?.email ? (
+        <p className="text-sm">
+          {t('E-mail z účtu {provider}:', { provider: social.provider === 'google' ? 'Google' : 'Facebook' })}{' '}
+          <strong>{social.email}</strong>
+        </p>
+      ) : (
+        <Field
+          label={t('E-mail')}
+          hint={social ? t('Facebook nám e-mail neposlal. Zadej ho, pošleme ti odkaz pro potvrzení.') : undefined}
+        >
+          <input name="email" type="email" required autoComplete="email" defaultValue={f.email} className={inputCls} />
+        </Field>
+      )}
+      {!social && (
+        <Field label={t('Heslo')} hint={t('Aspoň 8 znaků.')}>
+          <PasswordInput autoComplete="new-password" minLength={8} />
+        </Field>
+      )}
       <Field label={t('Přezdívka')} hint={t('Uvidí ji ostatní. Nepiš skutečné jméno a příjmení.')}>
         <input name="nickname" required minLength={3} maxLength={20} defaultValue={f.nickname} className={inputCls} />
       </Field>
@@ -121,7 +134,7 @@ export function RegisterForm({ next }: { next?: string | null }) {
         disabled={pending}
         className="rounded-xl bg-slate-900 px-5 py-2.5 font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50 dark:bg-yellow-400 dark:text-slate-900 dark:hover:bg-yellow-300"
       >
-        {pending ? t('Moment…') : t('Zaregistrovat se')}
+        {pending ? t('Moment…') : social ? t('Dokončit registraci') : t('Zaregistrovat se')}
       </button>
     </form>
   )

@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { OAUTH_PENDING_COOKIE, verify, type OAuthProfile } from '@/lib/oauth'
 import {
   consumeEmailToken,
   createEmailToken,
@@ -167,4 +168,83 @@ export async function resendParent(): Promise<FormState> {
   await prisma.user.update({ where: { id: user.id }, data: { parentToken: sha256(raw) } })
   await sendParentConsentEmail(user.parentEmail, user.nickname, raw, user.locale)
   return { ok: t('E-mail rodiči jsme poslali znovu. Ať se podívá i do složky Spam / Nevyžádaná pošta.') }
+}
+
+/**
+ * Dokončení registrace po přihlášení přes Google/Facebook: stejná pravidla jako běžná registrace
+ * (přezdívka, věk, souhlas rodiče u dětí), jen bez hesla. E-mail ověřený poskytovatelem je rovnou potvrzený.
+ */
+export async function completeSocialSignup(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
+  const jar = await cookies()
+  const pending = verify<OAuthProfile & { next: string }>(jar.get(OAUTH_PENDING_COOKIE)?.value)
+  if (!pending) return { error: t('Přihlášení vypršelo. Zkus to prosím znovu přes Google nebo Facebook.') }
+  const fields = Object.fromEntries(
+    ['email', 'nickname', 'birthYear', 'birthMonth', 'country', 'region', 'city', 'parentEmail'].map((k) => [k, str(fd, k)]),
+  )
+  const fail = (error: string): FormState => ({ error, fields })
+  if (!rateLimit(`register:${await clientIp()}`, 5, 60 * 60_000)) return fail(t('Příliš mnoho registrací. Zkus to za hodinu.'))
+
+  const email = (pending.email ?? fields.email).toLowerCase()
+  const emailVerified = !!pending.email && pending.emailVerified
+  const country = fields.country as CountryCode
+  const birthYear = Number(fields.birthYear)
+  const birthMonth = Number(fields.birthMonth)
+  const thisYear = new Date().getFullYear()
+
+  if (!EMAIL_RE.test(email)) return fail(t('Zadej platný e-mail.'))
+  if (!NICK_RE.test(fields.nickname)) return fail(t('Přezdívka: 3–20 znaků, jen písmena, číslice, _ a -.'))
+  if (await nicknameProblem(fields.nickname)) return fail(t('Tahle přezdívka není povolená. Zvol prosím jinou.'))
+  if (country !== 'CZ' && country !== 'SK') return fail(t('Vyber zemi.'))
+  if (!(birthYear >= thisYear - 100 && birthYear <= thisYear - 4) || !(birthMonth >= 1 && birthMonth <= 12))
+    return fail(t('Zadej rok a měsíc narození.'))
+  if (!checkRegion(country, fields.region)) return fail(t('Vyber kraj ze seznamu.'))
+  if (fields.city.length > 60) return fail(t('Název města je příliš dlouhý.'))
+  if (fd.get('terms') !== 'on') return fail(t('Pro registraci je potřeba souhlasit s pravidly a zásadami ochrany údajů.'))
+
+  const isMinor = needsParentConsent(birthYear, birthMonth, country)
+  const parentEmail = fields.parentEmail.toLowerCase()
+  if (isMinor) {
+    if (!EMAIL_RE.test(parentEmail)) return fail(t('Zadej e-mail rodiče — bez jeho souhlasu nebude účet plně fungovat.'))
+    if (parentEmail === email) return fail(t('E-mail rodiče musí být jiný než tvůj.'))
+  }
+  const taken = await prisma.user.findFirst({
+    where: { OR: [{ email }, { nickname: { equals: fields.nickname, mode: 'insensitive' } }] },
+    select: { email: true },
+  })
+  if (taken)
+    return fail(
+      taken.email === email
+        ? t('Tento e-mail už je zaregistrovaný. Přihlas se heslem a účet se při příštím přihlášení přes Google/Facebook propojí.')
+        : t('Tahle přezdívka už je obsazená.'),
+    )
+
+  const parentRaw = isMinor ? randomToken() : null
+  const user = await prisma.user.create({
+    data: {
+      email,
+      // Bez hesla: náhodný otisk, přihlašuje se přes Google/Facebook (heslo si může nastavit přes „Zapomenuté heslo“).
+      passwordHash: await hashPassword(randomToken()),
+      emailVerifiedAt: emailVerified ? new Date() : null,
+      nickname: fields.nickname,
+      birthYear,
+      birthMonth,
+      country,
+      region: fields.region || null,
+      city: fields.city || null,
+      isMinor,
+      parentEmail: isMinor ? parentEmail : null,
+      parentToken: parentRaw ? sha256(parentRaw) : null,
+      indexable: !isMinor && fd.get('indexable') === 'on',
+      acceptedTermsAt: new Date(),
+      locale: await getLocale(),
+      oauthAccounts: { create: { provider: pending.provider, providerId: pending.providerId } },
+    },
+  })
+  if (!emailVerified) await sendVerifyEmail(email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72), null, user.locale)
+  if (isMinor && parentRaw) await sendParentConsentEmail(parentEmail, user.nickname, parentRaw, user.locale)
+  jar.delete(OAUTH_PENDING_COOKIE)
+  await createSession(user.id)
+  const next = safeNext(pending.next)
+  redirect(next && next !== '/' ? next : '/?vitej=1')
 }
