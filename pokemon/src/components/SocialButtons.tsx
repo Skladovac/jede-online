@@ -3,7 +3,9 @@ import { getT } from '@/lib/i18n/server'
 
 /** Tlačítka „Pokračovat přes Google / Facebook“ (zobrazí se jen poskytovatelé s nastavenými klíči). */
 export async function SocialButtons({ next }: { next?: string | null }) {
-  const providers = enabledProviders()
+  // FACEBOOK_BUTTON_HIDDEN=1: tlačítko skryté (čeká se na schválení aplikace u Mety), přihlášení přes
+  // /api/auth/facebook ale funguje dál — kvůli kontrole aplikace (App Review).
+  const providers = enabledProviders().filter((p) => !(p === 'facebook' && process.env.FACEBOOK_BUTTON_HIDDEN === '1'))
   if (!providers.length) return null
   const t = await getT()
   const q = next ? `?next=${encodeURIComponent(next)}` : ''
