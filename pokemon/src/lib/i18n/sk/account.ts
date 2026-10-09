@@ -279,5 +279,6 @@ const dict: Record<string, string> = {
   'Špatné heslo nebo přezdívka.': 'Nesprávne heslo alebo prezývka.',
   'Propojené přihlášení:': 'Prepojené prihlásenie:',
   'Pro potvrzení zadej heslo (nebo svou přezdívku, pokud se přihlašuješ přes Google/Facebook)': 'Na potvrdenie zadaj heslo (alebo svoju prezývku, ak sa prihlasuješ cez Google/Facebook)',
+  'Přihlašuješ se přes Google/Facebook a heslo nemáš? Nastav si ho přes „Zapomenuté heslo“ — odkaz přijde na tvůj e-mail.': 'Prihlasuješ sa cez Google/Facebook a heslo nemáš? Nastav si ho cez „Zabudnuté heslo“ — odkaz príde na tvoj e-mail.',
 }
 export default dict
