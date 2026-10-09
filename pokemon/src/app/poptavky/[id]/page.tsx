@@ -50,7 +50,7 @@ export default async function RequestDetail({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-black tracking-tight">
           {iAmBuyer ? t('Žádost o výměnu pro') : t('Žádost o výměnu od')}{' '}
-          <Link href={`/u/${encodeURIComponent(other.nickname)}`} className="hover:underline">
+          <Link href={`/@${encodeURIComponent(other.nickname)}`} className="hover:underline">
             {other.nickname}
           </Link>
         </h1>
@@ -60,7 +60,7 @@ export default async function RequestDetail({
       </div>
       <p className="-mt-3 text-xs">
         <Link
-          href={`/u/${encodeURIComponent(other.nickname)}?nahlasit=1#nahlasit`}
+          href={`/@${encodeURIComponent(other.nickname)}?nahlasit=1#nahlasit`}
           className="text-slate-400 hover:text-red-600 hover:underline"
         >
           {t('Něco nesedí? Nahlásit {name}', { name: other.nickname })}

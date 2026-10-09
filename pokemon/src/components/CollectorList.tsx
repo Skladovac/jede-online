@@ -13,7 +13,7 @@ export async function CollectorList({ collectors }: { collectors: Collector[] })
       {collectors.map((c) => (
         <li key={c.user.id}>
           <Link
-            href={`/u/${encodeURIComponent(c.user.nickname)}#shoda`}
+            href={`/@${encodeURIComponent(c.user.nickname)}#shoda`}
             className="block rounded-2xl border border-slate-200 bg-white p-4 hover:border-yellow-400 dark:border-slate-800 dark:bg-slate-900"
           >
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

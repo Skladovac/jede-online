@@ -23,7 +23,7 @@ export default async function TopRatedPage() {
           {rows.map((r, i) => (
             <li key={r.user.id}>
               <Link
-                href={`/u/${encodeURIComponent(r.user.nickname)}/hodnoceni`}
+                href={`/@${encodeURIComponent(r.user.nickname)}/hodnoceni`}
                 className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 hover:border-yellow-400 dark:border-slate-800 dark:bg-slate-900"
               >
                 <span className={`w-8 text-center text-lg font-black ${i < 3 ? 'text-yellow-500' : 'text-slate-400'}`}>

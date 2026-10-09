@@ -14,7 +14,7 @@ export async function toggleFollow(fd: FormData) {
   const user = await getCurrentUser()
   const target = await prisma.user.findUnique({ where: { id: str(fd, 'userId') } })
   if (!target) return
-  const back = `/u/${encodeURIComponent(target.nickname)}`
+  const back = `/@${encodeURIComponent(target.nickname)}`
   if (!user) redirect(`/prihlaseni?next=${encodeURIComponent(back)}`)
   if (target.id === user.id || target.bannedAt || isLimited(target) || isLimited(user) || user.bannedAt) return
 
@@ -28,9 +28,9 @@ export async function toggleFollow(fd: FormData) {
     await pushNotification(target.id, {
       icon: '👀',
       title: tt('{name} tě začal(a) sledovat', { name: user.nickname }),
-      url: `/u/${encodeURIComponent(user.nickname)}`,
+      url: `/@${encodeURIComponent(user.nickname)}`,
     })
   }
-  revalidatePath(back)
+  revalidatePath('/u/[nickname]', 'page')
   revalidatePath('/ucet')
 }

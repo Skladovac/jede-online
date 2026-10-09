@@ -72,7 +72,7 @@ export async function FollowingList({ userId }: { userId: string }) {
           {rows.map(({ following: f }) => (
             <li key={f.nickname}>
               <Link
-                href={`/u/${encodeURIComponent(f.nickname)}`}
+                href={`/@${encodeURIComponent(f.nickname)}`}
                 className="flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1 text-sm hover:border-yellow-400 dark:border-slate-700"
               >
                 <span className="font-semibold">{f.nickname}</span>

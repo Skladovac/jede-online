@@ -48,7 +48,7 @@ export default async function MyCollectionPage() {
             {t('Zkopíruj odkaz na seznam karet, které ti chybí, a vlož ho třeba na Facebook nebo do skupiny sběratelů.')}
           </p>
           <CopyLink
-            url={`https://pokemon.jede.online/u/${encodeURIComponent(user.nickname)}/chybi`}
+            url={`https://pokemon.jede.online/@${encodeURIComponent(user.nickname)}/chybi`}
             title={t('Co hledá {name}', { name: user.nickname })}
           />
         </div>

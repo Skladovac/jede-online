@@ -71,7 +71,7 @@ export default async function WantedPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <Link href={`/u/${encodeURIComponent(nick)}`} className="text-sm text-slate-500 hover:underline">
+      <Link href={`/@${encodeURIComponent(nick)}`} className="text-sm text-slate-500 hover:underline">
         ← {t('Profil {name}', { name: nick })}
       </Link>
       <h1 className="mt-3 text-3xl font-black tracking-tight">{t('Co hledá {name}', { name: nick })}</h1>
@@ -81,7 +81,7 @@ export default async function WantedPage({ params }: Props) {
           viewer.id !== d.user.id && (
             <>
               {t('Máš něco z toho? Označ to v sadě jako „Navíc“ a')}{' '}
-              <Link href={`/u/${encodeURIComponent(nick)}#shoda`} className="underline">
+              <Link href={`/@${encodeURIComponent(nick)}#shoda`} className="underline">
                 {t('podívej se na shodu')}
               </Link>
               .

@@ -45,10 +45,10 @@ export function UserMenu({ nickname, isAdmin }: { nickname: string; isAdmin: boo
         <Link href="/sbirka" className={item}>
           {t('Moje sbírka')}
         </Link>
-        <Link href={`/u/${encodeURIComponent(nickname)}`} className={item}>
+        <Link href={`/@${encodeURIComponent(nickname)}`} className={item}>
           {t('Můj veřejný profil')}
         </Link>
-        <Link href={`/u/${encodeURIComponent(nickname)}/hodnoceni`} className={item}>
+        <Link href={`/@${encodeURIComponent(nickname)}/hodnoceni`} className={item}>
           {t('Moje hodnocení')}
         </Link>
         <Link href="/sberatele" className={item}>

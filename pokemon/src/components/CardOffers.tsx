@@ -42,13 +42,13 @@ export async function CardOffers({ cardId }: { cardId: string }) {
           {offers.map((o) => (
             <li key={o.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
               <div className="min-w-0 flex-1">
-                <Link href={`/u/${encodeURIComponent(o.user.nickname)}`} className="font-semibold hover:underline">
+                <Link href={`/@${encodeURIComponent(o.user.nickname)}`} className="font-semibold hover:underline">
                   {o.user.nickname}
                 </Link>{' '}
                 <BadgeIcon nickname={o.user.nickname} />
                 {viewer && viewer.id !== o.userId && (
                   <Link
-                    href={`/u/${encodeURIComponent(o.user.nickname)}?nahlasit=1#nahlasit`}
+                    href={`/@${encodeURIComponent(o.user.nickname)}?nahlasit=1#nahlasit`}
                     className="ml-2 text-xs text-slate-400 hover:text-red-600 hover:underline"
                   >
                     {t('nahlásit')}

@@ -55,13 +55,13 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
           {buyCount > 0 && ` · ${t('chceš koupit {count}', { count: buyCount })}`}
         </p>
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
-          <Link href={`/u/${nick}`} className="text-yellow-700 hover:underline dark:text-yellow-400">
+          <Link href={`/@${nick}`} className="text-yellow-700 hover:underline dark:text-yellow-400">
             {t('Můj veřejný profil →')}
           </Link>
-          <Link href={`/u/${nick}/hodnoceni`} className="text-yellow-700 hover:underline dark:text-yellow-400">
+          <Link href={`/@${nick}/hodnoceni`} className="text-yellow-700 hover:underline dark:text-yellow-400">
             {t('Moje hodnocení →')}
           </Link>
-          <Link href={`/u/${nick}/chybi`} className="text-yellow-700 hover:underline dark:text-yellow-400">
+          <Link href={`/@${nick}/chybi`} className="text-yellow-700 hover:underline dark:text-yellow-400">
             {t('Co hledám (sdílet) →')}
           </Link>
           <Link href="/ucet#pozvi" className="text-yellow-700 hover:underline dark:text-yellow-400">

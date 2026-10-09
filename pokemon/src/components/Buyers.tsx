@@ -34,7 +34,7 @@ async function BuyersList({ rows, kind }: { rows: Row[]; kind: 'card' | 'product
             {rows.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <Link href={`/u/${encodeURIComponent(r.user.nickname)}`} className="font-semibold hover:underline">
+                  <Link href={`/@${encodeURIComponent(r.user.nickname)}`} className="font-semibold hover:underline">
                     {r.user.nickname}
                   </Link>{' '}
                   <BadgeIcon nickname={r.user.nickname} />
