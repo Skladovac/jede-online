@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { getCurrentUser, isLimited } from '@/lib/auth'
 import { changePassword, deleteAccount, updateProfile } from '@/app/actions/account'
@@ -21,6 +22,7 @@ export const dynamic = 'force-dynamic'
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ vitej?: string; heslo?: string; next?: string }> }) {
   const user = await getCurrentUser()
   if (!user) redirect('/prihlaseni?next=/ucet')
+  const oauth = await prisma.oAuthAccount.findMany({ where: { userId: user.id }, select: { provider: true } })
   const { vitej, heslo } = await searchParams
   const next = safeNext((await searchParams).next)
   const limited = isLimited(user)
@@ -148,6 +150,11 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           {t('Přihlašuješ se e-mailem')} <strong className="break-all">{user.email}</strong>
           {user.emailVerifiedAt ? ' ✓' : ` ${t('(zatím nepotvrzený)')}`}
         </p>
+        {oauth.length > 0 && (
+          <p className="-mt-3 mb-5 text-sm text-slate-600 dark:text-slate-300">
+            {t('Propojené přihlášení:')} {oauth.map((o) => (o.provider === 'google' ? 'Google' : 'Facebook')).join(', ')}
+          </p>
+        )}
         <h3 className="mb-3 font-semibold">{t('Změnit heslo')}</h3>
         <ActionForm action={changePassword} className="space-y-3">
           <Field label={t('Současné heslo')}>
@@ -172,7 +179,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <h2 className="text-lg font-bold">{t('Smazat účet')}</h2>
         <p className="mb-4 mt-1 text-sm text-slate-500">{t('Smaže profil, sbírku i všechny údaje. Nejde vrátit.')}</p>
         <ActionForm action={deleteAccount} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <Field label={t('Pro potvrzení zadej heslo')}>
+          <Field label={oauth.length ? t('Pro potvrzení zadej heslo (nebo svou přezdívku, pokud se přihlašuješ přes Google/Facebook)') : t('Pro potvrzení zadej heslo')}>
             <PasswordInput autoComplete="current-password" />
           </Field>
           <Submit variant="danger">{t('Smazat účet')}</Submit>

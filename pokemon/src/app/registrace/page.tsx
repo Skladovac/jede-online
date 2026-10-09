@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { RegisterForm } from './RegisterForm'
 import { safeNext } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
+import { SocialButtons } from '@/components/SocialButtons'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
@@ -24,6 +25,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
           {t('Přihlas se')}
         </Link>
       </p>
+      <SocialButtons next={next} />
       <RegisterForm next={next} />
     </main>
   )

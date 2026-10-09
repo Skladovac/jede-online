@@ -98,7 +98,11 @@ export async function deleteAccount(_: FormState, fd: FormData): Promise<FormSta
   const user = await getCurrentUser()
   if (!user) redirect('/prihlaseni')
   if (!rateLimit(`delete:${user.id}`, 5, 60 * 60_000)) return { error: t('Příliš mnoho pokusů. Zkus to za hodinu.') }
-  if (!(await verifyPassword(str(fd, 'password'), user.passwordHash))) return { error: t('Špatné heslo.') }
+  const input = str(fd, 'password')
+  // Kdo se přihlašuje jen přes Google/Facebook (heslo nezná), potvrdí smazání svou přezdívkou.
+  const social = (await prisma.oAuthAccount.count({ where: { userId: user.id } })) > 0
+  const ok = (await verifyPassword(input, user.passwordHash)) || (social && input.trim().toLowerCase() === user.nickname.toLowerCase())
+  if (!ok) return { error: social ? t('Špatné heslo nebo přezdívka.') : t('Špatné heslo.') }
   await destroySession()
   await prisma.user.delete({ where: { id: user.id } }) // kaskádou smaže sbírku, relace, tokeny…
   redirect('/?smazano=1')

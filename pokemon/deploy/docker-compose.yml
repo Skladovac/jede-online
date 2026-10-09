@@ -25,6 +25,12 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       CRON_SECRET: ${CRON_SECRET}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      # Přihlášení přes Google / Facebook (bez klíčů se tlačítka nezobrazí) a podpis dočasných cookie.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
+      FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET:-}
+      AUTH_SECRET: ${AUTH_SECRET:-}
       GIT_COMMIT: ${GIT_COMMIT:-unknown}
     ports:
       - "127.0.0.1:3400:3000"
