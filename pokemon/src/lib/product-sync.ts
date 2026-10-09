@@ -83,8 +83,11 @@ const price = (p?: CmPrice) => {
   return v ? new Prisma.Decimal(v.toFixed(2)) : null
 }
 
-const cardEur = (...c: (number | null | undefined)[]) => {
-  const v = c.find((x) => x && x > 0)
+const cardEur = (trend?: number | null, avg7?: number | null, avg30?: number | null) => {
+  // U málo prodávaných karet (nové promo) bývá trend nesmyslně nízký (0,02 € při průměru 0,50 €) → vzít průměr.
+  const avg = avg7 && avg7 > 0 ? avg7 : avg30
+  const t = trend && avg && trend < avg * 0.25 ? null : trend
+  const v = [t, avg7, avg30].find((x) => x && x > 0)
   return v ? new Prisma.Decimal(v.toFixed(2)) : null
 }
 

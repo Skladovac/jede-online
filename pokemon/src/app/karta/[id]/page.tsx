@@ -93,7 +93,8 @@ export default async function CardPage({ params }: Props) {
             <dt className="text-slate-500">{t('Číslo')}</dt>
             <dd className="font-mono">
               {card.set.code ? `${card.set.code} ` : ''}
-              {card.localId}/{card.set.officialCount}
+              {card.localId}
+              {card.set.officialCount ? `/${card.set.officialCount}` : ''}
             </dd>
             {card.rarity && (
               <>
