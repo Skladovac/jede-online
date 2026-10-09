@@ -76,7 +76,7 @@ export async function refreshBadges(userId: string) {
     await prisma.userBadge.upsert({
       where: { userId_badge: { userId, badge: def.id } },
       create: { userId, badge: def.id, level, maxLevel },
-      update: { level, maxLevel, ...(level > row!.level ? { earnedAt: new Date() } : {}) },
+      update: { level, maxLevel, ...(row && level > row.level ? { earnedAt: new Date() } : {}) },
     })
   }
 
