@@ -12,6 +12,7 @@ import { Checkbox, Field, Submit, inputCls } from '@/components/ui'
 import { COUNTRY_LABEL, REGIONS } from '@/lib/regions'
 import { PasswordInput } from '@/components/PasswordInput'
 import { getT } from '@/lib/i18n/server'
+import { FollowingList, InviteBox } from '@/components/Social'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
@@ -85,6 +86,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </ActionForm>
         </Notice>
       )}
+
+      {!limited && <InviteBox userId={user.id} nickname={user.nickname} />}
+      {!limited && <FollowingList userId={user.id} />}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
         <h2 className="mb-5 text-lg font-bold">{t('Profil')}</h2>

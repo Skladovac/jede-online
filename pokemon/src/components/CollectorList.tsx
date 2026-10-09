@@ -22,6 +22,11 @@ export async function CollectorList({ collectors }: { collectors: Collector[] })
               </span>
               <span className="font-bold">{c.user.nickname}</span>
               <BadgeIcon nickname={c.user.nickname} />
+              {c.followed && (
+                <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white dark:bg-yellow-400 dark:text-slate-900">
+                  👀 {t('Sleduješ')}
+                </span>
+              )}
               {c.trade && (
                 <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800 dark:bg-green-400/10 dark:text-green-300">
                   🔁 {t('Výměna možná')}

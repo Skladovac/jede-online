@@ -55,13 +55,18 @@ export type Collector = {
   owned: number // má jen ve sbírce
   theyWant: number // shání z toho, co mám navíc
   trade: boolean // výměna možná oběma směry
+  followed: boolean // sleduji ho
   score: number
   rating: { pos: number; neg: number }
   preview: { id: string; name: string; imageUrl: string | null; offered: boolean }[]
 }
 
 export async function findCollectors(viewerId: string, place: Place, limit = 50) {
-  const mine = await myLists(viewerId)
+  const [mine, follows] = await Promise.all([
+    myLists(viewerId),
+    prisma.follow.findMany({ where: { followerId: viewerId }, select: { followingId: true } }),
+  ])
+  const followed = new Set(follows.map((f) => f.followingId))
   const users = visibleUser(viewerId, place)
   const [theirCards, theirProducts, wantMyCards, wantMyProducts] = await Promise.all([
     mine.wantCards.length
@@ -111,10 +116,19 @@ export async function findCollectors(viewerId: string, place: Place, limit = 50)
       const owned = a.owned.size
       const theyWant = a.theyWant.size
       const trade = offered > 0 && theyWant > 0
-      return { userId, a, offered, owned, theyWant, trade, score: offered * W_OFFERED + owned * W_OWNED + (trade ? theyWant * W_TRADE : 0) }
+      return {
+        userId,
+        a,
+        offered,
+        owned,
+        theyWant,
+        trade,
+        followed: followed.has(userId),
+        score: offered * W_OFFERED + owned * W_OWNED + (trade ? theyWant * W_TRADE : 0),
+      }
     })
     .filter((r) => r.offered + r.owned > 0)
-    .sort((x, y) => Number(y.trade) - Number(x.trade) || y.score - x.score)
+    .sort((x, y) => Number(y.followed) - Number(x.followed) || Number(y.trade) - Number(x.trade) || y.score - x.score)
   const total = ranked.length
   const top = ranked.slice(0, limit)
   if (!top.length) return { collectors: [] as Collector[], total, mine }
@@ -137,6 +151,7 @@ export async function findCollectors(viewerId: string, place: Place, limit = 50)
     owned: r.owned,
     theyWant: r.theyWant,
     trade: r.trade,
+    followed: r.followed,
     score: r.score,
     rating: {
       pos: ratings.find((x) => x.toId === r.userId && x.positive)?._count ?? 0,

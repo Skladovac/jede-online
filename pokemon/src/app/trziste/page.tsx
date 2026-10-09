@@ -6,6 +6,7 @@ import { COUNTRY_LABEL, REGIONS } from '@/lib/regions'
 import { cardImage, productImage } from '@/lib/format'
 import { getT } from '@/lib/i18n/server'
 import { BadgeIcon } from '@/components/Badges'
+import { followingNicknames } from '@/lib/social'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -32,6 +33,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
   const setId = sp.sada || null
   // Stránku omezíme (velké číslo by načetlo celou databázi).
   const page = Math.min(50, Math.max(1, Math.floor(Number(sp.strana)) || 1))
+  const following = await followingNicknames()
   const [{ entries, hasMore }, sets] = await Promise.all([
     marketEntries(tab.id, place, setId, page),
     prisma.cardSet.findMany({
@@ -145,6 +147,9 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
                     </span>
                     <BadgeIcon nickname={e.user.nickname} />
                   </p>
+                  {following.has(e.user.nickname) && (
+                    <p className="mt-0.5 text-xs font-semibold text-slate-700 dark:text-yellow-300">👀 {t('Sleduješ')}</p>
+                  )}
                 </Link>
               </li>
             )
