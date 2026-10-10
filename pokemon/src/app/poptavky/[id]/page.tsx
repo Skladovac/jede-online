@@ -8,7 +8,9 @@ import { Submit, inputCls } from '@/components/ui'
 import { RequestItems } from '@/components/RequestItems'
 import { STATUS } from '@/lib/request-status'
 import { TAG_LABEL } from '@/lib/rating-tags'
-import { getT } from '@/lib/i18n/server'
+import { getT, getLocale } from '@/lib/i18n/server'
+import { LOCALE_INFO } from '@/lib/i18n/config'
+import { TradeChat } from '@/components/TradeChat'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -41,6 +43,13 @@ export default async function RequestDetail({
   const myRating = req.ratings.find((r) => r.fromId === user.id)
   const theirRating = req.ratings.find((r) => r.fromId !== user.id)
   const { odeslano } = await searchParams
+
+  // Chat: zprávy k výměně (od přijetí). Co mi přišlo, je otevřením stránky přečtené.
+  const chatOpen = req.status === 'ACCEPTED' || req.status === 'COMPLETED'
+  const messages = chatOpen ? await prisma.tradeMessage.findMany({ where: { requestId: req.id }, orderBy: { createdAt: 'asc' }, take: 500 }) : []
+  if (messages.some((m) => m.fromId !== user.id && !m.readAt))
+    await prisma.tradeMessage.updateMany({ where: { requestId: req.id, fromId: { not: user.id }, readAt: null }, data: { readAt: new Date() } })
+  const locale = await getLocale()
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
@@ -110,6 +119,20 @@ export default async function RequestDetail({
             {t('Domluvte se na předání nebo zaslání. Web neřeší platby. Neposílej peníze předem někomu, komu nevěříš, a u dětí nechte domluvu na rodičích.')}
           </p>
         </section>
+      )}
+
+      {chatOpen && !other.bannedAt && (
+        <TradeChat
+          requestId={req.id}
+          otherName={other.nickname}
+          canWrite={req.status === 'ACCEPTED'}
+          messages={messages.map((m) => ({
+            id: m.id,
+            mine: m.fromId === user.id,
+            body: m.body,
+            at: m.createdAt.toLocaleString(LOCALE_INFO[locale].intl, { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' }),
+          }))}
+        />
       )}
 
       <div className="flex flex-wrap gap-3">

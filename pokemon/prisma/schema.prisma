@@ -147,6 +147,7 @@ model User {
   oauthAccounts  OAuthAccount[]
   badges         UserBadge[]
   activeDays     UserActiveDay[]
+  tradeMessages  TradeMessage[]
   following      Follow[]       @relation("Follower")
   followers      Follow[]       @relation("Following")
 
@@ -280,8 +281,9 @@ model TradeRequest {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  items   TradeRequestItem[]
-  ratings Rating[]
+  items    TradeRequestItem[]
+  ratings  Rating[]
+  messages TradeMessage[]
 
   @@index([toId, status])
   @@index([fromId, status])
@@ -586,4 +588,18 @@ model UserActiveDay {
   user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([day, userId])
+}
+
+// Zprávy k výměně (chat). Psát jde až po přijetí žádosti; e-mail příjemci jen u první nepřečtené zprávy.
+model TradeMessage {
+  id        String       @id @default(cuid())
+  requestId String
+  request   TradeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  fromId    String
+  from      User         @relation(fields: [fromId], references: [id], onDelete: Cascade)
+  body      String       @db.VarChar(1000)
+  readAt    DateTime?
+  createdAt DateTime     @default(now())
+
+  @@index([requestId, createdAt])
 }
