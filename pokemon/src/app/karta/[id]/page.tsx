@@ -16,6 +16,7 @@ import { ensureEurCzk } from '@/lib/fx'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO } from '@/lib/i18n/config'
 import { TypeBadge } from '@/components/TypeBadge'
+import { setDisplayName } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     prisma.wantItem.count({ where: { cardId: card.id, buy: true } }),
   ])
   const price = card.priceEur ? formatEur(card.priceEur) : null
-  const title = t('{name} ({set} {num}) – cena a kdo ji nabízí', { name: card.name, set: card.set.name, num: card.localId })
+  const title = t('{name} ({set} {num}) – cena a kdo ji nabízí', { name: card.name, set: setDisplayName(card.set), num: card.localId })
   const description = [
     price && t('Orientační cena {price}.', { price }),
     offers ? t('Nabízí ji {n} sběratelů z Česka a Slovenska.', { n: offers }) : t('Najdi sběratele, kteří ji nabízejí.'),
@@ -72,7 +73,7 @@ export default async function CardPage({ params }: Props) {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <Link href={setHref} className="text-sm text-subtle hover:underline">
-        ← {card.set.name}
+        ← {setDisplayName(card.set)}
       </Link>
       <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,360px)_1fr]">
         {img ? (
@@ -91,7 +92,7 @@ export default async function CardPage({ params }: Props) {
             <dt className="text-subtle">{t('Sada')}</dt>
             <dd>
               <Link href={setHref} className="font-medium hover:underline">
-                {card.set.name}
+                {setDisplayName(card.set)}
               </Link>
             </dd>
             <dt className="text-subtle">{t('Číslo')}</dt>

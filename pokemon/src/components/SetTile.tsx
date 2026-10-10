@@ -3,6 +3,7 @@ import { setLogo } from '@/lib/format'
 import { CardBack } from '@/components/CardBack'
 import { ProgressMeter, panelInteractive } from '@/components/design'
 import { getT } from '@/lib/i18n/server'
+import { setDisplayName } from '@/lib/format'
 
 type Props = {
   id: string
@@ -39,7 +40,7 @@ export async function SetTile({ id, name, code, logoUrl, officialCount, cardCoun
         )}
       </div>
       <div className="flex flex-1 flex-col">
-        <p className="font-semibold leading-snug text-fg">{name}</p>
+        <p className="font-semibold leading-snug text-fg">{setDisplayName({ id, name })}</p>
         <p className="mt-1 text-xs tabular-nums text-muted">
           {[code, releaseDate?.getFullYear(), t('{n} karet', { n: count })].filter(Boolean).join(' · ')}
         </p>
