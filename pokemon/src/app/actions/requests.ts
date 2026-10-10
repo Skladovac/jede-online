@@ -483,3 +483,36 @@ export async function reportUser(_: FormState, fd: FormData): Promise<FormState>
   )
   return { ok: t('Díky, nahlášení jsme dostali a podíváme se na to.') }
 }
+
+/**
+ * „Připravit výměnu v košíku“ z návrhu na profilu: jeho karty dá do košíku a moje karty navíc k nim přidá jako
+ * protinabídku. Pak se otevře košík, kde jde výměnu upravit a odeslat (nic se neodesílá samo).
+ */
+export async function applyTradeProposal(fd: FormData) {
+  const user = await requireUser()
+  const otherId = str(fd, 'otherId')
+  const getIds = fd.getAll('get').map(String).slice(0, 12)
+  const giveIds = fd.getAll('give').map(String).slice(0, 12)
+  const [theirs, mine] = await Promise.all([
+    prisma.collectionItem.findMany({
+      where: { id: { in: getIds }, userId: otherId, spareQty: { gt: 0 }, offerType: { not: null }, hiddenAt: null },
+      include: { ...itemInclude, user: true },
+    }),
+    prisma.collectionItem.findMany({ where: { id: { in: giveIds }, userId: user.id, spareQty: { gt: 0 } }, include: itemInclude }),
+  ])
+  if (!theirs.length || !theirs.every((i) => visible(i.user)) || otherId === user.id) redirect('/kosik')
+  const draft = await draftFor(user.id, otherId)
+  for (const i of theirs) {
+    const exists = await prisma.tradeRequestItem.findFirst({ where: { requestId: draft.id, collectionItemId: i.id, fromRequester: false } })
+    if (!exists) await prisma.tradeRequestItem.create({ data: { requestId: draft.id, collectionItemId: i.id, fromRequester: false, ...snapshot(i) } })
+  }
+  for (const m of mine) {
+    const exists = await prisma.tradeRequestItem.findFirst({ where: { requestId: draft.id, collectionItemId: m.id, fromRequester: true } })
+    if (!exists)
+      await prisma.tradeRequestItem.create({
+        data: { requestId: draft.id, collectionItemId: m.id, fromRequester: true, ...snapshot(m), offerType: 'TRADE', priceCzk: null },
+      })
+  }
+  revalidatePath('/', 'layout')
+  redirect('/kosik')
+}

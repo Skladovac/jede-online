@@ -253,5 +253,13 @@ const dict: Record<string, string> = {
   '{name} nabízí {card}: {type}': '{name} offers {card}: {type}',
   'Hlídáš ji do {max} Kč.': 'You are watching it up to {max} CZK.',
   'Máš ji v seznamu „chci koupit“.': 'It is on your “want to buy” list.',
+  'Návrh férové výměny': 'Fair trade suggestion',
+  'Podle orientačních cen z Cardmarketu. Před odesláním ho v košíku můžeš upravit.': 'Based on indicative Cardmarket prices. You can adjust it in the cart before sending.',
+  'Dostaneš': 'You get',
+  'Dáš {name}': 'You give {name}',
+  'Hodnota je vyrovnaná.': 'The value is balanced.',
+  'Dostaneš o {n} Kč víc.': 'You get {n} CZK more.',
+  'Dáš o {n} Kč víc.': 'You give {n} CZK more.',
+  'Připravit výměnu v košíku': 'Prepare the trade in your cart',
 }
 export default dict

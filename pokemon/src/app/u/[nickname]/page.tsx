@@ -15,6 +15,8 @@ import { pairMatches } from '@/lib/matches'
 import { isAdult } from '@/lib/age'
 import { PhoneReveal } from '@/components/PhoneReveal'
 import { MatchSection } from '@/components/MatchSection'
+import { TradeProposal } from '@/components/TradeProposal'
+import { tradeProposal } from '@/lib/trade-proposal'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO } from '@/lib/i18n/config'
 import { BadgeIcon, BadgeShelf } from '@/components/Badges'
@@ -156,7 +158,11 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       <BadgeShelf userId={user.id} values={own?.values} />
 
       {viewer && viewer.id !== user.id && !isLimited(viewer) && (
-        <MatchSection data={await pairMatches(viewer.id, user.id)} nickname={user.nickname} />
+        <MatchSection
+          data={await pairMatches(viewer.id, user.id)}
+          nickname={user.nickname}
+          proposal={await tradeProposal(viewer.id, user.id).then((p) => (p ? <TradeProposal proposal={p} otherId={user.id} nickname={user.nickname} /> : null))}
+        />
       )}
 
       <p className="mt-6 text-sm">
