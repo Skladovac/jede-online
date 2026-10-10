@@ -36,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0d131c',
+  themeColor: '#1d4e89',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -44,8 +44,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const dict = dictFor(locale)
   const theme = (await cookies()).get('theme')?.value
   return (
-    // Vzhled: výchozí tmavý, světlý jen když si ho uživatel přepnul (cookie „theme“ z ThemeToggle).
-    <html lang={LOCALE_INFO[locale].htmlLang} className={theme === 'light' ? '' : 'dark'}>
+    // Vzhled: výchozí světlý (Pokémon modrá + žlutá), tmavý jen když si ho uživatel přepnul (cookie „theme“ z ThemeToggle).
+    <html lang={LOCALE_INFO[locale].htmlLang} className={theme === 'dark' ? 'dark' : ''}>
       <body className="min-h-dvh bg-base pb-[calc(3.5rem+env(safe-area-inset-bottom))] text-fg antialiased sm:pb-0">
         <I18nProvider locale={locale} dict={dict}>
         <SiteHeader />

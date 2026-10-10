@@ -10,7 +10,7 @@ import { CardImg } from '@/components/CardImg'
 import { setProgress } from '@/lib/progress'
 import { portfolio } from '@/lib/portfolio'
 import { cardImage } from '@/lib/format'
-import { ProgressMeter, SectionHeader, StatCard, btnPrimary, btnSecondary, container, linkAccent, panel, panelInteractive } from '@/components/design'
+import { Pokeball, ProgressMeter, SectionHeader, StatCard, btnPrimary, btnSecondary, container, linkAccent, panel, panelInteractive } from '@/components/design'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO, type TFunc } from '@/lib/i18n/config'
 
@@ -64,14 +64,24 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
         <GuestHero t={t} setCount={setCount} cardCount={cardCount} previewSetId={latest[0]?.id} />
       )}
 
-      <div className={`${container} space-y-16 pb-8 sm:space-y-20`}>
-        {!user && <WhyUse t={t} />}
+      {!user && (
+        <div className={`${container} py-14 sm:py-20`}>
+          <WhyUse t={t} />
+        </div>
+      )}
 
-        {user && <Matches userId={user.id} region={user.region} t={t} />}
+      {user && (
+        <div className={`${container} py-12 sm:py-16`}>
+          <Matches userId={user.id} region={user.region} t={t} />
+        </div>
+      )}
 
+      <div className={`${container} pb-16 sm:pb-24`}>
         <LatestOffers note={priceNote} />
+      </div>
 
-        <section>
+      <section className="texture-dots border-y border-line bg-surface py-16 sm:py-24">
+        <div className={container}>
           <SectionHeader title={t('Nejnovější sady')} href="/sady" linkLabel={t('Všechny sady')} />
           {latest.length ? (
             <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:gap-4 lg:grid-cols-4">
@@ -82,89 +92,89 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
           ) : (
             <p className="text-muted">{t('Katalog se právě načítá. Zkus to za pár minut.')}</p>
           )}
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   )
 }
 
-/** Návštěvník: dvousloupcový hero s náhledem „alba“ z obrázků karet nejnovější sady. */
+/** Návštěvník: hero s kartami „v ruce“ (skutečné obrázky z nejnovější sady) a velkým jemným Pokéballem v pozadí. */
 async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; setCount: number; cardCount: number; previewSetId?: string }) {
   const preview = previewSetId
     ? await prisma.card.findMany({
         where: { setId: previewSetId, imageUrl: { not: null } },
         orderBy: { priceEur: { sort: 'desc', nulls: 'last' } },
         select: { id: true, name: true, imageUrl: true },
-        take: 4,
+        take: 5,
       })
     : []
+  // Vějíř karet: mírné natočení a posun, prostřední karta nahoře.
+  const fan = [
+    'left-[2%] top-[18%] -rotate-[9deg] z-10',
+    'left-[20%] top-[8%] -rotate-[4deg] z-20',
+    'left-[38%] top-[4%] rotate-[1deg] z-30',
+    'left-[56%] top-[9%] rotate-[5deg] z-20',
+    'left-[72%] top-[19%] rotate-[10deg] z-10',
+  ]
   return (
-    <section className="border-b border-line">
-      <div className={`${container} grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:py-24`}>
+    <section className="relative overflow-hidden border-b border-line">
+      {/* Velký abstraktní Pokéball — patrný až na druhý pohled. */}
+      <Pokeball className="pointer-events-none absolute -right-40 top-1/2 h-[420px] w-[420px] -translate-y-1/2 text-brand-blue-dark opacity-[0.045] sm:h-[560px] sm:w-[560px] lg:-right-24 lg:h-[720px] lg:w-[720px] dark:text-white dark:opacity-[0.05]" />
+      <div className={`${container} relative grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:py-24`}>
         <div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="rounded-md bg-accent-soft px-2 py-1 font-bold tracking-wider text-accent">BETA</span>
-            <span className="text-muted">{t('Komunitní projekt · zdarma a bez reklam')}</span>
+            <span className="rounded-md bg-brand-yellow px-2 py-1 font-extrabold tracking-wider text-brand-blue-deep">BETA</span>
+            <span className="font-medium text-muted">{t('Fan project · zdarma · bez reklam')}</span>
           </div>
-          <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-subtle">{t('Správce sbírky Pokémon TCG')}</p>
-          <h1 className="mt-3 max-w-2xl text-4xl font-black leading-[1.08] tracking-tight text-fg sm:text-5xl lg:text-[56px]">
-            {t('Měj přehled o své sbírce a najdi karty, které ti chybí.')}
+          <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-blue dark:text-accent">
+            <Pokeball className="h-3.5 w-3.5" /> {t('Pokémon TCG fan project')}
+          </p>
+          <h1 className="mt-4 max-w-2xl text-4xl font-black leading-[1.06] tracking-tight text-brand-blue-deep sm:text-5xl lg:text-[58px] dark:text-white">
+            {t('Tvoje Pokémon sbírka.')}
+            <br />
+            <span className="text-brand-blue dark:text-brand-yellow">{t('Na jednom místě.')}</span>
           </h1>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-            {t('Katalog všech anglických sad od roku 1999, vlastní sbírka, seznam chybějících karet a výměny se sběrateli z Česka a Slovenska.')}
+            {t('Eviduj karty, doplňuj sety, sleduj ceny a obchoduj s dalšími sběrateli z Česka a Slovenska.')}
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link href="/registrace" className={btnPrimary}>
-              {t('Založit účet zdarma')}
+              {t('Začít sbírat')}
             </Link>
-            <Link href="/trziste" className={btnSecondary}>
-              {t('Prohlédnout tržiště')}
+            <Link href="/sady" className={btnSecondary}>
+              {t('Procházet karty')}
             </Link>
-            <Link href="/hodnoceni" className={`${linkAccent} inline-flex min-h-11 items-center px-1 text-sm`}>
-              {t('Nejlépe hodnocení sběratelé')} →
+            <Link href="/trziste" className={`${linkAccent} inline-flex min-h-11 items-center px-1 text-sm font-semibold`}>
+              {t('Tržiště')} →
             </Link>
           </div>
-          <p className="mt-3 text-sm text-subtle">{t('Prohlížet nabídky a hodnocení můžeš i bez registrace.')}</p>
-          <dl className="mt-8 flex gap-3">
-            {[
-              [t('sad'), setCount],
-              [t('karet'), cardCount],
-            ].map(([label, value]) => (
-              <div key={label} className={`${panel} px-4 py-3`}>
-                <dd className="text-xl font-bold tabular-nums text-fg">{num(value as number)}</dd>
-                <dt className="text-xs text-muted">{label}</dt>
-              </div>
-            ))}
-          </dl>
+          <ul className="mt-8 flex flex-wrap gap-2.5 text-xs font-bold uppercase tracking-wide">
+            <li className={`${panel} flex items-center gap-2 px-3.5 py-2`}>
+              <span className="text-base tabular-nums text-brand-blue-deep dark:text-white">{num(setCount)}</span>
+              <span className="text-muted">{t('sad')}</span>
+            </li>
+            <li className={`${panel} flex items-center gap-2 px-3.5 py-2`}>
+              <span className="text-base tabular-nums text-brand-blue-deep dark:text-white">{num(cardCount)}</span>
+              <span className="text-muted">{t('karet')}</span>
+            </li>
+            <li className={`${panel} flex items-center gap-2 px-3.5 py-2`}>
+              <span aria-hidden className="h-2 w-2 rounded-full bg-brand-red" />
+              <span className="text-muted">{t('Ceny z Cardmarketu')}</span>
+            </li>
+          </ul>
         </div>
 
         {preview.length >= 3 && (
-          <div className="relative hidden sm:block" aria-hidden>
-            <div className="pointer-events-none absolute inset-0 -z-0 rounded-[24px] bg-[radial-gradient(closest-side,var(--glow),transparent)]" />
-            <div className={`${panel} relative mx-auto max-w-md p-5`}>
-              <div className="mb-4 flex items-center justify-between text-xs text-muted">
-                <span className="font-semibold text-fg">{t('Ukázka alba')}</span>
-                <span className="tabular-nums">3 / 4</span>
+          <div className="relative mx-auto hidden aspect-[5/4] w-full max-w-xl sm:block" aria-hidden>
+            <div className="pointer-events-none absolute inset-[8%] rounded-full bg-[radial-gradient(closest-side,var(--glow),transparent)]" />
+            {preview.map((c, i) => (
+              <div
+                key={c.id}
+                className={`absolute aspect-[63/88] w-[28%] overflow-hidden rounded-xl bg-surface shadow-[0_14px_30px_rgba(20,35,60,0.22)] ring-1 ring-black/5 transition-transform duration-200 hover:-translate-y-1.5 ${fan[i + (preview.length === 3 ? 1 : 0)]}`}
+              >
+                <CardImg src={cardImage(c.imageUrl)} alt={c.name} eager />
               </div>
-              <div className="grid grid-cols-4 gap-2.5">
-                {preview.map((c, i) => (
-                  <div
-                    key={c.id}
-                    className={`aspect-[63/88] overflow-hidden rounded-md bg-surface transition duration-200 hover:-translate-y-0.5 ${i === preview.length - 1 ? 'opacity-35 grayscale' : ''}`}
-                  >
-                    <CardImg src={cardImage(c.imageUrl)} alt={c.name} />
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 space-y-3">
-                <ProgressMeter owned={83} total={128} label="Base" />
-                <div className="flex gap-2 text-[11px] font-semibold">
-                  <span className="rounded-md bg-[color-mix(in_srgb,var(--positive)_14%,transparent)] px-2 py-1 text-positive">✓ {t('Mám')}</span>
-                  <span className="rounded-md bg-[color-mix(in_srgb,var(--warning)_16%,transparent)] px-2 py-1 text-warning">● {t('Chybí')}</span>
-                  <span className="rounded-md bg-accent-soft px-2 py-1 text-accent">⇄ {t('Navíc')}</span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         )}
       </div>
@@ -210,8 +220,9 @@ async function UserDashboard({
     .slice(0, 4)
 
   return (
-    <section className="border-b border-line">
-      <div className={`${container} py-10 sm:py-14`}>
+    <section className="relative overflow-hidden border-b border-line">
+      <Pokeball className="pointer-events-none absolute -right-32 -top-24 h-[420px] w-[420px] text-brand-blue-dark opacity-[0.04] dark:text-white dark:opacity-[0.05]" />
+      <div className={`${container} relative py-10 sm:py-14`}>
         {vitej && (
           <p className="mb-6 rounded-panel border border-line bg-[color-mix(in_srgb,var(--positive)_10%,transparent)] p-4 text-sm text-fg">
             {t(
@@ -221,7 +232,7 @@ async function UserDashboard({
         )}
         <GettingStarted userId={user.id} nickname={user.nickname} emailVerified={!!user.emailVerifiedAt} />
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="text-3xl font-black tracking-tight text-fg sm:text-4xl">{t('Vítej zpět, {name}', { name: user.nickname })}</h1>
+          <h1 className="text-3xl font-black tracking-tight text-fg sm:text-4xl">{t('Ahoj, {name}', { name: user.nickname })}</h1>
           <Link href="/sbirka" className={`${linkAccent} inline-flex min-h-11 items-center text-sm`}>
             {t('Moje sbírka')} →
           </Link>
@@ -235,7 +246,7 @@ async function UserDashboard({
 
         {collecting.length > 0 && (
           <div className="mt-10">
-            <h2 className="mb-4 text-xl font-bold tracking-tight text-fg">{t('Pokračuj ve sbírání')}</h2>
+            <h2 className="mb-4 text-xl font-bold tracking-tight text-fg">{t('Rozpracované sady')}</h2>
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {collecting.map((s) => (
                 <li key={s.id}>
@@ -279,26 +290,26 @@ async function Matches({ userId, region, t }: { userId: string; region: string |
 function WhyUse({ t }: { t: TFunc }) {
   const items = [
     {
-      title: t('Přehled o sbírce'),
+      title: t('Spravuj svoji sbírku'),
       text: t('Víš přesně, co máš a co ti ještě chybí.'),
       icon: <path d="M4 5h16v14H4zM4 9h16M9 9v10" />,
     },
     {
-      title: t('Ceny z trhu'),
+      title: t('Sleduj ceny'),
       text: t('Ceny karet z Cardmarketu, aktualizované jednou denně.'),
       icon: <path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6" />,
     },
     {
-      title: t('Výměny se sběrateli'),
-      text: t('Najdi sběratele z Česka a Slovenska.'),
+      title: t('Obchoduj s komunitou'),
+      text: t('Prodávej a vyměňuj karty s dalšími sběrateli z Česka a Slovenska.'),
       icon: <path d="M7 7h11l-3-3M17 17H6l3 3" />,
     },
   ]
   return (
-    <section aria-label={t('Proč pokemon.jede.online')} className="grid gap-3 pt-12 sm:grid-cols-3 sm:gap-4 sm:pt-16">
+    <section aria-label={t('Proč pokemon.jede.online')} className="grid gap-4 sm:grid-cols-3">
       {items.map((i) => (
-        <div key={i.title} className={`${panel} flex gap-4 p-5`}>
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
+        <div key={i.title} className={`${panelInteractive} flex gap-4 p-6`}>
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-blue text-white">
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               {i.icon}
             </svg>

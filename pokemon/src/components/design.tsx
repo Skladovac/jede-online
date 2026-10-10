@@ -1,20 +1,25 @@
 import Link from 'next/link'
 
 /**
- * Sdílené stavební prvky nového designu (collector dashboard): panel, nadpis sekce, statistika, štítek, tlačítka.
+ * Sdílené stavební prvky designu (Pokémon TCG fan web): panel, nadpis sekce, statistika, štítek, tlačítka, Pokéball.
  * Barvy jsou z design tokenů (globals.css), takže fungují ve tmavém i světlém vzhledu.
  */
 
 export const container = 'mx-auto w-full max-w-page px-4 sm:px-6'
 
 /** Panel / karta: jednotné pozadí, rámeček a zaoblení. `interactive` = jemný hover (rámeček + posun o 2 px). */
-export const panel = 'rounded-panel border border-line bg-card'
-export const panelInteractive = `${panel} transition duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:bg-card-hover`
+export const panel = 'rounded-panel border border-line bg-card shadow-soft'
+export const panelInteractive = `${panel} transition duration-200 hover:-translate-y-0.5 hover:border-line-hover`
 
+/** Hlavní CTA: Pokémon žlutá s tmavě modrým textem (kontrast). */
 export const btnPrimary =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-panel bg-accent-strong px-5 py-2.5 font-semibold text-on-accent transition-colors duration-200 hover:bg-accent-hover'
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-[11px] bg-accent-strong px-5 py-2.5 font-bold text-on-accent shadow-sm transition-colors duration-200 hover:bg-accent-hover'
+/** Sekundární: modré tlačítko. */
+export const btnBlue =
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-[11px] bg-brand-blue px-5 py-2.5 font-semibold text-white transition-colors duration-200 hover:bg-brand-blue-dark'
+/** Obrys: bílé/průhledné s modrým okrajem. */
 export const btnSecondary =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-panel border border-line-strong bg-card px-5 py-2.5 font-semibold text-fg transition-colors duration-200 hover:bg-card-hover'
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-[11px] border-2 border-brand-blue bg-card px-5 py-2.5 font-semibold text-brand-blue transition-colors duration-200 hover:bg-accent-soft dark:border-accent dark:bg-transparent dark:text-accent'
 export const linkAccent = 'font-medium text-accent hover:underline'
 
 export function SectionHeader({ title, href, linkLabel, sub }: { title: string; href?: string; linkLabel?: string; sub?: React.ReactNode }) {
@@ -47,6 +52,10 @@ export function StatCard({ label, value, sub, tone }: { label: string; value: Re
 
 const BADGE = {
   accent: 'bg-accent-soft text-accent',
+  blue: 'bg-brand-blue text-white',
+  yellow: 'bg-brand-yellow text-brand-blue-deep',
+  green: 'bg-[#22a06b] text-white',
+  red: 'bg-brand-red text-white',
   positive: 'bg-[color-mix(in_srgb,var(--positive)_14%,transparent)] text-positive',
   warning: 'bg-[color-mix(in_srgb,var(--warning)_16%,transparent)] text-warning',
   neutral: 'bg-surface text-muted',
@@ -66,11 +75,26 @@ export function ProgressMeter({ owned, total, label }: { owned: number; total: n
           {label ? `${label} ` : ''}
           <span className="font-semibold text-fg">{owned}</span> / {total}
         </span>
-        <span>{pct.toLocaleString('cs-CZ', { maximumFractionDigits: 1 })} %</span>
+        <span>{pct >= 100 ? '✓ ' : ''}{pct.toLocaleString('cs-CZ', { maximumFractionDigits: 1 })} %</span>
       </div>
-      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={owned}>
-        <div className="h-full rounded-full bg-positive" style={{ width: `${Math.min(100, pct)}%` }} />
+      {/* Modrý podklad, žlutý postup; hotová sada zeleně (a s ✓, ne jen barvou). */}
+      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--pokemon-blue)_16%,transparent)]" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={owned}>
+        <div className={`h-full rounded-full ${pct >= 100 ? 'bg-positive' : 'bg-brand-yellow'}`} style={{ width: `${Math.min(100, pct)}%` }} />
       </div>
     </div>
+  )
+}
+
+/**
+ * Pokéball jako jemný geometrický motiv (jen obrys, čisté SVG). Barva z `currentColor`, průhlednost řeší rodič.
+ */
+export function Pokeball({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 200 200" className={className} fill="none" stroke="currentColor" aria-hidden focusable="false">
+      <circle cx="100" cy="100" r="94" strokeWidth="6" />
+      <path d="M6 100h62M132 100h62" strokeWidth="6" />
+      <circle cx="100" cy="100" r="30" strokeWidth="6" />
+      <circle cx="100" cy="100" r="14" strokeWidth="5" />
+    </svg>
   )
 }
