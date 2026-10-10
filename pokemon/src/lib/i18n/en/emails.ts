@@ -104,5 +104,15 @@ const dict: Record<string, string> = {
     '<small>You can turn these emails off in <a href="{url}">My account</a>.</small>',
   'Zobrazit, kdo to nabízí': 'See who\'s offering it',
   'Otevřít moji sbírku': 'Open my collection',
+  'Pošli mi v neděli odpoledne týdenní souhrn (nové nabídky, sledující, hodnocení, zájem o moje karty).': 'Send me a weekly summary on Sunday afternoon (new offers, followers, ratings, interest in my cards).',
+  'Nové nabídky karet, které ti chybí ({n})': 'New offers of cards you are missing ({n})',
+  '…a další na webu.': '…and more on the site.',
+  'Noví sledující: {names}': 'New followers: {names}',
+  'Nová hodnocení: 👍 {pos} · 👎 {neg}': 'New ratings: 👍 {pos} · 👎 {neg}',
+  'Tvoje nabídky ({offers}): žádosti o výměnu za týden {requests}, v košíku je má teď {carts} lidí.': 'Your offers ({offers}): trade requests this week {requests}, currently in {carts} people’s carts.',
+  'Týdenní souhrn vypneš v Můj účet.': 'You can turn off the weekly summary in My account.',
+  'Tvůj týden na pokemon.jede.online': 'Your week on pokemon.jede.online',
+  'Ahoj {name}, tohle se za poslední týden stalo kolem tvé sbírky:': 'Hi {name}, here is what happened around your collection this week:',
+  'Otevřít web': 'Open the site',
 }
 export default dict
