@@ -7,6 +7,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { str, type FormState } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
 import { searchCards, searchCardsById } from '@/lib/search'
+import { formatEur } from '@/lib/format'
 import { notifyDeals } from '@/lib/deals'
 import { readCardPhoto, visionEnabled } from '@/lib/card-vision'
 import { rateLimit } from '@/lib/rate-limit'
@@ -307,9 +308,9 @@ export async function toggleWantForm(_: FormState, fd: FormData): Promise<FormSt
 
 // ── Rychlé přidání karty číslem (Moje sbírka) ──
 
-export type QuickHit = { id: string; name: string; number: string; set: string; imageUrl: string | null; owned: number }
+export type QuickHit = { id: string; name: string; number: string; set: string; imageUrl: string | null; owned: number; price?: string | null }
 export type QuickBatch = { added: (QuickHit & { qty: number })[]; ambiguous: { q: string; hits: QuickHit[] }[]; notFound: string[] }
-export type QuickAddState = { added?: QuickHit; hits?: QuickHit[]; batch?: QuickBatch; error?: string; q?: string }
+export type QuickAddState = { added?: QuickHit; hits?: QuickHit[]; batch?: QuickBatch; suggest?: QuickHit; error?: string; q?: string }
 
 async function toHits(userId: string, cards: Awaited<ReturnType<typeof searchCards>>): Promise<QuickHit[]> {
   const owned = await prisma.collectionItem.groupBy({
@@ -324,6 +325,7 @@ async function toHits(userId: string, cards: Awaited<ReturnType<typeof searchCar
     set: c.set.name,
     imageUrl: c.imageUrl,
     owned: owned.find((o) => o.cardId === c.id)?._sum.quantity ?? 0,
+    price: formatEur(c.priceEur),
   }))
 }
 
@@ -430,8 +432,8 @@ export async function bulkOffer(_: FormState, fd: FormData): Promise<FormState> 
 }
 
 /**
- * Přidání karty z fotky: model přečte jméno, kód sady a číslo, pak stejné hledání jako u „Přidej kartu číslem“.
- * Jedna jistá shoda se rovnou přidá, víc shod se nabídne k výběru. Limit 200 fotek denně na uživatele.
+ * Karta z fotky: model přečte jméno, kód sady a číslo, pak stejné hledání jako u „Přidej kartu číslem“.
+ * Výsledek se jen ukáže (obrázek, sada, cena) a uživatel potvrdí „Přidat do alba“. Limit 200 fotek denně na uživatele.
  */
 export async function quickAddPhoto(_: QuickAddState, fd: FormData): Promise<QuickAddState> {
   const t = await getT()
@@ -467,13 +469,9 @@ export async function quickAddPhoto(_: QuickAddState, fd: FormData): Promise<Qui
       const same = cards.filter((c) => c.name.toLowerCase() === nameKey)
       if (same.length) cards = same
     }
-    if (cards.length === 1) {
-      await addPiece(user.id, cards[0].id)
-      revalidatePath('/sbirka')
-      const [hit] = await toHits(user.id, cards)
-      return { added: hit, q: recognized }
-    }
-    return { hits: await toHits(user.id, cards), q: recognized }
+    // Nic se nepřidává samo: první (nejpravděpodobnější) shodu nabídneme k potvrzení, ostatní jako „jiná karta“.
+    const hits = await toHits(user.id, cards)
+    return { suggest: hits[0], hits: hits.slice(1), q: recognized }
   }
   return { error: t('Přečetli jsme „{text}“, ale v katalogu jsme ji nenašli. Zkus číslo napsat ručně.', { text: recognized }) }
 }

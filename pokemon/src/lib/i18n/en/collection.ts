@@ -114,5 +114,12 @@ const dict: Record<string, string> = {
   '📷 Vyfoť celou kartu zepředu — web přečte jméno a číslo a kartu přidá.': '📷 Photograph the whole card from the front — we read the name and number and add it.',
   'Čtu kartu z fotky…': 'Reading the card from the photo…',
   'Rozpoznáno: {text}': 'Recognised: {text}',
+  'Na fotce je': 'This is',
+  'Cena zatím neznámá': 'Price not known yet',
+  'Už máš {n} ks': 'You already have {n}',
+  'Přidat do alba': 'Add to album',
+  'Vyfotit znovu': 'Retake photo',
+  'Není to ona? Vyber jinou:': 'Not this one? Pick another:',
+  '📷 Vyfoť celou kartu zepředu — web ji pozná, ukáže cenu a zeptá se, jestli ji přidat.': '📷 Photograph the whole card from the front — we recognise it, show the price and ask whether to add it.',
 }
 export default dict
