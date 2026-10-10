@@ -30,7 +30,7 @@ export async function LatestOffers({ take = 6, note }: { take?: number; note?: R
       user: { select: { id: true, nickname: true } },
     },
     orderBy: { offeredAt: { sort: 'desc', nulls: 'last' } },
-    take: 60,
+    take: 400,
   })
   const perUser = new Map<string, number>()
   const offers = recent
