@@ -64,11 +64,3 @@ export function parseTopBadge(v: string | null | undefined) {
   return def ? { def, level: Number(lvl) || 1 } : null
 }
 
-/** Barvy úrovní (rámeček odznaku). */
-export const LEVEL_STYLE = [
-  'border-slate-300 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800',
-  'border-amber-700/50 bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200',
-  'border-slate-400 bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-100',
-  'border-yellow-400 bg-yellow-100 text-yellow-900 dark:bg-yellow-400/15 dark:text-yellow-200',
-  'border-fuchsia-400 bg-gradient-to-br from-fuchsia-100 to-sky-100 text-fuchsia-900 dark:from-fuchsia-500/20 dark:to-sky-500/20 dark:text-fuchsia-100',
-] as const
