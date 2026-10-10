@@ -48,9 +48,9 @@ export default async function AdminUsers({
           name="q"
           defaultValue={q}
           placeholder="Přezdívka nebo e-mail (i rodiče)"
-          className="w-full max-w-md rounded-full border border-slate-300 bg-white px-4 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+          className="w-full max-w-md rounded-full border border-line-strong bg-card px-4 py-2 text-sm"
         />
-        <button className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white dark:bg-yellow-400 dark:text-slate-900">
+        <button className="rounded-full bg-accent-strong px-4 py-2 text-sm font-semibold text-on-accent">
           Hledat
         </button>
       </form>
@@ -59,15 +59,15 @@ export default async function AdminUsers({
           <Link
             key={k}
             href={`/admin/uzivatele?filtr=${k}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
-            className={`rounded-full px-3 py-1 ${filtr === k ? 'bg-slate-900 text-white dark:bg-yellow-400 dark:text-slate-900' : 'border border-slate-300 dark:border-slate-700'}`}
+            className={`rounded-full px-3 py-1 ${filtr === k ? 'bg-accent-strong text-on-accent' : 'border border-line-strong'}`}
           >
             {f.label}
           </Link>
         ))}
       </div>
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div className="overflow-x-auto rounded-panel border border-line bg-card">
         <table className="w-full text-left text-sm">
-          <thead className="text-xs uppercase text-slate-500">
+          <thead className="text-xs uppercase text-subtle">
             <tr>
               <th className="px-4 py-2">Přezdívka</th>
               <th className="px-4 py-2">E-mail</th>
@@ -78,16 +78,16 @@ export default async function AdminUsers({
               <th className="px-4 py-2">Registrace</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+          <tbody className="divide-y divide-line">
             {users.map((u) => (
-              <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+              <tr key={u.id} className="hover:bg-card-hover">
                 <td className="px-4 py-2 font-medium">
                   <Link href={`/admin/uzivatele/${u.id}`} className="hover:underline">
                     {u.nickname}
                   </Link>
                   {u.isAdmin && <span className="ml-1 text-xs text-red-600">admin</span>}
                 </td>
-                <td className="px-4 py-2 text-slate-500">{u.email}</td>
+                <td className="px-4 py-2 text-subtle">{u.email}</td>
                 <td className="px-4 py-2 text-xs">
                   {[
                     u.bannedAt && '🚫 zablokován',
@@ -102,12 +102,12 @@ export default async function AdminUsers({
                 <td className={`px-4 py-2 tabular-nums ${u._count.reportsAgainst ? 'font-bold text-red-600' : ''}`}>
                   {u._count.reportsAgainst}
                 </td>
-                <td className="px-4 py-2 text-slate-500">{u.createdAt.toLocaleDateString('cs-CZ')}</td>
+                <td className="px-4 py-2 text-subtle">{u.createdAt.toLocaleDateString('cs-CZ')}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        {!users.length && <p className="p-6 text-center text-slate-500">Nikdo.</p>}
+        {!users.length && <p className="p-6 text-center text-subtle">Nikdo.</p>}
       </div>
     </div>
   )

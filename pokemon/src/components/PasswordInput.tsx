@@ -31,7 +31,7 @@ export function PasswordInput({
         onClick={() => setShow((s) => !s)}
         aria-label={show ? t('Skrýt heslo') : t('Zobrazit heslo')}
         aria-pressed={show}
-        className="absolute inset-y-0 right-0 px-3 text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+        className="absolute inset-y-0 right-0 px-3 text-sm font-medium text-subtle hover:text-fg"
       >
         {show ? t('Skrýt') : t('Zobrazit')}
       </button>

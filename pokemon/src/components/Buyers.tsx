@@ -20,17 +20,17 @@ async function BuyersList({ rows, kind }: { rows: Row[]; kind: 'card' | 'product
     <section className="mt-10">
       <h2 className="text-xl font-bold">💰 {t('Chtějí koupit ({n})', { n: rows.length })}</h2>
       {rows.length === 0 ? (
-        <p className="mt-3 rounded-2xl border border-dashed border-slate-300 p-6 text-center text-slate-500 dark:border-slate-700">
+        <p className="mt-3 rounded-panel border border-dashed border-line-strong p-6 text-center text-subtle">
           {card ? t('Zatím kartu nikdo nepoptává.') : t('Zatím produkt nikdo nepoptává.')}
         </p>
       ) : (
         <>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-subtle">
             {card
               ? t('Máš kartu? Napiš zájemci přes jeho profil nebo kartu nabídni ve své sbírce.')
               : t('Máš produkt? Napiš zájemci přes jeho profil nebo produkt nabídni ve své sbírce.')}
           </p>
-          <ul className="mt-3 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-emerald-200 bg-white dark:divide-slate-800 dark:border-emerald-500/30 dark:bg-slate-900">
+          <ul className="mt-3 divide-y divide-line overflow-hidden rounded-panel border border-emerald-200 bg-card dark:border-emerald-500/30">
             {rows.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
                 <div className="min-w-0 flex-1">
@@ -38,8 +38,8 @@ async function BuyersList({ rows, kind }: { rows: Row[]; kind: 'card' | 'product
                     {r.user.nickname}
                   </Link>{' '}
                   <BadgeIcon nickname={r.user.nickname} />
-                  <span className="text-sm text-slate-500"> · {r.user.city ?? r.user.region ?? t('neuvedeno')}</span>
-                  {r.detail.length > 0 && <p className="text-xs text-slate-500">{r.detail.join(' · ')}</p>}
+                  <span className="text-sm text-subtle"> · {r.user.city ?? r.user.region ?? t('neuvedeno')}</span>
+                  {r.detail.length > 0 && <p className="text-xs text-subtle">{r.detail.join(' · ')}</p>}
                 </div>
                 <span className="font-semibold text-emerald-700 dark:text-emerald-400">
                   {r.maxPriceCzk ? t('koupí do {price} Kč', { price: r.maxPriceCzk.toLocaleString('cs-CZ') }) : t('koupí (cena dohodou)')}

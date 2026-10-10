@@ -63,12 +63,12 @@ export default async function ProductsPage({
     return `/produkty${p.size ? `?${p}` : ''}`
   }
   const chip = (active: boolean) =>
-    `rounded-full px-3 py-1 text-sm ${active ? 'bg-slate-900 text-white dark:bg-yellow-400 dark:text-slate-900' : 'border border-slate-300 dark:border-slate-700'}`
+    `rounded-full px-3 py-1 text-sm ${active ? 'bg-accent-strong text-on-accent' : 'border border-line-strong'}`
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="text-3xl font-black tracking-tight">{t('Zapečetěné produkty')}</h1>
-      <p className="mt-2 text-slate-600 dark:text-slate-300">
+      <p className="mt-2 text-muted">
         {t('Boostery, Elite Trainer Boxy, tins, kolekce a mince.')} {t('{n} produktů.', { n: total.toLocaleString('cs-CZ') })}
       </p>
 
@@ -79,9 +79,9 @@ export default async function ProductsPage({
           name="q"
           defaultValue={q}
           placeholder={t('Hledat produkt: Prismatic Evolutions ETB…')}
-          className="w-full max-w-md rounded-full border border-slate-300 bg-white px-4 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+          className="w-full max-w-md rounded-full border border-line-strong bg-card px-4 py-2 text-sm"
         />
-        <button className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white dark:bg-yellow-400 dark:text-slate-900">
+        <button className="rounded-full bg-accent-strong px-4 py-2 text-sm font-semibold text-on-accent">
           {t('Hledat')}
         </button>
       </form>
@@ -109,13 +109,13 @@ export default async function ProductsPage({
           ))}
         </ul>
       ) : (
-        <p className="mt-8 text-slate-500">{t('Nic jsme nenašli.')}</p>
+        <p className="mt-8 text-subtle">{t('Nic jsme nenašli.')}</p>
       )}
 
       {total > PAGE && (
         <div className="mt-8 flex items-center justify-center gap-4 text-sm">
           {page > 1 && <Link href={href({ strana: String(page - 1) })}>← {t('Předchozí')}</Link>}
-          <span className="text-slate-500">
+          <span className="text-subtle">
             {page} / {Math.ceil(total / PAGE)}
           </span>
           {page * PAGE < total && <Link href={href({ strana: String(page + 1) })}>{t('Další')} →</Link>}

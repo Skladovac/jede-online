@@ -46,7 +46,7 @@ export default async function CartPage() {
     <main className="mx-auto max-w-3xl space-y-8 px-4 py-10">
       <div>
         <h1 className="text-3xl font-black tracking-tight">{t('Košík')}</h1>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-sm text-muted">
           {t('Každému sběrateli se posílá samostatná žádost o výměnu. Když ji přijme, uvidíte navzájem e-mail a domluvíte se na předání. Web neřeší platby ani dopravu.')}{' '}
           <Link href="/bezpecny-obchod" className="font-medium underline">
             🛡️ {t('Jak obchodovat bezpečně')}
@@ -54,13 +54,13 @@ export default async function CartPage() {
         </p>
       </div>
       {blocked && (
-        <p className="rounded-xl bg-yellow-50 px-4 py-3 text-sm text-yellow-900 dark:bg-yellow-400/10 dark:text-yellow-100">
+        <p className="rounded-xl bg-accent-soft px-4 py-3 text-sm text-fg">
           {blocked}
         </p>
       )}
 
       {drafts.length === 0 && (
-        <p className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500 dark:border-slate-700">
+        <p className="rounded-panel border border-dashed border-line-strong p-8 text-center text-subtle">
           {t('Košík je prázdný. U karty v sekci „Kdo ji nabízí“ klikni na')} <strong>{t('Chci')}</strong>.
         </p>
       )}
@@ -75,13 +75,13 @@ export default async function CartPage() {
         ].filter((o) => !offeredIds.has(o.v))
         const hasTrade = wanted.some((i) => i.offerType === 'TRADE')
         return (
-          <section key={d.id} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+          <section key={d.id} className="rounded-panel border border-line bg-card p-5">
             <h2 className="text-lg font-bold">
               {t('Od')}{' '}
               <Link href={`/@${encodeURIComponent(d.to.nickname)}`} className="hover:underline">
                 {d.to.nickname}
               </Link>
-              <span className="text-sm font-normal text-slate-500"> · {d.to.city ?? d.to.region ?? t('neuvedeno')}</span>
+              <span className="text-sm font-normal text-subtle"> · {d.to.city ?? d.to.region ?? t('neuvedeno')}</span>
             </h2>
             <RequestItems
               items={wanted}
@@ -109,7 +109,7 @@ export default async function CartPage() {
                     )}
                   />
                 ) : (
-                  <p className="mt-1 text-xs text-slate-500">{t('Zatím nic. Vyber ze svých karet navíc.')}</p>
+                  <p className="mt-1 text-xs text-subtle">{t('Zatím nic. Vyber ze svých karet navíc.')}</p>
                 )}
                 {options.length > 0 ? (
                   <ActionForm action={offerMyItem} className="mt-3 flex gap-2">
@@ -125,7 +125,7 @@ export default async function CartPage() {
                   </ActionForm>
                 ) : (
                   !offered.length && (
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-subtle">
                       {t('Nemáš žádné karty navíc. Označ je v sadě v režimu „Navíc“.')}
                     </p>
                   )

@@ -8,7 +8,7 @@ import { ActionForm } from '@/components/ActionForm'
 const LABEL: Record<BugStatus, string> = { NEW: 'nové', IN_PROGRESS: 'řeší se', DONE: 'hotovo' }
 const CLS: Record<BugStatus, string> = {
   NEW: 'bg-red-100 text-red-800',
-  IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
+  IN_PROGRESS: 'bg-yellow-100 text-fg',
   DONE: 'bg-green-100 text-green-800',
 }
 
@@ -37,7 +37,7 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
           <Link
             key={k}
             href={`/admin/chyby${k ? `?stav=${k}` : ''}`}
-            className={`rounded-full px-3 py-1 ${(stav ?? '') === k ? 'bg-slate-900 text-white dark:bg-yellow-400 dark:text-slate-900' : 'border border-slate-300 dark:border-slate-700'}`}
+            className={`rounded-full px-3 py-1 ${(stav ?? '') === k ? 'bg-accent-strong text-on-accent' : 'border border-line-strong'}`}
           >
             {l}
           </Link>
@@ -46,8 +46,8 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
       {bugs.length ? (
         <ul className="space-y-3">
           {bugs.map((b) => (
-            <li key={b.id} id={b.id} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <li key={b.id} id={b.id} className="rounded-panel border border-line bg-card p-4 text-sm">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-subtle">
                 <span className={`rounded-full px-2 py-0.5 font-semibold ${CLS[b.status]}`}>{LABEL[b.status]}</span>
                 <span>{b.createdAt.toLocaleString('cs-CZ')}</span>
                 <span>
@@ -68,7 +68,7 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
                 )}
               </div>
               <p className="mt-2 whitespace-pre-wrap">{b.message}</p>
-              {b.userAgent && <p className="mt-1 truncate text-xs text-slate-400">{b.userAgent}</p>}
+              {b.userAgent && <p className="mt-1 truncate text-xs text-subtle">{b.userAgent}</p>}
               <div className="mt-2 flex gap-3">
                 {(['NEW', 'IN_PROGRESS', 'DONE'] as BugStatus[])
                   .filter((s) => s !== b.status)
@@ -84,7 +84,7 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
           ))}
         </ul>
       ) : (
-        <p className="text-slate-500">Žádné chyby. 🎉</p>
+        <p className="text-subtle">Žádné chyby. 🎉</p>
       )}
     </div>
   )

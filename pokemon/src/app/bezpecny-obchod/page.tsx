@@ -10,14 +10,14 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-const box = 'rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900'
+const box = 'rounded-panel border border-line bg-card p-5'
 
 export default async function SafeTradePage() {
   const t = await getT()
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="text-3xl font-black tracking-tight">{t('Bezpečný obchod')}</h1>
-      <p className="mt-2 text-slate-600 dark:text-slate-300">
+      <p className="mt-2 text-muted">
         {t('Pár jednoduchých pravidel, aby výměna nebo prodej dopadly dobře. Děti: projděte si to s rodičem.')}
       </p>
 

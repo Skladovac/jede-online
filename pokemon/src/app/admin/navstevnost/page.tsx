@@ -47,16 +47,16 @@ export default async function AdminTraffic() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-black tracking-tight">Návštěvnost</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-subtle">
           Vlastní počítadlo bez cookies. Unikátní návštěvník = jeden prohlížeč za den. Roboti a administrace se nepočítají.
         </p>
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+      <section className="rounded-panel border border-line bg-card p-5">
         <h2 className="mb-3 font-bold">Posledních 30 dní</h2>
         {daily.length ? (
           <table className="w-full text-sm">
-            <thead className="text-left text-xs text-slate-500">
+            <thead className="text-left text-xs text-subtle">
               <tr>
                 <th className="py-1">Den</th>
                 <th className="py-1 text-right">Návštěvníci</th>
@@ -68,12 +68,12 @@ export default async function AdminTraffic() {
               {daily.map((d) => {
                 const v = d._sum.views ?? 0
                 return (
-                  <tr key={d.day.toISOString()} className="border-t border-slate-100 dark:border-slate-800">
+                  <tr key={d.day.toISOString()} className="border-t border-line">
                     <td className="py-1.5">{fmt(d.day)}</td>
                     <td className="py-1.5 text-right font-semibold">{uniq.get(d.day.toISOString()) ?? 0}</td>
                     <td className="py-1.5 text-right">{v}</td>
                     <td className="py-1.5 pl-3">
-                      <div className="h-2 rounded-full bg-yellow-400" style={{ width: `${(v / max) * 100}%` }} />
+                      <div className="h-2 rounded-full bg-accent-strong" style={{ width: `${(v / max) * 100}%` }} />
                     </td>
                   </tr>
                 )
@@ -81,27 +81,27 @@ export default async function AdminTraffic() {
             </tbody>
           </table>
         ) : (
-          <p className="text-sm text-slate-500">Zatím žádná data. Počítá se od nasazení.</p>
+          <p className="text-sm text-subtle">Zatím žádná data. Počítá se od nasazení.</p>
         )}
       </section>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+        <section className="rounded-panel border border-line bg-card p-5">
           <h2 className="mb-3 font-bold">Sekce webu (7 dní, {total7} zobrazení)</h2>
           <ul className="space-y-1 text-sm">
             {sectionRows.map(([k, v]) => (
-              <li key={k} className="flex justify-between border-t border-slate-100 py-1 dark:border-slate-800">
+              <li key={k} className="flex justify-between border-t border-line py-1">
                 <span>{k}</span>
                 <span className="font-semibold">{v}</span>
               </li>
             ))}
           </ul>
         </section>
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+        <section className="rounded-panel border border-line bg-card p-5">
           <h2 className="mb-3 font-bold">Nejčtenější stránky (7 dní)</h2>
           <ul className="space-y-1 text-sm">
             {topPaths.map((t) => (
-              <li key={t.path} className="flex justify-between gap-3 border-t border-slate-100 py-1 dark:border-slate-800">
+              <li key={t.path} className="flex justify-between gap-3 border-t border-line py-1">
                 <a href={t.path} className="truncate underline" target="_blank" rel="noreferrer">
                   {t.path}
                 </a>

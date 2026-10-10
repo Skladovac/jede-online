@@ -59,7 +59,7 @@ export async function PriceChart({ cardId, stats }: { cardId: string; stats: Pri
   const fmt = (v: number) => `${v.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € (${Math.round(v * rate).toLocaleString('cs-CZ')} Kč)`
 
   return (
-    <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-800">
+    <div className="mt-5 border-t border-line pt-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm font-semibold">{t('Vývoj ceny')}</p>
         <p className={`text-sm font-semibold ${up ? 'text-green-700 dark:text-green-400' : 'text-red-600'}`}>
@@ -74,7 +74,7 @@ export async function PriceChart({ cardId, stats }: { cardId: string; stats: Pri
         />
         <path d={d} fill="none" strokeWidth="2.5" strokeDasharray={estimate ? '6 4' : undefined} className={up ? 'stroke-green-500' : 'stroke-red-500'} />
       </svg>
-      <div className="flex justify-between text-xs text-slate-500">
+      <div className="flex justify-between text-xs text-subtle">
         <span>
           {fmtDay(points[0].day)}: {fmt(vals[0])}
         </span>
@@ -83,7 +83,7 @@ export async function PriceChart({ cardId, stats }: { cardId: string; stats: Pri
         </span>
       </div>
       {estimate && (
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-subtle">
           {t('Odhad z průměrů Cardmarketu (30 dní, 7 dní, 1 den, dnes). Přesná historie se ukládá každý den.')}
         </p>
       )}

@@ -92,7 +92,7 @@ export function RegisterForm({ next, social }: { next?: string | null; social?: 
       </Field>
 
       {minor && (
-        <div className="space-y-3 rounded-2xl border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-500/30 dark:bg-yellow-400/5">
+        <div className="space-y-3 rounded-panel border border-line-strong bg-accent-soft p-4">
           <p className="text-sm">
             {t('Je ti méně než {age} let, takže účet musí schválit rodič. Pošleme mu e-mail s odkazem. Do té doby si můžeš prohlížet katalog a vést sbírku, ale profil nebude vidět a nepůjde posílat nabídky.', { age: CONSENT_AGE[country] })}
           </p>
@@ -132,7 +132,7 @@ export function RegisterForm({ next, social }: { next?: string | null; social?: 
       <button
         type="submit"
         disabled={pending}
-        className="rounded-xl bg-slate-900 px-5 py-2.5 font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50 dark:bg-yellow-400 dark:text-slate-900 dark:hover:bg-yellow-300"
+        className="rounded-xl bg-accent-strong px-5 py-2.5 font-semibold text-on-accent transition hover:bg-accent-hover disabled:opacity-50"
       >
         {pending ? t('Moment…') : social ? t('Dokončit registraci') : t('Zaregistrovat se')}
       </button>

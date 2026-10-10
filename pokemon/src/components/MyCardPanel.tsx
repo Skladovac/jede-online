@@ -24,7 +24,7 @@ export async function MyCardPanel({ card }: { card: CardVariants }) {
   const user = await getCurrentUser()
   if (!user) {
     return (
-      <p className="mt-8 rounded-xl bg-yellow-50 px-4 py-3 text-sm text-yellow-900 dark:bg-yellow-400/10 dark:text-yellow-100">
+      <p className="mt-8 rounded-xl bg-accent-soft px-4 py-3 text-sm text-fg">
         <Link href="/prihlaseni" className="font-semibold underline">
           {t('Přihlas se')}
         </Link>{' '}
@@ -64,7 +64,7 @@ export async function MyCardPanel({ card }: { card: CardVariants }) {
         <ItemForm key={i.id} cardId={card.id} variants={variants} item={i} />
       ))}
       <details className="group" open={!items.length}>
-        <summary className="cursor-pointer text-sm font-medium text-yellow-700 dark:text-yellow-400">
+        <summary className="cursor-pointer text-sm font-medium text-accent">
           {items.length ? `+ ${t('Přidat další kus (jiná varianta, stav nebo jazyk)')}` : t('Přidat do sbírky')}
         </summary>
         <div className="mt-3">

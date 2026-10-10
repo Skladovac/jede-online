@@ -21,7 +21,7 @@ export async function ProductTile({ p, extra }: { p: TileProduct; extra?: React.
   const price = formatEur(p.priceEur)
   return (
     <Link href={`/produkt/${p.id}`} className="group block">
-      <div className="grid aspect-square place-items-center overflow-hidden rounded-xl border border-slate-200 bg-white p-2 transition group-hover:-translate-y-0.5 group-hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+      <div className="grid aspect-square place-items-center overflow-hidden rounded-xl border border-line bg-card p-2 transition group-hover:-translate-y-0.5 group-hover:shadow-md">
         {img ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={img} alt={p.name} loading="lazy" className="max-h-full max-w-full object-contain" />
@@ -31,12 +31,12 @@ export async function ProductTile({ p, extra }: { p: TileProduct; extra?: React.
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logo} alt="" loading="lazy" className="max-h-12 max-w-[80%] object-contain opacity-70" />
             )}
-            <span className="text-xs font-semibold text-slate-400">{t(KIND_LABEL[p.kind])}</span>
+            <span className="text-xs font-semibold text-subtle">{t(KIND_LABEL[p.kind])}</span>
           </div>
         )}
       </div>
       <p className="mt-1.5 line-clamp-2 text-xs font-medium">{p.name}</p>
-      {price && <p className="text-xs text-slate-500">≈ {price}</p>}
+      {price && <p className="text-xs text-subtle">≈ {price}</p>}
       {extra}
     </Link>
   )

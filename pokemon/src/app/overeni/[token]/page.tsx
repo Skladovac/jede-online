@@ -33,7 +33,7 @@ export default async function VerifyPage({
   return (
     <main className="mx-auto max-w-md px-4 py-16 text-center">
       <h1 className="text-3xl font-black tracking-tight">{userId ? t('E-mail potvrzen ✓') : t('Odkaz už neplatí')}</h1>
-      <p className="mt-4 text-slate-600 dark:text-slate-300">
+      <p className="mt-4 text-muted">
         {userId
           ? t('Díky! Teď ti můžeme posílat upozornění na nabídky.')
           : t('Možná už byl použitý nebo vypršel. Nový si můžeš poslat ze stránky svého účtu.')}

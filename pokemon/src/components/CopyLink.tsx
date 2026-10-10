@@ -37,17 +37,17 @@ export function CopyLink({ url, title }: { url: string; title: string }) {
         readOnly
         value={url}
         onFocus={(e) => e.currentTarget.select()}
-        className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+        className="min-w-0 flex-1 rounded-lg border border-line-strong bg-card px-3 py-1.5 text-sm"
       />
       <button
         type="button"
         onClick={copy}
-        className="rounded-full bg-yellow-400 px-4 py-1.5 text-sm font-semibold text-slate-900 hover:bg-yellow-300"
+        className="rounded-full bg-accent-strong px-4 py-1.5 text-sm font-semibold text-on-accent hover:bg-accent-hover"
       >
         {copied ? t('Zkopírováno ✓') : t('Zkopírovat')}
       </button>
       {canShare && (
-        <button type="button" onClick={share} className="rounded-full border border-slate-300 px-4 py-1.5 text-sm dark:border-slate-700">
+        <button type="button" onClick={share} className="rounded-full border border-line-strong px-4 py-1.5 text-sm">
           {t('Sdílet')}
         </button>
       )}

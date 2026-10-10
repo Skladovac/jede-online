@@ -15,14 +15,14 @@ function Thumb({ c, children }: { c: MiniCard; children?: React.ReactNode }) {
   return (
     <li>
       <Link href={`/karta/${encodeURIComponent(c.id)}`} className="block">
-        <div className="aspect-[63/88] overflow-hidden rounded-lg bg-slate-200 shadow-sm dark:bg-slate-800">
+        <div className="aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm">
           {img && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={img} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
           )}
         </div>
         <p className="mt-1 truncate text-xs font-medium">{c.name}</p>
-        <p className="truncate text-xs text-slate-500">
+        <p className="truncate text-xs text-subtle">
           {c.set.name} · {c.localId}
         </p>
       </Link>
@@ -42,7 +42,7 @@ export async function MatchSection({ data, nickname }: { data: Data; nickname: s
   const trade = (offeredCards.length || offeredProducts.length) > 0 && (theyWantCards.length || theyWantProducts.length) > 0
 
   return (
-    <section id="shoda" className="mt-10 scroll-mt-20 rounded-2xl border-2 border-yellow-400 p-4 sm:p-6">
+    <section id="shoda" className="mt-10 scroll-mt-24 rounded-panel border-2 border-accent p-4 sm:p-6">
       <h2 className="text-xl font-bold">
         {t('Shoda s tebou')}
         {trade && (
@@ -84,7 +84,7 @@ export async function MatchSection({ data, nickname }: { data: Data; nickname: s
       {ownedCards.length > 0 && (
         <>
           <h3 className="mb-1 mt-6 font-semibold">{t('Má ve sbírce, ale nenabízí')}</h3>
-          <p className="mb-3 text-xs text-slate-500">
+          <p className="mb-3 text-xs text-subtle">
             {t('Nejsou na výměnu, ale můžeš se {name} zeptat, jestli by je neuvolnil(a).', { name: nickname })}
           </p>
           <ul className={grid}>
@@ -108,7 +108,7 @@ export async function MatchSection({ data, nickname }: { data: Data; nickname: s
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-subtle">
             {t('Když si od něj dáš něco do košíku, můžeš k žádosti přidat i své karty navíc na výměnu.')}
           </p>
         </>

@@ -11,7 +11,7 @@ export default async function PrivacyPage() {
   const t = await getT()
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">
-      <p className="mb-6 rounded-xl bg-yellow-50 px-4 py-3 text-sm text-yellow-900 dark:bg-yellow-400/10 dark:text-yellow-100">
+      <p className="mb-6 rounded-xl bg-accent-soft px-4 py-3 text-sm text-fg">
         {t('Zkušební provoz. Pracovní verze pravidel, konečné znění doplníme před ostrým spuštěním.')}
       </p>
       <article className="space-y-6 leading-relaxed [&_h2]:mt-8 [&_h2]:text-xl [&_h2]:font-bold [&_li]:ml-5 [&_li]:list-disc">

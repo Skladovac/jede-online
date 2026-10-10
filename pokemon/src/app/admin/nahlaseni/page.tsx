@@ -27,7 +27,7 @@ export default async function AdminReports({ searchParams }: { searchParams: Pro
           {reports.map((r) => (
             <li
               key={r.id}
-              className={`rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900 ${r.resolvedAt ? 'opacity-50' : ''}`}
+              className={`rounded-panel border border-line bg-card p-4 text-sm ${r.resolvedAt ? 'opacity-50' : ''}`}
             >
               <p>
                 <Link href={`/admin/uzivatele/${r.from.id}`} className="font-semibold hover:underline">
@@ -49,7 +49,7 @@ export default async function AdminReports({ searchParams }: { searchParams: Pro
           ))}
         </ul>
       ) : (
-        <p className="text-slate-500">Nic k vyřízení. 🎉</p>
+        <p className="text-subtle">Nic k vyřízení. 🎉</p>
       )}
     </div>
   )

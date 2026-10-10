@@ -27,13 +27,13 @@ export function ProductItemForm({ productId, item }: { productId: number; item: 
   const [offer, setOffer] = useState(item.offerType ?? 'SELL')
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="rounded-panel border border-line bg-card p-4">
       <form action={action} className="space-y-3">
         <input type="hidden" name="productId" value={productId} />
         {item.id && <input type="hidden" name="id" value={item.id} />}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <label className="space-y-1 text-xs">
-            <span className="text-slate-500">{t('Jazyk')}</span>
+            <span className="text-subtle">{t('Jazyk')}</span>
             <select name="language" defaultValue={item.language} className={small}>
               {PRODUCT_LANGS.map(([v, l]) => (
                 <option key={v} value={v}>
@@ -43,11 +43,11 @@ export function ProductItemForm({ productId, item }: { productId: number; item: 
             </select>
           </label>
           <label className="space-y-1 text-xs">
-            <span className="text-slate-500">{t('Kusů celkem')}</span>
+            <span className="text-subtle">{t('Kusů celkem')}</span>
             <input name="quantity" type="number" min={1} max={999} defaultValue={item.quantity} className={small} />
           </label>
           <label className="space-y-1 text-xs">
-            <span className="text-slate-500">{t('Z toho navíc')}</span>
+            <span className="text-subtle">{t('Z toho navíc')}</span>
             <input
               name="spareQty"
               type="number"
@@ -59,11 +59,11 @@ export function ProductItemForm({ productId, item }: { productId: number; item: 
             />
           </label>
           <label className="space-y-1 text-xs">
-            <span className="text-slate-500">{t('Poznámka (max 30)')}</span>
+            <span className="text-subtle">{t('Poznámka (max 30)')}</span>
             <input name="note" maxLength={30} defaultValue={item.note ?? ''} className={small} />
           </label>
           <label className="space-y-1 text-xs">
-            <span className="text-slate-500">{t('Koupeno za (Kč/ks)')}</span>
+            <span className="text-subtle">{t('Koupeno za (Kč/ks)')}</span>
             <input
               name="purchasePriceCzk"
               inputMode="numeric"
@@ -78,7 +78,7 @@ export function ProductItemForm({ productId, item }: { productId: number; item: 
         {spare > 0 && (
           <div className="flex flex-wrap items-end gap-2 rounded-xl bg-blue-50 p-3 dark:bg-blue-500/10">
             <label className="space-y-1 text-xs">
-              <span className="text-slate-500">{t('Kusy navíc')}</span>
+              <span className="text-subtle">{t('Kusy navíc')}</span>
               <select name="offerType" value={offer} onChange={(e) => setOffer(e.target.value)} className={small}>
                 <option value="SELL">{t('prodám')}</option>
                 <option value="TRADE">{t('vyměním')}</option>
@@ -87,7 +87,7 @@ export function ProductItemForm({ productId, item }: { productId: number; item: 
             </label>
             {offer === 'SELL' && (
               <label className="space-y-1 text-xs">
-                <span className="text-slate-500">{t('Cena za kus (Kč)')}</span>
+                <span className="text-subtle">{t('Cena za kus (Kč)')}</span>
                 <input name="priceCzk" type="number" min={1} defaultValue={item.priceCzk ?? ''} className={small} />
               </label>
             )}
@@ -98,7 +98,7 @@ export function ProductItemForm({ productId, item }: { productId: number; item: 
         <div className="flex items-center gap-3">
           <button
             disabled={pending}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 dark:bg-yellow-400 dark:text-slate-900"
+            className="rounded-xl bg-accent-strong px-4 py-2 text-sm font-semibold text-on-accent disabled:opacity-50"
           >
             {item.id ? t('Uložit') : t('Přidat do sbírky')}
           </button>

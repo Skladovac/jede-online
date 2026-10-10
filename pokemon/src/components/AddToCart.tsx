@@ -14,7 +14,7 @@ export function AddToCart({ collectionItemId, productItemId }: { collectionItemI
       {productItemId && <input type="hidden" name="productItemId" value={productItemId} />}
       <button
         disabled={pending}
-        className="rounded-full bg-yellow-400 px-4 py-1.5 text-sm font-semibold text-slate-900 hover:bg-yellow-300 disabled:opacity-50"
+        className="rounded-full bg-accent-strong px-4 py-1.5 text-sm font-semibold text-on-accent hover:bg-accent-hover disabled:opacity-50"
       >
         {pending ? '…' : t('Chci')}
       </button>

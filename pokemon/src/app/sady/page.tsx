@@ -27,7 +27,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="text-3xl font-black tracking-tight">{t('Všechny sady')}</h1>
-      <nav className="mt-4 flex gap-2 border-b border-slate-200 dark:border-slate-800">
+      <nav className="mt-4 flex gap-2 border-b border-line">
         {(
           [
             ['en', t('Anglické sady')],
@@ -38,14 +38,14 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
             key={l}
             href={l === 'ja' ? '/sady?jazyk=ja' : '/sady'}
             className={`-mb-px border-b-2 px-4 py-2 font-semibold ${
-              l === language ? 'border-yellow-400 text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              l === language ? 'border-accent text-fg' : 'border-transparent text-subtle hover:text-fg'
             }`}
           >
             {label}
           </Link>
         ))}
       </nav>
-      <p className="mt-3 text-slate-600 dark:text-slate-300">
+      <p className="mt-3 text-muted">
         {language === 'ja'
           ? t('{n} japonských sad z ér Scarlet & Violet a Mega, od nejnovějších. Japonské sady mají jiné složení než anglické.', { n: sets.length })
           : t('{n} anglických sad, od nejnovějších.', { n: sets.length })}
@@ -56,7 +56,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
           <a
             key={series}
             href={`#${encodeURIComponent(series)}`}
-            className="rounded-full border border-slate-300 px-3 py-1 text-sm hover:border-yellow-400 dark:border-slate-700"
+            className="rounded-full border border-line-strong px-3 py-1 text-sm hover:border-line-strong"
           >
             {series}
           </a>
@@ -64,7 +64,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
       </div>
 
       {[...groups.entries()].map(([series, list]) => (
-        <section key={series} id={encodeURIComponent(series)} className="scroll-mt-20 pt-10">
+        <section key={series} id={encodeURIComponent(series)} className="scroll-mt-24 pt-10">
           <h2 className="mb-4 text-xl font-bold">{series}</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {list.map((s) => (

@@ -35,24 +35,24 @@ export default async function NotificationsPage() {
       <h1 className="text-3xl font-black tracking-tight">{t('Upozornění')}</h1>
       <MarkRead unread={unread} />
       {list.length ? (
-        <ul className="mt-6 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
+        <ul className="mt-6 divide-y divide-line overflow-hidden rounded-panel border border-line bg-card">
           {list.map((n) => {
             const inner = (
-              <div className={`flex gap-3 px-4 py-3 ${n.readAt ? '' : 'bg-yellow-50 dark:bg-yellow-400/10'}`}>
+              <div className={`flex gap-3 px-4 py-3 ${n.readAt ? '' : 'bg-accent-soft'}`}>
                 <span className="text-xl" aria-hidden>
                   {n.icon ?? '🔔'}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className={`text-sm ${n.readAt ? '' : 'font-semibold'}`}>{n.title}</p>
-                  {n.body && <p className="truncate text-xs text-slate-500">{n.body}</p>}
+                  {n.body && <p className="truncate text-xs text-subtle">{n.body}</p>}
                 </div>
-                <span className="shrink-0 text-xs text-slate-400">{ago(n.createdAt, t, intl)}</span>
+                <span className="shrink-0 text-xs text-subtle">{ago(n.createdAt, t, intl)}</span>
               </div>
             )
             return (
               <li key={n.id}>
                 {n.url?.startsWith('/') ? (
-                  <Link href={n.url} className="block hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <Link href={n.url} className="block hover:bg-card-hover">
                     {inner}
                   </Link>
                 ) : (
@@ -63,9 +63,9 @@ export default async function NotificationsPage() {
           })}
         </ul>
       ) : (
-        <p className="mt-6 text-slate-500">{t('Zatím žádná upozornění. Přijdou sem nové žádosti o výměnu, odpovědi, hodnocení a shody.')}</p>
+        <p className="mt-6 text-subtle">{t('Zatím žádná upozornění. Přijdou sem nové žádosti o výměnu, odpovědi, hodnocení a shody.')}</p>
       )}
-      <p className="mt-4 text-xs text-slate-400">{t('Upozornění starší než 90 dní mažeme. E-maily nastavíš v Můj účet.')}</p>
+      <p className="mt-4 text-xs text-subtle">{t('Upozornění starší než 90 dní mažeme. E-maily nastavíš v Můj účet.')}</p>
     </main>
   )
 }

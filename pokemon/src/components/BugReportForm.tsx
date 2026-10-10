@@ -21,8 +21,8 @@ export function BugReportForm({ loggedIn }: { loggedIn: boolean }) {
     )
 
   return (
-    <form action={action} className="mt-3 max-w-lg space-y-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <p className="font-semibold text-slate-700 dark:text-slate-200">{t('Nahlásit chybu')}</p>
+    <form action={action} className="mt-3 max-w-lg space-y-3 rounded-panel border border-line bg-card p-4">
+      <p className="font-semibold text-muted">{t('Nahlásit chybu')}</p>
       {state?.ok ? (
         <Alert state={state} />
       ) : (
@@ -46,7 +46,7 @@ export function BugReportForm({ loggedIn }: { loggedIn: boolean }) {
           <div className="flex gap-3">
             <button
               disabled={pending}
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 dark:bg-yellow-400 dark:text-slate-900"
+              className="rounded-xl bg-accent-strong px-4 py-2 text-sm font-semibold text-on-accent disabled:opacity-50"
             >
               {pending ? t('Odesílám…') : t('Odeslat')}
             </button>

@@ -69,7 +69,7 @@ export async function SiteFooter() {
           </p>
           <p className="shrink-0">
             Designed by{' '}
-            <a href="https://jede.online" className="font-semibold text-[#C9A961] hover:text-[#D4AF37]">
+            <a href="https://jede.online" className="font-semibold text-[#8a6a14] hover:text-[#6f550f] dark:text-[#C9A961] dark:hover:text-[#D4AF37]">
               jede.online
             </a>
           </p>

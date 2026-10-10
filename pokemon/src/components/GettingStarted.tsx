@@ -49,15 +49,15 @@ export async function GettingStarted({ userId, nickname, emailVerified }: { user
   const next = steps.find((s) => !s.done)!
 
   return (
-    <section className="mb-10 rounded-2xl border-2 border-yellow-400 bg-yellow-50 p-5 dark:bg-yellow-400/10">
+    <section className="mb-10 rounded-panel border-2 border-accent bg-accent-soft p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-xl font-bold">{t('Vítej, {nickname}! Jak začít', { nickname })}</h2>
-        <span className="text-sm text-slate-600 dark:text-slate-300">
+        <span className="text-sm text-muted">
           {t('hotovo {done} ze {total}', { done: doneCount, total: steps.length })}
         </span>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-yellow-200 dark:bg-yellow-900/40">
-        <div className="h-full rounded-full bg-yellow-500" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface">
+        <div className="h-full rounded-full bg-accent-strong" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
       </div>
       <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((s, i) => (
@@ -67,8 +67,8 @@ export async function GettingStarted({ userId, nickname, emailVerified }: { user
               s.done
                 ? 'border-green-200 bg-green-50 text-green-900 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-200'
                 : s === next
-                  ? 'border-yellow-400 bg-white dark:bg-slate-900'
-                  : 'border-slate-200 bg-white opacity-70 dark:border-slate-800 dark:bg-slate-900'
+                  ? 'border-accent bg-card'
+                  : 'border-line bg-card opacity-70'
             }`}
           >
             <p className="font-semibold">
@@ -76,11 +76,11 @@ export async function GettingStarted({ userId, nickname, emailVerified }: { user
             </p>
             {!s.done && (
               <>
-                <p className="mt-1 text-slate-600 dark:text-slate-300">{s.text}</p>
+                <p className="mt-1 text-muted">{s.text}</p>
                 {s === next && (
                   <Link
                     href={s.href}
-                    className="mt-2 inline-block rounded-full bg-yellow-400 px-3 py-1 text-xs font-semibold text-slate-900 hover:bg-yellow-300"
+                    className="mt-2 inline-block rounded-full bg-accent-strong px-3 py-1 text-xs font-semibold text-on-accent hover:bg-accent-hover"
                   >
                     {s.cta} →
                   </Link>

@@ -42,7 +42,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           )}
         </div>
         <form action={logout}>
-          <button className="text-sm text-slate-500 underline">{t('Odhlásit')}</button>
+          <button className="text-sm text-subtle underline">{t('Odhlásit')}</button>
         </form>
       </div>
 
@@ -90,13 +90,13 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       {!limited && <InviteBox userId={user.id} nickname={user.nickname} />}
       {!limited && <FollowingList userId={user.id} />}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+      <section className="rounded-panel border border-line bg-card p-5">
         <h2 className="mb-5 text-lg font-bold">{t('Profil')}</h2>
         <ActionForm action={updateProfile}>
           <Field label={t('Přezdívka')}>
             <input name="nickname" required defaultValue={user.nickname} className={inputCls} />
           </Field>
-          <p className="text-sm text-slate-500">{t('Země: {country}', { country: t(COUNTRY_LABEL[user.country]) })}</p>
+          <p className="text-sm text-subtle">{t('Země: {country}', { country: t(COUNTRY_LABEL[user.country]) })}</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label={t('Kraj')}>
               <select name="region" defaultValue={user.region ?? ''} className={inputCls}>
@@ -114,12 +114,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <fieldset className="space-y-3">
             <legend className="mb-2 text-sm font-medium">{t('Odkazy (nepovinné)')}</legend>
             {user.isMinor && (
-              <p className="text-xs text-slate-500">{t('Odkazy se ostatním zobrazí až po schválení rodičem.')}</p>
+              <p className="text-xs text-subtle">{t('Odkazy se ostatním zobrazí až po schválení rodičem.')}</p>
             )}
             <input name="facebookUrl" placeholder="facebook.com/…" defaultValue={user.facebookUrl ?? ''} className={inputCls} />
             <input name="instagramUrl" placeholder="instagram.com/…" defaultValue={user.instagramUrl ?? ''} className={inputCls} />
             <input name="aukroUrl" placeholder="aukro.cz/…" defaultValue={user.aukroUrl ?? ''} className={inputCls} />
-            {linksPending && <p className="text-xs text-yellow-700 dark:text-yellow-400">{t('Odkazy čekají na schválení rodičem.')}</p>}
+            {linksPending && <p className="text-xs text-accent">{t('Odkazy čekají na schválení rodičem.')}</p>}
           </fieldset>
 
           {isAdult(user) && (
@@ -136,7 +136,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </Checkbox>
 
           {user.isMinor ? (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-subtle">
               {user.indexable ? t('Dohledatelnost přes Google: zapnutá (nastavuje rodič).') : t('Dohledatelnost přes Google: vypnutá (nastavuje rodič).')}
             </p>
           ) : (
@@ -148,14 +148,14 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         </ActionForm>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+      <section className="rounded-panel border border-line bg-card p-5">
         <h2 className="mb-1 text-lg font-bold">{t('Přihlášení')}</h2>
         <p className="mb-5 text-sm">
           {t('Přihlašuješ se e-mailem')} <strong className="break-all">{user.email}</strong>
           {user.emailVerifiedAt ? ' ✓' : ` ${t('(zatím nepotvrzený)')}`}
         </p>
         {oauth.length > 0 && (
-          <p className="-mt-3 mb-5 text-sm text-slate-600 dark:text-slate-300">
+          <p className="-mt-3 mb-5 text-sm text-muted">
             {t('Propojené přihlášení:')} {oauth.map((o) => (o.provider === 'google' ? 'Google' : 'Facebook')).join(', ')}
           </p>
         )}
@@ -179,9 +179,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         </ActionForm>
       </section>
 
-      <section className="rounded-2xl border border-red-200 p-5 dark:border-red-500/30">
+      <section className="rounded-panel border border-red-200 p-5 dark:border-red-500/30">
         <h2 className="text-lg font-bold">{t('Smazat účet')}</h2>
-        <p className="mb-4 mt-1 text-sm text-slate-500">{t('Smaže profil, sbírku i všechny údaje. Nejde vrátit.')}</p>
+        <p className="mb-4 mt-1 text-sm text-subtle">{t('Smaže profil, sbírku i všechny údaje. Nejde vrátit.')}</p>
         <ActionForm action={deleteAccount} className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <Field
             label={t('Pro potvrzení zadej heslo')}
@@ -200,6 +200,6 @@ function Notice({ tone, children }: { tone: 'ok' | 'warn'; children: React.React
   const cls =
     tone === 'ok'
       ? 'border-green-200 bg-green-50 text-green-900 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-200'
-      : 'border-yellow-300 bg-yellow-50 text-yellow-900 dark:border-yellow-500/30 dark:bg-yellow-400/10 dark:text-yellow-100'
-  return <div className={`rounded-2xl border p-4 text-sm ${cls}`}>{children}</div>
+      : 'border-line-strong bg-accent-soft text-fg'
+  return <div className={`rounded-panel border p-4 text-sm ${cls}`}>{children}</div>
 }

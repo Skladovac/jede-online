@@ -14,7 +14,7 @@ export async function SocialButtons({ next }: { next?: string | null }) {
       {providers.includes('google') && (
         <a
           href={`/api/auth/google${q}`}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-line-strong bg-card px-4 py-2.5 font-semibold text-fg hover:bg-card-hover"
         >
           <svg viewBox="0 0 48 48" className="h-5 w-5" aria-hidden>
             <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
@@ -36,7 +36,7 @@ export async function SocialButtons({ next }: { next?: string | null }) {
           {t('Pokračovat přes Facebook')}
         </a>
       )}
-      <p className="pt-2 text-center text-xs text-slate-500">{t('nebo e-mailem')}</p>
+      <p className="pt-2 text-center text-xs text-subtle">{t('nebo e-mailem')}</p>
     </div>
   )
 }

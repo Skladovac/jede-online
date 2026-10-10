@@ -34,7 +34,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
   const pos = shown.filter((r) => r.positive).length
 
   const Box = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+    <section className="rounded-panel border border-line bg-card p-5">
       <h2 className="mb-3 font-bold">{title}</h2>
       {children}
     </section>
@@ -42,13 +42,13 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="space-y-5">
-      <Link href="/admin/uzivatele" className="text-sm text-slate-500 hover:underline">
+      <Link href="/admin/uzivatele" className="text-sm text-subtle hover:underline">
         ← Uživatelé
       </Link>
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-3xl font-black tracking-tight">{u.nickname}</h1>
         {u.bannedAt && <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">ZABLOKOVÁN</span>}
-        {u.isAdmin && <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white">admin</span>}
+        {u.isAdmin && <span className="rounded-full bg-accent-strong px-3 py-1 text-xs font-bold text-on-accent">admin</span>}
         <Link href={`/@${encodeURIComponent(u.nickname)}`} className="text-sm underline">
           veřejný profil
         </Link>
@@ -57,17 +57,17 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
       <div className="grid gap-5 lg:grid-cols-2">
         <Box title="Údaje">
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-sm">
-            <dt className="text-slate-500">E-mail</dt>
+            <dt className="text-subtle">E-mail</dt>
             <dd>
-              {u.email} {u.emailVerifiedAt ? '✓' : <span className="text-yellow-700">(nepotvrzen)</span>}
+              {u.email} {u.emailVerifiedAt ? '✓' : <span className="text-accent">(nepotvrzen)</span>}
             </dd>
-            <dt className="text-slate-500">Narození</dt>
+            <dt className="text-subtle">Narození</dt>
             <dd>
               {u.birthMonth}/{u.birthYear} {u.isMinor && '· dítě'}
             </dd>
             {u.isMinor && (
               <>
-                <dt className="text-slate-500">Rodič</dt>
+                <dt className="text-subtle">Rodič</dt>
                 <dd>
                   {u.parentEmail} ·{' '}
                   {u.parentConsentAt
@@ -76,22 +76,22 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
                 </dd>
               </>
             )}
-            <dt className="text-slate-500">Místo</dt>
+            <dt className="text-subtle">Místo</dt>
             <dd>{[u.city, u.region, COUNTRY_LABEL[u.country]].filter(Boolean).join(', ')}</dd>
-            <dt className="text-slate-500">Telefon</dt>
+            <dt className="text-subtle">Telefon</dt>
             <dd>
               {u.phone ?? '—'} · zobrazen {u._count.phoneViewsGot}× · sám zobrazil {u._count.phoneViewsMade}×
             </dd>
-            <dt className="text-slate-500">Odkazy</dt>
+            <dt className="text-subtle">Odkazy</dt>
             <dd className="break-all">
               {[u.facebookUrl, u.instagramUrl, u.aukroUrl].filter(Boolean).join(' · ') || '—'}
               {u.linksApprovedAt ? ' (schváleno)' : ''}
             </dd>
-            <dt className="text-slate-500">Registrace</dt>
+            <dt className="text-subtle">Registrace</dt>
             <dd>{u.createdAt.toLocaleString('cs-CZ')}</dd>
-            <dt className="text-slate-500">Aktivní přihlášení</dt>
+            <dt className="text-subtle">Aktivní přihlášení</dt>
             <dd>{u._count.sessions}</dd>
-            <dt className="text-slate-500">Hodnocení</dt>
+            <dt className="text-subtle">Hodnocení</dt>
             <dd>
               👍 {pos} · 👎 {shown.length - pos}
             </dd>
@@ -105,7 +105,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
                 <li key={r.id} className={r.hiddenAt ? 'opacity-50' : ''}>
                   {r.positive ? '👍' : '👎'} <strong>{r.from.nickname}</strong>
                   {r.requestId ? ' · ✓ výměna' : ' · volné'}
-                  {r.comment && <span className="text-slate-500"> · „{r.comment}“</span>}
+                  {r.comment && <span className="text-subtle"> · „{r.comment}“</span>}
                   <ActionForm action={adminHideRating} className="inline">
                     <input type="hidden" name="ratingId" value={r.id} />
                     <input type="hidden" name="hide" value={r.hiddenAt ? '0' : '1'} />
@@ -115,7 +115,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-500">Žádná.</p>
+            <p className="text-sm text-subtle">Žádná.</p>
           )}
         </Box>
 
@@ -131,7 +131,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
             <ActionForm action={adminBan} className="space-y-2">
               <input type="hidden" name="userId" value={u.id} />
               <input type="hidden" name="ban" value={u.bannedAt ? '0' : '1'} />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-subtle">
                 Zablokovaný se nepřihlásí, jeho profil a nabídky nejsou vidět. Data zůstávají.
               </p>
               <Submit variant={u.bannedAt ? 'ghost' : 'danger'}>{u.bannedAt ? 'Odblokovat' : 'Zablokovat a odhlásit'}</Submit>
@@ -159,7 +159,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
                   <strong>{r.from.nickname}</strong> · {r.createdAt.toLocaleString('cs-CZ')}
                   {r.resolvedAt && ' · vyřízeno'}
                 </p>
-                <p className="whitespace-pre-wrap text-slate-600 dark:text-slate-300">{r.reason}</p>
+                <p className="whitespace-pre-wrap text-muted">{r.reason}</p>
                 <ActionForm action={adminResolveReport} className="mt-1">
                   <input type="hidden" name="reportId" value={r.id} />
                   <input type="hidden" name="resolved" value={r.resolvedAt ? '0' : '1'} />
@@ -169,10 +169,10 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-slate-500">Žádná.</p>
+          <p className="text-sm text-subtle">Žádná.</p>
         )}
         {u.reportsMade.length > 0 && (
-          <p className="mt-4 text-xs text-slate-500">
+          <p className="mt-4 text-xs text-subtle">
             Sám nahlásil: {u.reportsMade.map((r) => r.against.nickname).join(', ')}
           </p>
         )}
@@ -180,7 +180,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
 
       <Box title={`Nabídky (${offers.length + productOffers.length})`}>
         {offers.length + productOffers.length ? (
-          <ul className="divide-y divide-slate-200 text-sm dark:divide-slate-800">
+          <ul className="divide-y divide-line text-sm">
             {[
               ...offers.map((o) => ({
                 id: o.id,
@@ -197,7 +197,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
                 </Link>
                 <span>
                   {o.spareQty}× {o.offerType === 'SELL' ? `${o.priceCzk} Kč` : OFFER[o.offerType!]}
-                  {o.note && <em className="text-slate-500"> „{o.note}“</em>}
+                  {o.note && <em className="text-subtle"> „{o.note}“</em>}
                 </span>
                 <ActionForm action={adminHideOffer}>
                   <input type="hidden" name="itemId" value={id} />
@@ -209,9 +209,9 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-slate-500">Žádné.</p>
+          <p className="text-sm text-subtle">Žádné.</p>
         )}
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-subtle">
           Sbírka: {u.items.length} řádků karet, {u.productItems.length} produktů · hledá {u._count.wants} karet a{' '}
           {u._count.productWants} produktů
         </p>
@@ -226,13 +226,13 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
             .sort((a, b) => b.r.createdAt.getTime() - a.r.createdAt.getTime())
             .map(({ r, text }) => (
               <li key={r.id} className="flex gap-3">
-                <span className="w-40 text-slate-500">{r.createdAt.toLocaleString('cs-CZ')}</span>
+                <span className="w-40 text-subtle">{r.createdAt.toLocaleString('cs-CZ')}</span>
                 <span className="flex-1">{text}</span>
                 <span className={`rounded-full px-2 text-xs ${STATUS[r.status].cls}`}>{STATUS[r.status].label}</span>
               </li>
             ))}
         </ul>
-        {!u.sentRequests.length && !u.gotRequests.length && <p className="text-sm text-slate-500">Žádné.</p>}
+        {!u.sentRequests.length && !u.gotRequests.length && <p className="text-sm text-subtle">Žádné.</p>}
       </Box>
     </div>
   )

@@ -22,14 +22,14 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   return (
     <main className="mx-auto max-w-md px-4 py-10">
       <h1 className="text-3xl font-black tracking-tight">{t('Registrace')}</h1>
-      <p className="mb-8 mt-2 text-slate-600 dark:text-slate-300">
+      <p className="mb-8 mt-2 text-muted">
         {t('Už máš účet?')}{' '}
         <Link href={next ? `/prihlaseni?next=${encodeURIComponent(next)}` : '/prihlaseni'} className="font-medium underline">
           {t('Přihlas se')}
         </Link>
       </p>
       {inviter && (
-        <p className="mb-6 rounded-2xl border-2 border-yellow-300 bg-yellow-50 p-4 text-sm dark:border-yellow-400/40 dark:bg-yellow-400/10">
+        <p className="mb-6 rounded-panel border-2 border-line-strong bg-accent-soft p-4 text-sm">
           🎁 {t('Pozval(a) tě {name}. Po registraci se budete navzájem sledovat a uvidíš, co nabízí.', { name: inviter })}
         </p>
       )}
