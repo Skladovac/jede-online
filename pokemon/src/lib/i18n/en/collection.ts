@@ -125,5 +125,6 @@ const dict: Record<string, string> = {
   'Focení je dnes vytížené. Zkus to zítra, kartu zatím přidej číslem.': 'Photo recognition is busy today. Try tomorrow — add the card by number for now.',
   'Dnešní fotky jsou vyčerpané, zítra zase.': "Today's photos are used up, more tomorrow.",
   'Dnes zbývá {n} z {max} fotek.': '{n} of {max} photos left today.',
+  'Dnes vyfoceno {n} · bez limitu (admin).': '{n} photos today · no limit (admin).',
 }
 export default dict

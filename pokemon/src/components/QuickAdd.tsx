@@ -10,7 +10,7 @@ import { useT } from '@/lib/i18n/client'
  * „Přidej kartu číslem“: rychlé zadávání hromádky karet ze stolu. Po přidání se pole vyčistí a zůstane aktivní,
  * takže jde psát jedno číslo za druhým (MEP 101 ⏎, SVI 045 ⏎, …).
  */
-export function QuickAdd({ photo = false, photosLeft: initialLeft, photoDaily = 5 }: { photo?: boolean; photosLeft?: number; photoDaily?: number }) {
+export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boolean; quota?: { used: number; left: number | null }; photoDaily?: number }) {
   const t = useT()
   const [textState, textAction, textPending] = useActionState<QuickAddState, FormData>(quickAdd, {})
   const [photoState, photoAction, photoPending] = useActionState<QuickAddState, FormData>(quickAddPhoto, {})
@@ -23,8 +23,9 @@ export function QuickAdd({ photo = false, photosLeft: initialLeft, photoDaily = 
     textAction(fd)
   }
   const fileInput = useRef<HTMLInputElement>(null)
-  // Zbývající fotky dnes (null = bez limitu, admin).
-  const left = photoState.photosLeft ?? initialLeft ?? null
+  // Zbývající fotky dnes (null = bez limitu, admin) a kolik už dnes vyfotil.
+  const left = photoState.photosLeft !== undefined ? photoState.photosLeft : (quota?.left ?? null)
+  const used = photoState.photosUsed ?? quota?.used ?? 0
   const noPhotos = left !== null && left <= 0
 
   // Fotka z telefonu: zmenšit na max. 1280 px (JPEG) přímo v prohlížeči, ať se posílá jen pár set kB.
@@ -120,11 +121,12 @@ export function QuickAdd({ photo = false, photosLeft: initialLeft, photoDaily = 
       {photo && (
         <p className="mt-2 text-xs text-subtle">
           {t('📷 Vyfoť celou kartu zepředu — web ji pozná, ukáže cenu a zeptá se, jestli ji přidat.')}{' '}
-          {left !== null && (
+          {quota && left !== null && (
             <strong className={noPhotos ? 'text-danger' : 'text-muted'}>
               {noPhotos ? t('Dnešní fotky jsou vyčerpané, zítra zase.') : t('Dnes zbývá {n} z {max} fotek.', { n: left, max: photoDaily })}
             </strong>
           )}
+          {quota && left === null && <strong className="text-muted">{t('Dnes vyfoceno {n} · bez limitu (admin).', { n: used })}</strong>}
         </p>
       )}
 
