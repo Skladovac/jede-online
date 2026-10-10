@@ -15,6 +15,8 @@ import { getT } from '@/lib/i18n/server'
 import { FollowingList, InviteBox } from '@/components/Social'
 import { PushSettings } from '@/components/Push'
 import { pushPublicKey } from '@/lib/push'
+import { ArrowRight, Bell, Check } from 'lucide-react'
+import { linkAccent, panel } from '@/components/design'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
@@ -36,15 +38,15 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     <main className="mx-auto max-w-2xl space-y-8 px-4 py-10">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight">{t('Ahoj, {name}!', { name: user.nickname })}</h1>
+          <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Ahoj, {name}!', { name: user.nickname })}</h1>
           {!limited && (
-            <Link href={`/@${encodeURIComponent(user.nickname)}`} className="text-sm underline">
+            <Link href={`/@${encodeURIComponent(user.nickname)}`} className={`mt-1 inline-block text-sm ${linkAccent}`}>
               {t('Zobrazit můj veřejný profil')}
             </Link>
           )}
         </div>
         <form action={logout}>
-          <button className="text-sm text-subtle underline">{t('Odhlásit')}</button>
+          <button className="min-h-11 text-sm text-muted underline underline-offset-4 hover:text-fg">{t('Odhlásit')}</button>
         </form>
       </div>
 
@@ -55,8 +57,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             <>
               {' '}
               {t('Po potvrzení tě odkaz vrátí zpátky na stránku, odkud jsi přišel(a).')}{' '}
-              <Link href={next} className="font-semibold underline">
-                {t('Zpět tam →')}
+              <Link href={next} className="inline-flex items-center gap-1 font-semibold underline underline-offset-4">
+                {t('Zpět tam')}
+                <ArrowRight className="h-4 w-4" strokeWidth={1.75} aria-hidden />
               </Link>
             </>
           )}
@@ -92,13 +95,13 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       {!limited && <InviteBox userId={user.id} nickname={user.nickname} />}
       {!limited && <FollowingList userId={user.id} />}
 
-      <section className="rounded-panel border border-line bg-card p-5">
-        <h2 className="mb-5 text-lg font-bold">{t('Profil')}</h2>
+      <section className={`${panel} p-5 sm:p-6`}>
+        <h2 className="mb-5 text-xl font-bold text-fg">{t('Profil')}</h2>
         <ActionForm action={updateProfile}>
           <Field label={t('Přezdívka')}>
             <input name="nickname" required defaultValue={user.nickname} className={inputCls} />
           </Field>
-          <p className="text-sm text-subtle">{t('Země: {country}', { country: t(COUNTRY_LABEL[user.country]) })}</p>
+          <p className="text-sm text-muted">{t('Země: {country}', { country: t(COUNTRY_LABEL[user.country]) })}</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label={t('Kraj')}>
               <select name="region" defaultValue={user.region ?? ''} className={inputCls}>
@@ -114,9 +117,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </div>
 
           <fieldset className="space-y-3">
-            <legend className="mb-2 text-sm font-medium">{t('Odkazy (nepovinné)')}</legend>
+            <legend className="mb-2 text-[13.5px] font-semibold text-fg">{t('Odkazy (nepovinné)')}</legend>
             {user.isMinor && (
-              <p className="text-xs text-subtle">{t('Odkazy se ostatním zobrazí až po schválení rodičem.')}</p>
+              <p className="text-xs text-muted">{t('Odkazy se ostatním zobrazí až po schválení rodičem.')}</p>
             )}
             <input name="facebookUrl" placeholder="facebook.com/…" defaultValue={user.facebookUrl ?? ''} className={inputCls} />
             <input name="instagramUrl" placeholder="instagram.com/…" defaultValue={user.instagramUrl ?? ''} className={inputCls} />
@@ -141,7 +144,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </Checkbox>
 
           {user.isMinor ? (
-            <p className="text-sm text-subtle">
+            <p className="text-sm text-muted">
               {user.indexable ? t('Dohledatelnost přes Google: zapnutá (nastavuje rodič).') : t('Dohledatelnost přes Google: vypnutá (nastavuje rodič).')}
             </p>
           ) : (
@@ -154,24 +157,34 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       </section>
 
       {pushPublicKey() && (
-        <section id="notifikace" className="scroll-mt-24 rounded-panel border border-line bg-card p-5">
-          <h2 className="mb-4 text-lg font-bold">🔔 {t('Notifikace na telefon')}</h2>
+        <section id="notifikace" className={`scroll-mt-24 ${panel} p-5 sm:p-6`}>
+          <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-fg">
+            <Bell className="h-5 w-5 text-accent" strokeWidth={1.75} aria-hidden />
+            {t('Notifikace na telefon')}
+          </h2>
           <PushSettings publicKey={pushPublicKey()!} isMinor={user.isMinor} nightQuiet={!user.pushNightOk} />
         </section>
       )}
 
-      <section className="rounded-panel border border-line bg-card p-5">
-        <h2 className="mb-1 text-lg font-bold">{t('Přihlášení')}</h2>
-        <p className="mb-5 text-sm">
+      <section className={`${panel} p-5 sm:p-6`}>
+        <h2 className="mb-1 text-xl font-bold text-fg">{t('Přihlášení')}</h2>
+        <p className="mb-5 text-sm text-fg">
           {t('Přihlašuješ se e-mailem')} <strong className="break-all">{user.email}</strong>
-          {user.emailVerifiedAt ? ' ✓' : ` ${t('(zatím nepotvrzený)')}`}
+          {user.emailVerifiedAt ? (
+            <>
+              <Check className="ml-1 inline h-4 w-4 align-[-3px] text-positive" strokeWidth={2} aria-hidden />
+              <span className="sr-only"> {t('(potvrzený)')}</span>
+            </>
+          ) : (
+            ` ${t('(zatím nepotvrzený)')}`
+          )}
         </p>
         {oauth.length > 0 && (
           <p className="-mt-3 mb-5 text-sm text-muted">
             {t('Propojené přihlášení:')} {oauth.map((o) => (o.provider === 'google' ? 'Google' : 'Facebook')).join(', ')}
           </p>
         )}
-        <h3 className="mb-3 font-semibold">{t('Změnit heslo')}</h3>
+        <h3 className="mb-3 font-semibold text-fg">{t('Změnit heslo')}</h3>
         <ActionForm action={changePassword} className="space-y-3">
           <Field label={t('Současné heslo')}>
             <PasswordInput name="current" autoComplete="current-password" />
@@ -184,16 +197,16 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </Field>
           <div className="flex flex-wrap items-center gap-4">
             <Submit>{t('Změnit heslo')}</Submit>
-            <Link href="/zapomenute-heslo" className="text-sm underline">
+            <Link href="/zapomenute-heslo" className={`text-sm ${linkAccent}`}>
               {t('Nepamatuješ si současné heslo?')}
             </Link>
           </div>
         </ActionForm>
       </section>
 
-      <section className="rounded-panel border border-red-200 p-5 dark:border-red-500/30">
-        <h2 className="text-lg font-bold">{t('Smazat účet')}</h2>
-        <p className="mb-4 mt-1 text-sm text-subtle">{t('Smaže profil, sbírku i všechny údaje. Nejde vrátit.')}</p>
+      <section className="rounded-[18px] border border-[color-mix(in_srgb,var(--danger)_30%,transparent)] bg-card p-5 sm:p-6">
+        <h2 className="text-xl font-bold text-danger">{t('Smazat účet')}</h2>
+        <p className="mb-4 mt-1 text-sm text-muted">{t('Smaže profil, sbírku i všechny údaje. Nejde vrátit.')}</p>
         <ActionForm action={deleteAccount} className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <Field
             label={t('Pro potvrzení zadej heslo')}
@@ -211,7 +224,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 function Notice({ tone, children }: { tone: 'ok' | 'warn'; children: React.ReactNode }) {
   const cls =
     tone === 'ok'
-      ? 'border-green-200 bg-green-50 text-green-900 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-200'
-      : 'border-line-strong bg-accent-soft text-fg'
-  return <div className={`rounded-panel border p-4 text-sm ${cls}`}>{children}</div>
+      ? 'border-[color-mix(in_srgb,var(--positive)_30%,transparent)] bg-[color-mix(in_srgb,var(--positive)_10%,transparent)] text-fg'
+      : 'border-[color-mix(in_srgb,var(--warning)_30%,transparent)] bg-[color-mix(in_srgb,var(--warning)_10%,transparent)] text-fg'
+  return <div className={`rounded-[18px] border p-4 text-sm ${cls}`}>{children}</div>
 }

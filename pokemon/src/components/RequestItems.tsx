@@ -22,7 +22,7 @@ export async function RequestItems({
           const img = i.productId ? productImage(i.imageUrl) : cardImage(i.imageUrl)
           return (
             <li key={i.id} className="flex items-center gap-3 py-3">
-              <span className="h-16 w-12 shrink-0 overflow-hidden rounded bg-surface">
+              <span className={`h-16 w-12 shrink-0 ${i.productId ? 'overflow-hidden rounded-md border border-line bg-card' : 'card-frame'}`}>
                 {img && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={img} alt="" className={`h-full w-full ${i.productId ? 'bg-card object-contain' : 'object-cover'}`} />
@@ -30,20 +30,20 @@ export async function RequestItems({
               </span>
               <div className="min-w-0 flex-1">
                 {i.productId ? (
-                  <Link href={`/produkt/${i.productId}`} className="font-medium hover:underline">
+                  <Link href={`/produkt/${i.productId}`} className="font-semibold text-fg hover:underline">
                     {i.title}
                   </Link>
                 ) : i.cardId ? (
-                  <Link href={`/karta/${encodeURIComponent(i.cardId)}`} className="font-medium hover:underline">
+                  <Link href={`/karta/${encodeURIComponent(i.cardId)}`} className="font-semibold text-fg hover:underline">
                     {i.title}
                   </Link>
                 ) : (
-                  <span className="font-medium">{i.title}</span>
+                  <span className="font-semibold text-fg">{i.title}</span>
                 )}
-                <p className="text-xs text-subtle">{i.detail}</p>
+                <p className="text-xs text-muted">{i.detail}</p>
               </div>
               <div className="shrink-0 text-right text-sm">
-                <p className="font-semibold">
+                <p className="font-semibold tabular-nums text-fg">
                   {i.quantity}× {i.offerType === 'SELL' && i.priceCzk ? `${i.priceCzk} Kč` : t(OFFER[i.offerType ?? 'TRADE'])}
                 </p>
                 {action?.(i)}
@@ -52,7 +52,7 @@ export async function RequestItems({
           )
         })}
       </ul>
-      {total > 0 && <p className="mt-2 text-right text-sm font-semibold">{t('Za prodávané kusy celkem: {total} Kč', { total })}</p>}
+      {total > 0 && <p className="mt-2 text-right text-sm font-semibold tabular-nums text-fg">{t('Za prodávané kusy celkem: {total} Kč', { total })}</p>}
     </div>
   )
 }

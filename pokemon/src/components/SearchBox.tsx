@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useT } from '@/lib/i18n/client'
+import { ArrowRight } from 'lucide-react'
 
 type Hit = { id: string; href: string; name: string; number: string; set: string; image: string | null; price: string | null }
 
@@ -87,7 +88,7 @@ export function SearchBox() {
       </form>
 
       {open && q.trim().length >= 2 && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-panel border border-line-strong bg-card shadow-xl">
+        <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-[14px] border border-line bg-card shadow-lift">
           {hits.length === 0 ? (
             <p className="px-4 py-3 text-sm text-muted">{t('Nic jsme nenašli.')}</p>
           ) : (
@@ -120,9 +121,10 @@ export function SearchBox() {
                 <button
                   type="button"
                   onClick={() => go(`/hledat?q=${encodeURIComponent(q.trim())}`)}
-                  className="w-full border-t border-line px-4 py-2.5 text-left text-sm font-medium text-accent"
+                  className="flex w-full items-center gap-1 border-t border-line px-4 py-2.5 text-left text-sm font-semibold text-accent"
                 >
-                  {t('Všechny výsledky pro „{q}“', { q: q.trim() })} →
+                  {t('Všechny výsledky pro „{q}“', { q: q.trim() })}
+                  <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden />
                 </button>
               </li>
             </ul>

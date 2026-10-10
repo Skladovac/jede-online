@@ -6,6 +6,8 @@ import { CopyLink } from '@/components/CopyLink'
 import { BadgeIcon } from '@/components/Badges'
 import { INVITE_MIN_CARDS } from '@/lib/social'
 import { getT } from '@/lib/i18n/server'
+import { panel } from '@/components/design'
+import { Check, Eye, Megaphone } from 'lucide-react'
 
 /** Tlačítko Sledovat / Sleduješ na profilu (nepřihlášeného pošle na přihlášení). */
 export async function FollowButton({ userId, following }: { userId: string; following: boolean }) {
@@ -14,13 +16,14 @@ export async function FollowButton({ userId, following }: { userId: string; foll
     <form action={toggleFollow}>
       <input type="hidden" name="userId" value={userId} />
       <button
-        className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
+        className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-4 py-1.5 text-sm font-semibold transition-colors duration-200 ${
           following
-            ? 'border border-line-strong text-muted hover:border-red-400 hover:text-red-600'
-            : 'bg-accent-strong text-on-accent hover:bg-accent-hover'
+            ? 'text-muted shadow-[inset_0_0_0_1px_var(--border-strong)] hover:text-danger'
+            : 'bg-[var(--ink)] text-white hover:bg-[#1b2c45] dark:bg-white dark:text-[var(--ink)] dark:hover:bg-[#e6ebf3]'
         }`}
       >
-        {following ? `✓ ${t('Sleduješ')}` : `👀 ${t('Sledovat')}`}
+        {following ? <Check className="h-4 w-4" strokeWidth={2.4} aria-hidden /> : <Eye className="h-4 w-4" strokeWidth={1.75} aria-hidden />}
+        {following ? t('Sleduješ') : t('Sledovat')}
       </button>
     </form>
   )
@@ -34,8 +37,13 @@ export async function InviteBox({ userId, nickname }: { userId: string; nickname
     prisma.user.count({ where: { invitedById: userId, inviteCountedAt: null } }),
   ])
   return (
-    <section id="pozvi" className="scroll-mt-24 rounded-panel border-2 border-line-strong bg-accent-soft p-5">
-      <h2 className="text-lg font-bold">📣 {t('Pozvi kamaráda')}</h2>
+    <section id="pozvi" className={`${panel} scroll-mt-24 p-5`}>
+      <h2 className="flex items-center gap-3 text-xl font-bold text-fg">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
+          <Megaphone className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+        </span>
+        {t('Pozvi kamaráda')}
+      </h2>
       <p className="mt-1 text-sm text-muted">
         {t('Pošli odkaz kamarádům nebo do skupiny. Až si pozvaný potvrdí e-mail a přidá aspoň {n} karet, započítá se ti a získáš odznak Ambasador. Budete se navzájem sledovat.', {
           n: INVITE_MIN_CARDS,
@@ -44,7 +52,7 @@ export async function InviteBox({ userId, nickname }: { userId: string; nickname
       <div className="mt-3">
         <CopyLink url={`${APP_URL}/pozvanka/${encodeURIComponent(nickname)}`} title={t('Pojď sbírat Pokémon karty se mnou!')} />
       </div>
-      <p className="mt-2 text-sm">
+      <p className="mt-2 text-sm tabular-nums text-fg">
         {t('Započítaní: {counted}', { counted })}
         {pending > 0 && ` · ${t('čeká na splnění: {pending}', { pending })}`}
       </p>
@@ -62,8 +70,11 @@ export async function FollowingList({ userId }: { userId: string }) {
   })
   const followers = await prisma.follow.count({ where: { followingId: userId } })
   return (
-    <section className="rounded-panel border border-line bg-card p-5">
-      <h2 className="text-lg font-bold">👀 {t('Sleduji')}</h2>
+    <section className={`${panel} p-5`}>
+      <h2 className="flex items-center gap-2 text-xl font-bold text-fg">
+        <Eye className="h-5 w-5 text-accent" strokeWidth={1.75} aria-hidden />
+        {t('Sleduji')}
+      </h2>
       <p className="mt-1 text-sm text-subtle">
         {t('Jednou denně ti do zvonečku přijde, co nového nabídli. Sleduje tě: {count}', { count: followers })}
       </p>
@@ -73,9 +84,9 @@ export async function FollowingList({ userId }: { userId: string }) {
             <li key={f.nickname}>
               <Link
                 href={`/@${encodeURIComponent(f.nickname)}`}
-                className="flex items-center gap-1.5 rounded-full border border-line-strong px-3 py-1 text-sm hover:border-line-strong"
+                className="flex min-h-9 items-center gap-1.5 rounded-full border border-line-strong bg-card px-3 py-1 text-sm transition-colors hover:bg-card-hover"
               >
-                <span className="font-semibold">{f.nickname}</span>
+                <span className="font-semibold text-fg">{f.nickname}</span>
                 <BadgeIcon nickname={f.nickname} />
                 {(f.city || f.region) && <span className="text-xs text-subtle">{f.city ?? f.region}</span>}
               </Link>

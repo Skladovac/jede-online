@@ -6,6 +6,8 @@ import { consumeEmailToken } from '@/lib/auth'
 import { safeNext } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
 import { refreshBadgesSafe } from '@/lib/badges'
+import { ArrowRight, CircleCheck } from 'lucide-react'
+import { btnPrimary, panel } from '@/components/design'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
@@ -31,16 +33,20 @@ export default async function VerifyPage({
   const t = await getT()
 
   return (
-    <main className="mx-auto max-w-md px-4 py-16 text-center">
-      <h1 className="text-3xl font-black tracking-tight">{userId ? t('E-mail potvrzen ✓') : t('Odkaz už neplatí')}</h1>
-      <p className="mt-4 text-muted">
-        {userId
-          ? t('Díky! Teď ti můžeme posílat upozornění na nabídky.')
-          : t('Možná už byl použitý nebo vypršel. Nový si můžeš poslat ze stránky svého účtu.')}
-      </p>
-      <Link href="/ucet" className="mt-8 inline-block font-medium underline">
-        {t('Na můj účet')}
-      </Link>
+    <main className="mx-auto max-w-md px-4 py-16">
+      <div className={`${panel} p-7 text-center sm:p-9`}>
+        {userId && <CircleCheck className="mx-auto mb-3 h-10 w-10 text-positive" strokeWidth={1.75} aria-hidden />}
+        <h1 className="text-3xl font-extrabold text-fg">{userId ? t('E-mail potvrzen') : t('Odkaz už neplatí')}</h1>
+        <p className="mt-4 text-muted">
+          {userId
+            ? t('Díky! Teď ti můžeme posílat upozornění na nabídky.')
+            : t('Možná už byl použitý nebo vypršel. Nový si můžeš poslat ze stránky svého účtu.')}
+        </p>
+        <Link href="/ucet" className={`mt-8 ${btnPrimary}`}>
+          {t('Na můj účet')}
+          <ArrowRight strokeWidth={1.75} aria-hidden />
+        </Link>
+      </div>
     </main>
   )
 }

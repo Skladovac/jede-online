@@ -8,6 +8,7 @@ import { Checkbox, Field, Submit, inputCls } from '@/components/ui'
 import { COUNTRY_LABEL } from '@/lib/regions'
 import { getLocale, getT } from '@/lib/i18n/server'
 import { LOCALE_INFO } from '@/lib/i18n/config'
+import { panel } from '@/components/design'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
@@ -32,12 +33,12 @@ export default async function ParentPage({ params }: { params: Promise<{ token: 
   return (
     <main className="mx-auto max-w-2xl space-y-8 px-4 py-10">
       <div>
-        <p className="text-sm text-subtle">{t('Správa účtu pro rodiče')}</p>
-        <h1 className="text-3xl font-black tracking-tight">{t('Účet „{name}“', { name: child.nickname })}</h1>
+        <p className="eyebrow">{t('Správa účtu pro rodiče')}</p>
+        <h1 className="mt-2 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Účet „{name}“', { name: child.nickname })}</h1>
         <p className="mt-2 text-sm">
           {t('Stav:')}{' '}
           {child.parentConsentAt ? (
-            <strong className="text-green-700 dark:text-green-400">
+            <strong className="text-positive">
               {t('souhlas udělen {date} ({name})', { date: child.parentConsentAt.toLocaleDateString(LOCALE_INFO[locale].intl), name: child.parentConsentName ?? '' })}
             </strong>
           ) : (
@@ -46,24 +47,24 @@ export default async function ParentPage({ params }: { params: Promise<{ token: 
         </p>
       </div>
 
-      <section className="rounded-panel border border-line bg-card p-5">
-        <h2 className="mb-4 text-lg font-bold">{t('Co dítě zadalo')}</h2>
+      <section className={`${panel} p-5 sm:p-6`}>
+        <h2 className="mb-4 text-xl font-bold text-fg">{t('Co dítě zadalo')}</h2>
         <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
-          <dt className="text-subtle">{t('Přezdívka (veřejná)')}</dt>
+          <dt className="text-muted">{t('Přezdívka (veřejná)')}</dt>
           <dd>{child.nickname}</dd>
-          <dt className="text-subtle">{t('E-mail dítěte (neveřejný)')}</dt>
+          <dt className="text-muted">{t('E-mail dítěte (neveřejný)')}</dt>
           <dd>{child.email}</dd>
-          <dt className="text-subtle">{t('Narození (neveřejné)')}</dt>
+          <dt className="text-muted">{t('Narození (neveřejné)')}</dt>
           <dd>
             {child.birthMonth}/{child.birthYear}
           </dd>
-          <dt className="text-subtle">{t('Země, kraj, město (veřejné)')}</dt>
+          <dt className="text-muted">{t('Země, kraj, město (veřejné)')}</dt>
           <dd>{[t(COUNTRY_LABEL[child.country]), child.region, child.city].filter(Boolean).join(', ')}</dd>
-          <dt className="text-subtle">{t('Odkazy')}</dt>
+          <dt className="text-muted">{t('Odkazy')}</dt>
           <dd className="space-y-1">
             {links.length
               ? links.map(([k, v]) => (
-                  <a key={k} href={v} target="_blank" rel="noopener noreferrer nofollow" className="block break-all underline">
+                  <a key={k} href={v} target="_blank" rel="noopener noreferrer nofollow" className="block break-all text-accent underline underline-offset-4">
                     {k}: {v}
                   </a>
                 ))
@@ -80,8 +81,8 @@ export default async function ParentPage({ params }: { params: Promise<{ token: 
       </section>
 
       {!child.parentConsentAt ? (
-        <section className="rounded-panel border border-line-strong bg-accent-soft p-5">
-          <h2 className="mb-4 text-lg font-bold">{t('Souhlas zákonného zástupce')}</h2>
+        <section className={`${panel} p-5 sm:p-6`}>
+          <h2 className="mb-4 text-xl font-bold text-fg">{t('Souhlas zákonného zástupce')}</h2>
           <ActionForm action={giveConsent}>
             <input type="hidden" name="token" value={token} />
             <Field label={t('Vaše jméno a příjmení')}>
@@ -90,7 +91,7 @@ export default async function ParentPage({ params }: { params: Promise<{ token: 
             <Checkbox name="indexable">{t('Profil dítěte smí být k nalezení přes Google (doporučujeme nechat vypnuté).')}</Checkbox>
             <Checkbox name="confirm">
               {t('Jsem zákonný zástupce dítěte a souhlasím se zpracováním jeho osobních údajů podle')}{' '}
-              <a href="/soukromi" target="_blank" className="underline">
+              <a href="/soukromi" target="_blank" className="font-semibold text-accent underline underline-offset-4">
                 {t('zásad ochrany osobních údajů')}
               </a>
               .
@@ -99,8 +100,8 @@ export default async function ParentPage({ params }: { params: Promise<{ token: 
           </ActionForm>
         </section>
       ) : (
-        <section className="rounded-panel border border-line bg-card p-5">
-          <h2 className="mb-4 text-lg font-bold">{t('Nastavení')}</h2>
+        <section className={`${panel} p-5 sm:p-6`}>
+          <h2 className="mb-4 text-xl font-bold text-fg">{t('Nastavení')}</h2>
           <ActionForm action={updateParentSettings}>
             <input type="hidden" name="token" value={token} />
             <Checkbox name="indexable" defaultChecked={child.indexable}>
@@ -120,7 +121,7 @@ export default async function ParentPage({ params }: { params: Promise<{ token: 
           <div className="mt-6 border-t border-line pt-5">
             <ActionForm action={revokeConsent}>
               <input type="hidden" name="token" value={token} />
-              <p className="text-sm text-subtle">
+              <p className="text-sm text-muted">
                 {t('Odvoláním souhlasu se účet znovu omezí (profil skrytý, žádné nabídky) a dítě se odhlásí.')}
               </p>
               <Submit variant="ghost">{t('Odvolat souhlas')}</Submit>
@@ -129,9 +130,9 @@ export default async function ParentPage({ params }: { params: Promise<{ token: 
         </section>
       )}
 
-      <section className="rounded-panel border border-red-200 p-5 dark:border-red-500/30">
-        <h2 className="text-lg font-bold">{t('Smazat účet dítěte')}</h2>
-        <p className="mb-4 mt-1 text-sm text-subtle">{t('Smaže profil, sbírku i všechny údaje. Nejde vrátit.')}</p>
+      <section className="rounded-[18px] border border-[color-mix(in_srgb,var(--danger)_30%,transparent)] bg-card p-5 sm:p-6">
+        <h2 className="text-xl font-bold text-danger">{t('Smazat účet dítěte')}</h2>
+        <p className="mb-4 mt-1 text-sm text-muted">{t('Smaže profil, sbírku i všechny údaje. Nejde vrátit.')}</p>
         <ActionForm action={parentDeleteAccount}>
           <input type="hidden" name="token" value={token} />
           <Field label={t('Pro potvrzení opište přezdívku: {name}', { name: child.nickname })}>
@@ -141,8 +142,8 @@ export default async function ParentPage({ params }: { params: Promise<{ token: 
         </ActionForm>
       </section>
 
-      <p className="text-xs text-subtle">
-        {t('Tento odkaz si uschovejte, slouží ke správě účtu. Nikomu ho neposílejte. Dotazy:')} <a href="mailto:pokemon@jede.online" className="underline">pokemon@jede.online</a>
+      <p className="text-xs text-muted">
+        {t('Tento odkaz si uschovejte, slouží ke správě účtu. Nikomu ho neposílejte. Dotazy:')} <a href="mailto:pokemon@jede.online" className="text-accent underline underline-offset-4">pokemon@jede.online</a>
       </p>
     </main>
   )

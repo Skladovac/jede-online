@@ -8,6 +8,8 @@ import { getT } from '@/lib/i18n/server'
 import { SocialButtons } from '@/components/SocialButtons'
 import { cookies } from 'next/headers'
 import { INVITE_COOKIE } from '@/lib/social'
+import { Gift } from 'lucide-react'
+import { linkAccent, panel } from '@/components/design'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
@@ -20,21 +22,24 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   if (await getCurrentUser()) redirect(next ?? '/')
   const t = await getT()
   return (
-    <main className="mx-auto max-w-md px-4 py-10">
-      <h1 className="text-3xl font-black tracking-tight">{t('Registrace')}</h1>
-      <p className="mb-8 mt-2 text-muted">
-        {t('Už máš účet?')}{' '}
-        <Link href={next ? `/prihlaseni?next=${encodeURIComponent(next)}` : '/prihlaseni'} className="font-medium underline">
-          {t('Přihlas se')}
-        </Link>
-      </p>
-      {inviter && (
-        <p className="mb-6 rounded-panel border-2 border-line-strong bg-accent-soft p-4 text-sm">
-          🎁 {t('Pozval(a) tě {name}. Po registraci se budete navzájem sledovat a uvidíš, co nabízí.', { name: inviter })}
+    <main className="mx-auto max-w-md px-4 py-10 sm:py-14">
+      <div className={`${panel} p-7 sm:p-9`}>
+        <h1 className="text-3xl font-extrabold text-fg">{t('Registrace')}</h1>
+        <p className="mb-8 mt-2 text-muted">
+          {t('Už máš účet?')}{' '}
+          <Link href={next ? `/prihlaseni?next=${encodeURIComponent(next)}` : '/prihlaseni'} className={linkAccent}>
+            {t('Přihlas se')}
+          </Link>
         </p>
-      )}
-      <SocialButtons next={next} />
-      <RegisterForm next={next} />
+        {inviter && (
+          <p className="mb-6 flex gap-2.5 rounded-xl bg-accent-soft p-4 text-sm text-fg">
+            <Gift className="mt-0.5 h-4 w-4 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
+            <span>{t('Pozval(a) tě {name}. Po registraci se budete navzájem sledovat a uvidíš, co nabízí.', { name: inviter })}</span>
+          </p>
+        )}
+        <SocialButtons next={next} />
+        <RegisterForm next={next} />
+      </div>
     </main>
   )
 }

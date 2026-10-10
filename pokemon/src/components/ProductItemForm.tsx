@@ -5,6 +5,7 @@ import { deleteProductItem, saveProductItem } from '@/app/actions/products'
 import { Alert, inputCls } from '@/components/ui'
 import { useT } from '@/lib/i18n/client'
 import { PRODUCT_LANGS } from '@/lib/products'
+import { btnPrimary, panel } from '@/components/design'
 
 export type ProductItemData = {
   id?: string
@@ -27,7 +28,7 @@ export function ProductItemForm({ productId, item }: { productId: number; item: 
   const [offer, setOffer] = useState(item.offerType ?? 'SELL')
 
   return (
-    <div className="rounded-panel border border-line bg-card p-4">
+    <div className={`${panel} p-4`}>
       <form action={action} className="space-y-3">
         <input type="hidden" name="productId" value={productId} />
         {item.id && <input type="hidden" name="id" value={item.id} />}
@@ -76,7 +77,7 @@ export function ProductItemForm({ productId, item }: { productId: number; item: 
         </div>
 
         {spare > 0 && (
-          <div className="flex flex-wrap items-end gap-2 rounded-xl bg-blue-50 p-3 dark:bg-blue-500/10">
+          <div className="flex flex-wrap items-end gap-2 rounded-xl bg-accent-soft p-3">
             <label className="space-y-1 text-xs">
               <span className="text-subtle">{t('Kusy navíc')}</span>
               <select name="offerType" value={offer} onChange={(e) => setOffer(e.target.value)} className={small}>
@@ -98,12 +99,12 @@ export function ProductItemForm({ productId, item }: { productId: number; item: 
         <div className="flex items-center gap-3">
           <button
             disabled={pending}
-            className="rounded-xl bg-accent-strong px-4 py-2 text-sm font-semibold text-on-accent disabled:opacity-50"
+            className={`${btnPrimary} text-sm disabled:opacity-50`}
           >
             {item.id ? t('Uložit') : t('Přidat do sbírky')}
           </button>
           {item.id && (
-            <button formAction={delAction} className="text-sm text-red-600 underline">
+            <button formAction={delAction} className="text-sm text-danger underline underline-offset-4">
               {t('Odebrat')}
             </button>
           )}

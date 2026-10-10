@@ -7,7 +7,8 @@ import { cardImage, productImage } from '@/lib/format'
 import { getT } from '@/lib/i18n/server'
 import { BadgeIcon } from '@/components/Badges'
 import { followingNicknames } from '@/lib/social'
-import { EmptyState } from '@/components/design'
+import { EmptyState, btnInk, btnSecondary, linkAccent } from '@/components/design'
+import { ArrowLeft, ArrowLeftRight, ArrowRight, Coins, Eye, Tag, type LucideIcon } from 'lucide-react'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -18,10 +19,10 @@ export async function generateMetadata() {
 }
 export const dynamic = 'force-dynamic'
 
-const TABS: { id: MarketTab; label: string; hint: string; color: string }[] = [
-  { id: 'prodej', label: '🏷️ Prodej', hint: 'Karty a produkty na prodej nebo zdarma za poštovné.', color: 'text-blue-700 dark:text-blue-400' },
-  { id: 'koupim', label: '💰 Koupím', hint: 'Co sběratelé chtějí koupit a kolik za to dají. Máš to? Ozvi se jim.', color: 'text-emerald-700 dark:text-emerald-400' },
-  { id: 'vymena', label: '🔁 Výměna', hint: 'Karty a produkty, které sběratelé nabízejí na výměnu.', color: 'text-orange-700 dark:text-orange-400' },
+const TABS: { id: MarketTab; label: string; icon: LucideIcon; hint: string; color: string }[] = [
+  { id: 'prodej', label: 'Prodej', icon: Tag, hint: 'Karty a produkty na prodej nebo zdarma za poštovné.', color: 'text-positive' },
+  { id: 'koupim', label: 'Koupím', icon: Coins, hint: 'Co sběratelé chtějí koupit a kolik za to dají. Máš to? Ozvi se jim.', color: 'text-[#7a5600] dark:text-[#ffd95c]' },
+  { id: 'vymena', label: 'Výměna', icon: ArrowLeftRight, hint: 'Karty a produkty, které sběratelé nabízejí na výměnu.', color: 'text-accent' },
 ]
 
 type Search = { tab?: string; kde?: string; sada?: string; strana?: string }
@@ -57,13 +58,15 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="text-3xl font-black tracking-tight">{t('Tržiště')}</h1>
-        <div className="flex gap-4 text-sm font-medium">
-          <Link href="/sberatele" className="text-accent hover:underline">
-            {t('Najdi sběratele →')}
+        <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Tržiště')}</h1>
+        <div className="flex gap-4 text-sm">
+          <Link href="/sberatele" className={`${linkAccent} inline-flex items-center gap-1`}>
+            {t('Najdi sběratele')}
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
-          <Link href="/hodnoceni" className="text-accent hover:underline">
-            {t('Nejlépe hodnocení →')}
+          <Link href="/hodnoceni" className={`${linkAccent} inline-flex items-center gap-1`}>
+            {t('Nejlépe hodnocení')}
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
       </div>
@@ -73,15 +76,17 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
           <Link
             key={x.id}
             href={url({ tab: x.id, strana: '1' })}
-            className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 font-semibold ${
-              x.id === tab.id ? 'border-accent text-fg' : 'border-transparent text-subtle hover:text-fg'
+            aria-current={x.id === tab.id ? 'page' : undefined}
+            className={`-mb-px inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2.5 font-semibold transition-colors ${
+              x.id === tab.id ? 'border-accent-strong text-fg' : 'border-transparent text-subtle hover:text-fg'
             }`}
           >
+            <x.icon className="h-4 w-4" strokeWidth={1.75} aria-hidden />
             {t(x.label)}
           </Link>
         ))}
       </nav>
-      <p className="mt-3 text-sm text-subtle">{t(tab.hint)}</p>
+      <p className="mt-3 text-sm text-muted">{t(tab.hint)}</p>
 
       <form className="mt-4 flex flex-wrap items-center gap-2 text-sm">
         {tab.id !== 'prodej' && <input type="hidden" name="tab" value={tab.id} />}
@@ -89,7 +94,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
           name="kde"
           defaultValue={kde}
           aria-label={t('Kde')}
-          className="rounded-lg border border-line-strong bg-card px-3 py-1.5"
+          className="min-h-11 rounded-xl border border-line-strong bg-card px-3 py-2 text-fg"
         >
           <option value="vse">{t('Celé Česko a Slovensko')}</option>
           {(['CZ', 'SK'] as const).map((c) => (
@@ -107,7 +112,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
           name="sada"
           defaultValue={setId ?? ''}
           aria-label={t('Sada')}
-          className="max-w-[16rem] rounded-lg border border-line-strong bg-card px-3 py-1.5"
+          className="min-h-11 max-w-[16rem] rounded-xl border border-line-strong bg-card px-3 py-2 text-fg"
         >
           <option value="">{t('Všechny sady')}</option>
           {sets.map((s) => (
@@ -116,40 +121,41 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
             </option>
           ))}
         </select>
-        <button className="rounded-full bg-accent-strong px-4 py-1.5 font-semibold text-on-accent">{t('Filtrovat')}</button>
+        <button className={btnInk}>{t('Filtrovat')}</button>
         {(kde !== 'vse' || setId) && (
-          <Link href={url({ kde: 'vse', sada: '', strana: '1' })} className="text-subtle underline">
+          <Link href={url({ kde: 'vse', sada: '', strana: '1' })} className="text-muted underline underline-offset-4 hover:text-fg">
             {t('zrušit filtr')}
           </Link>
         )}
       </form>
 
       {entries.length ? (
-        <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {entries.map((e) => {
             const img = e.image.kind === 'card' ? cardImage(e.image.url) : productImage(e.image.url)
             return (
               <li key={e.key}>
-                <Link href={e.href} className="group block">
-                  <div
-                    className={`${e.image.kind === 'card' ? 'aspect-[63/88]' : 'aspect-square bg-card p-2'} overflow-hidden rounded-lg bg-surface shadow-sm transition group-hover:-translate-y-0.5 `}
-                  >
+                <Link href={e.href} className="card-tile group block">
+                  <div className={e.image.kind === 'card' ? 'card-frame aspect-[63/88]' : 'card-frame aspect-square !bg-card p-2'}>
                     {img && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={img} alt={e.name} loading="lazy" className={`h-full w-full ${e.image.kind === 'card' ? 'object-cover' : 'object-contain'}`} />
                     )}
                   </div>
-                  <p className="mt-1.5 truncate text-sm font-medium">{e.name}</p>
-                  <p className="truncate text-xs text-subtle">{e.sub}</p>
-                  <p className={`truncate text-sm font-semibold ${tab.color}`}>{e.label}</p>
-                  <p className="flex items-center gap-1 text-xs text-subtle">
+                  <p className="mt-3 truncate text-[14.5px] font-semibold text-fg">{e.name}</p>
+                  <p className="truncate text-xs text-muted">{e.sub}</p>
+                  <p className={`mt-1 truncate text-sm font-semibold tabular-nums ${tab.color}`}>{e.label}</p>
+                  <p className="mt-1 flex items-center gap-1 text-xs text-subtle">
                     <span className="truncate">
                       {e.user.nickname} · {e.user.city ?? e.user.region ?? t('neuvedeno')}
                     </span>
                     <BadgeIcon nickname={e.user.nickname} />
                   </p>
                   {following.has(e.user.nickname) && (
-                    <p className="mt-0.5 text-xs font-semibold text-accent">👀 {t('Sleduješ')}</p>
+                    <p className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-accent">
+                      <Eye className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
+                      {t('Sleduješ')}
+                    </p>
                   )}
                 </Link>
               </li>
@@ -159,21 +165,23 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
       ) : (
         <EmptyState className="mt-8">
           {tab.id === 'koupim'
-            ? t('Zatím tu nikdo nic nepoptává. U chybějící karty zaškrtni „💰 Chci koupit“ a budeš první.')
+            ? t('Zatím tu nikdo nic nepoptává. U chybějící karty zaškrtni „Chci koupit“ a budeš první.')
             : t('Zatím tu nic není. Karty navíc nabídneš v sadě v režimu „Navíc“.')}
         </EmptyState>
       )}
 
       {(page > 1 || hasMore) && (
-        <div className="mt-8 flex justify-center gap-4 text-sm font-medium">
+        <div className="mt-10 flex justify-center gap-3 text-sm">
           {page > 1 && (
-            <Link href={url({ strana: String(page - 1) })} className="underline">
-              ← {t('Novější')}
+            <Link href={url({ strana: String(page - 1) })} className={btnSecondary}>
+              <ArrowLeft aria-hidden />
+              {t('Novější')}
             </Link>
           )}
           {hasMore && (
-            <Link href={url({ strana: String(page + 1) })} className="underline">
-              {t('Starší')} →
+            <Link href={url({ strana: String(page + 1) })} className={btnSecondary}>
+              {t('Starší')}
+              <ArrowRight aria-hidden />
             </Link>
           )}
         </div>

@@ -5,9 +5,11 @@ import { cardImage } from '@/lib/format'
 import { CardImg } from '@/components/CardImg'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO, type TFunc } from '@/lib/i18n/config'
+import { panel } from '@/components/design'
+import { ArrowRight, ThumbsDown, ThumbsUp } from 'lucide-react'
 
 const kc = (n: number) => `${n.toLocaleString('cs-CZ')} Kč`
-const box = 'rounded-panel border border-line bg-card p-4'
+const box = `${panel} p-5`
 
 /** Graf vývoje hodnoty (jednoduchá čára v SVG, bez knihoven). */
 function ValueChart({ points, t, intl }: { points: { day: Date; valueCzk: number }[]; t: TFunc; intl: string }) {
@@ -27,10 +29,10 @@ function ValueChart({ points, t, intl }: { points: { day: Date; valueCzk: number
   return (
     <div>
       <svg viewBox={`0 0 ${W} ${H}`} className="h-36 w-full" role="img" aria-label={t('Vývoj hodnoty sbírky')}>
-        <path d={`${d} L${x(points.length - 1)},${H} L${x(0)},${H} Z`} className={up ? 'fill-green-500/10' : 'fill-red-500/10'} />
-        <path d={d} fill="none" strokeWidth="2.5" className={up ? 'stroke-green-500' : 'stroke-red-500'} />
+        <path d={`${d} L${x(points.length - 1)},${H} L${x(0)},${H} Z`} className={up ? 'fill-[color-mix(in_srgb,var(--positive)_10%,transparent)]' : 'fill-[color-mix(in_srgb,var(--danger)_10%,transparent)]'} />
+        <path d={d} fill="none" strokeWidth="2.5" className={up ? 'stroke-positive' : 'stroke-danger'} />
       </svg>
-      <div className="flex justify-between text-xs text-subtle">
+      <div className="flex justify-between text-xs tabular-nums text-subtle">
         <span>
           {fmt(points[0].day)}: {kc(points[0].valueCzk)}
         </span>
@@ -81,14 +83,14 @@ export async function Dashboard({ userId }: { userId: string }) {
   return (
     <section className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className={`${box} border-line-strong bg-accent-soft `}>
-          <p className="text-xs text-muted">{t('Hodnota sbírky')}</p>
-          <p className="text-3xl font-black">{kc(p.valueCzk)}</p>
-          <p className="text-xs text-subtle">
+        <div className={`${box} border-line-strong bg-accent-soft`}>
+          <p className="eyebrow !text-[10.5px]">{t('Hodnota sbírky')}</p>
+          <p className="mt-1.5 font-display text-3xl font-bold leading-tight tabular-nums text-fg">{kc(p.valueCzk)}</p>
+          <p className="mt-0.5 text-xs tabular-nums text-subtle">
             ≈ {p.valueEur.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })} €
             {p.productsCzk > 0 && ` · ${t('z toho produkty {price}', { price: kc(p.productsCzk) })}`}
             {change !== null && (
-              <span className={change >= 0 ? ' text-green-700 dark:text-green-400' : ' text-red-600'}>
+              <span className={change >= 0 ? ' font-semibold text-positive' : ' font-semibold text-danger'}>
                 {' '}
                 · {change >= 0 ? '+' : ''}
                 {kc(change)} {t('za měsíc')}
@@ -97,11 +99,11 @@ export async function Dashboard({ userId }: { userId: string }) {
           </p>
         </div>
         <div className={box}>
-          <p className="text-xs text-subtle">{t('Investováno')}</p>
+          <p className="eyebrow !text-[10.5px]">{t('Investováno')}</p>
           {p.investedCzk ? (
             <>
-              <p className="text-3xl font-black">{kc(p.investedCzk)}</p>
-              <p className={`text-xs font-semibold ${profit! >= 0 ? 'text-green-700 dark:text-green-400' : 'text-red-600'}`}>
+              <p className="mt-1.5 font-display text-3xl font-bold leading-tight tabular-nums text-fg">{kc(p.investedCzk)}</p>
+              <p className={`mt-0.5 text-xs font-semibold tabular-nums ${profit! >= 0 ? 'text-positive' : 'text-danger'}`}>
                 {profit! >= 0 ? t('Zisk') : t('Ztráta')} {profit! >= 0 ? '+' : ''}
                 {kc(profit!)} ({t('dnes mají hodnotu {price}', { price: kc(p.investedValueCzk) })})
               </p>
@@ -113,12 +115,13 @@ export async function Dashboard({ userId }: { userId: string }) {
           )}
         </div>
         <div className={box}>
-          <p className="text-xs text-subtle">{t('Výměny')}</p>
-          <p className="text-3xl font-black">{waiting}</p>
-          <p className="text-xs text-subtle">
+          <p className="eyebrow !text-[10.5px]">{t('Výměny')}</p>
+          <p className="mt-1.5 font-display text-3xl font-bold leading-tight tabular-nums text-fg">{waiting}</p>
+          <p className="mt-0.5 text-xs text-subtle">
             {waiting ? (
-              <Link href="/poptavky" className="font-semibold text-red-600 underline">
-                {t('čeká na tvou odpověď →')}
+              <Link href="/poptavky" className="inline-flex items-center gap-1 font-semibold text-danger underline-offset-4 hover:underline">
+                {t('čeká na tvou odpověď')}
+                <ArrowRight className="h-4 w-4" strokeWidth={1.75} aria-hidden />
               </Link>
             ) : (
               t('nic nečeká na odpověď')
@@ -128,23 +131,23 @@ export async function Dashboard({ userId }: { userId: string }) {
       </div>
 
       <div className={box}>
-        <h2 className="mb-2 font-bold">{t('Vývoj hodnoty')}</h2>
+        <h2 className="mb-3 text-xl font-bold text-fg">{t('Vývoj hodnoty')}</h2>
         <ValueChart points={history} t={t} intl={intl} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className={box}>
-          <h2 className="mb-3 font-bold">{t('Nejcennější karty')}</h2>
+          <h2 className="mb-3 text-xl font-bold text-fg">{t('Nejcennější karty')}</h2>
           {p.topCards.length ? (
             <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6 lg:grid-cols-3">
               {p.topCards.map((c) => (
                 <li key={c.id}>
-                  <Link href={`/karta/${encodeURIComponent(c.id)}`} className="block">
-                    <div className="aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm">
+                  <Link href={`/karta/${encodeURIComponent(c.id)}`} className="card-tile group block">
+                    <div className="card-frame aspect-[63/88]">
                       <CardImg src={cardImage(c.imageUrl)} alt={c.name} />
                     </div>
-                    <p className="mt-1 truncate text-xs font-medium">{c.name}</p>
-                    <p className="text-xs font-semibold text-green-700 dark:text-green-400">
+                    <p className="mt-2 truncate text-xs font-semibold text-fg">{c.name}</p>
+                    <p className="text-xs font-semibold tabular-nums text-positive">
                       {kc(c.unitCzk)}
                       {c.qty > 1 && ` · ${c.qty}×`}
                     </p>
@@ -157,7 +160,7 @@ export async function Dashboard({ userId }: { userId: string }) {
           )}
         </div>
         <div className={box}>
-          <h2 className="mb-3 font-bold">{t('Hodnota po sadách')}</h2>
+          <h2 className="mb-3 text-xl font-bold text-fg">{t('Hodnota po sadách')}</h2>
           {p.bySet.length ? (
             <ul className="space-y-2 text-sm">
               {p.bySet.map((s) => (
@@ -166,9 +169,9 @@ export async function Dashboard({ userId }: { userId: string }) {
                     <Link href={`/sady/${encodeURIComponent(s.id)}`} className="truncate hover:underline">
                       {s.name}
                     </Link>
-                    <span className="shrink-0 font-semibold">{kc(s.czk)}</span>
+                    <span className="shrink-0 font-semibold tabular-nums">{kc(s.czk)}</span>
                   </div>
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface">
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
                     <div className="h-full rounded-full bg-accent-strong" style={{ width: `${(s.czk / Math.max(p.bySet[0].czk, 1)) * 100}%` }} />
                   </div>
                 </li>
@@ -181,10 +184,10 @@ export async function Dashboard({ userId }: { userId: string }) {
       </div>
 
       <div className={box}>
-        <h2 className="mb-3 font-bold">{t('Poslední aktivita')}</h2>
+        <h2 className="mb-3 text-xl font-bold text-fg">{t('Poslední aktivita')}</h2>
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-subtle">{t('Naposledy přidané')}</p>
+            <p className="eyebrow mb-2">{t('Naposledy přidané')}</p>
             {recent.length ? (
               <ul className="space-y-1 text-sm">
                 {recent.map((r) => (
@@ -192,7 +195,7 @@ export async function Dashboard({ userId }: { userId: string }) {
                     <Link href={`/karta/${encodeURIComponent(r.card.id)}`} className="truncate hover:underline">
                       {r.card.name} <span className="text-subtle">· {r.card.set.name}</span>
                     </Link>
-                    <span className="shrink-0 text-xs text-subtle">{r.createdAt.toLocaleDateString(intl)}</span>
+                    <span className="shrink-0 text-xs tabular-nums text-subtle">{r.createdAt.toLocaleDateString(intl)}</span>
                   </li>
                 ))}
               </ul>
@@ -201,7 +204,7 @@ export async function Dashboard({ userId }: { userId: string }) {
             )}
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-subtle">{t('Dokončené výměny')}</p>
+            <p className="eyebrow mb-2">{t('Dokončené výměny')}</p>
             {trades.length ? (
               <ul className="space-y-1 text-sm">
                 {trades.map((tr) => (
@@ -220,13 +223,18 @@ export async function Dashboard({ userId }: { userId: string }) {
             )}
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-subtle">{t('Nová hodnocení')}</p>
+            <p className="eyebrow mb-2">{t('Nová hodnocení')}</p>
             {ratings.length ? (
               <ul className="space-y-1 text-sm">
                 {ratings.map((r) => (
-                  <li key={r.id} className="truncate">
-                    {r.positive ? '👍' : '👎'} {r.from.nickname}
-                    {r.comment && <span className="text-subtle"> · „{r.comment}“</span>}
+                  <li key={r.id} className="flex items-center gap-1.5 truncate">
+                    {r.positive ? (
+                      <ThumbsUp className="h-4 w-4 shrink-0 text-positive" strokeWidth={1.75} aria-hidden />
+                    ) : (
+                      <ThumbsDown className="h-4 w-4 shrink-0 text-danger" strokeWidth={1.75} aria-hidden />
+                    )}
+                    <span className="truncate">{r.from.nickname}</span>
+                    {r.comment && <span className="min-w-0 truncate text-subtle"> · „{r.comment}“</span>}
                   </li>
                 ))}
               </ul>

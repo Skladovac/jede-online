@@ -59,7 +59,7 @@ export function BottomNav({ loggedIn, nickname, pending = 0 }: { loggedIn: boole
                 </svg>
                 {it.label}
                 {!!it.badge && (
-                  <span className="absolute right-[calc(50%-18px)] top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                  <span className="absolute right-[calc(50%-18px)] top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand-red px-1 text-[10px] font-bold text-white">
                     {it.badge}
                   </span>
                 )}

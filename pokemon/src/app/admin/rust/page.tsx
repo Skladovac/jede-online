@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin'
+import { StatCard, panel } from '@/components/design'
 
 const DAYS = 30
 
@@ -59,15 +60,15 @@ export default async function AdminGrowth() {
   const visitorMap = new Map(visitors.map((v) => [v.day.toISOString().slice(0, 10), v._count]))
 
   const series = [
-    { label: 'Registrace', map: regs, color: '#818cf8' },
-    { label: 'Unikátní návštěvníci', map: visitorMap, color: '#60a5fa' },
-    { label: 'Aktivní uživatelé', map: activeMap, color: '#a78bfa' },
-    { label: 'Nová přihlášení', map: logins, color: '#c4b5fd' },
-    { label: 'Přidané karty do sbírek', map: added, color: '#34d399' },
-    { label: 'Nové nabídky', map: offers, color: '#38bdf8' },
-    { label: 'Nové „chybí mi“', map: wants, color: '#fbbf24' },
-    { label: 'Dokončené výměny', map: trades, color: '#4ade80' },
-    { label: 'Hodnocení', map: ratings, color: '#f472b6' },
+    { label: 'Registrace', map: regs, color: 'var(--pokemon-blue)' },
+    { label: 'Unikátní návštěvníci', map: visitorMap, color: 'var(--pokemon-blue)' },
+    { label: 'Aktivní uživatelé', map: activeMap, color: 'var(--pokemon-blue)' },
+    { label: 'Nová přihlášení', map: logins, color: 'var(--pokemon-blue)' },
+    { label: 'Přidané karty do sbírek', map: added, color: 'var(--positive)' },
+    { label: 'Nové nabídky', map: offers, color: 'var(--positive)' },
+    { label: 'Nové „chybí mi“', map: wants, color: 'var(--accent-strong)' },
+    { label: 'Dokončené výměny', map: trades, color: 'var(--positive)' },
+    { label: 'Hodnocení', map: ratings, color: 'var(--accent-strong)' },
   ].map((s) => {
     const values = days.map((d) => s.map.get(d) ?? 0)
     const last7 = values.slice(-7).reduce((a, b) => a + b, 0)
@@ -78,11 +79,7 @@ export default async function AdminGrowth() {
   const growth = users30ago ? Math.round(((totalUsers - users30ago) / users30ago) * 100) : null
 
   const Kpi = ({ label, value, sub }: { label: string; value: string | number; sub?: string }) => (
-    <div className="rounded-panel border border-line bg-card p-4">
-      <p className="text-xs text-subtle">{label}</p>
-      <p className="text-2xl font-black tabular-nums">{typeof value === 'number' ? value.toLocaleString('cs-CZ') : value}</p>
-      {sub && <p className="mt-0.5 text-xs text-muted">{sub}</p>}
-    </div>
+    <StatCard label={label} value={typeof value === 'number' ? value.toLocaleString('cs-CZ') : value} sub={sub} />
   )
   const trend = (a: number, b: number) => {
     if (!a && !b) return { text: '–', cls: 'text-subtle' }
@@ -95,8 +92,8 @@ export default async function AdminGrowth() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">Růst webu</h1>
-        <p className="mt-1 text-sm text-subtle">Posledních {DAYS} dní, po dnech (pražský čas). Porovnání: posledních 7 dní proti 7 dnům předtím.</p>
+        <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">Růst webu</h1>
+        <p className="mt-1 text-sm text-muted">Posledních {DAYS} dní, po dnech (pražský čas). Porovnání: posledních 7 dní proti 7 dnům předtím.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
@@ -115,11 +112,11 @@ export default async function AdminGrowth() {
         {series.map((s) => {
           const tr = trend(s.last7, s.prev7)
           return (
-            <section key={s.label} className="rounded-panel border border-line bg-card p-4">
+            <section key={s.label} className={`${panel} p-4`}>
               <div className="flex items-baseline justify-between gap-3">
-                <h2 className="font-semibold">{s.label}</h2>
-                <p className="text-sm tabular-nums">
-                  <span className="font-bold">{s.last7}</span> <span className="text-subtle">za 7 dní</span>{' '}
+                <h2 className="font-semibold text-fg">{s.label}</h2>
+                <p className="text-sm tabular-nums text-fg">
+                  <span className="font-bold">{s.last7}</span> <span className="text-muted">za 7 dní</span>{' '}
                   <span className={`font-semibold ${tr.cls}`}>{tr.text}</span>
                 </p>
               </div>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useT } from '@/lib/i18n/client'
-import { Smartphone } from 'lucide-react'
+import { Smartphone, SquarePlus, X } from 'lucide-react'
+import { btnPrimary, btnSecondary, panel } from '@/components/design'
 
 /**
  * Instalace webu jako aplikace (PWA).
@@ -127,7 +128,7 @@ export function InstallPrompt() {
     <div
       role="dialog"
       aria-labelledby="install-title"
-      className="fixed inset-x-3 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md rounded-panel border border-line-strong bg-card p-4 text-fg shadow-2xl sm:bottom-6"
+      className={`fixed inset-x-3 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md ${panel} p-4 text-fg !shadow-lift sm:bottom-6`}
     >
       <div className="flex items-start gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -139,7 +140,7 @@ export function InstallPrompt() {
           <p className="mt-0.5 text-sm text-muted">{t('Sbírka, výměny a upozornění jedním klepnutím z plochy telefonu. Zdarma, bez obchodu s aplikacemi.')}</p>
         </div>
         <button type="button" onClick={dismiss} aria-label={t('Zavřít')} className="-mr-1 -mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted hover:text-fg">
-          ✕
+          <X className="h-4 w-4" strokeWidth={1.75} aria-hidden />
         </button>
       </div>
 
@@ -151,17 +152,18 @@ export function InstallPrompt() {
               await runPrompt()
               setOpen(false)
             }}
-            className="min-h-11 flex-1 rounded-[11px] bg-accent-strong px-4 font-bold text-on-accent transition-colors duration-200 hover:bg-accent-hover"
+            className={`${btnPrimary} flex-1`}
           >
-            <Smartphone className="mr-1.5 inline h-[18px] w-[18px] align-[-3px]" strokeWidth={1.9} aria-hidden />{t('Stáhnout aplikaci')}
+            <Smartphone strokeWidth={1.75} aria-hidden />
+            {t('Stáhnout aplikaci')}
           </button>
-          <button type="button" onClick={dismiss} className="min-h-11 rounded-[11px] border border-line-strong px-4 text-sm font-semibold text-muted hover:text-fg">
+          <button type="button" onClick={dismiss} className={`${btnSecondary} text-sm`}>
             {t('Teď ne')}
           </button>
         </div>
       ) : (
         <>
-          <ol className="mt-3 space-y-1.5 rounded-lg bg-surface p-3 text-sm">
+          <ol className="mt-3 space-y-1.5 rounded-xl border border-line bg-surface p-3 text-sm">
             {e.ios ? (
               <>
                 <li>
@@ -170,7 +172,10 @@ export function InstallPrompt() {
                     <path d="M12 3v12M8 7l4-4 4 4M5 12v8h14v-8" />
                   </svg>
                 </li>
-                <li>2. {t('Vyber „Přidat na plochu“')} ➕</li>
+                <li>
+                  2. {t('Vyber „Přidat na plochu“')}{' '}
+                  <SquarePlus className="inline h-4 w-4 align-[-3px] text-brand-blue" strokeWidth={1.75} aria-hidden />
+                </li>
                 <li>3. {t('Potvrď „Přidat“ vpravo nahoře')}</li>
               </>
             ) : (
@@ -180,7 +185,7 @@ export function InstallPrompt() {
               </>
             )}
           </ol>
-          <button type="button" onClick={dismiss} className="mt-3 min-h-11 w-full rounded-[11px] border border-line-strong px-4 text-sm font-semibold text-muted hover:text-fg">
+          <button type="button" onClick={dismiss} className={`mt-3 w-full ${btnSecondary} text-sm`}>
             {manual ? t('Zavřít') : t('Teď ne')}
           </button>
         </>

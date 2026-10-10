@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { sendTradeMessage } from '@/app/actions/chat'
 import { useT } from '@/lib/i18n/client'
 import type { FormState } from '@/lib/validation'
+import { MessageCircle } from 'lucide-react'
 
 export type ChatMessage = { id: string; mine: boolean; body: string; at: string }
 
@@ -32,8 +33,11 @@ export function TradeChat({ requestId, messages, canWrite, otherName }: { reques
   }, [messages.length])
 
   return (
-    <section id="chat" className="scroll-mt-24 rounded-panel border border-line bg-card p-5 shadow-soft">
-      <h2 className="font-bold text-fg">💬 {t('Zprávy s {name}', { name: otherName })}</h2>
+    <section id="chat" className="scroll-mt-24 rounded-[18px] border border-line bg-card p-5 shadow-soft">
+      <h2 className="flex items-center gap-2 text-xl font-bold text-fg">
+        <MessageCircle className="h-5 w-5 text-accent" strokeWidth={1.75} aria-hidden />
+        {t('Zprávy s {name}', { name: otherName })}
+      </h2>
       <div ref={list} className="mt-4 max-h-[420px] space-y-2 overflow-y-auto pr-1" aria-live="polite">
         {messages.length === 0 && <p className="text-sm text-muted">{t('Zatím žádné zprávy. Domluvte se tu na předání nebo zaslání.')}</p>}
         {messages.map((m) => (
@@ -68,11 +72,11 @@ export function TradeChat({ requestId, messages, canWrite, otherName }: { reques
                 e.currentTarget.form?.requestSubmit()
               }
             }}
-            className="min-h-11 flex-1 resize-y rounded-panel border border-line-strong bg-surface px-3 py-2.5 text-base text-fg outline-none placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent-soft"
+            className="min-h-11 flex-1 resize-y rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-base text-fg outline-none placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent-soft"
           />
           <button
             disabled={pending}
-            className="h-11 shrink-0 rounded-[11px] bg-accent-strong px-5 font-bold text-on-accent transition-colors duration-200 hover:bg-accent-hover disabled:opacity-50"
+            className="h-11 shrink-0 rounded-xl bg-accent-strong px-5 font-bold text-on-accent shadow-[inset_0_-2px_0_rgba(0,0,0,0.12)] transition-colors duration-200 hover:bg-accent-hover disabled:opacity-50"
           >
             {pending ? '…' : t('Odeslat')}
           </button>

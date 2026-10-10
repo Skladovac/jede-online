@@ -4,12 +4,14 @@ import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin'
 import { adminBugStatus } from '@/app/actions/admin'
 import { ActionForm } from '@/components/ActionForm'
+import { ArrowRight } from 'lucide-react'
+import { Badge, EmptyState, panel } from '@/components/design'
 
 const LABEL: Record<BugStatus, string> = { NEW: 'nové', IN_PROGRESS: 'řeší se', DONE: 'hotovo' }
-const CLS: Record<BugStatus, string> = {
-  NEW: 'bg-red-100 text-red-800',
-  IN_PROGRESS: 'bg-yellow-100 text-fg',
-  DONE: 'bg-green-100 text-green-800',
+const TONE: Record<BugStatus, 'red' | 'yellow' | 'positive'> = {
+  NEW: 'red',
+  IN_PROGRESS: 'yellow',
+  DONE: 'positive',
 }
 
 export default async function AdminBugs({ searchParams }: { searchParams: Promise<{ stav?: string }> }) {
@@ -25,7 +27,7 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
   })
   return (
     <div className="space-y-5">
-      <h1 className="text-3xl font-black tracking-tight">Nahlášené chyby</h1>
+      <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">Nahlášené chyby</h1>
       <div className="flex flex-wrap gap-2 text-sm">
         {[
           ['', 'Otevřené'],
@@ -37,7 +39,7 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
           <Link
             key={k}
             href={`/admin/chyby${k ? `?stav=${k}` : ''}`}
-            className={`rounded-full px-3 py-1 ${(stav ?? '') === k ? 'bg-accent-strong text-on-accent' : 'border border-line-strong'}`}
+            className={`inline-flex min-h-9 items-center rounded-full px-3.5 py-1 font-semibold ${(stav ?? '') === k ? 'bg-[var(--ink)] text-white dark:bg-white dark:text-[var(--ink)]' : 'border border-line-strong text-fg hover:bg-card'}`}
           >
             {l}
           </Link>
@@ -46,9 +48,9 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
       {bugs.length ? (
         <ul className="space-y-3">
           {bugs.map((b) => (
-            <li key={b.id} id={b.id} className="rounded-panel border border-line bg-card p-4 text-sm">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-subtle">
-                <span className={`rounded-full px-2 py-0.5 font-semibold ${CLS[b.status]}`}>{LABEL[b.status]}</span>
+            <li key={b.id} id={b.id} className={`${panel} p-4 text-sm`}>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                <Badge tone={TONE[b.status]}>{LABEL[b.status]}</Badge>
                 <span>{b.createdAt.toLocaleString('cs-CZ')}</span>
                 <span>
                   ·{' '}
@@ -67,7 +69,7 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
                   </a>
                 )}
               </div>
-              <p className="mt-2 whitespace-pre-wrap">{b.message}</p>
+              <p className="mt-2 whitespace-pre-wrap text-fg">{b.message}</p>
               {b.userAgent && <p className="mt-1 truncate text-xs text-subtle">{b.userAgent}</p>}
               <div className="mt-2 flex gap-3">
                 {(['NEW', 'IN_PROGRESS', 'DONE'] as BugStatus[])
@@ -76,7 +78,10 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
                     <ActionForm key={s} action={adminBugStatus}>
                       <input type="hidden" name="bugId" value={b.id} />
                       <input type="hidden" name="status" value={s} />
-                      <button className="text-xs underline">→ {LABEL[s]}</button>
+                      <button className="inline-flex items-center gap-1 text-xs font-semibold text-accent underline underline-offset-4">
+                        <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
+                        {LABEL[s]}
+                      </button>
                     </ActionForm>
                   ))}
               </div>
@@ -84,7 +89,7 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
           ))}
         </ul>
       ) : (
-        <p className="text-subtle">Žádné chyby. 🎉</p>
+        <EmptyState>Žádné chyby.</EmptyState>
       )}
     </div>
   )

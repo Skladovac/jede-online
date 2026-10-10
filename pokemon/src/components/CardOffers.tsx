@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { AddToCart } from '@/components/AddToCart'
 import { getT } from '@/lib/i18n/server'
 import { BadgeIcon } from '@/components/Badges'
+import { EmptyState, panel } from '@/components/design'
 
 const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' } as const
 const CONDITION = { MINT: 'Jako nová', LIGHT_PLAYED: 'Mírně hraná', DAMAGED: 'Poškozená' } as const
@@ -32,24 +33,24 @@ export async function CardOffers({ cardId }: { cardId: string }) {
 
   return (
     <section className="mt-10">
-      <h2 className="text-xl font-bold">{t('Kdo ji nabízí')}</h2>
+      <h2 className="text-2xl font-bold text-fg">{t('Kdo ji nabízí')}</h2>
       {offers.length === 0 ? (
-        <p className="mt-3 rounded-panel border border-dashed border-line-strong p-6 text-center text-subtle">
+        <EmptyState className="mt-4">
           {t('Zatím ji nikdo nenabízí. Až si ji někdo přidá do sbírky jako „navíc“, objeví se tady.')}
-        </p>
+        </EmptyState>
       ) : (
-        <ul className="mt-3 divide-y divide-line overflow-hidden rounded-panel border border-line bg-card">
+        <ul className={`mt-4 divide-y divide-line overflow-hidden ${panel}`}>
           {offers.map((o) => (
             <li key={o.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
               <div className="min-w-0 flex-1">
-                <Link href={`/@${encodeURIComponent(o.user.nickname)}`} className="font-semibold hover:underline">
+                <Link href={`/@${encodeURIComponent(o.user.nickname)}`} className="font-semibold text-fg hover:underline">
                   {o.user.nickname}
                 </Link>{' '}
                 <BadgeIcon nickname={o.user.nickname} />
                 {viewer && viewer.id !== o.userId && (
                   <Link
                     href={`/@${encodeURIComponent(o.user.nickname)}?nahlasit=1#nahlasit`}
-                    className="ml-2 text-xs text-subtle hover:text-red-600 hover:underline"
+                    className="ml-2 text-xs text-subtle hover:text-danger hover:underline"
                   >
                     {t('nahlásit')}
                   </Link>
@@ -62,7 +63,7 @@ export async function CardOffers({ cardId }: { cardId: string }) {
                   {o.note && <span className="italic"> · „{o.note}“</span>}
                 </p>
               </div>
-              <span className="flex items-center gap-3 font-semibold">
+              <span className="flex items-center gap-3 font-semibold tabular-nums text-fg">
                 {o.offerType === 'SELL' && o.priceCzk != null
                   ? `${o.priceCzk.toLocaleString('cs-CZ')} Kč`
                   : o.offerType === 'GIFT'

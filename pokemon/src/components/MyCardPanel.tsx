@@ -7,6 +7,7 @@ import { Submit } from '@/components/ui'
 import { ItemForm } from '@/components/ItemForm'
 import { CardBuyForm } from '@/components/BuyForm'
 import { getT } from '@/lib/i18n/server'
+import { Plus, Star } from 'lucide-react'
 
 type CardVariants = {
   id: string
@@ -50,11 +51,23 @@ export async function MyCardPanel({ card }: { card: CardVariants }) {
   return (
     <section className="mt-8 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold">{t('Moje sbírka')}</h2>
+        <h2 className="text-2xl font-bold text-fg">{t('Moje sbírka')}</h2>
         {!items.length && (
           <ActionForm action={toggleWantForm} className="flex items-center gap-2">
             <input type="hidden" name="cardId" value={card.id} />
-            <Submit variant={want ? 'primary' : 'ghost'}>{want ? `★ ${t('Na seznamu chybějících')}` : `☆ ${t('Chybí mi')}`}</Submit>
+            <Submit variant={want ? 'primary' : 'ghost'}>
+              {want ? (
+                <>
+                  <Star className="h-4 w-4" strokeWidth={1.75} fill="currentColor" aria-hidden />
+                  {t('Na seznamu chybějících')}
+                </>
+              ) : (
+                <>
+                  <Star className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+                  {t('Chybí mi')}
+                </>
+              )}
+            </Submit>
           </ActionForm>
         )}
       </div>
@@ -64,8 +77,15 @@ export async function MyCardPanel({ card }: { card: CardVariants }) {
         <ItemForm key={i.id} cardId={card.id} variants={variants} item={i} />
       ))}
       <details className="group" open={!items.length}>
-        <summary className="cursor-pointer text-sm font-medium text-accent">
-          {items.length ? `+ ${t('Přidat další kus (jiná varianta, stav nebo jazyk)')}` : t('Přidat do sbírky')}
+        <summary className="cursor-pointer text-sm font-semibold text-accent">
+          {items.length ? (
+            <span className="inline-flex items-center gap-1">
+              <Plus className="h-4 w-4" strokeWidth={2} aria-hidden />
+              {t('Přidat další kus (jiná varianta, stav nebo jazyk)')}
+            </span>
+          ) : (
+            t('Přidat do sbírky')
+          )}
         </summary>
         <div className="mt-3">
           <ItemForm

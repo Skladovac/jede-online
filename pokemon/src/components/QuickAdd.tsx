@@ -5,6 +5,8 @@ import { quickAdd, quickAddPhoto, type QuickAddState, type QuickHit } from '@/ap
 import { CardImg } from '@/components/CardImg'
 import { cardImage } from '@/lib/format'
 import { useT } from '@/lib/i18n/client'
+import { btnBlue, btnPrimary, btnSecondary, panel } from '@/components/design'
+import { Camera, Check, Plus, Zap } from 'lucide-react'
 
 /**
  * „Přidej kartu číslem“: rychlé zadávání hromádky karet ze stolu. Po přidání se pole vyčistí a zůstane aktivní,
@@ -56,9 +58,10 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
   }, [textState])
 
   return (
-    <section className="rounded-panel border border-line bg-card p-4 sm:p-5" aria-labelledby="quick-add-title">
-      <h2 id="quick-add-title" className="font-bold text-fg">
-        ⚡ {t('Přidej kartu číslem')}
+    <section className={`${panel} p-4 sm:p-5`} aria-labelledby="quick-add-title">
+      <h2 id="quick-add-title" className="flex items-center gap-2 text-xl font-bold text-fg">
+        <Zap className="h-5 w-5 text-brand-yellow-dark dark:text-brand-yellow" strokeWidth={1.75} aria-hidden />
+        {t('Přidej kartu číslem')}
       </h2>
       <form action={action} className="mt-3 flex gap-2">
         <label htmlFor="quick-add-q" className="sr-only">
@@ -80,11 +83,11 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
               e.currentTarget.form?.requestSubmit()
             }
           }}
-          className="max-h-40 min-h-11 min-w-0 flex-1 resize-y rounded-panel border border-line-strong bg-surface px-3 py-2.5 text-base text-fg outline-none placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent-soft"
+          className="max-h-40 min-h-11 min-w-0 flex-1 resize-y rounded-xl border border-line-strong bg-surface px-3 py-2.5 font-mono text-base text-fg outline-none placeholder:text-subtle focus:border-brand-blue focus:ring-4 focus:ring-[rgba(42,117,187,0.15)]"
         />
         <button
           disabled={pending}
-          className="h-11 shrink-0 rounded-panel bg-accent-strong px-5 font-semibold text-on-accent transition-colors duration-200 hover:bg-accent-hover disabled:opacity-50"
+          className={`${btnPrimary} h-11 shrink-0 disabled:opacity-50`}
         >
           {textPending ? '…' : t('Přidat')}
         </button>
@@ -108,9 +111,9 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
               onClick={() => fileInput.current?.click()}
               aria-label={t('Vyfotit kartu')}
               title={t('Vyfotit kartu')}
-              className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-panel bg-brand-blue px-4 font-semibold text-white transition-colors duration-200 hover:bg-brand-blue-dark disabled:opacity-50"
+              className={`${btnBlue} h-11 shrink-0 !px-4 disabled:opacity-50`}
             >
-              {photoPending ? '…' : '📷'}
+              {photoPending ? '…' : <Camera strokeWidth={1.75} aria-hidden />}
               <span className="hidden sm:inline">{t('Vyfotit')}</span>
             </button>
           </>
@@ -118,7 +121,8 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
       </form>
       {photo && (
         <p className="mt-2 text-xs text-subtle">
-          {t('📷 Vyfoť celou kartu zepředu — web ji pozná, ukáže cenu a zeptá se, jestli ji přidat.')}{' '}
+          <Camera className="mr-1 inline h-3.5 w-3.5 -translate-y-px align-middle" strokeWidth={1.75} aria-hidden />
+          {t('Vyfoť celou kartu zepředu — web ji pozná, ukáže cenu a zeptá se, jestli ji přidat.')}{' '}
           {quota && left !== null && (
             <strong className={noPhotos ? 'text-danger' : 'text-muted'}>
               {noPhotos ? t('Dnešní fotky jsou vyčerpané, zítra zase.') : t('Dnes zbývá {n} z {max} fotek.', { n: left, max: photoDaily })}
@@ -131,31 +135,38 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
       <div aria-live="polite">
         {photoPending && <p className="mt-3 text-sm text-muted">{t('Čtu kartu z fotky…')}</p>}
         {last === 'photo' && !photoPending && state.suggest && (
-          <div className="mt-3 rounded-panel border-2 border-line-hover bg-accent-soft p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue dark:text-accent">📷 {t('Na fotce je')}</p>
-            <div className="mt-2 flex gap-4">
-              <span className="block aspect-[63/88] w-28 shrink-0 overflow-hidden rounded-lg bg-surface shadow-md sm:w-36">
-                <CardImg src={cardImage(state.suggest.imageUrl)} alt={state.suggest.name} eager />
+          <div className="mt-3 rounded-[18px] border border-line-strong bg-surface p-4">
+            <p className="eyebrow flex items-center gap-1.5">
+              <Camera className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
+              {t('Na fotce je')}
+            </p>
+            <div className="mt-3 flex gap-4">
+              <span className="card-tile group block w-28 shrink-0 sm:w-36">
+                <span className="card-frame block aspect-[63/88]">
+                  <CardImg src={cardImage(state.suggest.imageUrl)} alt={state.suggest.name} eager />
+                </span>
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-lg font-extrabold text-fg">{state.suggest.name}</p>
+                <p className="font-display text-lg font-bold text-fg">{state.suggest.name}</p>
                 <p className="text-sm text-muted">{state.suggest.set}</p>
-                <p className="text-sm tabular-nums text-muted">{state.suggest.number}</p>
-                <p className="mt-2 text-xl font-extrabold tabular-nums text-brand-blue-deep dark:text-white">
+                <p className="font-mono text-[11.5px] tabular-nums text-subtle">{state.suggest.number}</p>
+                <p className="mt-2 font-display text-xl font-bold tabular-nums text-fg">
                   {state.suggest.price ? `≈ ${state.suggest.price}` : t('Cena zatím neznámá')}
                 </p>
                 {state.suggest.owned > 0 && <p className="text-xs text-positive">{t('Už máš {n} ks', { n: state.suggest.owned })}</p>}
                 <form action={action} className="mt-3 flex flex-wrap gap-2">
                   <input type="hidden" name="cardId" value={state.suggest.id} />
-                  <button className="min-h-11 rounded-[11px] bg-accent-strong px-4 font-bold text-on-accent transition-colors duration-200 hover:bg-accent-hover">
-                    ＋ {t('Přidat do alba')}
+                  <button className={btnPrimary}>
+                    <Plus strokeWidth={2} aria-hidden />
+                    {t('Přidat do alba')}
                   </button>
                   {!noPhotos && <button
                     type="button"
                     onClick={() => fileInput.current?.click()}
-                    className="min-h-11 rounded-[11px] border border-line-strong bg-card px-4 text-sm font-semibold text-muted hover:text-fg"
+                    className={`${btnSecondary} text-sm`}
                   >
-                    📷 {t('Vyfotit znovu')}
+                    <Camera strokeWidth={1.75} aria-hidden />
+                    {t('Vyfotit znovu')}
                   </button>}
                 </form>
               </div>
@@ -168,7 +179,7 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
           <div className="mt-3 flex items-center gap-3 rounded-panel bg-[color-mix(in_srgb,var(--positive)_12%,transparent)] p-2.5">
             <Thumb hit={state.added} />
             <p className="min-w-0 text-sm text-fg">
-              <span className="font-semibold text-positive">✓ {t('Přidáno')}:</span> {state.added.name}{' '}
+              <span className="inline-flex items-center gap-1 font-semibold text-positive"><Check className="h-4 w-4" strokeWidth={2.6} aria-hidden />{t('Přidáno')}:</span> {state.added.name}{' '}
               <span className="text-muted">({state.added.number})</span>
               <span className="block text-xs text-muted">{t('Teď máš {n} ks', { n: state.added.owned })}</span>
             </p>
@@ -178,8 +189,9 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
           <div className="mt-3 space-y-3 text-sm">
             {state.batch.added.length > 0 && (
               <div className="rounded-panel bg-[color-mix(in_srgb,var(--positive)_12%,transparent)] p-3">
-                <p className="font-semibold text-positive">
-                  ✓ {t('Přidáno {n} karet', { n: state.batch.added.reduce((s, a) => s + a.qty, 0) })}
+                <p className="flex items-center gap-1 font-semibold text-positive">
+                  <Check className="h-4 w-4" strokeWidth={2.6} aria-hidden />
+                  {t('Přidáno {n} karet', { n: state.batch.added.reduce((s, a) => s + a.qty, 0) })}
                 </p>
                 <ul className="mt-1 space-y-0.5 text-fg">
                   {state.batch.added.map((a) => (
@@ -209,10 +221,10 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold text-fg">{h.name}</span>
                             <span className="block truncate text-xs text-muted">
-                              {h.set} · {h.number}
+                              {h.set} · <span className="font-mono text-[11.5px] text-subtle">{h.number}</span>
                             </span>
                           </span>
-                          <span className="shrink-0 text-sm font-semibold text-accent">+ {t('Přidat')}</span>
+                          <span className="inline-flex shrink-0 items-center gap-0.5 text-sm font-semibold text-accent"><Plus className="h-4 w-4" strokeWidth={2} aria-hidden />{t('Přidat')}</span>
                         </button>
                       </form>
                     </li>
@@ -235,12 +247,12 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold text-fg">{h.name}</span>
                         <span className="block truncate text-xs text-muted">
-                          {h.set} · {h.number}
+                          {h.set} · <span className="font-mono text-[11.5px] text-subtle">{h.number}</span>
                         </span>
                         {h.price && <span className="block text-xs tabular-nums text-muted">≈ {h.price}</span>}
                         {h.owned > 0 && <span className="block text-xs text-positive">{t('máš {n} ks', { n: h.owned })}</span>}
                       </span>
-                      <span className="shrink-0 text-sm font-semibold text-accent">+ {t('Přidat')}</span>
+                      <span className="inline-flex shrink-0 items-center gap-0.5 text-sm font-semibold text-accent"><Plus className="h-4 w-4" strokeWidth={2} aria-hidden />{t('Přidat')}</span>
                     </button>
                   </form>
                 </li>
@@ -255,7 +267,7 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
 
 function Thumb({ hit }: { hit: QuickHit }) {
   return (
-    <span className="block aspect-[63/88] w-10 shrink-0 overflow-hidden rounded bg-surface">
+    <span className="block aspect-[63/88] w-10 shrink-0 overflow-hidden rounded-[3px] bg-surface shadow-card">
       <CardImg src={cardImage(hit.imageUrl)} alt={hit.name} />
     </span>
   )

@@ -8,6 +8,7 @@ import { needsParentConsent, CONSENT_AGE, type CountryCode } from '@/lib/age'
 import { REGIONS } from '@/lib/regions'
 import { PasswordInput } from '@/components/PasswordInput'
 import { useT } from '@/lib/i18n/client'
+import { btnPrimary } from '@/components/design'
 
 const MONTHS = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec']
 
@@ -92,7 +93,7 @@ export function RegisterForm({ next, social }: { next?: string | null; social?: 
       </Field>
 
       {minor && (
-        <div className="space-y-3 rounded-panel border border-line-strong bg-accent-soft p-4">
+        <div className="space-y-3 rounded-xl border border-line bg-accent-soft p-4">
           <p className="text-sm">
             {t('Je ti méně než {age} let, takže účet musí schválit rodič. Pošleme mu e-mail s odkazem. Do té doby si můžeš prohlížet katalog a vést sbírku, ale profil nebude vidět a nepůjde posílat nabídky.', { age: CONSENT_AGE[country] })}
           </p>
@@ -122,7 +123,7 @@ export function RegisterForm({ next, social }: { next?: string | null; social?: 
         )}
         <Checkbox name="terms">
           {t('Souhlasím s')}{' '}
-          <Link href="/soukromi" target="_blank" className="underline">
+          <Link href="/soukromi" target="_blank" className="font-semibold text-accent underline underline-offset-4">
             {t('pravidly a zásadami ochrany osobních údajů')}
           </Link>{' '}
           {t('a beru na vědomí, že web jen zprostředkovává kontakt mezi sběrateli. Za nabídky, domluvené výměny, prodeje ani jejich průběh provozovatel neodpovídá.')}
@@ -132,7 +133,7 @@ export function RegisterForm({ next, social }: { next?: string | null; social?: 
       <button
         type="submit"
         disabled={pending}
-        className="rounded-xl bg-accent-strong px-5 py-2.5 font-semibold text-on-accent transition hover:bg-accent-hover disabled:opacity-50"
+        className={`${btnPrimary} w-full disabled:opacity-50`}
       >
         {pending ? t('Moment…') : social ? t('Dokončit registraci') : t('Zaregistrovat se')}
       </button>
