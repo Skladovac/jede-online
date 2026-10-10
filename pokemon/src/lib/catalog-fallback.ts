@@ -55,10 +55,32 @@ async function ptcgCards(setId: string) {
 
 // ── Obrázky z TCGplayeru (přes tcgcsv.com) pro sady, které TCGdex ani pokemontcg nemají dobře ──
 // match: 'number' = podle čísla karty (R/RGB → R, 065/128 → 065), 'name' = podle názvu (sady s původním číslováním).
-const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' }> = {
+// match 'kit' = trenérské balíčky: TCGplayer má dva balíčky v jedné skupině, karta se páruje číslem + jménem
+// a při shodě podle názvu balíčku v názvu produktu („Psychic Energy (#8 - Latias)“).
+const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' | 'kit'; deck?: string }> = {
   '30th': { group: 24722, match: 'number' },
   '30th-c': { group: 24837, match: 'name' },
   mep: { group: 24451, match: 'number' }, // MEP Black Star Promos (nové promo karty TCGdex dlouho nemá s obrázkem)
+  cel25cc: { group: 2931, match: 'name' },
+  '2023sv': { group: 23306, match: 'number' },
+  '2024sv': { group: 24163, match: 'number' },
+  mfb: { group: 23330, match: 'kit' },
+  'tk-xy-p': { group: 1796, match: 'kit', deck: 'Pikachu' },
+  'tk-xy-su': { group: 1796, match: 'kit', deck: 'Suicune' },
+  'tk-xy-latia': { group: 1536, match: 'kit', deck: 'Latias' },
+  'tk-xy-latio': { group: 1536, match: 'kit', deck: 'Latios' },
+  'tk-xy-b': { group: 1533, match: 'kit', deck: 'Bisharp' },
+  'tk-xy-w': { group: 1533, match: 'kit', deck: 'Wigglytuff' },
+  'tk-xy-sy': { group: 1532, match: 'kit', deck: 'Sylveon' },
+  'tk-xy-n': { group: 1532, match: 'kit', deck: 'Noivern' },
+  'tk-bw-e': { group: 1538, match: 'kit', deck: 'Excadrill' },
+  'tk-bw-z': { group: 1538, match: 'kit', deck: 'Zoroark' },
+  'tk-hs-g': { group: 1540, match: 'kit', deck: 'Gyarados' },
+  'tk-hs-r': { group: 1540, match: 'kit', deck: 'Raichu' },
+  'tk-sm-r': { group: 2069, match: 'kit', deck: 'Raichu' },
+  'tk-sm-l': { group: 2069, match: 'kit', deck: 'Lycanroc' },
+  'tk-dp-m': { group: 1541, match: 'kit', deck: 'Manaphy' },
+  'tk-dp-l': { group: 1541, match: 'kit', deck: 'Lucario' },
 }
 const TCGP_CDN = 'https://tcgplayer-cdn.tcgplayer.com/product/'
 
@@ -105,10 +127,12 @@ async function fillFromTcgplayer(log: (m: string) => void) {
       )
       const cards = await prisma.card.findMany({ where: { setId }, select: { id: true, localId: true, name: true, imageUrl: true } })
       const byNum = new Map<string, TcgpProduct>()
+      const allByNum = new Map<string, TcgpProduct[]>()
       const byName = new Map<string, TcgpProduct[]>()
       for (const p of products) {
         const num = p.extendedData!.find((e) => e.name === 'Number')!.value.split('/')[0]
         // Stejné číslo má víc verzí („[Staff]“, „Pokemon Center Exclusive“) — bereme základní (nejkratší název).
+        allByNum.set(numKey(num), [...(allByNum.get(numKey(num)) ?? []), p])
         const prev = byNum.get(numKey(num))
         if (!prev || p.name.length < prev.name.length) byNum.set(numKey(num), p)
         const k = nameKey(p.name)
@@ -117,6 +141,12 @@ async function fillFromTcgplayer(log: (m: string) => void) {
       for (const c of cards) {
         let p: TcgpProduct | undefined
         if (cfg.match === 'number') p = byNum.get(numKey(c.localId))
+        else if (cfg.match === 'kit') {
+          // Stejné číslo + stejné jméno karty; při víc kandidátech ten s názvem našeho balíčku.
+          const same = (allByNum.get(numKey(c.localId)) ?? []).filter((x) => nameKey(x.name) === nameKey(c.name))
+          const deck = cfg.deck?.toLowerCase()
+          p = (deck && same.find((x) => x.name.toLowerCase().includes(deck))) || same.find((x) => !/ - [A-Z]/.test(x.name)) || same[0]
+        }
         else {
           const list = byName.get(nameKey(c.name)) ?? []
           // Dvojice se stejným názvem (Darkrai & Cresselia LEGEND horní/dolní půlka): podle pořadí čísel.
