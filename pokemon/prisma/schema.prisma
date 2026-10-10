@@ -150,6 +150,7 @@ model User {
   oauthAccounts  OAuthAccount[]
   badges         UserBadge[]
   activeDays     UserActiveDay[]
+  photoScans     PhotoScan[]
   tradeMessages  TradeMessage[]
   following      Follow[]       @relation("Follower")
   followers      Follow[]       @relation("Following")
@@ -585,6 +586,17 @@ model Follow {
 }
 
 // Dny, kdy byl uživatel na webu (statistika „aktivní uživatelé po dnech“ v administraci).
+// Rozpoznání karty z fotky (placené OpenAI) — kvůli dennímu limitu na uživatele.
+model PhotoScan {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
+
 model UserActiveDay {
   day    DateTime @db.Date
   userId String
