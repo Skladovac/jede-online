@@ -300,7 +300,8 @@ export async function toggleWantForm(_: FormState, fd: FormData): Promise<FormSt
 // ── Rychlé přidání karty číslem (Moje sbírka) ──
 
 export type QuickHit = { id: string; name: string; number: string; set: string; imageUrl: string | null; owned: number }
-export type QuickAddState = { added?: QuickHit; hits?: QuickHit[]; error?: string; q?: string }
+export type QuickBatch = { added: (QuickHit & { qty: number })[]; ambiguous: { q: string; hits: QuickHit[] }[]; notFound: string[] }
+export type QuickAddState = { added?: QuickHit; hits?: QuickHit[]; batch?: QuickBatch; error?: string; q?: string }
 
 async function toHits(userId: string, cards: Awaited<ReturnType<typeof searchCards>>): Promise<QuickHit[]> {
   const owned = await prisma.collectionItem.groupBy({
@@ -345,6 +346,26 @@ export async function quickAdd(_: QuickAddState, fd: FormData): Promise<QuickAdd
   }
   const q = str(fd, 'q').trim()
   if (q.length < 2) return { error: t('Napiš číslo z karty, např. MEP 101 nebo 045/198.'), q }
+  // Seznam najednou: „MEP 101, SVI 045; 2x 30C 071“ (oddělené čárkou, středníkem nebo novým řádkem).
+  if (/[,;\n]/.test(q)) {
+    const items = q.split(/[,;\n]+/).map((x) => x.trim()).filter((x) => x.length >= 2).slice(0, 100)
+    const batch: QuickBatch = { added: [], ambiguous: [], notFound: [] }
+    for (const raw of items) {
+      const m = raw.match(/^(\d{1,2})\s*[x×]\s*(.+)$/i)
+      const qty = m ? Math.min(20, Number(m[1])) : 1
+      const term = m ? m[2] : raw
+      const cards = await searchCards(term, 8)
+      if (!cards.length) batch.notFound.push(raw)
+      else if (cards.length > 1) batch.ambiguous.push({ q: raw, hits: await toHits(user.id, cards) })
+      else {
+        for (let i = 0; i < qty; i++) await addPiece(user.id, cards[0].id)
+        const [hit] = await toHits(user.id, cards)
+        batch.added.push({ ...hit, qty })
+      }
+    }
+    if (batch.added.length) revalidatePath('/sbirka')
+    return { batch }
+  }
   const cards = await searchCards(q, 8)
   if (!cards.length) return { error: t('Nic jsme nenašli. Zkus kód sady a číslo, např. SVI 045.'), q }
   if (cards.length === 1) {
@@ -354,4 +375,46 @@ export async function quickAdd(_: QuickAddState, fd: FormData): Promise<QuickAdd
     return { added: hit }
   }
   return { hits: await toHits(user.id, cards), q }
+}
+
+// ── Hromadná nabídka (Moje sbírka → Hromadná nabídka) ──
+
+/**
+ * Vybraným řádkům sbírky nastaví nabídku najednou (nebo ji zruší). Pravidla stejná jako u jedné karty:
+ * nabízet jde jen s ověřeným e-mailem, kusů navíc nejvýš tolik, kolik jich mám, prodej s cenou v Kč.
+ */
+export async function bulkOffer(_: FormState, fd: FormData): Promise<FormState> {
+  const t = await getT()
+  const user = await requireUser()
+  const ids = fd.getAll('ids').map(String).filter(Boolean).slice(0, 2000)
+  if (!ids.length) return { error: t('Vyber aspoň jednu kartu.') }
+  const items = await prisma.collectionItem.findMany({ where: { id: { in: ids }, userId: user.id }, select: { id: true, quantity: true, spareQty: true, offerType: true, priceCzk: true } })
+  if (str(fd, 'mode') === 'clear') {
+    await prisma.collectionItem.updateMany({ where: { id: { in: items.map((i) => i.id) } }, data: { spareQty: 0, offerType: null, priceCzk: null } })
+    revalidatePath('/sbirka')
+    revalidatePath('/sbirka/nabidka')
+    return { ok: t('Nabídka zrušena u {n} karet.', { n: items.length }) }
+  }
+  if (!user.emailVerifiedAt) return { error: t('Kusy navíc můžeš nabízet po potvrzení e-mailu (odkaz je v Můj účet).') }
+  const offerType = str(fd, 'offerType') as OfferType
+  if (!OFFERS.includes(offerType)) return { error: t('Neplatný typ nabídky.') }
+  const spare = Number(str(fd, 'spare'))
+  if (!Number.isInteger(spare) || spare < 1 || spare > 999) return { error: t('Kusů navíc: 1–999.') }
+  const priceCzk = offerType === 'SELL' ? Number(str(fd, 'priceCzk')) : null
+  if (offerType === 'SELL' && (!Number.isInteger(priceCzk) || priceCzk! < 1 || priceCzk! > 1_000_000))
+    return { error: t('Zadej cenu v celých korunách.') }
+  const now = new Date()
+  await prisma.$transaction(
+    items.map((i) => {
+      const spareQty = Math.min(spare, i.quantity)
+      const changed = i.spareQty === 0 || i.offerType !== offerType || i.priceCzk !== priceCzk
+      return prisma.collectionItem.update({
+        where: { id: i.id },
+        data: { spareQty, offerType, priceCzk, ...(changed && { offeredAt: now }) },
+      })
+    }),
+  )
+  revalidatePath('/sbirka')
+  revalidatePath('/sbirka/nabidka')
+  return { ok: t('Nabídka uložena u {n} karet.', { n: items.length }) }
 }

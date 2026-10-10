@@ -51,15 +51,18 @@ export default async function AdminGrowth() {
     perDay('Rating', 'createdAt'),
     prisma.user.count({ where: { bannedAt: null } }),
     prisma.user.count({ where: { bannedAt: null, createdAt: { lt: new Date(Date.now() - DAYS * 86_400_000) } } }),
-    prisma.session.groupBy({ by: ['userId'], where: { createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } } }),
-    prisma.session.groupBy({ by: ['userId'], where: { createdAt: { gte: new Date(Date.now() - 30 * 86_400_000) } } }),
+    prisma.user.count({ where: { lastSeenAt: { gte: new Date(Date.now() - 7 * 86_400_000) } } }),
+    prisma.user.count({ where: { lastSeenAt: { gte: new Date(Date.now() - 30 * 86_400_000) } } }),
   ])
+  const activeDays = await prisma.userActiveDay.groupBy({ by: ['day'], where: { day: { gte: new Date(Date.now() - DAYS * 86_400_000) } }, _count: true })
+  const activeMap = new Map(activeDays.map((v) => [v.day.toISOString().slice(0, 10), v._count]))
   const visitorMap = new Map(visitors.map((v) => [v.day.toISOString().slice(0, 10), v._count]))
 
   const series = [
     { label: 'Registrace', map: regs, color: '#818cf8' },
     { label: 'Unikátní návštěvníci', map: visitorMap, color: '#60a5fa' },
-    { label: 'Přihlášení (uživatelé)', map: logins, color: '#a78bfa' },
+    { label: 'Aktivní uživatelé', map: activeMap, color: '#a78bfa' },
+    { label: 'Nová přihlášení', map: logins, color: '#c4b5fd' },
     { label: 'Přidané karty do sbírek', map: added, color: '#34d399' },
     { label: 'Nové nabídky', map: offers, color: '#38bdf8' },
     { label: 'Nové „chybí mi“', map: wants, color: '#fbbf24' },
@@ -98,8 +101,8 @@ export default async function AdminGrowth() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Kpi label="Uživatelé celkem" value={totalUsers} sub={growth === null ? `za ${DAYS} dní +${totalUsers - users30ago}` : `za ${DAYS} dní +${totalUsers - users30ago} (${growth} %)`} />
-        <Kpi label="Přihlásili se za 7 dní" value={wau.length} sub="nové přihlášení (kdo zůstává přihlášený, se nepočítá)" />
-        <Kpi label="Přihlásili se za 30 dní" value={mau.length} sub="nové přihlášení" />
+        <Kpi label="Aktivní za 7 dní" value={wau} sub="přihlášení uživatelé na webu" />
+        <Kpi label="Aktivní za 30 dní" value={mau} sub="měříme od 10. 10. 2026" />
         <Kpi label={`Návštěvníci za ${DAYS} dní`} value={visitors30} sub="součet denních unikátů" />
         <Kpi
           label="Konverze na registraci"

@@ -40,8 +40,23 @@ export const getCurrentUser = cache(async () => {
   if (!token) return null
   const session = await prisma.session.findUnique({ where: { id: sha256(token) }, include: { user: true } })
   if (!session || session.expiresAt < new Date() || session.user.bannedAt) return null
+  await touchLastSeen(session.user.id, session.user.lastSeenAt)
   return session.user
 })
+
+/**
+ * „Naposledy na webu“ a aktivní den pro statistiky. Zapisuje se nejvýš jednou za 10 minut (ne při každém požadavku);
+ * chyba zápisu nesmí shodit stránku.
+ */
+async function touchLastSeen(userId: string, lastSeenAt: Date | null) {
+  const now = new Date()
+  if (lastSeenAt && now.getTime() - lastSeenAt.getTime() < 10 * 60_000) return
+  const day = new Date(`${new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Prague' }).format(now)}T00:00:00Z`)
+  await Promise.all([
+    prisma.user.update({ where: { id: userId }, data: { lastSeenAt: now } }),
+    prisma.userActiveDay.createMany({ data: [{ day, userId }], skipDuplicates: true }),
+  ]).catch((err) => console.error('[aktivita]', err))
+}
 
 /** Účet nezletilého bez souhlasu rodiče je omezený (skrytý profil, žádné poptávky). */
 export const isLimited = (u: { isMinor: boolean; parentConsentAt: Date | null }) => u.isMinor && !u.parentConsentAt

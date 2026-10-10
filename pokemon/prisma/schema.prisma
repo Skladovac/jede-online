@@ -120,6 +120,7 @@ model User {
   invited         User[]    @relation("Invites")
   inviteCountedAt DateTime?
   followDigestAt  DateTime? // do kdy už jsme poslali souhrn nových nabídek sledovaných
+  lastSeenAt      DateTime? // naposledy na webu (zapisuje se nejvýš jednou za 10 minut)
 
   isAdmin     Boolean  @default(false)
   bannedAt    DateTime?
@@ -144,6 +145,7 @@ model User {
   notifications  Notification[]
   oauthAccounts  OAuthAccount[]
   badges         UserBadge[]
+  activeDays     UserActiveDay[]
   following      Follow[]       @relation("Follower")
   followers      Follow[]       @relation("Following")
 
@@ -574,4 +576,13 @@ model Follow {
 
   @@id([followerId, followingId])
   @@index([followingId])
+}
+
+// Dny, kdy byl uživatel na webu (statistika „aktivní uživatelé po dnech“ v administraci).
+model UserActiveDay {
+  day    DateTime @db.Date
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([day, userId])
 }
