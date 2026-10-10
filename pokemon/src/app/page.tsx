@@ -101,14 +101,24 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
 
 /** Návštěvník: hero s kartami „v ruce“ (skutečné obrázky z nejnovější sady) a velkým jemným Pokéballem v pozadí. */
 async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; setCount: number; cardCount: number; previewSetId?: string }) {
-  const preview = previewSetId
+  // 5 nejdražších karet nejnovější sady, každá jiná (ne tři varianty téhož Pokémona) — u duplicit zůstane ta dražší.
+  const candidates = previewSetId
     ? await prisma.card.findMany({
         where: { setId: previewSetId, imageUrl: { not: null } },
         orderBy: { priceEur: { sort: 'desc', nulls: 'last' } },
         select: { id: true, name: true, imageUrl: true },
-        take: 5,
+        take: 40,
       })
     : []
+  const seen = new Set<string>()
+  const preview = candidates
+    .filter((c) => {
+      const key = c.name.replace(/\s+(ex|EX|V|VMAX|VSTAR|GX)$/, '').toLowerCase()
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .slice(0, 5)
   // Vějíř karet: mírné natočení a posun, prostřední karta nahoře.
   const fan = [
     'left-[2%] top-[18%] -rotate-[9deg] z-10',
