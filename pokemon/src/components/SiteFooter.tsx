@@ -21,7 +21,7 @@ export async function SiteFooter() {
             <img src="/logo.svg" alt="" width={28} height={28} className="h-7 w-7" />
             pokemon<span className="-ml-2 text-brand-yellow">.jede.online</span>
           </p>
-          <p className="mt-2 max-w-sm">{t('Fan project · zdarma · bez reklam')}</p>
+          <p className="mt-2 max-w-sm">{t('Fan project · zdarma')}</p>
         </div>
         <div>
           <p className="mb-3 text-xs font-bold uppercase tracking-wider text-brand-yellow">{t('Informace')}</p>

@@ -135,7 +135,7 @@ async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; s
         <div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-md bg-brand-yellow px-2 py-1 font-extrabold tracking-wider text-brand-blue-deep">BETA</span>
-            <span className="font-medium text-muted">{t('Fan project · zdarma · bez reklam')}</span>
+            <span className="font-medium text-muted">{t('Fan project · zdarma')}</span>
           </div>
           <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-blue dark:text-accent">
             <Pokeball className="h-3.5 w-3.5" /> {t('Pokémon TCG fan project')}

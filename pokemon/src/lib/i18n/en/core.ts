@@ -1,6 +1,5 @@
 // Překlady (en) – oblast „core“. Klíč = český text přesně jak je v kódu.
 const dict: Record<string, string> = {
-  "Zkušební provoz · komunitní projekt ve vývoji, zdarma a bez reklam": "Trial run · a community project in development, free and ad-free",
   "Pokémon karty — sbírka a výměny": "Pokémon cards — collection and trades",
   "Evidence sbírky Pokémon karet, seznam chybějících karet a výměny mezi sběrateli v ČR a SK.": "Track your Pokémon card collection, list the cards you are missing and trade with collectors in Czechia and Slovakia.",
   "Vlastní sbírka, chybějící karty a výměny mezi sběrateli z Česka a Slovenska. Zdarma.": "Your own collection, missing cards and trades between collectors from Czechia and Slovakia. Free.",
@@ -186,7 +185,6 @@ const dict: Record<string, string> = {
   'Za poštovné': 'For postage',
   'Ceny karet z Cardmarketu · aktualizace jednou denně': 'Card prices powered by Cardmarket · updated daily',
   'naposledy {date}': 'last {date}',
-  'Komunitní projekt · zdarma a bez reklam': 'Community project · free & ad-free',
   'Správce sbírky Pokémon TCG': 'Pokémon TCG collection manager',
   'Ukázka alba': 'Album preview',
   'Vítej zpět, {name}': 'Welcome back, {name}',
@@ -212,7 +210,7 @@ const dict: Record<string, string> = {
   'Spodní navigace': 'Bottom navigation',
   'Hledat kartu, set nebo číslo…': 'Search a card, set or number…',
   'Registrovat': 'Sign up',
-  'Fan project · zdarma · bez reklam': 'Fan project · free · ad-free',
+  'Fan project · zdarma': 'Fan project · free',
   'Pokémon TCG fan project': 'Pokémon TCG fan project',
   'Tvoje Pokémon sbírka.': 'Your Pokémon collection.',
   'Na jednom místě.': 'All in one place.',
