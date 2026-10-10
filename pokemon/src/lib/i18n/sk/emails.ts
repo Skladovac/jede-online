@@ -104,5 +104,15 @@ const dict: Record<string, string> = {
     '<small>Tieto e-maily môžeš vypnúť v <a href="{url}">Môj účet</a>.</small>',
   'Zobrazit, kdo to nabízí': 'Zobraziť, kto to ponúka',
   'Otevřít moji sbírku': 'Otvoriť moju zbierku',
+  'Pošli mi v neděli odpoledne týdenní souhrn (nové nabídky, sledující, hodnocení, zájem o moje karty).': 'Pošli mi v nedeľu poobede týždenný súhrn (nové ponuky, sledujúci, hodnotenia, záujem o moje karty).',
+  'Nové nabídky karet, které ti chybí ({n})': 'Nové ponuky kariet, ktoré ti chýbajú ({n})',
+  '…a další na webu.': '…a ďalšie na webe.',
+  'Noví sledující: {names}': 'Noví sledujúci: {names}',
+  'Nová hodnocení: 👍 {pos} · 👎 {neg}': 'Nové hodnotenia: 👍 {pos} · 👎 {neg}',
+  'Tvoje nabídky ({offers}): žádosti o výměnu za týden {requests}, v košíku je má teď {carts} lidí.': 'Tvoje ponuky ({offers}): žiadosti o výmenu za týždeň {requests}, v košíku ich má teraz {carts} ľudí.',
+  'Týdenní souhrn vypneš v Můj účet.': 'Týždenný súhrn vypneš v Môj účet.',
+  'Tvůj týden na pokemon.jede.online': 'Tvoj týždeň na pokemon.jede.online',
+  'Ahoj {name}, tohle se za poslední týden stalo kolem tvé sbírky:': 'Ahoj {name}, toto sa za posledný týždeň stalo okolo tvojej zbierky:',
+  'Otevřít web': 'Otvoriť web',
 }
 export default dict

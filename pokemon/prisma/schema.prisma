@@ -110,6 +110,9 @@ model User {
   matchEmails   Boolean   @default(true)
   locale        String    @default("cs") @db.VarChar(5) // jazyk webu a e-mailů: cs / sk / en
   matchDigestAt DateTime? // do kdy už jsme shody poslali
+  // Týdenní souhrn e-mailem (neděle 17:00): nové nabídky, sledující, hodnocení, zájem o moje nabídky.
+  weeklyEmails   Boolean   @default(true)
+  weeklyDigestAt DateTime?
   linksApprovedAt DateTime? // u nezletilých schvaluje rodič
 
   acceptedTermsAt DateTime?

@@ -6,3 +6,5 @@
 45 14 * * * root . /opt/jede/pokemon.env && curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3400/api/cron/badges >> /var/log/pokemon-badges.log 2>&1 && echo >> /var/log/pokemon-badges.log
 # Denni souhrn novych nabidek sledovanych sberatelu (do zvonecku)
 50 14 * * * root . /opt/jede/pokemon.env && curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3400/api/cron/follow-digest >> /var/log/pokemon-follow.log 2>&1 && echo >> /var/log/pokemon-follow.log
+# Tydenni souhrn e-mailem - nedele 17:00 prazskeho casu (bezi kazdou hodinu v nedeli, odesle se jen v 17 h Praha)
+0 * * * 0 root . /opt/jede/pokemon.env && curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3400/api/cron/weekly-digest >> /var/log/pokemon-weekly.log 2>&1 && echo >> /var/log/pokemon-weekly.log

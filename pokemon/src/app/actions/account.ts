@@ -51,6 +51,7 @@ export async function updateProfile(_: FormState, fd: FormData): Promise<FormSta
       ...links,
       phone: phoneRes.phone,
       matchEmails: fd.get('matchEmails') === 'on',
+      weeklyEmails: fd.get('weeklyEmails') === 'on',
       // Dospělý si odkazy schvaluje sám; dítěti je musí znovu schválit rodič.
       ...(linksChanged && { linksApprovedAt: user.isMinor ? null : new Date() }),
       // Indexaci u dítěte řídí jen rodič.

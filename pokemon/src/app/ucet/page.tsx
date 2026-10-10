@@ -134,6 +134,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <Checkbox name="matchEmails" defaultChecked={user.matchEmails}>
             {t('Pošli mi jednou denně e-mail, když někdo nabídne kartu, která mi chybí.')}
           </Checkbox>
+          <Checkbox name="weeklyEmails" defaultChecked={user.weeklyEmails}>
+            {t('Pošli mi v neděli odpoledne týdenní souhrn (nové nabídky, sledující, hodnocení, zájem o moje karty).')}
+          </Checkbox>
 
           {user.isMinor ? (
             <p className="text-sm text-subtle">
