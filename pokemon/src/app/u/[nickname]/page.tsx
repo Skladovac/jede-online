@@ -191,7 +191,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
                   <p className="mb-2 text-sm font-semibold text-fg">
                     🔗 {t('Sdílej svůj profil — kdo odkaz otevře, uvidí přepínač Nabízí / Hledá:')}
                   </p>
-                  <CopyLink url={`https://pokemon.jede.online/@${encodeURIComponent(user.nickname)}?ukaz=${view}`} title={t('Co nabízím a co hledám')} />
+                  <CopyLink url={`https://pokemon.jede.online/@${encodeURIComponent(user.nickname)}`} title={t('Co nabízím a co hledám')} />
                 </div>
               )}
               <div className="mb-8 flex gap-3">
