@@ -6,6 +6,7 @@ import { ensureEurCzk } from '@/lib/fx'
 import { CopyLink } from '@/components/CopyLink'
 import { Dashboard } from '@/components/Dashboard'
 import { QuickAdd } from '@/components/QuickAdd'
+import { visionEnabled } from '@/lib/card-vision'
 import { ImportExport } from '@/components/ImportExport'
 import { interestInMyCards } from '@/lib/interest'
 import { cardImage } from '@/lib/format'
@@ -35,7 +36,7 @@ export default async function MyCollectionPage() {
         </p>
       )}
       <div className="mt-6">
-        <QuickAdd />
+        <QuickAdd photo={visionEnabled()} />
         <p className="mt-2 text-right text-sm">
           <Link href="/sbirka/nabidka" className="font-medium text-accent hover:underline">
             🏷️ {t('Hromadná nabídka: nabídni víc karet najednou')} →

@@ -1,7 +1,7 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
-import { quickAdd, type QuickAddState, type QuickHit } from '@/app/actions/collection'
+import { startTransition, useActionState, useEffect, useRef, useState } from 'react'
+import { quickAdd, quickAddPhoto, type QuickAddState, type QuickHit } from '@/app/actions/collection'
 import { CardImg } from '@/components/CardImg'
 import { cardImage } from '@/lib/format'
 import { useT } from '@/lib/i18n/client'
@@ -10,16 +10,46 @@ import { useT } from '@/lib/i18n/client'
  * „Přidej kartu číslem“: rychlé zadávání hromádky karet ze stolu. Po přidání se pole vyčistí a zůstane aktivní,
  * takže jde psát jedno číslo za druhým (MEP 101 ⏎, SVI 045 ⏎, …).
  */
-export function QuickAdd() {
+export function QuickAdd({ photo = false }: { photo?: boolean }) {
   const t = useT()
-  const [state, action, pending] = useActionState<QuickAddState, FormData>(quickAdd, {})
+  const [textState, textAction, textPending] = useActionState<QuickAddState, FormData>(quickAdd, {})
+  const [photoState, photoAction, photoPending] = useActionState<QuickAddState, FormData>(quickAddPhoto, {})
+  // Zobrazuje se výsledek posledního způsobu zadání (text / fotka).
+  const [last, setLast] = useState<'text' | 'photo'>('text')
+  const state = last === 'photo' ? photoState : textState
+  const pending = textPending || photoPending
+  const action = (fd: FormData) => {
+    setLast('text')
+    textAction(fd)
+  }
+  const fileInput = useRef<HTMLInputElement>(null)
+
+  // Fotka z telefonu: zmenšit na max. 1280 px (JPEG) přímo v prohlížeči, ať se posílá jen pár set kB.
+  async function onPhoto(file: File) {
+    let blob: Blob = file
+    try {
+      const bmp = await createImageBitmap(file)
+      const scale = Math.min(1, 1280 / Math.max(bmp.width, bmp.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(bmp.width * scale)
+      canvas.height = Math.round(bmp.height * scale)
+      canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height)
+      blob = (await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.85))) ?? file
+    } catch {
+      /* starší prohlížeč: pošleme originál */
+    }
+    const fd = new FormData()
+    fd.append('photo', new File([blob], 'karta.jpg', { type: blob.type || 'image/jpeg' }))
+    setLast('photo')
+    startTransition(() => photoAction(fd))
+  }
   const input = useRef<HTMLTextAreaElement>(null)
   useEffect(() => {
-    if ((state.added || (state.batch && !state.batch.notFound.length && !state.batch.ambiguous.length)) && input.current) {
+    if ((textState.added || (textState.batch && !textState.batch.notFound.length && !textState.batch.ambiguous.length)) && input.current) {
       input.current.value = ''
       input.current.focus()
     }
-  }, [state])
+  }, [textState])
 
   return (
     <section className="rounded-panel border border-line bg-card p-4 sm:p-5" aria-labelledby="quick-add-title">
@@ -37,7 +67,7 @@ export function QuickAdd() {
           id="quick-add-q"
           name="q"
           rows={1}
-          defaultValue={state.added || state.batch ? '' : state.q}
+          defaultValue={textState.added || textState.batch ? '' : textState.q}
           autoComplete="off"
           autoCapitalize="characters"
           placeholder="MEP 101, SVI 045, 2x 30C 071"
@@ -54,11 +84,43 @@ export function QuickAdd() {
           disabled={pending}
           className="h-11 shrink-0 rounded-panel bg-accent-strong px-5 font-semibold text-on-accent transition-colors duration-200 hover:bg-accent-hover disabled:opacity-50"
         >
-          {pending ? '…' : t('Přidat')}
+          {textPending ? '…' : t('Přidat')}
         </button>
+        {photo && (
+          <>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) onPhoto(f)
+                e.target.value = ''
+              }}
+            />
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => fileInput.current?.click()}
+              aria-label={t('Vyfotit kartu')}
+              title={t('Vyfotit kartu')}
+              className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-panel bg-brand-blue px-4 font-semibold text-white transition-colors duration-200 hover:bg-brand-blue-dark disabled:opacity-50"
+            >
+              {photoPending ? '…' : '📷'}
+              <span className="hidden sm:inline">{t('Vyfotit')}</span>
+            </button>
+          </>
+        )}
       </form>
+      {photo && <p className="mt-2 text-xs text-subtle">{t('📷 Vyfoť celou kartu zepředu — web přečte jméno a číslo a kartu přidá.')}</p>}
 
       <div aria-live="polite">
+        {photoPending && <p className="mt-3 text-sm text-muted">{t('Čtu kartu z fotky…')}</p>}
+        {last === 'photo' && !photoPending && state.q && (state.added || state.hits) && (
+          <p className="mt-3 text-xs text-subtle">📷 {t('Rozpoznáno: {text}', { text: state.q })}</p>
+        )}
         {state.error && <p className="mt-3 text-sm text-danger">{state.error}</p>}
         {state.added && (
           <div className="mt-3 flex items-center gap-3 rounded-panel bg-[color-mix(in_srgb,var(--positive)_12%,transparent)] p-2.5">
