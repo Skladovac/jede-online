@@ -17,29 +17,29 @@ const TYPE = {
  */
 export async function LatestOffers({ take = 6, note }: { take?: number; note?: React.ReactNode }) {
   const t = await getT()
-  const recent = await prisma.collectionItem.findMany({
-    where: {
-      spareQty: { gt: 0 },
-      offerType: { not: null },
-      hiddenAt: null,
-      card: { imageUrl: { not: null } },
-      user: { bannedAt: null, OR: [{ isMinor: false }, { parentConsentAt: { not: null } }] },
-    },
-    include: {
-      card: { include: { set: { select: { name: true, code: true, officialCount: true } } } },
-      user: { select: { id: true, nickname: true } },
-    },
-    orderBy: { offeredAt: { sort: 'desc', nulls: 'last' } },
-    take: 400,
-  })
-  const perUser = new Map<string, number>()
-  const offers = recent
-    .filter((o) => {
-      const n = perUser.get(o.userId) ?? 0
-      perUser.set(o.userId, n + 1)
-      return n < 2
-    })
+  const where = {
+    spareQty: { gt: 0 },
+    offerType: { not: null },
+    hiddenAt: null,
+    card: { imageUrl: { not: null } },
+    user: { bannedAt: null, OR: [{ isMinor: false }, { parentConsentAt: { not: null } }] },
+  }
+  // Nejvýš 2 nabídky od jednoho sběratele: napřed sběratelé s nejčerstvější nabídkou, pak jejich 2 poslední nabídky.
+  // (Postgres řadí NULL u DESC napřed, proto řazení v JS: nabídky bez data až na konec.)
+  const sellers = (await prisma.collectionItem.groupBy({ by: ['userId'], where, _max: { offeredAt: true } }))
+    .sort((a, b) => (b._max.offeredAt?.getTime() ?? 0) - (a._max.offeredAt?.getTime() ?? 0))
     .slice(0, take)
+  const include = {
+    card: { include: { set: { select: { name: true, code: true, officialCount: true } } } },
+    user: { select: { id: true, nickname: true } },
+  }
+  const perSeller = await Promise.all(
+    sellers.map((s) =>
+      prisma.collectionItem.findMany({ where: { ...where, userId: s.userId }, include, orderBy: { offeredAt: { sort: 'desc', nulls: 'last' } }, take: 2 }),
+    ),
+  )
+  // Napřed nejnovější nabídka každého sběratele, druhé nabídky až potom (pestřejší výběr).
+  const offers = [...perSeller.map((l) => l[0]), ...perSeller.map((l) => l[1])].filter((o): o is NonNullable<typeof o> => !!o).slice(0, take)
   if (!offers.length) return null
 
   // Hodnocení prodávajících jedním dotazem.
