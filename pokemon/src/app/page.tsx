@@ -9,8 +9,10 @@ import { GettingStarted } from '@/components/GettingStarted'
 import { CardImg } from '@/components/CardImg'
 import { setProgress } from '@/lib/progress'
 import { portfolio } from '@/lib/portfolio'
-import { cardImage, setLogo, subsetLabels } from '@/lib/format'
-import { Pokeball, ProgressMeter, SectionHeader, StatCard, btnPrimary, btnSecondary, container, linkAccent, panel, panelInteractive } from '@/components/design'
+import { cardImage, formatCzk, setLogo, subsetLabels } from '@/lib/format'
+import { ensureEurCzk } from '@/lib/fx'
+import { ArrowLeftRight, ArrowRight, Camera, Layers } from 'lucide-react'
+import { ProgressMeter, SectionHeader, StatCard, btnPrimary, btnSecondary, container, panel, panelInteractive } from '@/components/design'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO, type TFunc } from '@/lib/i18n/config'
 
@@ -20,6 +22,7 @@ const num = (n: number) => n.toLocaleString('cs-CZ')
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ vitej?: string }> }) {
   const { vitej } = await searchParams
+  await ensureEurCzk() // kurz ČNB pro ceny v Kč (cenovka v hero)
   const t = await getT()
   const intl = LOCALE_INFO[await getLocale()].intl
   const user = await getCurrentUser()
@@ -66,8 +69,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
       )}
 
       {!user && (
-        <div className={`${container} py-14 sm:py-20`}>
-          <WhyUse t={t} />
+        <div className="border-b border-line bg-surface">
+          <div className={`${container} py-16 sm:py-20`}>
+            <WhyUse t={t} />
+          </div>
         </div>
       )}
 
@@ -77,11 +82,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
         </div>
       )}
 
-      <div className={`${container} pb-16 sm:pb-24`}>
+      <div className={`${container} ${user ? 'pb-16' : 'py-16'} sm:pb-24 ${user ? '' : 'sm:pt-20'}`}>
         <LatestOffers note={priceNote} />
       </div>
 
-      <section className="texture-dots border-y border-line bg-surface py-16 sm:py-24">
+      <section className="border-t border-line bg-surface py-16 sm:py-24">
         <div className={container}>
           <SectionHeader title={t('Nejnovější sady')} href="/sady" linkLabel={t('Všechny sady')} />
           {latest.length ? (
@@ -99,17 +104,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
   )
 }
 
-/** Návštěvník: hero s kartami „v ruce“ (skutečné obrázky z nejnovější sady) a velkým jemným Pokéballem v pozadí. */
+/** Návštěvník: hero ve stylu „Sběratelské galerie“ — velký nadpis, vějíř nejdražších karet nejnovější sady s cenovkou. */
 async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; setCount: number; cardCount: number; previewSetId?: string }) {
-  // 5 nejdražších karet nejnovější sady, každá jiná (ne tři varianty téhož Pokémona) — u duplicit zůstane ta dražší.
-  const candidates = previewSetId
-    ? await prisma.card.findMany({
-        where: { setId: previewSetId, imageUrl: { not: null } },
-        orderBy: { priceEur: { sort: 'desc', nulls: 'last' } },
-        select: { id: true, name: true, imageUrl: true },
-        take: 40,
-      })
-    : []
+  // Nejdražší karty nejnovější sady, každá jiná (ne tři varianty téhož Pokémona) — u duplicit zůstane ta dražší.
+  const [candidates, previewSet] = previewSetId
+    ? await Promise.all([
+        prisma.card.findMany({
+          where: { setId: previewSetId, imageUrl: { not: null } },
+          orderBy: { priceEur: { sort: 'desc', nulls: 'last' } },
+          select: { id: true, name: true, imageUrl: true, localId: true, priceEur: true },
+          take: 40,
+        }),
+        prisma.cardSet.findUnique({ where: { id: previewSetId }, select: { id: true, name: true } }),
+      ])
+    : [[], null]
   const seen = new Set<string>()
   const preview = candidates
     .filter((c) => {
@@ -118,74 +126,83 @@ async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; s
       seen.add(key)
       return true
     })
-    .slice(0, 5)
-  // Vějíř karet: mírné natočení a posun, prostřední karta nahoře.
+    .slice(0, 4)
+  const top = preview[0]
+  const topPrice = top ? formatCzk(top.priceEur) : null
+  // Vějíř: nejdražší karta vpředu (poslední v pořadí kreslení), ostatní za ní.
   const fan = [
-    'left-[2%] top-[18%] -rotate-[9deg] z-10',
-    'left-[20%] top-[8%] -rotate-[4deg] z-20',
-    'left-[38%] top-[4%] rotate-[1deg] z-30',
-    'left-[56%] top-[9%] rotate-[5deg] z-20',
-    'left-[72%] top-[19%] rotate-[10deg] z-10',
-  ]
+    { card: preview[3], cls: 'left-[2%] top-[16%] -rotate-[14deg] z-10' },
+    { card: preview[2], cls: 'left-[52%] top-[18%] rotate-[12deg] z-20' },
+    { card: preview[1], cls: 'left-[16%] top-[6%] -rotate-[5deg] z-30' },
+    { card: preview[0], cls: 'left-[34%] top-[9%] rotate-[6deg] z-40' },
+  ].filter((f) => f.card)
   return (
     <section className="relative overflow-hidden border-b border-line">
-      {/* Velký abstraktní Pokéball — patrný až na druhý pohled. */}
-      <Pokeball className="pointer-events-none absolute -right-40 top-1/2 h-[420px] w-[420px] -translate-y-1/2 text-brand-blue-dark opacity-[0.045] sm:h-[560px] sm:w-[560px] lg:-right-24 lg:h-[720px] lg:w-[720px] dark:text-white dark:opacity-[0.05]" />
-      <div className={`${container} relative grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:py-24`}>
-        <div>
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="rounded-md bg-brand-yellow px-2 py-1 font-extrabold tracking-wider text-brand-blue-deep">BETA</span>
-            <span className="font-medium text-muted">{t('Fan project · zdarma')}</span>
-          </div>
-          <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-blue dark:text-accent">
-            <Pokeball className="h-3.5 w-3.5" /> {t('Pokémon TCG fan project')}
+      {/* Žlutá záře a tenké soustředné kruhy (náznak Pokéballu) vpravo nahoře. */}
+      <div aria-hidden className="pointer-events-none absolute -right-40 -top-48 h-[900px] w-[900px] rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.28),rgba(255,203,5,0.08)_45%,transparent_72%)] dark:opacity-50" />
+      <div aria-hidden className="pointer-events-none absolute -right-20 -top-28 hidden h-[760px] w-[760px] rounded-full border-[1.5px] border-[rgba(14,27,46,0.07)] lg:block dark:border-[rgba(255,255,255,0.06)]" />
+      <div aria-hidden className="pointer-events-none absolute right-10 -top-2 hidden h-[560px] w-[560px] rounded-full border-[1.5px] border-[rgba(14,27,46,0.07)] lg:block dark:border-[rgba(255,255,255,0.06)]" />
+      <div className={`${container} relative grid items-center gap-8 pb-14 pt-10 sm:pb-20 sm:pt-16 lg:grid-cols-[1.02fr_1fr] lg:gap-10 lg:pb-24 lg:pt-20`}>
+        <div className="hero-rise">
+          <p className="eyebrow flex items-center gap-2.5">
+            <span aria-hidden className="h-[1.5px] w-6 bg-fg" />
+            {t('Komunita sběratelů · Česko a Slovensko')}
           </p>
-          <h1 className="mt-4 max-w-2xl text-4xl font-black leading-[1.06] tracking-tight text-brand-blue-deep sm:text-5xl lg:text-[58px] dark:text-white">
-            {t('Tvoje Pokémon sbírka.')}
+          <h1 className="mt-5 text-[44px] font-extrabold leading-[0.98] text-fg sm:text-[56px] xl:text-[64px]">
+            {t('Tvoje sbírka.')}
             <br />
-            <span className="text-brand-blue dark:text-brand-yellow">{t('Na jednom místě.')}</span>
+            <span className="relative inline-block lg:whitespace-nowrap">
+              {t('Konečně v pořádku.')}
+              <svg aria-hidden viewBox="0 0 300 18" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3.5 w-[46%] sm:h-4">
+                <path d="M3 12 C 80 2, 190 2, 297 9" fill="none" stroke="#FFCB05" strokeWidth="7" strokeLinecap="round" />
+              </svg>
+            </span>
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-            {t('Eviduj karty, doplňuj sety, sleduj ceny a obchoduj s dalšími sběrateli z Česka a Slovenska.')}
+          <p className="mt-7 max-w-[520px] text-lg leading-relaxed text-muted sm:text-[19px]">
+            {t('Eviduj karty, sleduj, co ti v sadách chybí, hlídej ceny a vyměňuj s lidmi z okolí. Kartu stačí vyfotit.')}
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link href="/registrace" className={btnPrimary}>
-              {t('Začít sbírat')}
+            <Link href="/registrace" className={`${btnPrimary} min-h-[52px] px-6 text-[16.5px]`}>
+              {t('Začít sbírat zdarma')}
+              <ArrowRight aria-hidden />
             </Link>
-            <Link href="/sady" className={btnSecondary}>
-              {t('Procházet karty')}
-            </Link>
-            <Link href="/trziste" className={`${linkAccent} inline-flex min-h-11 items-center px-1 text-sm font-semibold`}>
-              {t('Tržiště')} →
+            <Link href="/sady" className={`${btnSecondary} min-h-[52px] px-6`}>
+              {t('Prohlédnout sady')}
             </Link>
           </div>
-          <ul className="mt-8 flex flex-wrap gap-2.5 text-xs font-bold uppercase tracking-wide">
-            <li className={`${panel} flex items-center gap-2 px-3.5 py-2`}>
-              <span className="text-base tabular-nums text-brand-blue-deep dark:text-white">{num(setCount)}</span>
-              <span className="text-muted">{t('sad')}</span>
+          <ul className="mt-10 flex flex-wrap gap-x-7 gap-y-2 font-mono text-[13px] text-muted">
+            <li>
+              <b className="text-[15px] font-bold text-fg">{num(setCount)}</b>&nbsp; {t('sad')}
             </li>
-            <li className={`${panel} flex items-center gap-2 px-3.5 py-2`}>
-              <span className="text-base tabular-nums text-brand-blue-deep dark:text-white">{num(cardCount)}</span>
-              <span className="text-muted">{t('karet')}</span>
+            <li>
+              <b className="text-[15px] font-bold text-fg">{num(cardCount)}</b>&nbsp; {t('karet')}
             </li>
-            <li className={`${panel} flex items-center gap-2 px-3.5 py-2`}>
-              <span aria-hidden className="h-2 w-2 rounded-full bg-brand-red" />
-              <span className="text-muted">{t('Ceny z Cardmarketu')}</span>
+            <li className="flex items-center gap-2">
+              <span aria-hidden className="h-[7px] w-[7px] rounded-full bg-positive shadow-[0_0_0_4px_color-mix(in_srgb,var(--positive)_18%,transparent)]" />
+              {t('ceny z Cardmarketu denně')}
             </li>
           </ul>
         </div>
 
-        {preview.length >= 3 && (
-          <div className="relative mx-auto aspect-[5/4] w-full max-w-[340px] sm:max-w-xl" aria-hidden>
-            <div className="pointer-events-none absolute inset-[8%] rounded-full bg-[radial-gradient(closest-side,var(--glow),transparent)]" />
-            {preview.map((c, i) => (
+        {fan.length >= 3 && (
+          <div className="relative mx-auto aspect-[10/9] w-full max-w-[420px] sm:max-w-[560px]" aria-hidden>
+            {fan.map(({ card, cls }) => (
               <div
-                key={c.id}
-                className={`absolute aspect-[63/88] w-[28%] overflow-hidden rounded-xl bg-surface shadow-[0_14px_30px_rgba(20,35,60,0.22)] ring-1 ring-black/5 transition-transform duration-200 hover:-translate-y-1.5 ${fan[i + (preview.length === 3 ? 1 : 0)]}`}
+                key={card!.id}
+                className={`absolute aspect-[63/88] w-[42%] overflow-hidden rounded-[4.5%/3.2%] bg-surface shadow-[0_2px_2px_rgba(14,27,46,0.1),0_30px_50px_-18px_rgba(14,27,46,0.55)] transition-transform duration-300 hover:-translate-y-2 ${cls}`}
               >
-                <CardImg src={cardImage(c.imageUrl)} alt={c.name} eager />
+                <CardImg src={cardImage(card!.imageUrl, 'high')} alt={card!.name} eager />
               </div>
             ))}
+            {top && topPrice && (
+              <div className="absolute -bottom-2 left-0 z-50 hidden max-w-[260px] rounded-xl bg-[color-mix(in_srgb,var(--bg-card)_92%,transparent)] px-3.5 py-2.5 shadow-[0_2px_4px_rgba(14,27,46,0.05),0_8px_24px_-6px_rgba(14,27,46,0.18)] ring-1 ring-line backdrop-blur sm:block">
+                <p className="eyebrow truncate !text-[10px]">{t('Nejdražší v sadě {set}', { set: previewSet?.name ?? '' })}</p>
+                <p className="mt-0.5 text-sm font-bold text-fg">
+                  {top.name} <span className="font-mono text-xs font-medium text-subtle">{top.localId}</span>
+                </p>
+                <p className="font-display text-xl font-extrabold tabular-nums text-fg">≈ {topPrice}</p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -232,7 +249,7 @@ async function UserDashboard({
 
   return (
     <section className="relative overflow-hidden border-b border-line">
-      <Pokeball className="pointer-events-none absolute -right-32 -top-24 h-[420px] w-[420px] text-brand-blue-dark opacity-[0.04] dark:text-white dark:opacity-[0.05]" />
+      <div aria-hidden className="pointer-events-none absolute -right-40 -top-56 h-[640px] w-[640px] rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.2),transparent_70%)] dark:opacity-50" />
       <div className={`${container} relative py-10 sm:py-14`}>
         {vitej && (
           <p className="mb-6 rounded-panel border border-line bg-[color-mix(in_srgb,var(--positive)_10%,transparent)] p-4 text-sm text-fg">
@@ -243,9 +260,13 @@ async function UserDashboard({
         )}
         <GettingStarted userId={user.id} nickname={user.nickname} emailVerified={!!user.emailVerifiedAt} />
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="text-3xl font-black tracking-tight text-fg sm:text-4xl">{t('Ahoj, {name}', { name: user.nickname })}</h1>
-          <Link href="/sbirka" className={`${linkAccent} inline-flex min-h-11 items-center text-sm`}>
-            {t('Moje sbírka')} →
+          <div>
+            <p className="eyebrow">{t('Tvoje sbírka')}</p>
+            <h1 className="mt-2 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Ahoj, {name}', { name: user.nickname })}</h1>
+          </div>
+          <Link href="/sbirka" className="group inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-accent">
+            {t('Moje sbírka')}
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />
           </Link>
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -257,7 +278,7 @@ async function UserDashboard({
 
         {collecting.length > 0 && (
           <div className="mt-10">
-            <h2 className="mb-4 text-xl font-bold tracking-tight text-fg">{t('Rozpracované sady')}</h2>
+            <h2 className="mb-4 text-xl font-bold text-fg">{t('Rozpracované sady')}</h2>
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {collecting.map((s) => (
                 <li key={s.id}>
@@ -303,40 +324,33 @@ async function Matches({ userId, region, t }: { userId: string; region: string |
   )
 }
 
-/** Krátké „proč to používat“ (jen pro návštěvníky). */
+/** Jak to funguje — 3 kroky (jen pro návštěvníky). */
 function WhyUse({ t }: { t: TFunc }) {
-  const items = [
-    {
-      title: t('Spravuj svoji sbírku'),
-      text: t('Víš přesně, co máš a co ti ještě chybí.'),
-      icon: <path d="M4 5h16v14H4zM4 9h16M9 9v10" />,
-    },
-    {
-      title: t('Sleduj ceny'),
-      text: t('Ceny karet z Cardmarketu, aktualizované jednou denně.'),
-      icon: <path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6" />,
-    },
-    {
-      title: t('Obchoduj s komunitou'),
-      text: t('Prodávej a vyměňuj karty s dalšími sběrateli z Česka a Slovenska.'),
-      icon: <path d="M7 7h11l-3-3M17 17H6l3 3" />,
-    },
+  const steps = [
+    { icon: Camera, title: t('Vyfoť nebo napiš číslo'), text: t('Web kartu pozná, ukáže sadu a cenu. Ty jen potvrdíš „Přidat do alba“.') },
+    { icon: Layers, title: t('Uvidíš, co ti chybí'), text: t('Každá sada jako album: co máš, co chybí a kolik zbývá do kompletu.') },
+    { icon: ArrowLeftRight, title: t('Vyměň s ostatními'), text: t('Najdi lidi, kteří mají tvoje chybějící karty, a domluvte se v chatu.') },
   ]
   return (
-    <section aria-label={t('Proč pokemon.jede.online')} className="grid gap-4 sm:grid-cols-3">
-      {items.map((i) => (
-        <div key={i.title} className={`${panelInteractive} flex gap-4 p-6`}>
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-blue text-white">
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              {i.icon}
-            </svg>
-          </span>
-          <div>
-            <h3 className="font-semibold text-fg">{i.title}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted">{i.text}</p>
-          </div>
-        </div>
-      ))}
+    <section aria-labelledby="how-title">
+      <p className="eyebrow">{t('Jak to funguje')}</p>
+      <h2 id="how-title" className="mt-3 max-w-[640px] text-3xl font-bold leading-[1.08] text-fg sm:text-[42px]">
+        {t('Od hromádky na stole k přehledné sbírce za pár minut.')}
+      </h2>
+      <ol className="mt-10 grid gap-4 sm:grid-cols-3 sm:gap-5">
+        {steps.map((st, n) => (
+          <li key={st.title} className={`${panel} p-6 sm:p-7`}>
+            <div className="flex items-start justify-between">
+              <span className="grid h-12 w-12 place-items-center rounded-[14px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
+                <st.icon className="h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden />
+              </span>
+              <span className="font-mono text-[13px] text-subtle">{String(n + 1).padStart(2, '0')}</span>
+            </div>
+            <h3 className="mt-5 text-[19px] font-semibold text-fg">{st.title}</h3>
+            <p className="mt-2 leading-relaxed text-muted">{st.text}</p>
+          </li>
+        ))}
+      </ol>
     </section>
   )
 }

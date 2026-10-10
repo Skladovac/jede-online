@@ -2,13 +2,14 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { cardImage } from '@/lib/format'
 import { CardImg } from '@/components/CardImg'
-import { Badge, SectionHeader, panelInteractive } from '@/components/design'
+import { Badge, SectionHeader } from '@/components/design'
+import { ArrowLeftRight, Gift, Tag, ThumbsUp } from 'lucide-react'
 import { getT } from '@/lib/i18n/server'
 
 const TYPE = {
-  SELL: { label: 'Prodej', tone: 'green' },
-  TRADE: { label: 'Výměna', tone: 'blue' },
-  GIFT: { label: 'Za poštovné', tone: 'yellow' },
+  SELL: { label: 'Prodej', tone: 'green', icon: Tag },
+  TRADE: { label: 'Výměna', tone: 'blue', icon: ArrowLeftRight },
+  GIFT: { label: 'Za poštovné', tone: 'yellow', icon: Gift },
 } as const
 
 /**
@@ -60,41 +61,43 @@ export async function LatestOffers({ take = 6, note }: { take?: number; note?: R
   return (
     <section>
       <SectionHeader title={t('Nejnovější nabídky')} href="/trziste" linkLabel={t('Celé tržiště')} sub={note} />
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+      <ul className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 sm:gap-x-7 lg:grid-cols-6">
         {offers.map((o) => {
           const type = TYPE[o.offerType!]
           const pct = rating(o.userId)
           const number = `${o.card.set.code ? `${o.card.set.code} ` : ''}${o.card.localId}${o.card.set.officialCount ? `/${o.card.set.officialCount}` : ''}`
           return (
             <li key={o.id}>
-              <Link href={`/karta/${encodeURIComponent(o.cardId)}`} className={`${panelInteractive} group flex h-full flex-col p-2.5`}>
-                <div className="aspect-[63/88] overflow-hidden rounded-lg bg-surface">
+              <Link href={`/karta/${encodeURIComponent(o.cardId)}`} className="card-tile group flex h-full flex-col">
+                <div className="card-frame aspect-[63/88]">
                   <CardImg src={cardImage(o.card.imageUrl)} alt={o.card.name} />
                 </div>
-                <div className="mt-2.5 flex min-w-0 flex-1 flex-col gap-1 px-0.5">
-                  <span className="self-start">
-                    <Badge tone={type.tone}>{t(type.label)}</Badge>
-                  </span>
-                  <p className="truncate text-sm font-semibold text-fg" title={o.card.name}>
+                <div className="mt-3 flex items-baseline justify-between gap-2">
+                  <p className="truncate text-[14.5px] font-semibold text-fg" title={o.card.name}>
                     {o.card.name}
                   </p>
-                  <p className="truncate text-xs text-muted" title={o.card.set.name}>
-                    {o.card.set.name} · <span className="tabular-nums">{number}</span>
-                  </p>
-                  <p className="mt-auto pt-1 text-lg font-extrabold tabular-nums text-brand-blue-deep dark:text-white">
-                    {o.offerType === 'SELL' ? (o.priceCzk ? `${o.priceCzk.toLocaleString('cs-CZ')} Kč` : t('cena dohodou')) : o.offerType === 'GIFT' ? t('zdarma') : t('na výměnu')}
-                  </p>
-                  {o.card.priceEur && (
-                    <p className="text-[11px] tabular-nums text-subtle">Cardmarket: {Number(o.card.priceEur).toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</p>
-                  )}
-                  <p className="mt-1 flex items-center gap-1.5 truncate border-t border-line pt-2 text-xs text-muted">
-                    <span aria-hidden className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-yellow text-[10px] font-black text-brand-blue-deep">
-                      {o.user.nickname.slice(0, 1).toUpperCase()}
-                    </span>
-                    <span className="truncate font-medium">{o.user.nickname}</span>
-                    {pct !== null && <span className="shrink-0 tabular-nums text-subtle">· 👍 {pct} %</span>}
-                  </p>
+                  <span className="shrink-0 font-mono text-[11px] text-subtle">{number}</span>
                 </div>
+                <p className="mt-0.5 truncate text-xs text-muted" title={o.card.set.name}>
+                  {o.card.set.name}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <Badge tone={type.tone}>
+                    <type.icon aria-hidden />
+                    {o.offerType === 'SELL' ? (o.priceCzk ? `${o.priceCzk.toLocaleString('cs-CZ')} Kč` : t('cena dohodou')) : t(type.label)}
+                  </Badge>
+                </div>
+                <p className="mt-2 flex items-center gap-1.5 truncate text-xs text-subtle">
+                  <span aria-hidden className="grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full bg-[var(--ink)] text-[9px] font-extrabold text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
+                    {o.user.nickname.slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="truncate font-medium text-muted">{o.user.nickname}</span>
+                  {pct !== null && (
+                    <span className="flex shrink-0 items-center gap-0.5 tabular-nums">
+                      · <ThumbsUp className="h-3 w-3" aria-hidden /> {pct} %
+                    </span>
+                  )}
+                </p>
               </Link>
             </li>
           )
