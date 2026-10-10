@@ -61,7 +61,7 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
           <Link href={`/@${nick}/hodnoceni`} className="text-accent hover:underline">
             {t('Moje hodnocení →')}
           </Link>
-          <Link href={`/@${nick}/chybi`} className="text-accent hover:underline">
+          <Link href={`/@${nick}?ukaz=hledam`} className="text-accent hover:underline">
             {t('Co hledám (sdílet) →')}
           </Link>
           <Link href="/ucet#pozvi" className="text-accent hover:underline">
