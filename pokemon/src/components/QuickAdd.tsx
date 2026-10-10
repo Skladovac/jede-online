@@ -60,8 +60,6 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
       <h2 id="quick-add-title" className="font-bold text-fg">
         ⚡ {t('Přidej kartu číslem')}
       </h2>
-      <p className="mt-1 text-sm text-muted">{t('Napiš kód sady a číslo z karty vlevo dole, třeba MEP 101, SVI 045 nebo 045/198. Enter kartu rovnou přidá.')}</p>
-      <p className="mt-0.5 text-xs text-subtle">{t('Víc karet najednou: odděl je čárkou nebo novým řádkem (Shift+Enter), počet zapiš jako „2x SVI 045“.')}</p>
       <form action={action} className="mt-3 flex gap-2">
         <label htmlFor="quick-add-q" className="sr-only">
           {t('Číslo karty')}
