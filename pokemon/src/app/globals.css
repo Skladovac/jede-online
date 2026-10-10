@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 /*
- * Design tokeny — „Modern Pokémon TCG fan community“: Pokémon modrá + žlutá, bílé panely, jemná červená jako akcent.
- * Výchozí je světlý vzhled; tmavý (třída .dark na <html>, cookie „theme“) je přepínatelný.
+ * Design tokeny — „Sběratelská galerie“: karty jsou hlavní hrdina. Teplý papírový podklad, inkoustový text,
+ * žlutá jen pro hlavní akci a značku, modrá pro odkazy a postup. Výchozí světlý, tmavý přes třídu .dark (cookie „theme“).
  * Tailwind je mapuje jako barvy: bg-base, bg-surface, bg-card, border-line, text-fg, text-muted, accent, brand-*…
  */
 :root {
@@ -15,71 +15,94 @@
   --pokemon-blue-deep: #163a66;
   --pokemon-yellow: #ffcb05;
   --pokemon-yellow-dark: #c7a008;
-  --pokemon-red: #e3350d;
+  --pokemon-red: #d8341a;
   --pokemon-red-dark: #b72a0a;
+  --ink: #0e1b2e;
 
   /* Plochy a text */
-  --bg-primary: #f5f7fb;
-  --bg-secondary: #eef3f8;
+  --bg-primary: #f6f4ef;
+  --bg-secondary: #fbfaf7;
   --bg-card: #ffffff;
-  --bg-card-hover: #f8fbff;
-  --border: rgba(23, 32, 51, 0.08);
-  --border-strong: rgba(23, 32, 51, 0.14);
-  --border-hover: rgba(42, 117, 187, 0.32);
-  --text-primary: #172033;
-  --text-secondary: #4b5565;
-  --text-muted: #5e6878;
+  --bg-card-hover: #fdfcf9;
+  --border: #e7e2d8;
+  --border-strong: #d6cfc1;
+  --border-hover: rgba(42, 117, 187, 0.35);
+  --text-primary: #0e1b2e;
+  --text-secondary: #5b6474;
+  --text-muted: #687080;
 
-  /* Akce: odkazy modře, hlavní tlačítka žlutě s tmavě modrým textem */
+  /* Akce: odkazy modře, hlavní akce žlutě s inkoustovým textem */
   --accent: #2a75bb;
   --accent-strong: #ffcb05;
-  --accent-hover: #f4c000;
-  --accent-soft: rgba(42, 117, 187, 0.1);
-  --on-accent: #1d4e89;
+  --accent-hover: #f2b700;
+  --accent-soft: rgba(42, 117, 187, 0.09);
+  --on-accent: #0e1b2e;
 
-  --positive: #15803d;
+  --positive: #1f8a5b;
   --warning: #b45309;
-  --danger: #d92d20;
-  --shadow-soft: 0 8px 30px rgba(20, 35, 60, 0.06);
-  --glow: rgba(255, 203, 5, 0.18);
-
-  /* Pozadí stránky: jemné vrstvené gradienty (modrá vlevo nahoře, žlutá vpravo, náznak červené níž) */
-  --page-bg:
-    radial-gradient(circle at 15% 10%, rgba(42, 117, 187, 0.12), transparent 30%),
-    radial-gradient(circle at 85% 15%, rgba(255, 203, 5, 0.12), transparent 28%),
-    radial-gradient(circle at 75% 75%, rgba(227, 53, 13, 0.04), transparent 25%), #f5f7fb;
+  --danger: #d8341a;
+  --shadow-soft: 0 1px 2px rgba(14, 27, 46, 0.05), 0 1px 1px rgba(14, 27, 46, 0.03);
+  --shadow-card: 0 1px 1px rgba(14, 27, 46, 0.08), 0 10px 22px -8px rgba(14, 27, 46, 0.35);
+  --shadow-lift: 0 2px 2px rgba(14, 27, 46, 0.08), 0 22px 40px -12px rgba(14, 27, 46, 0.45);
+  --glow: rgba(255, 203, 5, 0.22);
+  --page-bg: #f6f4ef;
 }
 
 .dark {
   color-scheme: dark;
-  --bg-primary: #0e1a2c;
-  --bg-secondary: #12223a;
-  --bg-card: #172a45;
-  --bg-card-hover: #1c3253;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --border-hover: rgba(127, 178, 234, 0.45);
-  --text-primary: #eaf1fb;
-  --text-secondary: #b3c2d8;
-  --text-muted: #93a4bd;
-  --accent: #7fb2ea;
+  --bg-primary: #0b1424;
+  --bg-secondary: #0f1b2f;
+  --bg-card: #13223a;
+  --bg-card-hover: #182a46;
+  --border: #22334f;
+  --border-strong: #2e4466;
+  --border-hover: rgba(140, 195, 255, 0.45);
+  --text-primary: #eef2f8;
+  --text-secondary: #a3afc2;
+  --text-muted: #8593ab;
+  --accent: #8cc3ff;
   --accent-strong: #ffcb05;
   --accent-hover: #ffd633;
-  --accent-soft: rgba(127, 178, 234, 0.14);
-  --on-accent: #163a66;
+  --accent-soft: rgba(140, 195, 255, 0.12);
+  --on-accent: #0e1b2e;
   --positive: #4ade80;
   --warning: #fbbf24;
   --danger: #f87171;
-  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.25);
-  --glow: rgba(255, 203, 5, 0.12);
-  --page-bg:
-    radial-gradient(circle at 15% 10%, rgba(42, 117, 187, 0.22), transparent 32%),
-    radial-gradient(circle at 85% 15%, rgba(255, 203, 5, 0.06), transparent 28%), #0e1a2c;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.3), 0 12px 24px -10px rgba(0, 0, 0, 0.7);
+  --shadow-lift: 0 2px 2px rgba(0, 0, 0, 0.3), 0 24px 44px -12px rgba(0, 0, 0, 0.8);
+  --glow: rgba(255, 203, 5, 0.1);
+  --page-bg: #0b1424;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Nadpisy: Bricolage Grotesque, těsnější proklad. */
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  letter-spacing: -0.022em;
+}
+h1 {
+  letter-spacing: -0.03em;
+}
+/* Štítek nad nadpisem sekce (katalogový dojem). */
+.eyebrow {
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 
 body {
   background: var(--page-bg);
-  background-attachment: fixed;
 }
 
 /* Jemné textury sekcí (2–4 %) — každá sekce jiná, ne přes celou stránku. */

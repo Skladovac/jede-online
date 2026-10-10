@@ -10,11 +10,12 @@ import { InstallHeaderButton } from '@/components/InstallApp'
 import { PushAsk } from '@/components/Push'
 import { pushPublicKey } from '@/lib/push'
 import { getT } from '@/lib/i18n/server'
+import { ArrowLeftRight, Bell, ShoppingBag } from 'lucide-react'
 
-// Odkazy ve žluté hlavičce: tmavě modré, při najetí modré podtržení.
+// Odkazy ve žluté hlavičce: inkoustové, při najetí jemná tmavá plocha.
 const navLink =
-  'relative inline-flex min-h-10 items-center rounded-lg px-2.5 font-semibold text-brand-blue-deep transition-colors duration-200 hover:text-brand-blue after:absolute after:inset-x-2.5 after:bottom-1 after:h-0.5 after:scale-x-0 after:rounded-full after:bg-brand-blue after:transition-transform after:duration-200 hover:after:scale-x-100'
-const iconLink = 'relative inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-brand-blue-deep hover:bg-[rgba(22,58,102,0.1)]'
+  'inline-flex min-h-10 items-center rounded-[9px] px-3 text-[15px] font-semibold text-[var(--ink)] opacity-85 transition duration-200 hover:bg-[rgba(14,27,46,0.08)] hover:opacity-100'
+const iconLink = 'relative inline-flex min-h-10 min-w-10 items-center justify-center rounded-[10px] text-[var(--ink)] transition-colors duration-200 hover:bg-[rgba(14,27,46,0.08)] [&_svg]:h-5 [&_svg]:w-5'
 
 export async function SiteHeader() {
   const user = await getCurrentUser()
@@ -29,13 +30,13 @@ export async function SiteHeader() {
     : [0, 0, 0]
   return (
     <>
-      <header className="sticky top-0 z-20 border-b-[3px] border-brand-blue bg-brand-yellow text-brand-blue-deep shadow-md">
+      <header className="sticky top-0 z-20 bg-brand-yellow text-[var(--ink)] shadow-[inset_0_-1px_0_rgba(14,27,46,0.14)]">
         <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-3 px-4 sm:px-6 lg:h-[68px]">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5 font-extrabold tracking-tight text-brand-blue-deep">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5 font-display font-extrabold tracking-tight text-[var(--ink)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.svg" alt="" width={34} height={34} className="h-[34px] w-[34px] drop-shadow" />
-            <span className="hidden text-[17px] sm:inline">
-              pokemon<span className="text-brand-blue">.jede.online</span>
+            <img src="/logo.svg" alt="" width={34} height={34} className="h-9 w-9 rounded-[10px] shadow-[0_1px_0_rgba(14,27,46,0.25),0_4px_10px_-4px_rgba(14,27,46,0.5)]" />
+            <span className="hidden text-[18px] sm:inline">
+              pokemon<span className="text-brand-blue-dark">.jede.online</span>
             </span>
           </Link>
 
@@ -64,14 +65,15 @@ export async function SiteHeader() {
             {user ? (
               <>
                 <Link href="/poptavky" aria-label={t('Výměny')} title={t('Výměny')} className={`${iconLink} hidden sm:inline-flex`}>
-                  ⇄{pendingCount > 0 && <Dot n={pendingCount} />}
+                  <ArrowLeftRight strokeWidth={1.75} aria-hidden />
+                  {pendingCount > 0 && <Dot n={pendingCount} />}
                 </Link>
                 <Link href="/upozorneni" aria-label={t('Upozornění')} className={iconLink}>
-                  🔔
+                  <Bell strokeWidth={1.75} aria-hidden />
                   {unreadCount > 0 && <Dot n={unreadCount} />}
                 </Link>
                 <Link href="/kosik" aria-label={t('Košík')} className={iconLink}>
-                  🛒
+                  <ShoppingBag strokeWidth={1.75} aria-hidden />
                   {cartCount > 0 && <Dot n={cartCount} />}
                 </Link>
                 <LocaleSwitcher />
@@ -91,7 +93,7 @@ export async function SiteHeader() {
                 </Link>
                 <Link
                   href="/prihlaseni"
-                  className="ml-1 inline-flex min-h-10 items-center rounded-[10px] bg-brand-blue-dark px-3.5 font-bold text-white transition-colors duration-200 hover:bg-brand-blue-deep"
+                  className="ml-1 inline-flex min-h-10 items-center rounded-[10px] bg-[var(--ink)] px-4 font-bold text-white shadow-[0_6px_16px_-6px_rgba(14,27,46,0.55)] transition-colors duration-200 hover:bg-[#1b2c45]"
                 >
                   {t('Přihlásit')}
                 </Link>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useT } from '@/lib/i18n/client'
+import { Smartphone } from 'lucide-react'
 
 /**
  * Instalace webu jako aplikace (PWA).
@@ -152,7 +153,7 @@ export function InstallPrompt() {
             }}
             className="min-h-11 flex-1 rounded-[11px] bg-accent-strong px-4 font-bold text-on-accent transition-colors duration-200 hover:bg-accent-hover"
           >
-            📲 {t('Stáhnout aplikaci')}
+            <Smartphone className="mr-1.5 inline h-[18px] w-[18px] align-[-3px]" strokeWidth={1.9} aria-hidden />{t('Stáhnout aplikaci')}
           </button>
           <button type="button" onClick={dismiss} className="min-h-11 rounded-[11px] border border-line-strong px-4 text-sm font-semibold text-muted hover:text-fg">
             {t('Teď ne')}
@@ -195,7 +196,7 @@ export function InstallMenuItem({ className }: { className: string }) {
   if (!available) return null
   return (
     <button type="button" onClick={openInstall} className={`${className} w-full text-left`}>
-      📲 {t('Stáhnout aplikaci')}
+      <Smartphone className="mr-1.5 inline h-[18px] w-[18px] align-[-3px]" strokeWidth={1.9} aria-hidden />{t('Stáhnout aplikaci')}
     </button>
   )
 }
@@ -207,7 +208,7 @@ export function InstallHeaderButton({ className }: { className: string }) {
   if (!available || !e?.mobile) return null
   return (
     <button type="button" onClick={openInstall} aria-label={t('Stáhnout aplikaci')} title={t('Stáhnout aplikaci')} className={className}>
-      📲
+      <Smartphone strokeWidth={1.75} aria-hidden />
     </button>
   )
 }
@@ -219,7 +220,7 @@ export function InstallApp() {
   if (!available) return null
   return (
     <button type="button" onClick={openInstall} className="underline">
-      📱 {t('Aplikace do mobilu')}
+      {t('Aplikace do mobilu')}
     </button>
   )
 }

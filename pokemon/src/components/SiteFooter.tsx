@@ -5,26 +5,28 @@ import { InstallApp } from '@/components/InstallApp'
 import { Pokeball, container } from '@/components/design'
 import { getT } from '@/lib/i18n/server'
 
-const link = 'text-white/80 hover:text-white hover:underline'
+const link = 'text-[#c9d3e3] transition-colors hover:text-white'
 
 export async function SiteFooter() {
   const user = await getCurrentUser()
   const t = await getT()
   return (
-    <footer className="relative mt-20 overflow-hidden border-t-[3px] border-brand-yellow bg-brand-blue-deep text-sm text-white/75">
+    <footer className="relative mt-24 overflow-hidden bg-[var(--ink)] text-sm text-[#9aa7bd]">
       {/* Jemný Pokéball detail v rohu. */}
-      <Pokeball className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 text-white opacity-[0.05]" />
+      <Pokeball className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 text-white opacity-[0.04]" />
       <div className={`${container} relative grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]`}>
         <div>
-          <p className="flex items-center gap-2 text-base font-extrabold text-white">
+          <p className="flex items-center gap-2.5 font-display text-[17px] font-extrabold tracking-tight text-white">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.svg" alt="" width={28} height={28} className="h-7 w-7" />
-            pokemon<span className="-ml-2 text-brand-yellow">.jede.online</span>
+            <img src="/logo.svg" alt="" width={28} height={28} className="h-8 w-8 rounded-[9px]" />
+            <span>
+              pokemon<span className="text-brand-yellow">.jede.online</span>
+            </span>
           </p>
-          <p className="mt-2 max-w-sm">{t('Fan project · zdarma')}</p>
+          <p className="mt-3 max-w-sm">{t('Fan project · zdarma')}</p>
         </div>
         <div>
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-brand-yellow">{t('Informace')}</p>
+          <p className="eyebrow mb-3 !text-[#7d8aa3]">{t('Informace')}</p>
           <ul className="space-y-2">
             <li>
               <a href="/soukromi" className={link}>
@@ -44,8 +46,8 @@ export async function SiteFooter() {
           </ul>
         </div>
         <div>
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-brand-yellow">{t('Nástroje')}</p>
-          <ul className="space-y-2 text-white/80 [&_button]:text-white/80 [&_button:hover]:text-white">
+          <p className="eyebrow mb-3 !text-[#7d8aa3]">{t('Nástroje')}</p>
+          <ul className="space-y-2 text-[#c9d3e3] [&_button]:text-[#c9d3e3] [&_button]:no-underline [&_button:hover]:text-white">
             <li>
               <BugReportForm loggedIn={!!user} />
             </li>
@@ -62,8 +64,8 @@ export async function SiteFooter() {
           </ul>
         </div>
       </div>
-      <div className="relative border-t border-white/10">
-        <div className={`${container} flex flex-col gap-2 py-5 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between`}>
+      <div className="relative border-t border-[rgba(255,255,255,0.08)]">
+        <div className={`${container} flex flex-col gap-2 py-5 text-xs text-[#7d8aa3] sm:flex-row sm:items-center sm:justify-between`}>
           <p className="max-w-3xl">
             {t(
               'Neoficiální fanouškovský projekt. Pokémon a názvy karet jsou ochranné známky jejich vlastníků (Nintendo, The Pokémon Company). Data katalogu: TCGdex.',
