@@ -64,7 +64,7 @@ const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' | 'kit
   cel25cc: { group: 2931, match: 'name' },
   '2023sv': { group: 23306, match: 'number' },
   '2024sv': { group: 24163, match: 'number' },
-  mfb: { group: 23330, match: 'kit' },
+  mfb: { group: 23330, match: 'name' }, // TCGplayer tu čísla karet nemá — jen podle jména
   'tk-xy-p': { group: 1796, match: 'kit', deck: 'Pikachu' },
   'tk-xy-su': { group: 1796, match: 'kit', deck: 'Suicune' },
   'tk-xy-latia': { group: 1536, match: 'kit', deck: 'Latias' },
@@ -122,15 +122,17 @@ async function fillFromTcgplayer(log: (m: string) => void) {
         signal: AbortSignal.timeout(60_000),
       })
       if (!res.ok) throw new Error(`tcgcsv ${res.status}`)
+      // Karty (ne zapečetěné produkty) poznáme podle čísla; u párování podle jména bereme i produkty bez čísla,
+      // jen ne samotné balíčky („My First Battle [Pikachu & Bulbasaur]“).
       const products = ((await res.json()) as { results: TcgpProduct[] }).results.filter((p) =>
-        p.extendedData?.some((e) => e.name === 'Number'),
+        cfg.match === 'name' ? !/\[.*&.*\]/.test(p.name) : p.extendedData?.some((e) => e.name === 'Number'),
       )
       const cards = await prisma.card.findMany({ where: { setId }, select: { id: true, localId: true, name: true, imageUrl: true } })
       const byNum = new Map<string, TcgpProduct>()
       const allByNum = new Map<string, TcgpProduct[]>()
       const byName = new Map<string, TcgpProduct[]>()
       for (const p of products) {
-        const num = p.extendedData!.find((e) => e.name === 'Number')!.value.split('/')[0]
+        const num = p.extendedData?.find((e) => e.name === 'Number')?.value.split('/')[0] ?? ''
         // Stejné číslo má víc verzí („[Staff]“, „Pokemon Center Exclusive“) — bereme základní (nejkratší název).
         allByNum.set(numKey(num), [...(allByNum.get(numKey(num)) ?? []), p])
         const prev = byNum.get(numKey(num))
@@ -152,7 +154,8 @@ async function fillFromTcgplayer(log: (m: string) => void) {
           // Dvojice se stejným názvem (Darkrai & Cresselia LEGEND horní/dolní půlka): podle pořadí čísel.
           if (list.length > 1) {
             const same = cards.filter((x) => nameKey(x.name) === nameKey(c.name)).sort((a, b) => a.localId.localeCompare(b.localId))
-            const sorted = [...list].sort((a, b) => (/\(top\)/i.test(a.name) ? -1 : /\(top\)/i.test(b.name) ? 1 : 0))
+            // Napřed „(top)“, pak základní verze (nejkratší název, bez „(Blue Border)“ apod.).
+            const sorted = [...list].sort((a, b) => (/\(top\)/i.test(a.name) ? -1 : /\(top\)/i.test(b.name) ? 1 : a.name.length - b.name.length))
             p = sorted[same.findIndex((x) => x.id === c.id)]
           } else p = list[0]
         }
