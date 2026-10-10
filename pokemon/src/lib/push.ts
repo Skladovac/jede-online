@@ -12,6 +12,23 @@ const QUIET_TO = 8
 
 export const pushPublicKey = () => process.env.VAPID_PUBLIC_KEY || null
 
+/** Odběr musí mířit na skutečnou push službu prohlížeče (server na endpoint posílá požadavky — ochrana proti SSRF). */
+export function isPushEndpoint(endpoint: string) {
+  let u: URL
+  try {
+    u = new URL(endpoint)
+  } catch {
+    return false
+  }
+  if (u.protocol !== 'https:' || u.port || u.username || u.password) return false
+  const host = u.hostname.toLowerCase().replace(/\.$/, '')
+  return (
+    ['fcm.googleapis.com', 'updates.push.services.mozilla.com', 'web.push.apple.com'].includes(host) ||
+    host.endsWith('.notify.windows.com') ||
+    host.endsWith('.push.apple.com')
+  )
+}
+
 let ready: boolean | null = null
 function setup() {
   if (ready !== null) return ready
@@ -50,6 +67,7 @@ export async function sendPush(userId: string, n: PushPayload, { ignoreQuiet = f
   let sent = 0
   await Promise.all(
     u.pushSubs.map(async (s) => {
+      if (!isPushEndpoint(s.endpoint)) return
       try {
         await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 6 * 3600 })
         sent++

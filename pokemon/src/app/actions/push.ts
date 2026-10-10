@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { rateLimit } from '@/lib/rate-limit'
-import { isQuietNow, quietApplies, sendPush } from '@/lib/push'
+import { isPushEndpoint, isQuietNow, quietApplies, sendPush } from '@/lib/push'
 import { getT } from '@/lib/i18n/server'
 
 type SubJSON = { endpoint?: string; keys?: { p256dh?: string; auth?: string } }
@@ -15,7 +15,7 @@ export async function savePushSubscription(sub: SubJSON) {
   const endpoint = sub?.endpoint ?? ''
   const p256dh = sub?.keys?.p256dh ?? ''
   const auth = sub?.keys?.auth ?? ''
-  if (!/^https:\/\/[^\s]{10,900}$/.test(endpoint) || !p256dh || p256dh.length > 200 || !auth || auth.length > 100) return { ok: false }
+  if (endpoint.length > 900 || !isPushEndpoint(endpoint) || !p256dh || p256dh.length > 200 || !auth || auth.length > 100) return { ok: false }
   if (!rateLimit(`push-sub:${user.id}`, 30, 3_600_000)) return { ok: false }
   // Max. 10 zařízení na účet — nejstarší odběry pryč.
   const old = await prisma.pushSubscription.findMany({ where: { userId: user.id, endpoint: { not: endpoint } }, orderBy: { createdAt: 'desc' }, skip: 9, select: { id: true } })
