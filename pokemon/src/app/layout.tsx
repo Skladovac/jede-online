@@ -8,7 +8,13 @@ import { dictFor } from '@/lib/i18n/dicts'
 import { I18nProvider } from '@/lib/i18n/client'
 import { LOCALE_INFO, makeT } from '@/lib/i18n/config'
 import { cookies } from 'next/headers'
+import { Bricolage_Grotesque, Figtree, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+
+// Písma „Sběratelské galerie“: nadpisy Bricolage Grotesque, text Figtree, čísla karet a ceny JetBrains Mono.
+const display = Bricolage_Grotesque({ subsets: ['latin', 'latin-ext'], variable: '--font-display', display: 'swap' })
+const sans = Figtree({ subsets: ['latin', 'latin-ext'], variable: '--font-sans', display: 'swap' })
+const mono = JetBrains_Mono({ subsets: ['latin', 'latin-ext'], weight: ['500', '700'], variable: '--font-mono', display: 'swap' })
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale()
@@ -46,7 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const theme = (await cookies()).get('theme')?.value
   return (
     // Vzhled: výchozí světlý (Pokémon modrá + žlutá), tmavý jen když si ho uživatel přepnul (cookie „theme“ z ThemeToggle).
-    <html lang={LOCALE_INFO[locale].htmlLang} className={theme === 'dark' ? 'dark' : ''}>
+    <html lang={LOCALE_INFO[locale].htmlLang} className={`${display.variable} ${sans.variable} ${mono.variable}${theme === 'dark' ? ' dark' : ''}`}>
       <body className="min-h-dvh bg-base pb-[calc(3.5rem+env(safe-area-inset-bottom))] text-fg antialiased sm:pb-0">
         <I18nProvider locale={locale} dict={dict}>
         <SiteHeader />

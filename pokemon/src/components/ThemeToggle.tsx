@@ -1,5 +1,6 @@
 'use client'
 
+import { Moon, Sun } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useT } from '@/lib/i18n/client'
 
@@ -21,8 +22,8 @@ export function ThemeToggle({ variant = 'icon' }: { variant?: 'icon' | 'menu' | 
   const label = dark ? t('Přepnout na světlý vzhled') : t('Přepnout na tmavý vzhled')
   if (variant === 'menu')
     return (
-      <button type="button" onClick={toggle} className="block w-full px-4 py-2.5 text-left hover:bg-card-hover">
-        {dark ? '☀️' : '🌙'} {dark ? t('Světlý vzhled') : t('Tmavý vzhled')}
+      <button type="button" onClick={toggle} className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-card-hover">
+        {dark ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />} {dark ? t('Světlý vzhled') : t('Tmavý vzhled')}
       </button>
     )
   return (
