@@ -8,7 +8,7 @@ import { str, type FormState } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
 import { searchCards, searchCardsById } from '@/lib/search'
 import { formatEur } from '@/lib/format'
-import { PHOTO_DAILY, photosLeft, takePhotoSlot } from '@/lib/photo-quota'
+import { PHOTO_DAILY, photoQuota, takePhotoSlot } from '@/lib/photo-quota'
 import { notifyDeals } from '@/lib/deals'
 import { readCardPhoto, visionEnabled } from '@/lib/card-vision'
 import { rateLimit } from '@/lib/rate-limit'
@@ -311,7 +311,7 @@ export async function toggleWantForm(_: FormState, fd: FormData): Promise<FormSt
 
 export type QuickHit = { id: string; name: string; number: string; set: string; imageUrl: string | null; owned: number; price?: string | null }
 export type QuickBatch = { added: (QuickHit & { qty: number })[]; ambiguous: { q: string; hits: QuickHit[] }[]; notFound: string[] }
-export type QuickAddState = { added?: QuickHit; hits?: QuickHit[]; batch?: QuickBatch; suggest?: QuickHit; error?: string; q?: string; photosLeft?: number }
+export type QuickAddState = { added?: QuickHit; hits?: QuickHit[]; batch?: QuickBatch; suggest?: QuickHit; error?: string; q?: string; photosLeft?: number | null; photosUsed?: number }
 
 async function toHits(userId: string, cards: Awaited<ReturnType<typeof searchCards>>): Promise<QuickHit[]> {
   const owned = await prisma.collectionItem.groupBy({
@@ -443,7 +443,7 @@ export async function quickAddPhoto(_: QuickAddState, fd: FormData): Promise<Qui
   const file = fd.get('photo')
   if (!(file instanceof File) || !file.size) return { error: t('Vyfoť kartu.') }
   if (file.size > 3_000_000 || !/^image\/(jpeg|png|webp)$/.test(file.type)) return { error: t('Fotka je moc velká nebo v nepodporovaném formátu.') }
-  if (!rateLimit(`photo:${user.id}`, 20, 3_600_000)) return { error: t('Dnes už jsi vyfotil(a) hodně karet. Zkus to zítra.') }
+  if (!user.isAdmin && !rateLimit(`photo:${user.id}`, 20, 3_600_000)) return { error: t('Dnes už jsi vyfotil(a) hodně karet. Zkus to zítra.') }
   // Placené rozpoznání: slot se počítá i při nepovedené fotce (stojí stejně).
   const slot = await takePhotoSlot(user)
   if (!slot.ok)
@@ -454,9 +454,9 @@ export async function quickAddPhoto(_: QuickAddState, fd: FormData): Promise<Qui
           : t('Focení je dnes vytížené. Zkus to zítra, kartu zatím přidej číslem.'),
       photosLeft: 0,
     }
-  const left = await photosLeft(user)
+  const quota = await photoQuota(user)
   const res = await recognizePhoto(user.id, file, t)
-  return { ...res, photosLeft: Number.isFinite(left) ? left : undefined }
+  return { ...res, photosLeft: quota.left, photosUsed: quota.used }
 }
 
 async function recognizePhoto(userId: string, file: File, t: Awaited<ReturnType<typeof getT>>): Promise<QuickAddState> {

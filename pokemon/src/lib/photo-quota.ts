@@ -14,11 +14,13 @@ function pragueMidnight(now = new Date()) {
   return new Date(Math.floor(now.getTime() / 1000) * 1000 - ((hour * 60 + n('minute')) * 60 + n('second')) * 1000)
 }
 
-/** Kolik fotek dnes uživateli zbývá (admin bez limitu). */
-export async function photosLeft(user: { id: string; isAdmin?: boolean }) {
-  if (user.isAdmin) return Infinity
-  const used = await prisma.photoScan.count({ where: { userId: user.id, createdAt: { gte: pragueMidnight() } } })
-  return Math.max(0, PHOTO_DAILY - used)
+/** Kolik fotek uživatel dnes vyfotil. */
+export const photosUsedToday = (userId: string) => prisma.photoScan.count({ where: { userId, createdAt: { gte: pragueMidnight() } } })
+
+/** Stav pro počítadlo u tlačítka: kolik dnes vyfotil a kolik zbývá (admin: left = null, bez limitu). */
+export async function photoQuota(user: { id: string; isAdmin?: boolean }) {
+  const used = await photosUsedToday(user.id)
+  return { used, left: user.isAdmin ? null : Math.max(0, PHOTO_DAILY - used) }
 }
 
 /** Zapíše fotku do limitu. Vrací false, když už uživatel (nebo celý web) dnešní limit vyčerpal. */
