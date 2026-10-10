@@ -6,6 +6,7 @@ import { useT } from '@/lib/i18n/client'
 import { changeSpare, clearSetWanted, markByNumbers, markRestWanted, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
 import { CardImg } from '@/components/CardImg'
 import { POKEMON_TYPES } from '@/lib/pokemon-types'
+import { BookOpen, Check, LayoutGrid, Minus } from 'lucide-react'
 
 export type GridCard = { id: string; localId: string; name: string; image: string | null; price: string | null; types?: string[] }
 type Mode = 'view' | 'owned' | 'want' | 'spare'
@@ -157,19 +158,21 @@ export function SetGrid({
   return (
     <div className="mt-6">
       {loggedIn ? (
-        <div className="sticky top-[119px] z-10 -mx-4 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_95%,transparent)] px-4 py-3 backdrop-blur md:top-[67px] lg:top-[71px]">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="sticky top-[119px] z-10 -mx-4 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_88%,transparent)] px-4 py-3.5 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-[67px] lg:top-[68px]">
+          <div className="inline-flex flex-wrap gap-1 rounded-xl bg-surface p-1 ring-1 ring-inset ring-line" role="group" aria-label={t('Režim')}>
             {MODES.map((m) => (
               <button
                 key={m.id}
                 onClick={() => setMode(m.id)}
-                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
-                  mode === m.id
-                    ? 'bg-accent-strong text-on-accent'
-                    : 'border border-line-strong'
+                aria-pressed={mode === m.id}
+                className={`inline-flex min-h-9 items-center gap-1.5 rounded-[9px] px-3.5 text-sm font-semibold transition ${
+                  mode === m.id ? 'bg-card text-fg shadow-soft ring-1 ring-inset ring-line' : 'text-muted hover:text-fg'
                 }`}
               >
                 {t(m.label)}
+                {m.id === 'owned' && <span className="font-mono text-[11px] text-subtle">{ownedCount}</span>}
+                {m.id === 'want' && <span className="font-mono text-[11px] text-subtle">{wantCount}</span>}
+                {m.id === 'spare' && <span className="font-mono text-[11px] text-subtle">{spareCount}</span>}
               </button>
             ))}
           </div>
@@ -180,7 +183,7 @@ export function SetGrid({
                 type="button"
                 disabled={bulkBusy}
                 onClick={() => bulk('all')}
-                className="rounded-full bg-orange-500 px-3 py-1 font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
+                className="min-h-8 rounded-lg bg-[var(--ink)] px-3 font-semibold text-white hover:bg-[#1b2c45] disabled:opacity-50 dark:bg-white dark:text-[var(--ink)]"
               >
                 {bulkBusy ? t('Ukládám…') : t('Vše, co nemám, mi chybí')}
               </button>
@@ -189,7 +192,7 @@ export function SetGrid({
                   type="button"
                   disabled={bulkBusy}
                   onClick={() => bulk('base')}
-                  className="rounded-full border border-orange-400 px-3 py-1 font-semibold text-orange-700 disabled:opacity-50 dark:text-orange-300"
+                  className="min-h-8 rounded-lg px-3 font-semibold text-fg ring-1 ring-inset ring-line-strong hover:bg-card disabled:opacity-50"
                 >
                   {t('Jen základní 1–{n} (bez secret)', { n: baseCount })}
                 </button>
@@ -213,11 +216,11 @@ export function SetGrid({
                 value={numbers}
                 onChange={(e) => setNumbers(e.target.value)}
                 placeholder={t('Čísla karet: 1, 5, 23-30, 145')}
-                className="min-w-0 flex-1 rounded-lg border border-line-strong bg-card px-3 py-1.5 text-sm"
+                className="min-h-9 min-w-0 flex-1 rounded-lg border border-line-strong bg-card px-3 text-sm outline-none focus:border-brand-blue focus:ring-4 focus:ring-[rgba(42,117,187,0.15)]"
               />
               <button
                 disabled={bulkBusy || !numbers.trim()}
-                className="rounded-full bg-accent-strong px-3 py-1.5 font-semibold text-on-accent disabled:opacity-50"
+                className="min-h-9 rounded-lg bg-accent-strong px-3 font-semibold text-on-accent disabled:opacity-50"
               >
                 {mode === 'owned' ? t('Označit jako Mám') : t('Označit jako Chybí')}
               </button>
@@ -225,20 +228,20 @@ export function SetGrid({
             </form>
           )}
           <div className="mt-2 flex items-center gap-3 text-xs">
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
               <div
-                className="h-full rounded-full bg-green-500 transition-all"
+                className="h-full rounded-full bg-gradient-to-r from-brand-blue to-brand-blue-dark transition-all dark:from-accent dark:to-brand-blue"
                 style={{ width: `${Math.min(100, (ownedCount / Math.max(officialCount, 1)) * 100)}%` }}
               />
             </div>
-            <span className="shrink-0 font-medium">
+            <span className="shrink-0 font-mono text-[12px] text-muted">
               {t('Mám {owned}/{total} · chybí {want} · navíc {spare}', { owned: ownedCount, total: officialCount, want: wantCount, spare: spareCount })}
             </span>
           </div>
-          {error && <p className="mt-2 text-xs text-red-600">{t(error)}</p>}
+          {error && <p className="mt-2 text-xs text-danger">{t(error)}</p>}
         </div>
       ) : (
-        <p className="rounded-xl bg-accent-soft px-4 py-3 text-sm text-fg">
+        <p className="rounded-xl bg-surface px-4 py-3 text-sm text-fg ring-1 ring-inset ring-line">
           <Link href="/prihlaseni" className="font-semibold underline">
             {t('Přihlas se')}
           </Link>{' '}
@@ -246,24 +249,26 @@ export function SetGrid({
         </p>
       )}
 
-      <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-subtle">{t('Zobrazení:')}</span>
-        {(
-          [
-            ['grid', t('Mřížka')],
-            ['album', t('Album')],
-          ] as const
-        ).map(([l, label]) => (
-          <button
-            key={l}
-            type="button"
-            onClick={() => setLayout(l)}
-            className={`rounded-full px-3 py-1 font-medium ${layout === l ? 'bg-accent-strong text-on-accent' : 'border border-line-strong'}`}
-          >
-            {l === 'album' ? '📖 ' : '▦ '}
-            {label}
-          </button>
-        ))}
+      <div className="mt-6 flex flex-wrap items-center justify-end gap-2 text-sm">
+        <div className="inline-flex gap-1 rounded-xl bg-surface p-1 ring-1 ring-inset ring-line" role="group" aria-label={t('Zobrazení:')}>
+          {(
+            [
+              ['grid', t('Mřížka'), LayoutGrid],
+              ['album', t('Album'), BookOpen],
+            ] as const
+          ).map(([l, label, Icon]) => (
+            <button
+              key={l}
+              type="button"
+              onClick={() => setLayout(l)}
+              aria-pressed={layout === l}
+              className={`inline-flex min-h-9 items-center gap-1.5 rounded-[9px] px-3 font-semibold transition ${layout === l ? 'bg-card text-fg shadow-soft ring-1 ring-inset ring-line' : 'text-muted hover:text-fg'}`}
+            >
+              <Icon className="h-4 w-4" strokeWidth={1.9} aria-hidden />
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {layout === 'album' && (
@@ -340,12 +345,11 @@ export function SetGrid({
 
       {setTypes.length > 1 && layout === 'grid' && (
         <div className="mt-4 flex flex-wrap items-center gap-2 text-sm" role="group" aria-label={t('Filtr podle typu')}>
-          <span className="text-subtle">{t('Typ:')}</span>
           <button
             type="button"
             onClick={() => setTypeFilter(null)}
             aria-pressed={!typeFilter}
-            className={`min-h-9 rounded-full px-3 font-semibold ${!typeFilter ? 'bg-brand-blue text-white' : 'border border-line-strong text-muted hover:bg-card-hover'}`}
+            className={`min-h-9 rounded-full bg-card px-3.5 font-semibold transition ${!typeFilter ? 'text-fg ring-[1.5px] ring-inset ring-fg' : 'text-muted ring-1 ring-inset ring-line hover:text-fg'}`}
           >
             {t('Všechny')}
           </button>
@@ -358,10 +362,9 @@ export function SetGrid({
                 type="button"
                 onClick={() => setTypeFilter(on ? null : ty)}
                 aria-pressed={on}
-                className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 font-semibold transition ${on ? 'ring-2 ring-brand-blue-dark ring-offset-2 ring-offset-base' : 'opacity-90 hover:opacity-100'}`}
-                style={{ backgroundColor: info.color, color: info.text }}
+                className={`inline-flex min-h-9 items-center gap-2 rounded-full bg-card pl-2.5 pr-3.5 font-semibold transition ${on ? 'text-fg ring-[1.5px] ring-inset ring-fg' : 'text-muted ring-1 ring-inset ring-line hover:text-fg'}`}
               >
-                <span aria-hidden className="h-3 w-3 rounded-full border-2 border-current" />
+                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: info.color }} />
                 {t(info.label)}
               </button>
             )
@@ -369,44 +372,52 @@ export function SetGrid({
         </div>
       )}
 
-      <ul className={`mt-6 grid grid-cols-2 gap-3 min-[480px]:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 ${layout === 'album' ? 'hidden' : ''}`}>
+      <ul className={`mt-7 grid grid-cols-2 gap-x-4 gap-y-8 min-[480px]:grid-cols-3 sm:gap-x-6 sm:gap-y-9 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 ${layout === 'album' ? 'hidden' : ''}`}>
         {cards.filter((c) => !typeFilter || c.types?.includes(typeFilter)).map((c) => {
           const s = state[c.id] ?? { owned: 0, spare: 0, want: false }
-          // Neoznačené karty v režimu úprav ztlumené; chybějící šedé jen v obrázku, okraj zůstává oranžový.
-          const dim = loggedIn && mode !== 'view' && !s.owned && !s.want
+          // Galerie: karta, kterou nemám, je vybledlá (jen když už v sadě něco mám — nováček vidí vše barevně).
+          // V režimu úprav ztlumené vše neoznačené; po najetí se karta vždy ukáže v barvě.
+          const faded = loggedIn && !s.owned && (mode !== 'view' ? !s.want : ownedCount > 0)
           const tile = (
             <>
-              <div
-                className={`relative aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm transition ${
-                  dim ? 'opacity-40 grayscale' : ''
-                } ${s.want ? 'ring-4 ring-orange-400' : s.owned ? 'ring-2 ring-green-500' : ''}`}
-              >
+              <div className={`card-frame aspect-[63/88] ${faded ? 'opacity-45 grayscale-[0.9] transition-[opacity,filter] duration-300 group-hover:opacity-100 group-hover:grayscale-0' : ''}`}>
                 {c.image ? (
-                  <CardImg src={c.image} alt={c.name} className={s.want ? 'opacity-60 grayscale' : ''} />
+                  <CardImg src={c.image} alt={c.name} />
                 ) : (
                   <div className="grid h-full place-items-center p-2 text-center text-xs text-subtle">{c.name}</div>
                 )}
-                <div className="absolute left-1 top-1 flex flex-col gap-1">
-                  {s.owned > 0 && <Badge className="bg-green-600">✓ {s.owned > 1 ? `${s.owned}×` : t('mám')}</Badge>}
-                  {s.want && <Badge className="bg-orange-500">● {t('chybí')}</Badge>}
-                  {s.spare > 0 && <Badge className="bg-violet-600">⇄ +{s.spare} {t('navíc')}</Badge>}
-                </div>
               </div>
-              <p className="mt-2 truncate text-sm font-semibold text-fg">{c.name}</p>
-              <p className="flex items-center justify-between gap-2 text-xs text-subtle">
-                <span className="tabular-nums">{c.localId}</span>
-                {c.price && <span className="font-semibold tabular-nums text-brand-blue dark:text-accent">≈ {c.price}</span>}
-              </p>
+              {/* Stav ve sbírce: zelená fajfka (mám), počet navíc, „hledám“. */}
+              <div className="pointer-events-none absolute right-1.5 top-1.5 z-10 flex flex-col items-end gap-1">
+                {s.owned > 0 && (
+                  <span title={t('mám')} className="grid h-[26px] min-w-[26px] place-items-center rounded-full bg-[#1f8a5b] px-1 text-[11px] font-bold text-white shadow-[0_0_0_2px_#fff,0_4px_10px_-2px_rgba(0,0,0,0.35)]">
+                    {s.owned > 1 ? `${s.owned}×` : <Check className="h-[15px] w-[15px]" strokeWidth={2.8} aria-label={t('mám')} />}
+                  </span>
+                )}
+                {s.spare > 0 && (
+                  <span title={t('navíc')} className="rounded-full bg-[var(--ink)] px-2 py-0.5 font-mono text-[11px] font-bold text-brand-yellow shadow-[0_0_0_2px_#fff,0_4px_10px_-2px_rgba(0,0,0,0.35)]">
+                    +{s.spare}
+                  </span>
+                )}
+                {s.want && !s.owned && (
+                  <span className="rounded-full bg-brand-yellow px-2 py-0.5 text-[10.5px] font-bold text-[var(--ink)] shadow-[0_0_0_2px_#fff,0_4px_10px_-2px_rgba(0,0,0,0.35)]">{t('chybí')}</span>
+                )}
+              </div>
+              <div className="mt-3 flex items-baseline justify-between gap-2">
+                <p className={`truncate text-[14.5px] font-semibold ${faded ? 'text-muted' : 'text-fg'}`}>{c.name}</p>
+                <span className="shrink-0 font-mono text-[11.5px] text-subtle">{c.localId}</span>
+              </div>
+              {c.price && <p className="mt-0.5 truncate text-[13px] tabular-nums text-muted">≈ {c.price}</p>}
             </>
           )
           return (
             <li key={c.id} className="relative">
               {mode === 'view' || !loggedIn ? (
-                <Link href={`/karta/${encodeURIComponent(c.id)}`} className="group block">
+                <Link href={`/karta/${encodeURIComponent(c.id)}`} className="card-tile group relative block">
                   {tile}
                 </Link>
               ) : (
-                <button type="button" onClick={() => onCard(c.id)} className="block w-full text-left">
+                <button type="button" onClick={() => onCard(c.id)} className="card-tile group relative block w-full text-left">
                   {tile}
                 </button>
               )}
@@ -417,9 +428,9 @@ export function SetGrid({
                   onClick={() =>
                     apply(c.id, { ...s, spare: s.spare - 1, owned: Math.max(s.owned - 1, 0) }, () => changeSpare(c.id, -1))
                   }
-                  className="absolute right-1 top-1 grid h-8 w-8 place-items-center rounded-full bg-card text-lg font-bold text-fg shadow"
+                  className="absolute left-1.5 top-1.5 z-20 grid h-8 w-8 place-items-center rounded-full bg-card text-fg shadow-[0_2px_8px_rgba(14,27,46,0.25)]"
                 >
-                  −
+                  <Minus className="h-4 w-4" strokeWidth={2.4} aria-hidden />
                 </button>
               )}
             </li>
@@ -428,8 +439,4 @@ export function SetGrid({
       </ul>
     </div>
   )
-}
-
-function Badge({ className, children }: { className: string; children: React.ReactNode }) {
-  return <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold text-white shadow ${className}`}>{children}</span>
 }

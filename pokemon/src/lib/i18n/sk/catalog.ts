@@ -210,5 +210,11 @@ const dict: Record<string, string> = {
   'Typ:': 'Typ:',
   'Všechny': 'Všetky',
   'mám': 'mám',
+  'Drobečková navigace': 'Navigačná cesta',
+  'karet ve sbírce': 'kariet v zbierke',
+  'chybí do kompletu': 'chýba do kompletu',
+  'hodnota tvých karet': 'hodnota tvojich kariet',
+  'Režim': 'Režim',
+  'Katalog': 'Katalóg',
 }
 export default dict
