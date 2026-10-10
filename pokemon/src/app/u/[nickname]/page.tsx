@@ -22,6 +22,7 @@ import { LOCALE_INFO } from '@/lib/i18n/config'
 import { BadgeIcon, BadgeShelf } from '@/components/Badges'
 import { refreshBadges } from '@/lib/badges'
 import { FollowButton } from '@/components/Social'
+import { CopyLink } from '@/components/CopyLink'
 
 export const dynamic = 'force-dynamic'
 
@@ -165,12 +166,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         />
       )}
 
-      <p className="mt-6 text-sm">
-        <Link href={`/@${encodeURIComponent(user.nickname)}/chybi`} className="font-medium text-accent hover:underline">
-          {t('Co hledá {name}', { name: user.nickname })} →
-        </Link>
-      </p>
-
       <div id="karty" className="mt-6 scroll-mt-24">
         {(() => {
           // Přepínač Nabízím / Hledám: výchozí je to, co má uživatel neprázdné (nabídky napřed). Volba je v URL, jde sdílet.
@@ -187,11 +182,21 @@ export default async function ProfilePage({ params, searchParams }: Props) {
               <span className="ml-2 rounded-full bg-black/10 px-2 py-0.5 text-sm font-bold dark:bg-white/15">{counts[id]}</span>
             </Link>
           )
+          // Majitel vidí „Nabízím / Hledám“, ostatní „Nabízí / Hledá“.
+          const own = viewer?.id === user.id
           return (
             <>
+              {own && (
+                <div className="mb-4 rounded-panel border border-line bg-card p-4 shadow-soft">
+                  <p className="mb-2 text-sm font-semibold text-fg">
+                    🔗 {t('Sdílej svůj profil — kdo odkaz otevře, uvidí přepínač Nabízí / Hledá:')}
+                  </p>
+                  <CopyLink url={`https://pokemon.jede.online/@${encodeURIComponent(user.nickname)}?ukaz=${view}`} title={t('Co nabízím a co hledám')} />
+                </div>
+              )}
               <div className="mb-8 flex gap-3">
-                {tab('nabizim', `🏷️ ${t('Nabízím')}`, 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-200 dark:ring-blue-500/30', 'border-2 border-blue-200 bg-card text-blue-700 hover:bg-blue-50 dark:border-blue-500/30 dark:text-blue-300')}
-                {tab('hledam', `🔍 ${t('Hledám')}`, 'bg-orange-500 text-white shadow-lg ring-4 ring-orange-200 dark:ring-orange-500/30', 'border-2 border-orange-200 bg-card text-orange-700 hover:bg-orange-50 dark:border-orange-500/30 dark:text-orange-300')}
+                {tab('nabizim', `🏷️ ${own ? t('Nabízím') : t('Nabízí')}`, 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-200 dark:ring-blue-500/30', 'border-2 border-blue-200 bg-card text-blue-700 hover:bg-blue-50 dark:border-blue-500/30 dark:text-blue-300')}
+                {tab('hledam', `🔍 ${own ? t('Hledám') : t('Hledá')}`, 'bg-orange-500 text-white shadow-lg ring-4 ring-orange-200 dark:ring-orange-500/30', 'border-2 border-orange-200 bg-card text-orange-700 hover:bg-orange-50 dark:border-orange-500/30 dark:text-orange-300')}
               </div>
               <CollectionOverview data={overview} own={false} view={view} />
             </>

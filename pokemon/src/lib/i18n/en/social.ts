@@ -261,5 +261,8 @@ const dict: Record<string, string> = {
   'Dostaneš o {n} Kč víc.': 'You get {n} CZK more.',
   'Dáš o {n} Kč víc.': 'You give {n} CZK more.',
   'Připravit výměnu v košíku': 'Prepare the trade in your cart',
+  'Sdílej svůj profil — kdo odkaz otevře, uvidí přepínač Nabízí / Hledá:': 'Share your profile — whoever opens the link sees the Offering / Looking for switch:',
+  'Co nabízím a co hledám': 'What I offer and what I am looking for',
+  'Hledá': 'Looking for',
 }
 export default dict
