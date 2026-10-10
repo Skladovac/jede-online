@@ -43,7 +43,8 @@ export async function readCardPhoto(image: Buffer, mime: string): Promise<CardRe
               text:
                 'Read this Pokémon TCG card photo. Return the card name in English as printed (for Japanese cards the English name of the Pokémon/card), ' +
                 'the set code printed at the bottom left (e.g. SVI, MEP, 30C, PAL) or null if not visible, the card number and the total after the slash ' +
-                '(null if there is none). language: en, ja or other. If the photo does not show a Pokémon card, return name "".',
+                '(null if there is none). language: the language the card is PRINTED in (en = English text on the card, ja = Japanese text), or other. ' +
+                'If the photo does not show a Pokémon card, return name "".',
             },
             { type: 'input_image', image_url: `data:${mime};base64,${image.toString('base64')}`, detail: 'high' },
           ],

@@ -456,7 +456,11 @@ export async function quickAddPhoto(_: QuickAddState, fd: FormData): Promise<Qui
   ].filter((q): q is string => !!q)
   const nameKey = reading.name.toLowerCase()
   for (const q of queries) {
-    let cards = await searchCards(q, 8)
+    let cards = await searchCards(q, 20)
+    // Jazyk karty z fotky: anglická karta jen z anglických sad, japonská jen z japonských (stejná jména i čísla).
+    if (reading.language === 'en') cards = cards.filter((c) => !c.id.startsWith('ja-'))
+    else if (reading.language === 'ja') cards = cards.filter((c) => c.id.startsWith('ja-'))
+    cards = cards.slice(0, 8)
     if (!cards.length) continue
     // Víc shod podle čísla: přednost těm se stejným jménem.
     if (cards.length > 1 && nameKey) {
