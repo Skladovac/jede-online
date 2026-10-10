@@ -7,6 +7,10 @@ import { CopyLink } from '@/components/CopyLink'
 import { Dashboard } from '@/components/Dashboard'
 import { QuickAdd } from '@/components/QuickAdd'
 import { visionEnabled } from '@/lib/card-vision'
+import { PHOTO_DAILY, photosLeft } from '@/lib/photo-quota'
+
+// Admin nemá limit (Infinity) — do klienta posíláme undefined = bez počítadla.
+const photoLeftFinite = (n: number) => (Number.isFinite(n) ? n : undefined)
 import { ImportExport } from '@/components/ImportExport'
 import { interestInMyCards } from '@/lib/interest'
 import { cardImage } from '@/lib/format'
@@ -36,7 +40,7 @@ export default async function MyCollectionPage() {
         </p>
       )}
       <div className="mt-6">
-        <QuickAdd photo={visionEnabled()} />
+        <QuickAdd photo={visionEnabled()} photosLeft={visionEnabled() ? photoLeftFinite(await photosLeft(user)) : undefined} photoDaily={PHOTO_DAILY} />
         <p className="mt-2 text-right text-sm">
           <Link href="/sbirka/nabidka" className="font-medium text-accent hover:underline">
             🏷️ {t('Hromadná nabídka: nabídni víc karet najednou')} →

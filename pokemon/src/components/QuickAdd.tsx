@@ -10,7 +10,7 @@ import { useT } from '@/lib/i18n/client'
  * „Přidej kartu číslem“: rychlé zadávání hromádky karet ze stolu. Po přidání se pole vyčistí a zůstane aktivní,
  * takže jde psát jedno číslo za druhým (MEP 101 ⏎, SVI 045 ⏎, …).
  */
-export function QuickAdd({ photo = false }: { photo?: boolean }) {
+export function QuickAdd({ photo = false, photosLeft: initialLeft, photoDaily = 5 }: { photo?: boolean; photosLeft?: number; photoDaily?: number }) {
   const t = useT()
   const [textState, textAction, textPending] = useActionState<QuickAddState, FormData>(quickAdd, {})
   const [photoState, photoAction, photoPending] = useActionState<QuickAddState, FormData>(quickAddPhoto, {})
@@ -23,6 +23,9 @@ export function QuickAdd({ photo = false }: { photo?: boolean }) {
     textAction(fd)
   }
   const fileInput = useRef<HTMLInputElement>(null)
+  // Zbývající fotky dnes (null = bez limitu, admin).
+  const left = photoState.photosLeft ?? initialLeft ?? null
+  const noPhotos = left !== null && left <= 0
 
   // Fotka z telefonu: zmenšit na max. 1280 px (JPEG) přímo v prohlížeči, ať se posílá jen pár set kB.
   async function onPhoto(file: File) {
@@ -102,7 +105,7 @@ export function QuickAdd({ photo = false }: { photo?: boolean }) {
             />
             <button
               type="button"
-              disabled={pending}
+              disabled={pending || noPhotos}
               onClick={() => fileInput.current?.click()}
               aria-label={t('Vyfotit kartu')}
               title={t('Vyfotit kartu')}
@@ -114,7 +117,16 @@ export function QuickAdd({ photo = false }: { photo?: boolean }) {
           </>
         )}
       </form>
-      {photo && <p className="mt-2 text-xs text-subtle">{t('📷 Vyfoť celou kartu zepředu — web ji pozná, ukáže cenu a zeptá se, jestli ji přidat.')}</p>}
+      {photo && (
+        <p className="mt-2 text-xs text-subtle">
+          {t('📷 Vyfoť celou kartu zepředu — web ji pozná, ukáže cenu a zeptá se, jestli ji přidat.')}{' '}
+          {left !== null && (
+            <strong className={noPhotos ? 'text-danger' : 'text-muted'}>
+              {noPhotos ? t('Dnešní fotky jsou vyčerpané, zítra zase.') : t('Dnes zbývá {n} z {max} fotek.', { n: left, max: photoDaily })}
+            </strong>
+          )}
+        </p>
+      )}
 
       <div aria-live="polite">
         {photoPending && <p className="mt-3 text-sm text-muted">{t('Čtu kartu z fotky…')}</p>}
@@ -138,13 +150,13 @@ export function QuickAdd({ photo = false }: { photo?: boolean }) {
                   <button className="min-h-11 rounded-[11px] bg-accent-strong px-4 font-bold text-on-accent transition-colors duration-200 hover:bg-accent-hover">
                     ＋ {t('Přidat do alba')}
                   </button>
-                  <button
+                  {!noPhotos && <button
                     type="button"
                     onClick={() => fileInput.current?.click()}
                     className="min-h-11 rounded-[11px] border border-line-strong bg-card px-4 text-sm font-semibold text-muted hover:text-fg"
                   >
                     📷 {t('Vyfotit znovu')}
-                  </button>
+                  </button>}
                 </form>
               </div>
             </div>

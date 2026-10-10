@@ -121,5 +121,9 @@ const dict: Record<string, string> = {
   'Vyfotit znovu': 'Odfotiť znova',
   'Není to ona? Vyber jinou:': 'Nie je to ona? Vyber inú:',
   '📷 Vyfoť celou kartu zepředu — web ji pozná, ukáže cenu a zeptá se, jestli ji přidat.': '📷 Odfoť celú kartu spredu — web ju spozná, ukáže cenu a spýta sa, či ju pridať.',
+  'Dnešních {n} fotek máš vyčerpáno. Zítra zase, kartu zatím přidej číslem.': 'Dnešných {n} fotiek máš vyčerpaných. Zajtra znova, kartu zatiaľ pridaj číslom.',
+  'Focení je dnes vytížené. Zkus to zítra, kartu zatím přidej číslem.': 'Fotenie je dnes vyťažené. Skús to zajtra, kartu zatiaľ pridaj číslom.',
+  'Dnešní fotky jsou vyčerpané, zítra zase.': 'Dnešné fotky sú vyčerpané, zajtra znova.',
+  'Dnes zbývá {n} z {max} fotek.': 'Dnes zostáva {n} z {max} fotiek.',
 }
 export default dict
