@@ -249,5 +249,9 @@ const dict: Record<string, string> = {
   'Hledám': 'Looking for',
   'Co nabízí {name}': 'What {name} offers',
   'Sbírka a výměny Pokémon karet na pokemon.jede.online. Máš něco z toho? Napiš mu přes web.': 'Pokémon card collection and trades on pokemon.jede.online. Have any of these? Message them on the site.',
+  '{name} prodává {card} za {price} Kč': '{name} is selling {card} for {price} CZK',
+  '{name} nabízí {card}: {type}': '{name} offers {card}: {type}',
+  'Hlídáš ji do {max} Kč.': 'You are watching it up to {max} CZK.',
+  'Máš ji v seznamu „chci koupit“.': 'It is on your “want to buy” list.',
 }
 export default dict

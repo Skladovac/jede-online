@@ -99,7 +99,7 @@ export default async function CardPage({ params }: Props) {
               {card.localId}
               {card.set.officialCount ? `/${card.set.officialCount}` : ''}
             </dd>
-            {card.rarity && (
+            {card.rarity && card.rarity !== 'None' && (
               <>
                 <dt className="text-subtle">{t('Vzácnost')}</dt>
                 <dd>{t(rarityLabel(card.rarity)!)}</dd>
