@@ -247,5 +247,7 @@ const dict: Record<string, string> = {
   'Prohlížet nabídky a hodnocení můžeš i bez registrace.': 'You can browse offers and ratings without signing up.',
   'Nabízím': 'Offering',
   'Hledám': 'Looking for',
+  'Co nabízí {name}': 'What {name} offers',
+  'Sbírka a výměny Pokémon karet na pokemon.jede.online. Máš něco z toho? Napiš mu přes web.': 'Pokémon card collection and trades on pokemon.jede.online. Have any of these? Message them on the site.',
 }
 export default dict
