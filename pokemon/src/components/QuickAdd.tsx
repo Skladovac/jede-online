@@ -114,12 +114,42 @@ export function QuickAdd({ photo = false }: { photo?: boolean }) {
           </>
         )}
       </form>
-      {photo && <p className="mt-2 text-xs text-subtle">{t('📷 Vyfoť celou kartu zepředu — web přečte jméno a číslo a kartu přidá.')}</p>}
+      {photo && <p className="mt-2 text-xs text-subtle">{t('📷 Vyfoť celou kartu zepředu — web ji pozná, ukáže cenu a zeptá se, jestli ji přidat.')}</p>}
 
       <div aria-live="polite">
         {photoPending && <p className="mt-3 text-sm text-muted">{t('Čtu kartu z fotky…')}</p>}
-        {last === 'photo' && !photoPending && state.q && (state.added || state.hits) && (
-          <p className="mt-3 text-xs text-subtle">📷 {t('Rozpoznáno: {text}', { text: state.q })}</p>
+        {last === 'photo' && !photoPending && state.suggest && (
+          <div className="mt-3 rounded-panel border-2 border-line-hover bg-accent-soft p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue dark:text-accent">📷 {t('Na fotce je')}</p>
+            <div className="mt-2 flex gap-4">
+              <span className="block aspect-[63/88] w-28 shrink-0 overflow-hidden rounded-lg bg-surface shadow-md sm:w-36">
+                <CardImg src={cardImage(state.suggest.imageUrl)} alt={state.suggest.name} eager />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-extrabold text-fg">{state.suggest.name}</p>
+                <p className="text-sm text-muted">{state.suggest.set}</p>
+                <p className="text-sm tabular-nums text-muted">{state.suggest.number}</p>
+                <p className="mt-2 text-xl font-extrabold tabular-nums text-brand-blue-deep dark:text-white">
+                  {state.suggest.price ? `≈ ${state.suggest.price}` : t('Cena zatím neznámá')}
+                </p>
+                {state.suggest.owned > 0 && <p className="text-xs text-positive">{t('Už máš {n} ks', { n: state.suggest.owned })}</p>}
+                <form action={action} className="mt-3 flex flex-wrap gap-2">
+                  <input type="hidden" name="cardId" value={state.suggest.id} />
+                  <button className="min-h-11 rounded-[11px] bg-accent-strong px-4 font-bold text-on-accent transition-colors duration-200 hover:bg-accent-hover">
+                    ＋ {t('Přidat do alba')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInput.current?.click()}
+                    className="min-h-11 rounded-[11px] border border-line-strong bg-card px-4 text-sm font-semibold text-muted hover:text-fg"
+                  >
+                    📷 {t('Vyfotit znovu')}
+                  </button>
+                </form>
+              </div>
+            </div>
+            {state.hits && state.hits.length > 0 && <p className="mt-4 text-sm text-muted">{t('Není to ona? Vyber jinou:')}</p>}
+          </div>
         )}
         {state.error && <p className="mt-3 text-sm text-danger">{state.error}</p>}
         {state.added && (
@@ -182,7 +212,7 @@ export function QuickAdd({ photo = false }: { photo?: boolean }) {
         )}
         {state.hits && (
           <div className="mt-3">
-            <p className="mb-2 text-sm text-muted">{t('Víc shod — vyber tu svoji:')}</p>
+            {!state.suggest && <p className="mb-2 text-sm text-muted">{t('Víc shod — vyber tu svoji:')}</p>}
             <ul className="grid gap-2 sm:grid-cols-2">
               {state.hits.map((h) => (
                 <li key={h.id}>
@@ -195,6 +225,7 @@ export function QuickAdd({ photo = false }: { photo?: boolean }) {
                         <span className="block truncate text-xs text-muted">
                           {h.set} · {h.number}
                         </span>
+                        {h.price && <span className="block text-xs tabular-nums text-muted">≈ {h.price}</span>}
                         {h.owned > 0 && <span className="block text-xs text-positive">{t('máš {n} ks', { n: h.owned })}</span>}
                       </span>
                       <span className="shrink-0 text-sm font-semibold text-accent">+ {t('Přidat')}</span>
