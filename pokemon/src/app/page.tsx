@@ -9,7 +9,7 @@ import { GettingStarted } from '@/components/GettingStarted'
 import { CardImg } from '@/components/CardImg'
 import { setProgress } from '@/lib/progress'
 import { portfolio } from '@/lib/portfolio'
-import { cardImage, setLogo } from '@/lib/format'
+import { cardImage, setLogo, subsetLabels } from '@/lib/format'
 import { Pokeball, ProgressMeter, SectionHeader, StatCard, btnPrimary, btnSecondary, container, linkAccent, panel, panelInteractive } from '@/components/design'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO, type TFunc } from '@/lib/i18n/config'
@@ -43,6 +43,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
     return pick.owned > 0 ? pick : null
   }
 
+  const labels = subsetLabels(latest)
   const updated = priceAgg._max.priceUpdatedAt
   const priceNote = (
     <>
@@ -86,7 +87,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
           {latest.length ? (
             <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:gap-4 lg:grid-cols-4">
               {latest.map((s) => (
-                <SetTile key={s.id} {...s} progress={progressOf(s.id)} />
+                <SetTile key={s.id} {...s} progress={progressOf(s.id)} subLabel={labels.get(s.id)} />
               ))}
             </div>
           ) : (
