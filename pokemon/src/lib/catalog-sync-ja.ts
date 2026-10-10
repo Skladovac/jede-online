@@ -42,7 +42,7 @@ type JaCard = {
   pricing?: { cardmarket?: Record<string, number | string | null> | null }
 }
 type TcgGroup = { groupId: number; name: string; abbreviation?: string | null }
-type TcgProduct = { name: string; extendedData?: { name: string; value: string }[] }
+type TcgProduct = { productId: number; name: string; extendedData?: { name: string; value: string }[] }
 
 async function getJson<T>(url: string, attempt = 1): Promise<T> {
   const res = await fetch(url, {
@@ -94,12 +94,18 @@ export async function syncJapanese(log: (m: string) => void = console.log) {
     const group = groupByAbbr.get(s.id.toUpperCase()) ?? groups.find((g) => g.groupId === MANUAL_GROUP[s.id])
     // Anglické názvy karet podle čísla z TCGplayeru (když skupinu nenajdeme, zůstane japonský název).
     const enByNum = new Map<string, string>()
+    // Obrázek z TCGplayeru podle čísla, když ho TCGdex u japonské karty nemá (u víc verzí základní = nejkratší název).
+    const imgByNum = new Map<string, { id: number; name: string }>()
     if (group) {
       try {
         const prods = (await getJson<{ results: TcgProduct[] }>(`${TCGCSV}/${group.groupId}/products`)).results
         for (const p of prods) {
           const num = p.extendedData?.find((e) => e.name === 'Number')?.value.split('/')[0]
           if (num && !enByNum.has(numKey(num))) enByNum.set(numKey(num), cleanName(p.name))
+          if (num) {
+            const prev = imgByNum.get(numKey(num))
+            if (!prev || p.name.length < prev.name.length) imgByNum.set(numKey(num), { id: p.productId, name: p.name })
+          }
         }
       } catch (err) {
         log(`[ja] názvy pro ${s.id} selhaly: ${(err as Error).message}`)
@@ -140,7 +146,10 @@ export async function syncJapanese(log: (m: string) => void = console.log) {
         localId: brief.localId,
         name: enByNum.get(numKey(brief.localId)) ?? brief.name,
         nameOriginal: brief.name,
-        imageUrl: brief.image ?? detail?.image ?? null,
+        imageUrl:
+          brief.image ??
+          detail?.image ??
+          (imgByNum.get(numKey(brief.localId)) ? `https://tcgplayer-cdn.tcgplayer.com/product/${imgByNum.get(numKey(brief.localId))!.id}` : null),
         ...(detail && {
           category: detail.category ?? null,
           rarity: detail.rarity ?? null,
