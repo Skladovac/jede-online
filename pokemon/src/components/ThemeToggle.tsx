@@ -32,7 +32,7 @@ export function ThemeToggle({ variant = 'icon' }: { variant?: 'icon' | 'menu' | 
       aria-label={label}
       title={label}
       className={`grid h-10 w-10 place-items-center rounded-full transition-colors duration-200 ${
-        variant === 'header' ? 'text-white/90 hover:bg-white/10 hover:text-white' : 'text-muted hover:bg-card-hover hover:text-fg'
+        variant === 'header' ? 'text-brand-blue-deep hover:bg-[rgba(22,58,102,0.1)] hover:text-brand-blue' : 'text-muted hover:bg-card-hover hover:text-fg'
       }`}
     >
       {dark ? (
