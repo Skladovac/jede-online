@@ -9,7 +9,7 @@ import { GettingStarted } from '@/components/GettingStarted'
 import { CardImg } from '@/components/CardImg'
 import { setProgress } from '@/lib/progress'
 import { portfolio } from '@/lib/portfolio'
-import { cardImage } from '@/lib/format'
+import { cardImage, setLogo } from '@/lib/format'
 import { Pokeball, ProgressMeter, SectionHeader, StatCard, btnPrimary, btnSecondary, container, linkAccent, panel, panelInteractive } from '@/components/design'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO, type TFunc } from '@/lib/i18n/config'
@@ -207,7 +207,7 @@ async function UserDashboard({
   const candidates = [...perSet.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([id]) => id)
   const [progress, sets] = await Promise.all([
     setProgress(user.id, candidates),
-    prisma.cardSet.findMany({ where: { id: { in: candidates } }, select: { id: true, name: true } }),
+    prisma.cardSet.findMany({ where: { id: { in: candidates } }, select: { id: true, name: true, logoUrl: true } }),
   ])
   const collecting = sets
     .map((s) => {
@@ -251,9 +251,15 @@ async function UserDashboard({
               {collecting.map((s) => (
                 <li key={s.id}>
                   <Link href={`/sady/${encodeURIComponent(s.id)}`} className={`${panelInteractive} block p-4`}>
-                    <p className="mb-3 truncate font-semibold text-fg" title={s.name}>
-                      {s.name}
-                    </p>
+                    {/* Logo sady místo názvu (název zůstává pro čtečky a jako popisek); bez loga jen název. */}
+                    <div className="mb-3 grid h-14 place-items-center" title={s.name}>
+                      {setLogo(s.logoUrl) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={setLogo(s.logoUrl)!} alt={s.name} loading="lazy" className="max-h-14 w-auto max-w-full object-contain" />
+                      ) : (
+                        <p className="truncate font-semibold text-fg">{s.name}</p>
+                      )}
+                    </div>
                     <ProgressMeter owned={s.owned} total={s.total} />
                   </Link>
                 </li>
