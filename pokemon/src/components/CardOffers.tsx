@@ -34,11 +34,11 @@ export async function CardOffers({ cardId }: { cardId: string }) {
     <section className="mt-10">
       <h2 className="text-xl font-bold">{t('Kdo ji nabízí')}</h2>
       {offers.length === 0 ? (
-        <p className="mt-3 rounded-2xl border border-dashed border-slate-300 p-6 text-center text-slate-500 dark:border-slate-700">
+        <p className="mt-3 rounded-panel border border-dashed border-line-strong p-6 text-center text-subtle">
           {t('Zatím ji nikdo nenabízí. Až si ji někdo přidá do sbírky jako „navíc“, objeví se tady.')}
         </p>
       ) : (
-        <ul className="mt-3 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
+        <ul className="mt-3 divide-y divide-line overflow-hidden rounded-panel border border-line bg-card">
           {offers.map((o) => (
             <li key={o.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
               <div className="min-w-0 flex-1">
@@ -49,13 +49,13 @@ export async function CardOffers({ cardId }: { cardId: string }) {
                 {viewer && viewer.id !== o.userId && (
                   <Link
                     href={`/@${encodeURIComponent(o.user.nickname)}?nahlasit=1#nahlasit`}
-                    className="ml-2 text-xs text-slate-400 hover:text-red-600 hover:underline"
+                    className="ml-2 text-xs text-subtle hover:text-red-600 hover:underline"
                   >
                     {t('nahlásit')}
                   </Link>
                 )}
-                <span className="text-sm text-slate-500"> · {o.user.city ?? o.user.region ?? t('neuvedeno')}</span>
-                <p className="text-xs text-slate-500">
+                <span className="text-sm text-subtle"> · {o.user.city ?? o.user.region ?? t('neuvedeno')}</span>
+                <p className="text-xs text-subtle">
                   {[t(VARIANT[o.variant]), t(CONDITION[o.condition]), o.language.toUpperCase(), o.spareQty > 1 && t('{n} ks', { n: o.spareQty })]
                     .filter(Boolean)
                     .join(' · ')}

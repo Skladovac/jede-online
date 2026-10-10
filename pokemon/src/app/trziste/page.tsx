@@ -58,29 +58,29 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h1 className="text-3xl font-black tracking-tight">{t('Tržiště')}</h1>
         <div className="flex gap-4 text-sm font-medium">
-          <Link href="/sberatele" className="text-yellow-700 hover:underline dark:text-yellow-400">
+          <Link href="/sberatele" className="text-accent hover:underline">
             {t('Najdi sběratele →')}
           </Link>
-          <Link href="/hodnoceni" className="text-yellow-700 hover:underline dark:text-yellow-400">
+          <Link href="/hodnoceni" className="text-accent hover:underline">
             {t('Nejlépe hodnocení →')}
           </Link>
         </div>
       </div>
 
-      <nav className="mt-6 flex gap-2 overflow-x-auto border-b border-slate-200 dark:border-slate-800">
+      <nav className="mt-6 flex gap-2 overflow-x-auto border-b border-line">
         {TABS.map((x) => (
           <Link
             key={x.id}
             href={url({ tab: x.id, strana: '1' })}
             className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 font-semibold ${
-              x.id === tab.id ? 'border-yellow-400 text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              x.id === tab.id ? 'border-accent text-fg' : 'border-transparent text-subtle hover:text-fg'
             }`}
           >
             {t(x.label)}
           </Link>
         ))}
       </nav>
-      <p className="mt-3 text-sm text-slate-500">{t(tab.hint)}</p>
+      <p className="mt-3 text-sm text-subtle">{t(tab.hint)}</p>
 
       <form className="mt-4 flex flex-wrap items-center gap-2 text-sm">
         {tab.id !== 'prodej' && <input type="hidden" name="tab" value={tab.id} />}
@@ -88,7 +88,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
           name="kde"
           defaultValue={kde}
           aria-label={t('Kde')}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-900"
+          className="rounded-lg border border-line-strong bg-card px-3 py-1.5"
         >
           <option value="vse">{t('Celé Česko a Slovensko')}</option>
           {(['CZ', 'SK'] as const).map((c) => (
@@ -106,7 +106,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
           name="sada"
           defaultValue={setId ?? ''}
           aria-label={t('Sada')}
-          className="max-w-[16rem] rounded-lg border border-slate-300 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-900"
+          className="max-w-[16rem] rounded-lg border border-line-strong bg-card px-3 py-1.5"
         >
           <option value="">{t('Všechny sady')}</option>
           {sets.map((s) => (
@@ -115,9 +115,9 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
             </option>
           ))}
         </select>
-        <button className="rounded-full bg-slate-900 px-4 py-1.5 font-semibold text-white dark:bg-yellow-400 dark:text-slate-900">{t('Filtrovat')}</button>
+        <button className="rounded-full bg-accent-strong px-4 py-1.5 font-semibold text-on-accent">{t('Filtrovat')}</button>
         {(kde !== 'vse' || setId) && (
-          <Link href={url({ kde: 'vse', sada: '', strana: '1' })} className="text-slate-500 underline">
+          <Link href={url({ kde: 'vse', sada: '', strana: '1' })} className="text-subtle underline">
             {t('zrušit filtr')}
           </Link>
         )}
@@ -131,7 +131,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
               <li key={e.key}>
                 <Link href={e.href} className="group block">
                   <div
-                    className={`${e.image.kind === 'card' ? 'aspect-[63/88]' : 'aspect-square bg-white p-2 dark:bg-slate-900'} overflow-hidden rounded-lg bg-slate-200 shadow-sm transition group-hover:-translate-y-0.5 dark:bg-slate-800`}
+                    className={`${e.image.kind === 'card' ? 'aspect-[63/88]' : 'aspect-square bg-card p-2'} overflow-hidden rounded-lg bg-surface shadow-sm transition group-hover:-translate-y-0.5 `}
                   >
                     {img && (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -139,16 +139,16 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
                     )}
                   </div>
                   <p className="mt-1.5 truncate text-sm font-medium">{e.name}</p>
-                  <p className="truncate text-xs text-slate-500">{e.sub}</p>
+                  <p className="truncate text-xs text-subtle">{e.sub}</p>
                   <p className={`truncate text-sm font-semibold ${tab.color}`}>{e.label}</p>
-                  <p className="flex items-center gap-1 text-xs text-slate-500">
+                  <p className="flex items-center gap-1 text-xs text-subtle">
                     <span className="truncate">
                       {e.user.nickname} · {e.user.city ?? e.user.region ?? t('neuvedeno')}
                     </span>
                     <BadgeIcon nickname={e.user.nickname} />
                   </p>
                   {following.has(e.user.nickname) && (
-                    <p className="mt-0.5 text-xs font-semibold text-slate-700 dark:text-yellow-300">👀 {t('Sleduješ')}</p>
+                    <p className="mt-0.5 text-xs font-semibold text-accent">👀 {t('Sleduješ')}</p>
                   )}
                 </Link>
               </li>
@@ -156,7 +156,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
           })}
         </ul>
       ) : (
-        <p className="mt-8 rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500 dark:border-slate-700">
+        <p className="mt-8 rounded-panel border border-dashed border-line-strong p-8 text-center text-subtle">
           {tab.id === 'koupim'
             ? t('Zatím tu nikdo nic nepoptává. U chybějící karty zaškrtni „💰 Chci koupit“ a budeš první.')
             : t('Zatím tu nic není. Karty navíc nabídneš v sadě v režimu „Navíc“.')}

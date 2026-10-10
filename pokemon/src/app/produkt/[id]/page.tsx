@@ -72,11 +72,11 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <Link href={p.set ? `/sady/${encodeURIComponent(p.set.id)}?tab=produkty` : '/produkty'} className="text-sm text-slate-500 hover:underline">
+      <Link href={p.set ? `/sady/${encodeURIComponent(p.set.id)}?tab=produkty` : '/produkty'} className="text-sm text-subtle hover:underline">
         ← {p.set ? p.set.name : t('Produkty')}
       </Link>
       <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,360px)_1fr]">
-        <div className="mx-auto grid aspect-square w-full max-w-[360px] place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+        <div className="mx-auto grid aspect-square w-full max-w-[360px] place-items-center overflow-hidden rounded-panel border border-line bg-card p-4">
           {img ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={img} alt={p.name} className="max-h-full max-w-full object-contain" />
@@ -86,19 +86,19 @@ export default async function ProductPage({ params }: Props) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logo} alt="" className="max-h-20 max-w-[80%] object-contain" />
               )}
-              <span className="text-sm font-semibold text-slate-400">{t(KIND_LABEL[p.kind])}</span>
-              <span className="text-xs text-slate-400">{t('Obrázek zatím nemáme')}</span>
+              <span className="text-sm font-semibold text-subtle">{t(KIND_LABEL[p.kind])}</span>
+              <span className="text-xs text-subtle">{t('Obrázek zatím nemáme')}</span>
             </div>
           )}
         </div>
         <div>
           <h1 className="text-3xl font-black tracking-tight">{p.name}</h1>
           <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
-            <dt className="text-slate-500">{t('Typ')}</dt>
+            <dt className="text-subtle">{t('Typ')}</dt>
             <dd>{t(KIND_LABEL[p.kind])}</dd>
             {p.set && (
               <>
-                <dt className="text-slate-500">{t('Sada')}</dt>
+                <dt className="text-subtle">{t('Sada')}</dt>
                 <dd>
                   <Link href={`/sady/${encodeURIComponent(p.set.id)}`} className="font-medium hover:underline">
                     {p.set.name}
@@ -106,25 +106,25 @@ export default async function ProductPage({ params }: Props) {
                 </dd>
               </>
             )}
-            <dt className="text-slate-500">{t('Stav')}</dt>
+            <dt className="text-subtle">{t('Stav')}</dt>
             <dd>{t('Originálně zapečetěno')}</dd>
             {wantCount > 0 && (
               <>
-                <dt className="text-slate-500">{t('Shání')}</dt>
+                <dt className="text-subtle">{t('Shání')}</dt>
                 <dd>{t('{n} sběratelů', { n: wantCount })}</dd>
               </>
             )}
           </dl>
-          <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{t('Orientační cena')}</h2>
+          <section className="mt-8 rounded-panel border border-line bg-card p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-subtle">{t('Orientační cena')}</h2>
             <p className="mt-3 text-2xl font-bold">{price ? `≈ ${price}` : t('Cena zatím není k dispozici.')}</p>
             {p.priceStats && (
-              <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-800">
+              <div className="mt-5 border-t border-line pt-4">
                 <PriceStatsTable stats={p.priceStats as PriceStats} title="Cardmarket" />
               </div>
             )}
             <PriceNote className="mt-4" />
-            {eurCzkDate() && <p className="mt-1 text-xs text-slate-400">{t('Kurz ČNB ze dne {date}', { date: eurCzkDate()! })}</p>}
+            {eurCzkDate() && <p className="mt-1 text-xs text-subtle">{t('Kurz ČNB ze dne {date}', { date: eurCzkDate()! })}</p>}
           </section>
         </div>
       </div>
@@ -145,7 +145,7 @@ export default async function ProductPage({ params }: Props) {
             <ProductItemForm key={i.id} productId={p.id} item={i} />
           ))}
           <details open={!mine.length}>
-            <summary className="cursor-pointer text-sm font-medium text-yellow-700 dark:text-yellow-400">
+            <summary className="cursor-pointer text-sm font-medium text-accent">
               {mine.length ? `+ ${t('Přidat v jiném jazyce')}` : t('Přidat do sbírky / nabídnout')}
             </summary>
             <div className="mt-3">
@@ -157,7 +157,7 @@ export default async function ProductPage({ params }: Props) {
           </details>
         </section>
       ) : (
-        <p className="mt-8 rounded-xl bg-yellow-50 px-4 py-3 text-sm text-yellow-900 dark:bg-yellow-400/10 dark:text-yellow-100">
+        <p className="mt-8 rounded-xl bg-accent-soft px-4 py-3 text-sm text-fg">
           <Link href="/prihlaseni" className="font-semibold underline">
             {t('Přihlas se')}
           </Link>{' '}
@@ -170,11 +170,11 @@ export default async function ProductPage({ params }: Props) {
       <section className="mt-10">
         <h2 className="text-xl font-bold">{t('Kdo ho nabízí')}</h2>
         {offers.length === 0 ? (
-          <p className="mt-3 rounded-2xl border border-dashed border-slate-300 p-6 text-center text-slate-500 dark:border-slate-700">
+          <p className="mt-3 rounded-panel border border-dashed border-line-strong p-6 text-center text-subtle">
             {t('Zatím ho nikdo nenabízí.')}
           </p>
         ) : (
-          <ul className="mt-3 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
+          <ul className="mt-3 divide-y divide-line overflow-hidden rounded-panel border border-line bg-card">
             {offers.map((o) => (
               <li key={o.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
                 <div className="min-w-0 flex-1">
@@ -185,13 +185,13 @@ export default async function ProductPage({ params }: Props) {
                   {viewer && viewer.id !== o.userId && (
                     <Link
                       href={`/@${encodeURIComponent(o.user.nickname)}?nahlasit=1#nahlasit`}
-                      className="ml-2 text-xs text-slate-400 hover:text-red-600 hover:underline"
+                      className="ml-2 text-xs text-subtle hover:text-red-600 hover:underline"
                     >
                       {t('nahlásit')}
                     </Link>
                   )}
-                  <span className="text-sm text-slate-500"> · {o.user.city ?? o.user.region ?? t('neuvedeno')}</span>
-                  <p className="text-xs text-slate-500">
+                  <span className="text-sm text-subtle"> · {o.user.city ?? o.user.region ?? t('neuvedeno')}</span>
+                  <p className="text-xs text-subtle">
                     {[o.language.toUpperCase(), o.spareQty > 1 && t('{n} ks', { n: o.spareQty })].filter(Boolean).join(' · ')}
                     {o.note && <span className="italic"> · „{o.note}“</span>}
                   </p>

@@ -31,7 +31,7 @@ export async function BadgeShelf({ userId, values }: { userId: string; values?: 
   const shown = BADGES.filter((b) => levels.has(b.id) || values)
   if (!shown.length) return null
   return (
-    <section id="odznaky" className="mt-8 scroll-mt-20">
+    <section id="odznaky" className="mt-8 scroll-mt-24">
       <h2 className="text-xl font-bold">{t('Odznaky')}</h2>
       <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {shown.map((b) => {
@@ -40,7 +40,7 @@ export async function BadgeShelf({ userId, values }: { userId: string; values?: 
           const next = values ? nextTier(b, Math.max(level, levelFor(b, value ?? 0))) : null
           const style = LEVEL_STYLE[level ? (b.tiers ? level : 1) : 0]
           return (
-            <li key={b.id} className={`rounded-2xl border-2 p-3 ${style} ${level ? '' : 'opacity-70'}`}>
+            <li key={b.id} className={`rounded-panel border-2 p-3 ${style} ${level ? '' : 'opacity-70'}`}>
               <div className="flex items-center gap-2">
                 <span className={`text-2xl ${level ? '' : 'grayscale'}`}>{b.icon}</span>
                 <div className="min-w-0">

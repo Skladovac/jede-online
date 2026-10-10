@@ -14,7 +14,7 @@ export async function CollectorList({ collectors }: { collectors: Collector[] })
         <li key={c.user.id}>
           <Link
             href={`/@${encodeURIComponent(c.user.nickname)}#shoda`}
-            className="block rounded-2xl border border-slate-200 bg-white p-4 hover:border-yellow-400 dark:border-slate-800 dark:bg-slate-900"
+            className="block rounded-panel border border-line bg-card p-4 hover:border-line-strong"
           >
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-yellow-400 font-black text-slate-900">
@@ -23,7 +23,7 @@ export async function CollectorList({ collectors }: { collectors: Collector[] })
               <span className="font-bold">{c.user.nickname}</span>
               <BadgeIcon nickname={c.user.nickname} />
               {c.followed && (
-                <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white dark:bg-yellow-400 dark:text-slate-900">
+                <span className="rounded-full bg-accent-strong px-2 py-0.5 text-xs font-semibold text-on-accent">
                   👀 {t('Sleduješ')}
                 </span>
               )}
@@ -32,7 +32,7 @@ export async function CollectorList({ collectors }: { collectors: Collector[] })
                   🔁 {t('Výměna možná')}
                 </span>
               )}
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-subtle">
                 {[c.user.city, c.user.region, t(COUNTRY_LABEL[c.user.country])].filter(Boolean).join(', ')}
                 {c.rating.pos + c.rating.neg > 0 && ` · 👍 ${c.rating.pos} · 👎 ${c.rating.neg}`}
               </span>
@@ -42,9 +42,9 @@ export async function CollectorList({ collectors }: { collectors: Collector[] })
                 <span className="font-semibold text-blue-700 dark:text-blue-400">{t('nabízí {n} z toho, co ti chybí', { n: c.offered })}</span>
               )}
               {c.offered > 0 && c.owned > 0 && ' · '}
-              {c.owned > 0 && <span className="text-slate-600 dark:text-slate-300">{t('{n} má ve sbírce (můžeš se zeptat)', { n: c.owned })}</span>}
+              {c.owned > 0 && <span className="text-muted">{t('{n} má ve sbírce (můžeš se zeptat)', { n: c.owned })}</span>}
               {c.theyWant > 0 && (
-                <span className="text-slate-600 dark:text-slate-300"> · {t('shání {n} z tvých nabídek', { n: c.theyWant })}</span>
+                <span className="text-muted"> · {t('shání {n} z tvých nabídek', { n: c.theyWant })}</span>
               )}
             </p>
             {c.preview.length > 0 && (
@@ -55,7 +55,7 @@ export async function CollectorList({ collectors }: { collectors: Collector[] })
                     <div
                       key={p.id}
                       title={p.name}
-                      className={`aspect-[63/88] w-12 shrink-0 overflow-hidden rounded bg-slate-200 dark:bg-slate-800 ${p.offered ? 'ring-2 ring-blue-500' : 'opacity-70'}`}
+                      className={`aspect-[63/88] w-12 shrink-0 overflow-hidden rounded bg-surface ${p.offered ? 'ring-2 ring-blue-500' : 'opacity-70'}`}
                     >
                       {img && (
                         // eslint-disable-next-line @next/next/no-img-element

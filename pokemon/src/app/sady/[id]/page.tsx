@@ -82,7 +82,7 @@ export default async function SetPage({ params, searchParams }: Props) {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      <Link href="/sady" className="text-sm text-slate-500 hover:underline">
+      <Link href="/sady" className="text-sm text-subtle hover:underline">
         ← {t('Všechny sady')}
       </Link>
       <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -101,8 +101,8 @@ export default async function SetPage({ params, searchParams }: Props) {
               </span>
             )}
           </h1>
-          {set.nameOriginal && <p className="text-sm text-slate-500">{set.nameOriginal}</p>}
-          <p className="mt-1 text-sm text-slate-500">{meta.filter(Boolean).join(' · ')}</p>
+          {set.nameOriginal && <p className="text-sm text-subtle">{set.nameOriginal}</p>}
+          <p className="mt-1 text-sm text-subtle">{meta.filter(Boolean).join(' · ')}</p>
         </div>
       </header>
       {progress && (
@@ -111,7 +111,7 @@ export default async function SetPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      <nav className="mt-6 flex gap-2 border-b border-slate-200 dark:border-slate-800">
+      <nav className="mt-6 flex gap-2 border-b border-line">
         {[
           ['karty', t('Karty ({n})', { n: cards.length })],
           ['produkty', t('Produkty ({n})', { n: products.length })],
@@ -119,7 +119,7 @@ export default async function SetPage({ params, searchParams }: Props) {
           <Link
             key={k}
             href={`/sady/${encodeURIComponent(set.id)}${k === 'produkty' ? '?tab=produkty' : ''}`}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-semibold ${tab === k ? 'border-yellow-500' : 'border-transparent text-slate-500'}`}
+            className={`-mb-px border-b-2 px-4 py-2 text-sm font-semibold ${tab === k ? 'border-accent text-fg' : 'border-transparent text-subtle'}`}
           >
             {label}
           </Link>
@@ -136,7 +136,7 @@ export default async function SetPage({ params, searchParams }: Props) {
             ))}
           </ul>
         ) : (
-          <p className="mt-6 text-slate-500">{t('K této sadě zatím nemáme žádné produkty.')}</p>
+          <p className="mt-6 text-subtle">{t('K této sadě zatím nemáme žádné produkty.')}</p>
         )
       ) : (
       <SetGrid

@@ -17,15 +17,15 @@ export async function RequestItems({
   const total = items.reduce((s, i) => s + (i.offerType === 'SELL' && i.priceCzk ? i.priceCzk * i.quantity : 0), 0)
   return (
     <div>
-      <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+      <ul className="divide-y divide-line">
         {items.map((i) => {
           const img = i.productId ? productImage(i.imageUrl) : cardImage(i.imageUrl)
           return (
             <li key={i.id} className="flex items-center gap-3 py-3">
-              <span className="h-16 w-12 shrink-0 overflow-hidden rounded bg-slate-200 dark:bg-slate-800">
+              <span className="h-16 w-12 shrink-0 overflow-hidden rounded bg-surface">
                 {img && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={img} alt="" className={`h-full w-full ${i.productId ? 'bg-white object-contain' : 'object-cover'}`} />
+                  <img src={img} alt="" className={`h-full w-full ${i.productId ? 'bg-card object-contain' : 'object-cover'}`} />
                 )}
               </span>
               <div className="min-w-0 flex-1">
@@ -40,7 +40,7 @@ export async function RequestItems({
                 ) : (
                   <span className="font-medium">{i.title}</span>
                 )}
-                <p className="text-xs text-slate-500">{i.detail}</p>
+                <p className="text-xs text-subtle">{i.detail}</p>
               </div>
               <div className="shrink-0 text-right text-sm">
                 <p className="font-semibold">

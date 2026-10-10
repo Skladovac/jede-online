@@ -40,7 +40,7 @@ export function InstallApp() {
         📱 {t('Aplikace do mobilu')}
       </button>
       {help && (
-        <span className="mt-2 block rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+        <span className="mt-2 block rounded-xl border border-line bg-card p-3 text-xs text-muted">
           {ios ? (
             <>
               {t('iPhone: otevři web v')} <strong>Safari</strong>, {t('klepni na')} <strong>{t('Sdílet')}</strong>{' '}

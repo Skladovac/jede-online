@@ -44,9 +44,9 @@ export default async function AdminHome() {
   const Tile = ({ label, value, href, warn }: { label: string; value: number; href?: string; warn?: boolean }) => {
     const body = (
       <div
-        className={`rounded-2xl border p-4 ${warn && value > 0 ? 'border-red-300 bg-red-50 dark:border-red-500/40 dark:bg-red-500/10' : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'}`}
+        className={`rounded-panel border p-4 ${warn && value > 0 ? 'border-red-300 bg-red-50 dark:border-red-500/40 dark:bg-red-500/10' : 'border-line bg-card'}`}
       >
-        <p className="text-xs text-slate-500">{label}</p>
+        <p className="text-xs text-subtle">{label}</p>
         <p className="text-2xl font-black tabular-nums">{value.toLocaleString('cs-CZ')}</p>
       </div>
     )
@@ -89,17 +89,17 @@ export default async function AdminHome() {
       </section>
       <section>
         <h2 className="mb-3 font-bold">Poslední registrace</h2>
-        <ul className="divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white text-sm dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
+        <ul className="divide-y divide-line rounded-panel border border-line bg-card text-sm">
           {recentUsers.map((u) => (
             <li key={u.id}>
-              <Link href={`/admin/uzivatele/${u.id}`} className="flex justify-between gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+              <Link href={`/admin/uzivatele/${u.id}`} className="flex justify-between gap-3 px-4 py-2 hover:bg-card-hover">
                 <span className="font-medium">
                   {u.nickname}
                   {u.isMinor && (
-                    <span className="ml-2 text-xs text-slate-500">dítě{u.parentConsentAt ? '' : ' · čeká na rodiče'}</span>
+                    <span className="ml-2 text-xs text-subtle">dítě{u.parentConsentAt ? '' : ' · čeká na rodiče'}</span>
                   )}
                 </span>
-                <span className="text-slate-500">{u.createdAt.toLocaleString('cs-CZ')}</span>
+                <span className="text-subtle">{u.createdAt.toLocaleString('cs-CZ')}</span>
               </Link>
             </li>
           ))}

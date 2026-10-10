@@ -71,11 +71,11 @@ export default async function WantedPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <Link href={`/@${encodeURIComponent(nick)}`} className="text-sm text-slate-500 hover:underline">
+      <Link href={`/@${encodeURIComponent(nick)}`} className="text-sm text-subtle hover:underline">
         ← {t('Profil {name}', { name: nick })}
       </Link>
       <h1 className="mt-3 text-3xl font-black tracking-tight">{t('Co hledá {name}', { name: nick })}</h1>
-      <p className="mt-2 text-slate-600 dark:text-slate-300">
+      <p className="mt-2 text-muted">
         {t('Chybí {count} karet', { count: d.cardCount })}{d.products.length > 0 && ` ${t('a {count} produktů', { count: d.products.length })}`}.{' '}
         {viewer ? (
           viewer.id !== d.user.id && (
@@ -98,7 +98,7 @@ export default async function WantedPage({ params }: Props) {
         )}
       </p>
 
-      {d.sets.length === 0 && d.products.length === 0 && <p className="mt-8 text-slate-500">{t('Zatím nic.')}</p>}
+      {d.sets.length === 0 && d.products.length === 0 && <p className="mt-8 text-subtle">{t('Zatím nic.')}</p>}
 
       {d.sets.map(({ set, cards }) => (
         <section key={set.id} className="mt-8">
@@ -106,7 +106,7 @@ export default async function WantedPage({ params }: Props) {
             <Link href={`/sady/${encodeURIComponent(set.id)}`} className="hover:underline">
               {set.name}
             </Link>{' '}
-            <span className="text-sm font-normal text-slate-500">({cards.length})</span>
+            <span className="text-sm font-normal text-subtle">({cards.length})</span>
           </h2>
           {(() => {
             // Base set (1–oficiální počet) a zvlášť secret rare / karty mimo číslování.
@@ -116,11 +116,11 @@ export default async function WantedPage({ params }: Props) {
                 {list.map((c) => (
                   <li key={c.id}>
                     <Link href={`/karta/${encodeURIComponent(c.id)}`} className="block">
-                      <div className="aspect-[63/88] overflow-hidden rounded-lg bg-slate-200 shadow-sm dark:bg-slate-800">
+                      <div className="aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm">
                         <CardImg src={cardImage(c.imageUrl)} alt={c.name} />
                       </div>
                       <p className="mt-1 truncate text-xs font-medium">{c.name}</p>
-                      <p className="text-xs text-slate-500">{c.localId}</p>
+                      <p className="text-xs text-subtle">{c.localId}</p>
                       {d.buy.has(c.id) && <BuyBadge price={d.buy.get(c.id) ?? null} />}
                     </Link>
                   </li>
@@ -132,7 +132,7 @@ export default async function WantedPage({ params }: Props) {
                 {base.length > 0 && (
                   <div>
                     {set.officialCount > 0 && (
-                      <h3 className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                      <h3 className="mb-2 text-sm font-semibold text-muted">
                         Base set (1–{set.officialCount}) · {t('chybí {count}', { count: base.length })}
                       </h3>
                     )}

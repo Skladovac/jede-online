@@ -20,11 +20,11 @@ function CardStrip({ cards, extra }: { cards: MiniCard[]; extra?: (c: MiniCard, 
         return (
           <li key={`${c.id}-${i}`}>
             <Link href={`/karta/${encodeURIComponent(c.id)}`} className="group block">
-              <div className="aspect-[63/88] overflow-hidden rounded-lg bg-slate-200 shadow-sm dark:bg-slate-800">
+              <div className="aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm">
                 <CardImg src={img} alt={c.name} />
               </div>
               <p className="mt-1 truncate text-xs font-medium">{c.name}</p>
-              <p className="truncate text-xs text-slate-500">
+              <p className="truncate text-xs text-subtle">
                 {c.set.name} · {c.localId}
               </p>
               {extra?.(c, i)}
@@ -71,12 +71,12 @@ function BySet<T>({
   return (
     <div className="space-y-3">
       {sorted.map(({ set, items: list }) => (
-        <details key={set.id} open className="group rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+        <details key={set.id} open className="group rounded-panel border border-line bg-card p-3">
           <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold">
-            <span className="text-slate-400 transition group-open:rotate-90">▸</span>
+            <span className="text-subtle transition group-open:rotate-90">▸</span>
             <span className="min-w-0 flex-1 truncate">{set.name}</span>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-800">{list.length}</span>
-            <Link href={`/sady/${encodeURIComponent(set.id)}`} className="text-xs font-normal text-slate-500 underline">
+            <span className="rounded-full bg-surface px-2 py-0.5 text-xs">{list.length}</span>
+            <Link href={`/sady/${encodeURIComponent(set.id)}`} className="text-xs font-normal text-subtle underline">
               {t('sada')}
             </Link>
           </summary>
@@ -89,7 +89,7 @@ function BySet<T>({
                   {base.length > 0 && (
                     <div>
                       {set.officialCount > 0 && (
-                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-subtle">
                           Base set (1–{set.officialCount}) · {base.length}
                         </p>
                       )}
@@ -134,8 +134,8 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
           [t('Navíc k výměně'), totals.spare],
           [t('Chybí'), totals.wanted],
         ].map(([k, v]) => (
-          <div key={k} className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-            <dt className="text-xs text-slate-500">{k}</dt>
+          <div key={k} className="rounded-panel border border-line bg-card p-4">
+            <dt className="text-xs text-subtle">{k}</dt>
             <dd className="text-2xl font-black">{v}</dd>
           </div>
         ))}
@@ -161,7 +161,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
             )}
           />
         ) : (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-subtle">
             {own ? t('Zatím nic. V sadě přepni na „Navíc“ a klepni na karty, které máš víckrát.') : t('Zatím nic.')}
           </p>
         )}
@@ -179,7 +179,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
             extra={(c) => c.buy && <BuyBadge price={c.maxPriceCzk} />}
           />
         ) : (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-subtle">
             {own ? t('Zatím nic. V sadě přepni na „Chybí“ a označ karty, které sháníš.') : t('Zatím nic.')}
           </p>
         )}
@@ -207,7 +207,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-subtle">
               {own ? (
                 <>
                   {t('Zatím žádné.')}{' '}
@@ -246,13 +246,13 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
               <li key={set.id}>
                 <Link
                   href={`/sady/${encodeURIComponent(set.id)}`}
-                  className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3 hover:border-yellow-400 dark:border-slate-800 dark:bg-slate-900"
+                  className="flex items-center gap-4 rounded-xl border border-line bg-card px-4 py-3 hover:border-line-strong"
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{set.name}</span>
                     <ProgressBars p={progress} compact />
                   </span>
-                  <span className="hidden h-2 w-32 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800 sm:block" title="Base">
+                  <span className="hidden h-2 w-32 overflow-hidden rounded-full bg-surface sm:block" title="Base">
                     <span
                       className="block h-full rounded-full bg-green-500"
                       style={{ width: `${progress.base ? Math.min(100, (progress.base.owned / Math.max(progress.base.total, 1)) * 100) : Math.min(100, (owned / Math.max(progress.complete.total, 1)) * 100)}%` }}
@@ -263,7 +263,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-subtle">
             {own ? (
               <>
                 {t('Sbírka je prázdná.')}{' '}

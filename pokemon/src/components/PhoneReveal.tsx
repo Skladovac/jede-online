@@ -10,7 +10,7 @@ export function PhoneReveal({ ownerId }: { ownerId: string }) {
   const [pending, start] = useTransition()
   if (res && 'phone' in res)
     return (
-      <a href={`tel:${res.phone.replace(/\s/g, '')}`} className="rounded-full border border-slate-300 px-3 py-1 text-sm font-semibold dark:border-slate-700">
+      <a href={`tel:${res.phone.replace(/\s/g, '')}`} className="rounded-full border border-line-strong px-3 py-1 text-sm font-semibold">
         📞 {res.phone}
       </a>
     )
@@ -20,7 +20,7 @@ export function PhoneReveal({ ownerId }: { ownerId: string }) {
         type="button"
         disabled={pending}
         onClick={() => start(async () => setRes(await revealPhone(ownerId)))}
-        className="rounded-full border border-slate-300 px-3 py-1 text-sm hover:border-yellow-400 disabled:opacity-50 dark:border-slate-700"
+        className="rounded-full border border-line-strong px-3 py-1 text-sm hover:border-line-strong disabled:opacity-50"
       >
         📞 {pending ? '…' : t('Zobrazit číslo')}
       </button>

@@ -16,11 +16,11 @@ export async function PriceStatsTable({ stats, title }: { stats: PriceStats | nu
   const t = await getT()
   return (
     <div>
-      {title && <p className="mb-1 text-xs font-semibold text-slate-500">{title}</p>}
+      {title && <p className="mb-1 text-xs font-semibold text-subtle">{title}</p>}
       <dl className="grid grid-cols-[1fr_auto] gap-x-6 gap-y-1.5 text-sm">
         {rows.map(([k, label, prefix]) => (
           <div key={k} className="contents">
-            <dt className="text-slate-500">{t(label)}</dt>
+            <dt className="text-subtle">{t(label)}</dt>
             <dd className={`text-right tabular-nums ${k === 'trend' ? 'font-bold' : ''}`}>
               {prefix ? `${t(prefix)} ` : ''}
               {formatEur(stats![k] as number)}

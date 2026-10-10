@@ -16,7 +16,7 @@ export function CardBuyForm({ cardId, variants, want }: { cardId: string; varian
   const [state, action, pending] = useActionState(saveCardBuy, undefined)
   const [buy, setBuy] = useState(want?.buy ?? false)
   return (
-    <form action={action} className="space-y-3 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-500/40 dark:bg-emerald-500/10">
+    <form action={action} className="space-y-3 rounded-panel border-2 border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-500/40 dark:bg-emerald-500/10">
       <input type="hidden" name="cardId" value={cardId} />
       <label className="flex items-center gap-2 font-semibold text-emerald-900 dark:text-emerald-200">
         <input type="checkbox" name="buy" checked={buy} onChange={(e) => setBuy(e.target.checked)} className="h-4 w-4" />
@@ -32,7 +32,7 @@ export function CardBuyForm({ cardId, variants, want }: { cardId: string; varian
             <summary className="cursor-pointer text-emerald-800 dark:text-emerald-300">{t('Podrobnosti (varianta, stav, jazyk)')}</summary>
             <div className="mt-2 grid gap-2 sm:grid-cols-3">
               <label className="space-y-1 text-xs">
-                <span className="text-slate-500">{t('Varianta')}</span>
+                <span className="text-subtle">{t('Varianta')}</span>
                 <select name="variant" defaultValue={want?.variant ?? ''} className={small}>
                   <option value="">{t('je mi to jedno')}</option>
                   {variants.map((v) => (
@@ -43,7 +43,7 @@ export function CardBuyForm({ cardId, variants, want }: { cardId: string; varian
                 </select>
               </label>
               <label className="space-y-1 text-xs">
-                <span className="text-slate-500">{t('Stav nejméně')}</span>
+                <span className="text-subtle">{t('Stav nejméně')}</span>
                 <select name="minCondition" defaultValue={want?.minCondition ?? ''} className={small}>
                   <option value="">{t('je mi to jedno')}</option>
                   <option value="MINT">{t(CONDITION_LABEL.MINT)}</option>
@@ -51,7 +51,7 @@ export function CardBuyForm({ cardId, variants, want }: { cardId: string; varian
                 </select>
               </label>
               <label className="space-y-1 text-xs">
-                <span className="text-slate-500">{t('Jazyk')}</span>
+                <span className="text-subtle">{t('Jazyk')}</span>
                 <select name="language" defaultValue={want?.language ?? ''} className={small}>
                   <option value="">{t('je mi to jedno')}</option>
                   {LANGS.map(([v, l]) => (
@@ -85,7 +85,7 @@ export function ProductBuyForm({ productId, want }: { productId: number; want: {
   const [state, action, pending] = useActionState(saveProductBuy, undefined)
   const [buy, setBuy] = useState(want?.buy ?? false)
   return (
-    <form action={action} className="space-y-3 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-500/40 dark:bg-emerald-500/10">
+    <form action={action} className="space-y-3 rounded-panel border-2 border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-500/40 dark:bg-emerald-500/10">
       <input type="hidden" name="productId" value={productId} />
       <label className="flex items-center gap-2 font-semibold text-emerald-900 dark:text-emerald-200">
         <input type="checkbox" name="buy" checked={buy} onChange={(e) => setBuy(e.target.checked)} className="h-4 w-4" />

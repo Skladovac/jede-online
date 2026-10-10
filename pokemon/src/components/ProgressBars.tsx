@@ -13,7 +13,7 @@ export async function ProgressBars({ p, compact = false }: { p: Progress; compac
   const rows = ROWS.filter(([k]) => p[k])
   if (compact)
     return (
-      <span className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+      <span className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-subtle">
         {rows.map(([k, label, , color]) => {
           const v = p[k]!
           return (
@@ -31,17 +31,17 @@ export async function ProgressBars({ p, compact = false }: { p: Progress; compac
         const v = p[k]!
         const pct = v.total ? Math.round((v.owned / v.total) * 100) : 0
         return (
-          <div key={k} title={t(hint)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
+          <div key={k} title={t(hint)} className="rounded-xl border border-line bg-card px-3 py-2">
             <div className="flex items-baseline justify-between text-sm">
               <span className="font-semibold">{label}</span>
-              <span className="text-slate-500">
+              <span className="text-subtle">
                 {v.owned}/{v.total} · {pct} %
               </span>
             </div>
-            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface">
               <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
             </div>
-            <p className="mt-1 text-[11px] text-slate-400">{t(hint)}</p>
+            <p className="mt-1 text-[11px] text-subtle">{t(hint)}</p>
           </div>
         )
       })}

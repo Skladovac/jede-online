@@ -152,7 +152,7 @@ export function SetGrid({
   return (
     <div className="mt-6">
       {loggedIn ? (
-        <div className="sticky top-[106px] z-10 -mx-4 border-b border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 md:top-14">
+        <div className="sticky top-[120px] z-10 -mx-4 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_95%,transparent)] px-4 py-3 backdrop-blur md:top-16">
           <div className="flex flex-wrap items-center gap-2">
             {MODES.map((m) => (
               <button
@@ -160,15 +160,15 @@ export function SetGrid({
                 onClick={() => setMode(m.id)}
                 className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
                   mode === m.id
-                    ? 'bg-slate-900 text-white dark:bg-yellow-400 dark:text-slate-900'
-                    : 'border border-slate-300 dark:border-slate-700'
+                    ? 'bg-accent-strong text-on-accent'
+                    : 'border border-line-strong'
                 }`}
               >
                 {t(m.label)}
               </button>
             ))}
           </div>
-          <p className="mt-2 text-xs text-slate-500">{t(MODES.find((m) => m.id === mode)!.hint)}</p>
+          <p className="mt-2 text-xs text-subtle">{t(MODES.find((m) => m.id === mode)!.hint)}</p>
           {(mode === 'want' || mode === 'owned') && (
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
               <button
@@ -208,19 +208,19 @@ export function SetGrid({
                 value={numbers}
                 onChange={(e) => setNumbers(e.target.value)}
                 placeholder={t('Čísla karet: 1, 5, 23-30, 145')}
-                className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+                className="min-w-0 flex-1 rounded-lg border border-line-strong bg-card px-3 py-1.5 text-sm"
               />
               <button
                 disabled={bulkBusy || !numbers.trim()}
-                className="rounded-full bg-slate-900 px-3 py-1.5 font-semibold text-white disabled:opacity-50 dark:bg-yellow-400 dark:text-slate-900"
+                className="rounded-full bg-accent-strong px-3 py-1.5 font-semibold text-on-accent disabled:opacity-50"
               >
                 {mode === 'owned' ? t('Označit jako Mám') : t('Označit jako Chybí')}
               </button>
-              {numbersInfo && <span className="w-full text-slate-500">{numbersInfo}</span>}
+              {numbersInfo && <span className="w-full text-subtle">{numbersInfo}</span>}
             </form>
           )}
           <div className="mt-2 flex items-center gap-3 text-xs">
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface">
               <div
                 className="h-full rounded-full bg-green-500 transition-all"
                 style={{ width: `${Math.min(100, (ownedCount / Math.max(officialCount, 1)) * 100)}%` }}
@@ -233,7 +233,7 @@ export function SetGrid({
           {error && <p className="mt-2 text-xs text-red-600">{t(error)}</p>}
         </div>
       ) : (
-        <p className="rounded-xl bg-yellow-50 px-4 py-3 text-sm text-yellow-900 dark:bg-yellow-400/10 dark:text-yellow-100">
+        <p className="rounded-xl bg-accent-soft px-4 py-3 text-sm text-fg">
           <Link href="/prihlaseni" className="font-semibold underline">
             {t('Přihlas se')}
           </Link>{' '}
@@ -242,7 +242,7 @@ export function SetGrid({
       )}
 
       <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-slate-500">{t('Zobrazení:')}</span>
+        <span className="text-subtle">{t('Zobrazení:')}</span>
         {(
           [
             ['grid', t('Mřížka')],
@@ -253,7 +253,7 @@ export function SetGrid({
             key={l}
             type="button"
             onClick={() => setLayout(l)}
-            className={`rounded-full px-3 py-1 font-medium ${layout === l ? 'bg-slate-900 text-white dark:bg-yellow-400 dark:text-slate-900' : 'border border-slate-300 dark:border-slate-700'}`}
+            className={`rounded-full px-3 py-1 font-medium ${layout === l ? 'bg-accent-strong text-on-accent' : 'border border-line-strong'}`}
           >
             {l === 'album' ? '📖 ' : '▦ '}
             {label}
@@ -264,11 +264,11 @@ export function SetGrid({
       {layout === 'album' && (
         <div className="mx-auto mt-4 max-w-xl">
           {/* Stránka alba: 3×3 kapsy jako v pořadači. Prázdná kapsa = karta, kterou nemám. */}
-          <div className="grid grid-cols-3 gap-2 rounded-2xl border-4 border-slate-700 bg-slate-800 p-3 shadow-inner sm:gap-3 sm:p-4">
+          <div className="grid grid-cols-3 gap-2 rounded-panel border-4 border-slate-700 bg-slate-800 p-3 shadow-inner sm:gap-3 sm:p-4">
             {cards.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE).map((c) => {
               const s = state[c.id] ?? { owned: 0, spare: 0, want: false }
               const pocket = s.owned ? (
-                <div className="relative aspect-[63/88] overflow-hidden rounded-md bg-slate-900 shadow-md ring-1 ring-white/20">
+                <div className="relative aspect-[63/88] overflow-hidden rounded-md bg-accent-strong shadow-md ring-1 ring-white/20">
                   {c.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.image} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
@@ -291,7 +291,7 @@ export function SetGrid({
                   )}
                   <div className="relative">
                     <p className="text-lg font-black text-slate-300 sm:text-2xl">{c.localId}</p>
-                    <p className="line-clamp-2 text-[10px] text-slate-400 sm:text-xs">{c.name}</p>
+                    <p className="line-clamp-2 text-[10px] text-subtle sm:text-xs">{c.name}</p>
                     {s.want && <p className="mt-1 text-[10px] font-semibold text-orange-300">{t('chybí')}</p>}
                   </div>
                 </div>
@@ -316,16 +316,16 @@ export function SetGrid({
               type="button"
               disabled={page === 0}
               onClick={() => setPage((p) => Math.max(0, p - 1))}
-              className="rounded-full border border-slate-300 px-4 py-1.5 font-medium disabled:opacity-40 dark:border-slate-700"
+              className="rounded-full border border-line-strong px-4 py-1.5 font-medium disabled:opacity-40"
             >
               ← {t('Předchozí')}
             </button>
-            <span className="text-slate-500">{t('Strana {page} z {pages}', { page: page + 1, pages })}</span>
+            <span className="text-subtle">{t('Strana {page} z {pages}', { page: page + 1, pages })}</span>
             <button
               type="button"
               disabled={page >= pages - 1}
               onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
-              className="rounded-full border border-slate-300 px-4 py-1.5 font-medium disabled:opacity-40 dark:border-slate-700"
+              className="rounded-full border border-line-strong px-4 py-1.5 font-medium disabled:opacity-40"
             >
               {t('Další')} →
             </button>
@@ -341,7 +341,7 @@ export function SetGrid({
           const tile = (
             <>
               <div
-                className={`relative aspect-[63/88] overflow-hidden rounded-lg bg-slate-200 shadow-sm transition dark:bg-slate-800 ${
+                className={`relative aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm transition ${
                   dim ? 'opacity-40 grayscale' : ''
                 } ${s.want ? 'ring-4 ring-orange-400' : s.owned ? 'ring-2 ring-green-500' : ''}`}
               >
@@ -349,7 +349,7 @@ export function SetGrid({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={c.image} alt={c.name} loading="lazy" className={`h-full w-full object-cover ${s.want ? 'opacity-60 grayscale' : ''}`} />
                 ) : (
-                  <div className="grid h-full place-items-center p-2 text-center text-xs text-slate-500">{c.name}</div>
+                  <div className="grid h-full place-items-center p-2 text-center text-xs text-subtle">{c.name}</div>
                 )}
                 <div className="absolute left-1 top-1 flex flex-col gap-1">
                   {s.owned > 0 && <Badge className="bg-green-600">✓ {s.owned > 1 ? s.owned : ''}</Badge>}
@@ -358,9 +358,9 @@ export function SetGrid({
                 </div>
               </div>
               <p className="mt-1.5 truncate text-xs font-medium">
-                <span className="text-slate-400">{c.localId}</span> {c.name}
+                <span className="text-subtle">{c.localId}</span> {c.name}
               </p>
-              {c.price && <p className="text-xs text-slate-500">≈ {c.price}</p>}
+              {c.price && <p className="text-xs text-subtle">≈ {c.price}</p>}
             </>
           )
           return (
@@ -381,7 +381,7 @@ export function SetGrid({
                   onClick={() =>
                     apply(c.id, { ...s, spare: s.spare - 1, owned: Math.max(s.owned - 1, 0) }, () => changeSpare(c.id, -1))
                   }
-                  className="absolute right-1 top-1 grid h-8 w-8 place-items-center rounded-full bg-white text-lg font-bold text-slate-900 shadow"
+                  className="absolute right-1 top-1 grid h-8 w-8 place-items-center rounded-full bg-card text-lg font-bold text-fg shadow"
                 >
                   −
                 </button>

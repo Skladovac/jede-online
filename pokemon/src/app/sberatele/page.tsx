@@ -33,43 +33,43 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
       <h1 className="text-3xl font-black tracking-tight">{t('Najdi sběratele')}</h1>
-      <p className="mt-2 text-slate-600 dark:text-slate-300">
+      <p className="mt-2 text-muted">
         {t('Lidé, kteří mají nejvíc z toho, co ti chybí. Napřed ti, se kterými jde udělat výměnu oběma směry.')}
       </p>
 
-      <section className="mt-6 rounded-2xl border-2 border-dashed border-yellow-400 bg-yellow-50/60 p-4 dark:bg-yellow-400/5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-yellow-800 dark:text-yellow-300">{t('Takhle tě vidí ostatní')}</p>
+      <section className="mt-6 rounded-panel border-2 border-dashed border-accent bg-accent-soft p-4">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg">{t('Takhle tě vidí ostatní')}</p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-yellow-400 font-black text-slate-900">
             {user.nickname.slice(0, 1).toUpperCase()}
           </span>
           <span className="font-bold">{user.nickname}</span>
           <BadgeIcon nickname={user.nickname} />
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-subtle">
             {[user.city, user.region, t(COUNTRY_LABEL[user.country])].filter(Boolean).join(', ')}
             {summary.total > 0 ? ` · 👍 ${summary.pos} · 👎 ${summary.neg}` : ` · ${t('zatím bez hodnocení')}`}
           </span>
         </div>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-sm text-muted">
           {t('Nabízíš {offers} · chybí ti {wanted}', { offers: offerCount, wanted: mine.wantCards.length + mine.wantProducts.length })}
           {buyCount > 0 && ` · ${t('chceš koupit {count}', { count: buyCount })}`}
         </p>
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
-          <Link href={`/@${nick}`} className="text-yellow-700 hover:underline dark:text-yellow-400">
+          <Link href={`/@${nick}`} className="text-accent hover:underline">
             {t('Můj veřejný profil →')}
           </Link>
-          <Link href={`/@${nick}/hodnoceni`} className="text-yellow-700 hover:underline dark:text-yellow-400">
+          <Link href={`/@${nick}/hodnoceni`} className="text-accent hover:underline">
             {t('Moje hodnocení →')}
           </Link>
-          <Link href={`/@${nick}/chybi`} className="text-yellow-700 hover:underline dark:text-yellow-400">
+          <Link href={`/@${nick}/chybi`} className="text-accent hover:underline">
             {t('Co hledám (sdílet) →')}
           </Link>
-          <Link href="/ucet#pozvi" className="text-yellow-700 hover:underline dark:text-yellow-400">
+          <Link href="/ucet#pozvi" className="text-accent hover:underline">
             {t('Pozvi kamaráda →')}
           </Link>
         </div>
         {!user.region && (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-subtle">
             {t('Tip: doplň si v')}{' '}
             <Link href="/ucet" className="underline">
               {t('Můj účet')}
@@ -87,7 +87,7 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
           id="kde"
           name="kde"
           defaultValue={key}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-900"
+          className="rounded-lg border border-line-strong bg-card px-3 py-1.5"
         >
           <option value="vse">{t('Celé Česko a Slovensko')}</option>
           {(['CZ', 'SK'] as const).map((c) => (
@@ -102,14 +102,14 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
             </optgroup>
           ))}
         </select>
-        <button className="rounded-full bg-slate-900 px-4 py-1.5 font-semibold text-white dark:bg-yellow-400 dark:text-slate-900">
+        <button className="rounded-full bg-accent-strong px-4 py-1.5 font-semibold text-on-accent">
           {t('Hledat')}
         </button>
       </form>
 
       <div className="mt-8">
         {nothingWanted ? (
-          <p className="text-slate-500">
+          <p className="text-subtle">
             {t('Nejdřív si označ, co ti chybí: otevři')}{' '}
             <Link href="/sady" className="underline">
               {t('sadu')}
@@ -118,14 +118,14 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
           </p>
         ) : collectors.length ? (
           <>
-            <p className="mb-3 text-sm text-slate-500">
+            <p className="mb-3 text-sm text-subtle">
               {total} {total === 1 ? t('sběratel') : total >= 2 && total <= 4 ? t('sběratelé') : t('sběratelů')}
               {total > collectors.length && ` (${t('zobrazeno prvních {count}', { count: collectors.length })})`}
             </p>
             <CollectorList collectors={collectors} />
           </>
         ) : (
-          <p className="text-slate-500">
+          <p className="text-subtle">
             {t('Tady zatím nikdo nemá nic z toho, co ti chybí.')}{' '}
             {key !== 'vse' && (
               <Link href="/sberatele?kde=vse" className="underline">
