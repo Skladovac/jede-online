@@ -41,6 +41,7 @@ type TcgCard = {
   image?: string
   category?: string
   rarity?: string
+  types?: string[]
   variants?: { normal?: boolean; holo?: boolean; reverse?: boolean; firstEdition?: boolean }
   // Podrobné varianty: reverse se vzorem Poké Ball / Master Ball má foil 'pokeball' / 'masterball'.
   variants_detailed?: { type?: string; foil?: string; thirdParty?: { cardmarket?: number } }[]
@@ -163,6 +164,7 @@ export async function syncCatalog(
       ...(detail && {
         category: detail.category ?? null,
         rarity: detail.rarity ?? null,
+        types: detail.types ?? [],
         hasNormal: v?.normal ?? false,
         hasHolo: v?.holo ?? false,
         hasReverse: v?.reverse ?? false,

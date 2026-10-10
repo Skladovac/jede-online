@@ -7,6 +7,7 @@ import { PriceNote } from '@/components/PriceNote'
 import { ensureEurCzk } from '@/lib/fx'
 import { getT } from '@/lib/i18n/server'
 import { CardImg } from '@/components/CardImg'
+import { EmptyState } from '@/components/design'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,9 +37,7 @@ export default async function SearchPage({ searchParams }: Props) {
       </p>
 
       {q.length >= 2 && hits.length === 0 && products.length === 0 && (
-        <p className="mt-8 text-subtle">
-          {t('Nic jsme nenašli. Zkus jen část jména nebo kód sady a číslo z dolního rohu karty.')}
-        </p>
+        <EmptyState className="mt-8">{t('Nic jsme nenašli. Zkus jen část jména nebo kód sady a číslo z dolního rohu karty.')}</EmptyState>
       )}
 
       <ul className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">

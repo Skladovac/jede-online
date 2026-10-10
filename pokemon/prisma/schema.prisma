@@ -45,6 +45,7 @@ model Card {
   name           String
   nameOriginal   String? // původní název u japonských karet (フシギダネ); name je anglicky
   category       String? // Pokemon / Trainer / Energy
+  types          String[] @default([]) // typ Pokémona z katalogu: Fire, Water, Grass… (barevný štítek, filtr v sadě)
   rarity         String?
   imageUrl       String? // bez přípony; /low.webp nebo /high.webp se doplní při zobrazení
   // Jaké varianty karta v tisku existuje (z katalogu).

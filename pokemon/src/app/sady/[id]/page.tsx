@@ -23,7 +23,7 @@ type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ tab?: s
 async function getSet(id: string) {
   return prisma.cardSet.findUnique({
     where: { id: (safeDecode(id) ?? '') },
-    include: { cards: { select: { id: true, localId: true, name: true, imageUrl: true, priceEur: true } } },
+    include: { cards: { select: { id: true, localId: true, name: true, imageUrl: true, priceEur: true, types: true } } },
   })
 }
 
@@ -151,6 +151,7 @@ export default async function SetPage({ params, searchParams }: Props) {
           name: c.name,
           image: cardImage(c.imageUrl),
           price: formatEur(c.priceEur),
+          types: c.types,
         }))}
       />
       )}

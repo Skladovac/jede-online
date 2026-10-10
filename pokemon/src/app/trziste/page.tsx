@@ -7,6 +7,7 @@ import { cardImage, productImage } from '@/lib/format'
 import { getT } from '@/lib/i18n/server'
 import { BadgeIcon } from '@/components/Badges'
 import { followingNicknames } from '@/lib/social'
+import { EmptyState } from '@/components/design'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -156,11 +157,11 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
           })}
         </ul>
       ) : (
-        <p className="mt-8 rounded-panel border border-dashed border-line-strong p-8 text-center text-subtle">
+        <EmptyState className="mt-8">
           {tab.id === 'koupim'
             ? t('Zatím tu nikdo nic nepoptává. U chybějící karty zaškrtni „💰 Chci koupit“ a budeš první.')
             : t('Zatím tu nic není. Karty navíc nabídneš v sadě v režimu „Navíc“.')}
-        </p>
+        </EmptyState>
       )}
 
       {(page > 1 || hasMore) && (

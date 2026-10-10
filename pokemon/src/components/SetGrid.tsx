@@ -5,8 +5,9 @@ import { useRef, useState, useTransition } from 'react'
 import { useT } from '@/lib/i18n/client'
 import { changeSpare, clearSetWanted, markByNumbers, markRestWanted, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
 import { CardImg } from '@/components/CardImg'
+import { POKEMON_TYPES } from '@/lib/pokemon-types'
 
-export type GridCard = { id: string; localId: string; name: string; image: string | null; price: string | null }
+export type GridCard = { id: string; localId: string; name: string; image: string | null; price: string | null; types?: string[] }
 type Mode = 'view' | 'owned' | 'want' | 'spare'
 
 const MODES: { id: Mode; label: string; hint: string }[] = [
@@ -44,6 +45,9 @@ export function SetGrid({
   const PER_PAGE = 9
   const pages = Math.max(1, Math.ceil(cards.length / PER_PAGE))
   const [state, setState] = useState(initial)
+  // Filtr podle typu Pokémona (jen když karty v sadě typ mají).
+  const [typeFilter, setTypeFilter] = useState<string | null>(null)
+  const setTypes = [...new Set(cards.flatMap((c) => c.types ?? []))].filter((ty) => POKEMON_TYPES[ty])
   const [, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -334,8 +338,39 @@ export function SetGrid({
         </div>
       )}
 
-      <ul className={`mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 ${layout === 'album' ? 'hidden' : ''}`}>
-        {cards.map((c) => {
+      {setTypes.length > 1 && layout === 'grid' && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm" role="group" aria-label={t('Filtr podle typu')}>
+          <span className="text-subtle">{t('Typ:')}</span>
+          <button
+            type="button"
+            onClick={() => setTypeFilter(null)}
+            aria-pressed={!typeFilter}
+            className={`min-h-9 rounded-full px-3 font-semibold ${!typeFilter ? 'bg-brand-blue text-white' : 'border border-line-strong text-muted hover:bg-card-hover'}`}
+          >
+            {t('Všechny')}
+          </button>
+          {setTypes.map((ty) => {
+            const info = POKEMON_TYPES[ty]
+            const on = typeFilter === ty
+            return (
+              <button
+                key={ty}
+                type="button"
+                onClick={() => setTypeFilter(on ? null : ty)}
+                aria-pressed={on}
+                className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 font-semibold transition ${on ? 'ring-2 ring-brand-blue-dark ring-offset-2 ring-offset-base' : 'opacity-90 hover:opacity-100'}`}
+                style={{ backgroundColor: info.color, color: info.text }}
+              >
+                <span aria-hidden className="h-3 w-3 rounded-full border-2 border-current" />
+                {t(info.label)}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      <ul className={`mt-6 grid grid-cols-2 gap-3 min-[480px]:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 ${layout === 'album' ? 'hidden' : ''}`}>
+        {cards.filter((c) => !typeFilter || c.types?.includes(typeFilter)).map((c) => {
           const s = state[c.id] ?? { owned: 0, spare: 0, want: false }
           // Neoznačené karty v režimu úprav ztlumené; chybějící šedé jen v obrázku, okraj zůstává oranžový.
           const dim = loggedIn && mode !== 'view' && !s.owned && !s.want
@@ -352,15 +387,16 @@ export function SetGrid({
                   <div className="grid h-full place-items-center p-2 text-center text-xs text-subtle">{c.name}</div>
                 )}
                 <div className="absolute left-1 top-1 flex flex-col gap-1">
-                  {s.owned > 0 && <Badge className="bg-green-600">✓ {s.owned > 1 ? s.owned : ''}</Badge>}
-                  {s.want && <Badge className="bg-orange-500">{t('chybí')}</Badge>}
-                  {s.spare > 0 && <Badge className="bg-blue-600">+{s.spare} {t('navíc')}</Badge>}
+                  {s.owned > 0 && <Badge className="bg-green-600">✓ {s.owned > 1 ? `${s.owned}×` : t('mám')}</Badge>}
+                  {s.want && <Badge className="bg-orange-500">● {t('chybí')}</Badge>}
+                  {s.spare > 0 && <Badge className="bg-violet-600">⇄ +{s.spare} {t('navíc')}</Badge>}
                 </div>
               </div>
-              <p className="mt-1.5 truncate text-xs font-medium">
-                <span className="text-subtle">{c.localId}</span> {c.name}
+              <p className="mt-2 truncate text-sm font-semibold text-fg">{c.name}</p>
+              <p className="flex items-center justify-between gap-2 text-xs text-subtle">
+                <span className="tabular-nums">{c.localId}</span>
+                {c.price && <span className="font-semibold tabular-nums text-brand-blue dark:text-accent">≈ {c.price}</span>}
               </p>
-              {c.price && <p className="text-xs text-subtle">≈ {c.price}</p>}
             </>
           )
           return (

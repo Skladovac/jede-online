@@ -98,3 +98,13 @@ export function Pokeball({ className = '' }: { className?: string }) {
     </svg>
   )
 }
+
+/** Prázdný stav: jemný Pokéball, krátký text, případně akce. */
+export function EmptyState({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`flex flex-col items-center gap-3 rounded-panel border border-dashed border-line-strong bg-card px-6 py-10 text-center text-muted ${className}`}>
+      <Pokeball className="h-12 w-12 text-brand-blue opacity-30 dark:text-accent" />
+      <div className="max-w-md text-sm leading-relaxed">{children}</div>
+    </div>
+  )
+}
