@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     // Vzhled: výchozí tmavý, světlý jen když si ho uživatel přepnul (cookie „theme“ z ThemeToggle).
     <html lang={LOCALE_INFO[locale].htmlLang} className={theme === 'light' ? '' : 'dark'}>
-      <body className="min-h-dvh bg-base text-fg antialiased">
+      <body className="min-h-dvh bg-base pb-[calc(3.5rem+env(safe-area-inset-bottom))] text-fg antialiased sm:pb-0">
         <I18nProvider locale={locale} dict={dict}>
         <SiteHeader />
         {children}

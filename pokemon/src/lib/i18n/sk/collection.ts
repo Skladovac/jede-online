@@ -73,5 +73,14 @@ const dict: Record<string, string> = {
   "Stejné karty se přepíšou, nic se nemaže.": "Rovnaké karty sa prepíšu, nič sa nemaže.",
   "Nahrávám…": "Nahrávam…",
   "Nahrát": "Nahrať",
+  'Přidej kartu číslem': 'Pridaj kartu číslom',
+  'Napiš kód sady a číslo z karty vlevo dole, třeba MEP 101, SVI 045 nebo 045/198. Enter kartu rovnou přidá.': 'Napíš kód sady a číslo z karty vľavo dole, napríklad MEP 101, SVI 045 alebo 045/198. Enter kartu hneď pridá.',
+  'Číslo karty': 'Číslo karty',
+  'Přidáno': 'Pridané',
+  'Teď máš {n} ks': 'Teraz máš {n} ks',
+  'Víc shod — vyber tu svoji:': 'Viac zhôd — vyber tú svoju:',
+  'máš {n} ks': 'máš {n} ks',
+  'Napiš číslo z karty, např. MEP 101 nebo 045/198.': 'Napíš číslo z karty, napr. MEP 101 alebo 045/198.',
+  'Nic jsme nenašli. Zkus kód sady a číslo, např. SVI 045.': 'Nič sme nenašli. Skús kód sady a číslo, napr. SVI 045.',
 }
 export default dict

@@ -73,5 +73,14 @@ const dict: Record<string, string> = {
   "Stejné karty se přepíšou, nic se nemaže.": "Matching cards get overwritten, nothing is deleted.",
   "Nahrávám…": "Uploading…",
   "Nahrát": "Upload",
+  'Přidej kartu číslem': 'Add a card by number',
+  'Napiš kód sady a číslo z karty vlevo dole, třeba MEP 101, SVI 045 nebo 045/198. Enter kartu rovnou přidá.': 'Type the set code and number from the bottom of the card, e.g. MEP 101, SVI 045 or 045/198. Enter adds it right away.',
+  'Číslo karty': 'Card number',
+  'Přidáno': 'Added',
+  'Teď máš {n} ks': 'You now have {n}',
+  'Víc shod — vyber tu svoji:': 'Several matches — pick yours:',
+  'máš {n} ks': 'you have {n}',
+  'Napiš číslo z karty, např. MEP 101 nebo 045/198.': 'Type the card number, e.g. MEP 101 or 045/198.',
+  'Nic jsme nenašli. Zkus kód sady a číslo, např. SVI 045.': 'Nothing found. Try the set code and number, e.g. SVI 045.',
 }
 export default dict

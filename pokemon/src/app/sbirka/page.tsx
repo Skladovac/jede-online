@@ -5,6 +5,7 @@ import { CollectionOverview } from '@/components/CollectionOverview'
 import { ensureEurCzk } from '@/lib/fx'
 import { CopyLink } from '@/components/CopyLink'
 import { Dashboard } from '@/components/Dashboard'
+import { QuickAdd } from '@/components/QuickAdd'
 import { ImportExport } from '@/components/ImportExport'
 import { interestInMyCards } from '@/lib/interest'
 import { cardImage } from '@/lib/format'
@@ -32,6 +33,9 @@ export default async function MyCollectionPage() {
           {t('Dokud rodič nepotvrdí účet, tvoje nabídky ostatní neuvidí.')}
         </p>
       )}
+      <div className="mt-6">
+        <QuickAdd />
+      </div>
       <div className="mt-6">
         <Dashboard userId={user.id} />
       </div>
