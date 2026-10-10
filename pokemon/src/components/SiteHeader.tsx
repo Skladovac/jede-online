@@ -85,14 +85,15 @@ export async function SiteHeader() {
                 <InstallHeaderButton className={iconLink} />
                 <LocaleSwitcher />
                 <ThemeToggle variant="header" />
-                <Link href="/prihlaseni" className={navLink}>
-                  {t('Přihlásit')}
+                {/* Většina návštěv jsou vracející se uživatelé → výrazné je Přihlásit, registrace jako odkaz. */}
+                <Link href="/registrace" className={navLink}>
+                  {t('Registrovat')}
                 </Link>
                 <Link
-                  href="/registrace"
+                  href="/prihlaseni"
                   className="ml-1 inline-flex min-h-10 items-center rounded-[10px] bg-brand-blue-dark px-3.5 font-bold text-white transition-colors duration-200 hover:bg-brand-blue-deep"
                 >
-                  {t('Registrovat')}
+                  {t('Přihlásit')}
                 </Link>
               </>
             )}
