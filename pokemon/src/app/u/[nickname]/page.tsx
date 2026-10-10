@@ -33,10 +33,23 @@ async function getProfile(nickname: string) {
   return user && !isLimited(user) ? user : null
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  const t = await getT()
   const user = await getProfile((await params).nickname)
-  if (!user) return { title: (await getT())('Profil nenalezen') }
-  return { title: user.nickname, robots: user.indexable ? undefined : { index: false, follow: false } }
+  if (!user) return { title: t('Profil nenalezen') }
+  // Náhled pro Facebook podle přepínače (?ukaz=hledam / nabizim); bez volby to, co profil ukáže jako první.
+  const ukaz = (await searchParams)?.ukaz
+  const offers = await prisma.collectionItem.count({ where: { userId: user.id, spareQty: { gt: 0 }, offerType: { not: null }, hiddenAt: null } })
+  const view = ukaz === 'hledam' || ukaz === 'nabizim' ? ukaz : offers ? 'nabizim' : 'hledam'
+  const title = view === 'hledam' ? t('Co hledá {name}', { name: user.nickname }) : t('Co nabízí {name}', { name: user.nickname })
+  const description = t('Sbírka a výměny Pokémon karet na pokemon.jede.online. Máš něco z toho? Napiš mu přes web.')
+  const image = `https://pokemon.jede.online/og/profil?nick=${encodeURIComponent(user.nickname)}&ukaz=${view}`
+  return {
+    title: user.nickname,
+    robots: user.indexable ? undefined : { index: false, follow: false },
+    openGraph: { title, description, type: 'profile', siteName: 'pokemon.jede.online', images: [{ url: image, width: 1200, height: 630, alt: title }] },
+    twitter: { card: 'summary_large_image', title, description, images: [image] },
+  }
 }
 
 export default async function ProfilePage({ params, searchParams }: Props) {
