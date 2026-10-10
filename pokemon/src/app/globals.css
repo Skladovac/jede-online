@@ -2,6 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokeny (collector dashboard). Výchozí je tmavý vzhled (třída .dark na <html>, podle cookie „theme“),
+ * světlý je přepínatelný. Tailwind je mapuje jako barvy: bg-base, bg-surface, bg-card, border-line, text-fg, text-muted, accent…
+ */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+  --bg-primary: #f5f7fb;
+  --bg-secondary: #eef1f6;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --border: rgba(15, 23, 42, 0.09);
+  --border-strong: rgba(15, 23, 42, 0.18);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #5b6678;
+  --accent: #4f46e5;
+  --accent-strong: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: rgba(79, 70, 229, 0.1);
+  --on-accent: #ffffff;
+  --positive: #047857;
+  --warning: #b45309;
+  --danger: #dc2626;
+  --glow: rgba(99, 102, 241, 0.16);
+}
+
+.dark {
+  color-scheme: dark;
+  --bg-primary: #0d131c;
+  --bg-secondary: #111824;
+  --bg-card: #151d29;
+  --bg-card-hover: #1a2433;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text-primary: #e8edf5;
+  --text-secondary: #a3afc2;
+  --text-muted: #8c98ab;
+  --accent: #8b91ff;
+  --accent-strong: #5b5ef0;
+  --accent-hover: #6c6ff5;
+  --accent-soft: rgba(139, 145, 255, 0.14);
+  --on-accent: #ffffff;
+  --positive: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --glow: rgba(99, 102, 241, 0.22);
+}
+
+/* Viditelný focus pro klávesnici (WCAG). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -54,12 +54,17 @@ export function SearchBox() {
     <div ref={boxRef} className="relative w-full">
       <form
         role="search"
+        className="relative"
         onSubmit={(e) => {
           e.preventDefault()
           if (active >= 0 && hits[active]) go(hits[active].href)
           else if (q.trim().length >= 2) go(`/hledat?q=${encodeURIComponent(q.trim())}`)
         }}
       >
+        <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+        </svg>
         <input
           type="search"
           value={q}
@@ -74,17 +79,17 @@ export function SearchBox() {
               setActive((a) => Math.max(a - 1, -1))
             } else if (e.key === 'Escape') setOpen(false)
           }}
-          placeholder={t('Hledat: Charizard, SVI 045, Prismatic ETB…')}
+          placeholder={t('Hledej karty, sady, čísla karet…')}
           aria-label={t('Hledat kartu')}
           autoComplete="off"
-          className="w-full rounded-full border border-slate-300 bg-white px-4 py-2 text-sm outline-none transition focus:border-yellow-500 focus:ring-2 focus:ring-yellow-400/40 dark:border-slate-700 dark:bg-slate-900"
+          className="h-11 w-full rounded-panel border border-line-strong bg-card pl-10 pr-4 text-[15px] text-fg outline-none transition-colors duration-200 placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent-soft"
         />
       </form>
 
       {open && q.trim().length >= 2 && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
+        <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-panel border border-line-strong bg-card shadow-xl">
           {hits.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-slate-500">{t('Nic jsme nenašli.')}</p>
+            <p className="px-4 py-3 text-sm text-muted">{t('Nic jsme nenašli.')}</p>
           ) : (
             <ul>
               {hits.map((h, i) => (
@@ -93,9 +98,9 @@ export function SearchBox() {
                     type="button"
                     onMouseEnter={() => setActive(i)}
                     onClick={() => go(h.href)}
-                    className={`flex w-full items-center gap-3 px-3 py-2 text-left ${i === active ? 'bg-yellow-50 dark:bg-slate-800' : ''}`}
+                    className={`flex w-full items-center gap-3 px-3 py-2 text-left ${i === active ? 'bg-card-hover' : ''}`}
                   >
-                    <span className="h-14 w-10 shrink-0 overflow-hidden rounded bg-slate-200 dark:bg-slate-800">
+                    <span className="h-14 w-10 shrink-0 overflow-hidden rounded bg-surface">
                       {h.image && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={h.image} alt="" className="h-full w-full object-cover" />
@@ -103,11 +108,11 @@ export function SearchBox() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold">{h.name}</span>
-                      <span className="block truncate text-xs text-slate-500">
+                      <span className="block truncate text-xs text-muted">
                         {h.set} · {h.number}
                       </span>
                     </span>
-                    {h.price && <span className="shrink-0 text-xs text-slate-500">≈ {h.price}</span>}
+                    {h.price && <span className="shrink-0 text-xs tabular-nums text-muted">≈ {h.price}</span>}
                   </button>
                 </li>
               ))}
@@ -115,7 +120,7 @@ export function SearchBox() {
                 <button
                   type="button"
                   onClick={() => go(`/hledat?q=${encodeURIComponent(q.trim())}`)}
-                  className="w-full border-t border-slate-200 px-4 py-2.5 text-left text-sm font-medium text-yellow-700 dark:border-slate-700 dark:text-yellow-400"
+                  className="w-full border-t border-line px-4 py-2.5 text-left text-sm font-medium text-accent"
                 >
                   {t('Všechny výsledky pro „{q}“', { q: q.trim() })} →
                 </button>
