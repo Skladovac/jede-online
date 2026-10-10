@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { str, type FormState } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
+import { searchCards, searchCardsById } from '@/lib/search'
 
 const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']
 const CONDITIONS: Condition[] = ['MINT', 'LIGHT_PLAYED', 'DAMAGED']
@@ -294,4 +295,63 @@ export async function toggleWantForm(_: FormState, fd: FormData): Promise<FormSt
   await toggleWant(str(fd, 'cardId'))
   revalidatePath(`/karta/${str(fd, 'cardId')}`)
   return undefined
+}
+
+// ── Rychlé přidání karty číslem (Moje sbírka) ──
+
+export type QuickHit = { id: string; name: string; number: string; set: string; imageUrl: string | null; owned: number }
+export type QuickAddState = { added?: QuickHit; hits?: QuickHit[]; error?: string; q?: string }
+
+async function toHits(userId: string, cards: Awaited<ReturnType<typeof searchCards>>): Promise<QuickHit[]> {
+  const owned = await prisma.collectionItem.groupBy({
+    by: ['cardId'],
+    where: { userId, cardId: { in: cards.map((c) => c.id) } },
+    _sum: { quantity: true },
+  })
+  return cards.map((c) => ({
+    id: c.id,
+    name: c.name,
+    number: `${c.set.code ? `${c.set.code} ` : ''}${c.localId}${c.set.officialCount ? `/${c.set.officialCount}` : ''}`,
+    set: c.set.name,
+    imageUrl: c.imageUrl,
+    owned: owned.find((o) => o.cardId === c.id)?._sum.quantity ?? 0,
+  }))
+}
+
+/** +1 kus karty ve výchozí variantě (a karta tím přestane chybět). */
+async function addPiece(userId: string, cardId: string) {
+  const variant = await defaultVariant(cardId)
+  const existing = await prisma.collectionItem.findFirst({ where: { userId, cardId, variant, condition: 'MINT', language: 'en' } })
+  if (existing) await prisma.collectionItem.update({ where: { id: existing.id }, data: { quantity: { increment: 1 } } })
+  else await prisma.collectionItem.create({ data: { userId, cardId, variant } })
+  await prisma.wantItem.deleteMany({ where: { userId, cardId, OR: [{ variant: null }, { variant }] } })
+}
+
+/**
+ * Napíšeš číslo z karty („MEP 101“, „30C 071“, „045/198“) nebo jméno: jedna shoda se rovnou přidá,
+ * víc shod se nabídne k výběru.
+ */
+export async function quickAdd(_: QuickAddState, fd: FormData): Promise<QuickAddState> {
+  const t = await getT()
+  const user = await requireUser()
+  const pick = str(fd, 'cardId')
+  if (pick) {
+    const card = await prisma.card.findUnique({ where: { id: pick }, select: { id: true } })
+    if (!card) return { error: t('Karta nenalezena.') }
+    await addPiece(user.id, card.id)
+    revalidatePath('/sbirka')
+    const [hit] = await toHits(user.id, await searchCardsById(card.id))
+    return { added: hit }
+  }
+  const q = str(fd, 'q').trim()
+  if (q.length < 2) return { error: t('Napiš číslo z karty, např. MEP 101 nebo 045/198.'), q }
+  const cards = await searchCards(q, 8)
+  if (!cards.length) return { error: t('Nic jsme nenašli. Zkus kód sady a číslo, např. SVI 045.'), q }
+  if (cards.length === 1) {
+    await addPiece(user.id, cards[0].id)
+    revalidatePath('/sbirka')
+    const [hit] = await toHits(user.id, cards)
+    return { added: hit }
+  }
+  return { hits: await toHits(user.id, cards), q }
 }

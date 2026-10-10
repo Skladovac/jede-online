@@ -57,7 +57,8 @@ export async function searchCards(raw: string, limit = 12): Promise<SearchHit[]>
     })
   }
 
-  const code = q.match(/^([A-Za-z][A-Za-z0-9]{1,5})\s?(\d{1,3}[A-Za-z]?)$/)
+  // Kód může začínat i číslicí ("30C 071") — pak je mezera povinná, ať se neplete s holým číslem.
+  const code = q.match(/^([A-Za-z][A-Za-z0-9]{1,5}?|\d[A-Za-z0-9]{1,5}(?=\s))\s?(\d{1,3}[A-Za-z]?)$/)
   if (code) {
     const hits = await prisma.card.findMany({
       where: {
@@ -86,4 +87,9 @@ export async function searchCards(raw: string, limit = 12): Promise<SearchHit[]>
     take: limit - starts.length,
   })
   return [...starts, ...contains]
+}
+
+/** Jedna karta ve stejném tvaru jako výsledky hledání. */
+export async function searchCardsById(id: string): Promise<SearchHit[]> {
+  return prisma.card.findMany({ where: { id }, select, take: 1 })
 }

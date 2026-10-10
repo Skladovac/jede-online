@@ -5,6 +5,7 @@ import { SearchBox } from '@/components/SearchBox'
 import { UserMenu } from '@/components/UserMenu'
 import { LocaleSwitcher } from '@/components/LocaleSwitcher'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { BottomNav } from '@/components/BottomNav'
 import { btnPrimary } from '@/components/design'
 import { getT } from '@/lib/i18n/server'
 
@@ -22,6 +23,7 @@ export async function SiteHeader() {
       ])
     : [0, 0, 0]
   return (
+    <>
     <header className="sticky top-0 z-20 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_88%,transparent)] backdrop-blur">
       <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2.5 font-bold tracking-tight text-fg">
@@ -45,7 +47,7 @@ export async function SiteHeader() {
               <Link href="/sady" className={`${navLink} hidden xl:inline-flex`}>
                 {t('Sady')}
               </Link>
-              <Link href="/trziste" className={navLink}>
+              <Link href="/trziste" className={`${navLink} hidden sm:inline-flex`}>
                 {t('Tržiště')}
               </Link>
               {/* Na mobilu je Sbírka v menu pod přezdívkou (do lišty se nevejde vedle Tržiště a Výměn). */}
@@ -55,7 +57,7 @@ export async function SiteHeader() {
               <Link href="/sberatele" className={`${navLink} hidden lg:inline-flex`}>
                 {t('Sběratelé')}
               </Link>
-              <Link href="/poptavky" className={`${navLink} relative`}>
+              <Link href="/poptavky" className={`${navLink} relative hidden sm:inline-flex`}>
                 {t('Výměny')}
                 {pendingCount > 0 && <Dot n={pendingCount} />}
               </Link>
@@ -94,6 +96,8 @@ export async function SiteHeader() {
         <SearchBox />
       </div>
     </header>
+    <BottomNav loggedIn={!!user} nickname={user?.nickname} pending={pendingCount} />
+    </>
   )
 }
 

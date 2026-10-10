@@ -207,5 +207,8 @@ const dict: Record<string, string> = {
   'cena dohodou': 'price on request',
   'zdarma': 'free',
   'na výměnu': 'for trade',
+  'Domů': 'Home',
+  'Účet': 'Account',
+  'Spodní navigace': 'Bottom navigation',
 }
 export default dict
