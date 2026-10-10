@@ -77,3 +77,25 @@ export const rarityLabel = (r: string | null) => (r ? (RARITY_CS[r] ?? r) : null
 
 const CATEGORY_CS: Record<string, string> = { Pokemon: 'Pokémon', Trainer: 'Trenér', Energy: 'Energie' }
 export const categoryLabel = (c: string) => CATEGORY_CS[c] ?? c
+
+/**
+ * Podsady se stejným logem jako hlavní sada (30th Classic Collection, Trainer Gallery…): štítek, ať jdou odlišit.
+ * Ve skupině se stejným logem je hlavní sada ta s nejvíc kartami; ostatní dostanou svůj název bez společného začátku.
+ */
+export function subsetLabels(sets: { id: string; name: string; logoUrl: string | null; cardCount: number }[]) {
+  const byLogo = new Map<string, typeof sets>()
+  for (const s of sets) if (s.logoUrl) byLogo.set(s.logoUrl, [...(byLogo.get(s.logoUrl) ?? []), s])
+  const out = new Map<string, string>()
+  for (const group of byLogo.values()) {
+    if (group.length < 2) continue
+    const [main, ...rest] = [...group].sort((a, b) => b.cardCount - a.cardCount)
+    const mainWords = main.name.split(/\s+/)
+    for (const s of rest) {
+      const words = s.name.split(/\s+/)
+      let i = 0
+      while (i < words.length - 1 && words[i] === mainWords[i]) i++
+      out.set(s.id, words.slice(i).join(' '))
+    }
+  }
+  return out
+}

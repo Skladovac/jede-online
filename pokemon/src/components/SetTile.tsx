@@ -14,21 +14,28 @@ type Props = {
   releaseDate: Date | null
   /** Postup přihlášeného uživatele (vlastní / celkem), pokud ho stránka zná. */
   progress?: { owned: number; total: number } | null
+  /** Štítek podsady se stejným logem jako hlavní sada (např. „Classic Collection“). */
+  subLabel?: string
 }
 
-export async function SetTile({ id, name, code, logoUrl, officialCount, cardCount, releaseDate, progress }: Props) {
+export async function SetTile({ id, name, code, logoUrl, officialCount, cardCount, releaseDate, progress, subLabel }: Props) {
   const t = await getT()
   const logo = setLogo(logoUrl)
   // Promo sady nemají oficiální počet (0) — ukážeme skutečný počet karet.
   const count = officialCount || cardCount
   return (
     <Link href={`/sady/${encodeURIComponent(id)}`} className={`${panelInteractive} group flex h-full flex-col gap-4 p-4`}>
-      <div className="grid h-20 place-items-center rounded-[10px] bg-[radial-gradient(circle_at_50%_40%,#ffffff,var(--bg-secondary))] px-3 dark:bg-[radial-gradient(circle_at_50%_40%,#22385a,var(--bg-secondary))]">
+      <div className="relative grid h-20 place-items-center rounded-[10px] bg-[radial-gradient(circle_at_50%_40%,#ffffff,var(--bg-secondary))] px-3 dark:bg-[radial-gradient(circle_at_50%_40%,#22385a,var(--bg-secondary))]">
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logo} alt="" loading="lazy" width={160} height={64} className="max-h-14 w-auto max-w-full object-contain" />
         ) : (
           <CardBack className="h-14" />
+        )}
+        {subLabel && (
+          <span className="absolute bottom-1.5 right-1.5 max-w-[85%] truncate rounded-md bg-brand-yellow px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-brand-blue-deep shadow-sm">
+            {subLabel}
+          </span>
         )}
       </div>
       <div className="flex flex-1 flex-col">

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { SetTile } from '@/components/SetTile'
 import { getT } from '@/lib/i18n/server'
+import { subsetLabels } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 export async function generateMetadata(): Promise<Metadata> {
@@ -63,16 +64,19 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
         ))}
       </div>
 
-      {[...groups.entries()].map(([series, list]) => (
+      {[...groups.entries()].map(([series, list]) => {
+        const labels = subsetLabels(list)
+        return (
         <section key={series} id={encodeURIComponent(series)} className="scroll-mt-24 pt-10">
           <h2 className="mb-4 text-xl font-bold">{series}</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {list.map((s) => (
-              <SetTile key={s.id} {...s} />
+              <SetTile key={s.id} {...s} subLabel={labels.get(s.id)} />
             ))}
           </div>
         </section>
-      ))}
+        )
+      })}
     </main>
   )
 }
