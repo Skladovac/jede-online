@@ -26,7 +26,10 @@ export async function LatestOffers({ take = 6, note }: { take?: number; note?: R
   }
   // Nejvýš 2 nabídky od jednoho sběratele: napřed sběratelé s nejčerstvější nabídkou, pak jejich 2 poslední nabídky.
   // (Postgres řadí NULL u DESC napřed, proto řazení v JS: nabídky bez data až na konec.)
-  const sellers = (await prisma.collectionItem.groupBy({ by: ['userId'], where, _max: { offeredAt: true } }))
+  // Omezeno v databázi (LIMIT), ať dotaz neroste s počtem sběratelů; rezerva pro sběratele s NULL datem.
+  const sellers = (
+    await prisma.collectionItem.groupBy({ by: ['userId'], where, _max: { offeredAt: true }, orderBy: { _max: { offeredAt: 'desc' } }, take: take * 5 })
+  )
     .sort((a, b) => (b._max.offeredAt?.getTime() ?? 0) - (a._max.offeredAt?.getTime() ?? 0))
     .slice(0, take)
   const include = {
