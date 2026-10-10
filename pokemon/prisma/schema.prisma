@@ -151,6 +151,8 @@ model User {
   badges         UserBadge[]
   activeDays     UserActiveDay[]
   photoScans     PhotoScan[]
+  pushSubs       PushSubscription[]
+  pushNightOk    Boolean   @default(false) // true = dospělý si vypnul noční klid push notifikací
   tradeMessages  TradeMessage[]
   following      Follow[]       @relation("Follower")
   followers      Follow[]       @relation("Following")
@@ -586,6 +588,19 @@ model Follow {
 }
 
 // Dny, kdy byl uživatel na webu (statistika „aktivní uživatelé po dnech“ v administraci).
+// Push notifikace: jeden řádek = jedno zařízení/prohlížeč (endpoint od push služby prohlížeče).
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique @db.VarChar(1000)
+  p256dh    String   @db.VarChar(200)
+  auth      String   @db.VarChar(100)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 // Rozpoznání karty z fotky (placené OpenAI) — kvůli dennímu limitu na uživatele.
 model PhotoScan {
   id        String   @id @default(cuid())

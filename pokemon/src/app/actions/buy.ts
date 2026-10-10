@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import type { Condition, Variant } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { flagPushAsk } from '@/lib/push'
 import { getCurrentUser } from '@/lib/auth'
 import { str, type FormState } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
@@ -53,6 +54,7 @@ export async function saveCardBuy(_: FormState, fd: FormData): Promise<FormState
     if (!(await prisma.card.findUnique({ where: { id: cardId }, select: { id: true } }))) return { error: t('Karta nenalezena.') }
     await prisma.wantItem.create({ data: { ...data, ...stamp, variant, userId: user.id, cardId } })
   }
+  if (buy && !existing?.buy) await flagPushAsk() // vhodná chvíle nabídnout notifikace
   revalidatePath(`/karta/${cardId}`)
   return { ok: buy ? t('Uloženo. Ostatní uvidí, že tuhle kartu chceš koupit.') : t('Uloženo, karta zůstává mezi chybějícími.') }
 }

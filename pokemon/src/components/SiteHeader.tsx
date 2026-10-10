@@ -7,6 +7,8 @@ import { LocaleSwitcher } from '@/components/LocaleSwitcher'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { BottomNav } from '@/components/BottomNav'
 import { InstallHeaderButton } from '@/components/InstallApp'
+import { PushAsk } from '@/components/Push'
+import { pushPublicKey } from '@/lib/push'
 import { getT } from '@/lib/i18n/server'
 
 // Odkazy v tmavě modré hlavičce: bílé, při najetí žluté podtržení.
@@ -100,6 +102,7 @@ export async function SiteHeader() {
           <SearchBox />
         </div>
       </header>
+      {user && pushPublicKey() && <PushAsk publicKey={pushPublicKey()!} />}
       <BottomNav loggedIn={!!user} nickname={user?.nickname} pending={pendingCount} />
     </>
   )
