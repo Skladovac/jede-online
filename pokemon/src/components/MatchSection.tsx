@@ -34,7 +34,7 @@ function Thumb({ c, children }: { c: MiniCard; children?: React.ReactNode }) {
 const grid = 'grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6'
 
 /** Na profilu cizího sběratele: co z toho, co mi chybí, má on a co on shání ode mě. */
-export async function MatchSection({ data, nickname }: { data: Data; nickname: string }) {
+export async function MatchSection({ data, nickname, proposal }: { data: Data; nickname: string; proposal?: React.ReactNode }) {
   const t = await getT()
   const { offeredCards, ownedCards, offeredProducts, theyWantCards, theyWantProducts } = data
   if (!offeredCards.length && !ownedCards.length && !offeredProducts.length && !theyWantCards.length && !theyWantProducts.length)
@@ -51,6 +51,8 @@ export async function MatchSection({ data, nickname }: { data: Data; nickname: s
           </span>
         )}
       </h2>
+
+      {proposal}
 
       {(offeredCards.length > 0 || offeredProducts.length > 0) && (
         <>
