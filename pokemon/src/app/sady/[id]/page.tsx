@@ -15,6 +15,7 @@ import type { QuickState } from '@/app/actions/collection'
 import { ensureEurCzk } from '@/lib/fx'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO } from '@/lib/i18n/config'
+import { setDisplayName } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,10 +32,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const set = await getSet((await params).id)
   const t = await getT()
   if (!set) return { title: t('Sada nenalezena') }
-  const title = t('{name} – seznam karet a ceny', { name: set.name })
+  const title = t('{name} – seznam karet a ceny', { name: setDisplayName(set) })
   const description = t('Všech {n} karet sady {name} s cenami. Odklikej si, co máš, co ti chybí, a najdi sběratele na výměnu. Zdarma.', {
     n: set.cardCount,
-    name: set.name,
+    name: setDisplayName(set),
   })
   return { title, description, openGraph: { title, description } }
 }
@@ -94,7 +95,7 @@ export default async function SetPage({ params, searchParams }: Props) {
         )}
         <div>
           <h1 className="text-3xl font-black tracking-tight">
-            {set.name}
+            {setDisplayName(set)}
             {set.language === 'ja' && (
               <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 align-middle text-xs font-semibold text-red-800 dark:bg-red-400/10 dark:text-red-300">
                 🇯🇵 {t('Japonská')}

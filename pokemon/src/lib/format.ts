@@ -99,3 +99,11 @@ export function subsetLabels(sets: { id: string; name: string; logoUrl: string |
   }
   return out
 }
+
+// Zobrazovaný název sady tam, kde je oficiální název matoucí (Celebrations 2021 = 25. výročí vs. 30th Celebration).
+// V databázi zůstává oficiální název (hledání, párování produktů s Cardmarketem).
+const SET_DISPLAY_NAME: Record<string, string> = {
+  cel25: 'Celebrations · 25th Anniversary',
+  cel25cc: 'Celebrations Classic Collection · 25th Anniversary',
+}
+export const setDisplayName = (set: { id: string; name: string }) => SET_DISPLAY_NAME[set.id] ?? set.name
