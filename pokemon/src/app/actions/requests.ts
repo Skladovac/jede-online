@@ -8,6 +8,7 @@ import { getCurrentUser, isLimited } from '@/lib/auth'
 import { ADMIN_EMAIL, APP_URL, esc, notify } from '@/lib/email'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { localeOf, pushNotification } from '@/lib/notifications'
+import { flagPushAsk } from '@/lib/push'
 import { str, type FormState } from '@/lib/validation'
 import { getT, tFor } from '@/lib/i18n/server'
 import { refreshBadgesSafe } from '@/lib/badges'
@@ -248,6 +249,7 @@ export async function sendRequest(_: FormState, fd: FormData): Promise<FormState
     { label: ttTo('Zobrazit výměnu'), url: `${APP_URL}/poptavky/${req.id}` },
     req.to.locale,
   )
+  await flagPushAsk() // po odeslání žádosti nabídnout notifikace (ať ví o odpovědi)
   revalidatePath('/', 'layout')
   redirect(`/poptavky/${req.id}?odeslano=1`)
 }

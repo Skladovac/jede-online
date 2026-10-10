@@ -13,6 +13,8 @@ import { COUNTRY_LABEL, REGIONS } from '@/lib/regions'
 import { PasswordInput } from '@/components/PasswordInput'
 import { getT } from '@/lib/i18n/server'
 import { FollowingList, InviteBox } from '@/components/Social'
+import { PushSettings } from '@/components/Push'
+import { pushPublicKey } from '@/lib/push'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
@@ -150,6 +152,13 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <Submit>{t('Uložit')}</Submit>
         </ActionForm>
       </section>
+
+      {pushPublicKey() && (
+        <section id="notifikace" className="scroll-mt-24 rounded-panel border border-line bg-card p-5">
+          <h2 className="mb-4 text-lg font-bold">🔔 {t('Notifikace na telefon')}</h2>
+          <PushSettings publicKey={pushPublicKey()!} isMinor={user.isMinor} nightQuiet={!user.pushNightOk} />
+        </section>
+      )}
 
       <section className="rounded-panel border border-line bg-card p-5">
         <h2 className="mb-1 text-lg font-bold">{t('Přihlášení')}</h2>

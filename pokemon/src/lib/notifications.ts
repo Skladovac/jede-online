@@ -1,8 +1,11 @@
 import 'server-only'
 import { prisma } from '@/lib/prisma'
+import { sendPush } from '@/lib/push'
 
-/** Upozornění na webu (zvoneček). Chyba při zápisu nesmí shodit akci, která ho vyvolala. */
+/** Upozornění na webu (zvoneček) + push na telefon. Chyba při zápisu nesmí shodit akci, která ho vyvolala. */
 export async function pushNotification(userId: string, n: { title: string; body?: string; url?: string; icon?: string }) {
+  // Push běží na pozadí — akce na odeslání nečeká.
+  void sendPush(userId, n).catch((err) => console.error('[push]', err))
   await prisma.notification
     .create({
       data: {
