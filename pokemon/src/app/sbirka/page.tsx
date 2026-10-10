@@ -11,6 +11,7 @@ import { interestInMyCards } from '@/lib/interest'
 import { cardImage } from '@/lib/format'
 import Link from 'next/link'
 import { getT } from '@/lib/i18n/server'
+import { CardImg } from '@/components/CardImg'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -76,8 +77,7 @@ export default async function MyCollectionPage() {
                   <Link href={`/karta/${encodeURIComponent(i.card.id)}`} className="block">
                     <div className="aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm">
                       {img && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={img} alt={i.card.name} loading="lazy" className="h-full w-full object-cover" />
+                        <CardImg src={img} alt={i.card.name} />
                       )}
                     </div>
                     <p className="mt-1 truncate text-xs font-medium">{i.card.name}</p>
