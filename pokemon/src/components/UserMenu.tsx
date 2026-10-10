@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react'
 import { logout } from '@/app/actions/auth'
 import { useT } from '@/lib/i18n/client'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { InstallMenuItem } from '@/components/InstallApp'
 
 /** Menu pod přezdívkou v hlavičce: účet, sbírka, sběratelé (na mobilu nejsou v liště) a odhlášení. */
 export function UserMenu({ nickname, isAdmin }: { nickname: string; isAdmin: boolean }) {
@@ -66,6 +67,9 @@ export function UserMenu({ nickname, isAdmin }: { nickname: string; isAdmin: boo
             {t('Administrace')}
           </Link>
         )}
+        <div className="border-t border-line">
+          <InstallMenuItem className={item} />
+        </div>
         <div className="border-t border-line sm:hidden">
           <ThemeToggle variant="menu" />
         </div>
