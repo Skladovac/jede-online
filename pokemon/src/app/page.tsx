@@ -165,7 +165,7 @@ async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; s
         </div>
 
         {preview.length >= 3 && (
-          <div className="relative mx-auto hidden aspect-[5/4] w-full max-w-xl sm:block" aria-hidden>
+          <div className="relative mx-auto aspect-[5/4] w-full max-w-[340px] sm:max-w-xl" aria-hidden>
             <div className="pointer-events-none absolute inset-[8%] rounded-full bg-[radial-gradient(closest-side,var(--glow),transparent)]" />
             {preview.map((c, i) => (
               <div

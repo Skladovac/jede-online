@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { MarkRead } from '@/components/MarkRead'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO, type TFunc } from '@/lib/i18n/config'
+import { EmptyState } from '@/components/design'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -63,7 +64,7 @@ export default async function NotificationsPage() {
           })}
         </ul>
       ) : (
-        <p className="mt-6 text-subtle">{t('Zatím žádná upozornění. Přijdou sem nové žádosti o výměnu, odpovědi, hodnocení a shody.')}</p>
+        <EmptyState className="mt-6">{t('Zatím žádná upozornění. Přijdou sem nové žádosti o výměnu, odpovědi, hodnocení a shody.')}</EmptyState>
       )}
       <p className="mt-4 text-xs text-subtle">{t('Upozornění starší než 90 dní mažeme. E-maily nastavíš v Můj účet.')}</p>
     </main>

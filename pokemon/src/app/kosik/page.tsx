@@ -7,6 +7,7 @@ import { ActionForm } from '@/components/ActionForm'
 import { Submit, inputCls } from '@/components/ui'
 import { RequestItems } from '@/components/RequestItems'
 import { getT } from '@/lib/i18n/server'
+import { EmptyState } from '@/components/design'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -60,9 +61,9 @@ export default async function CartPage() {
       )}
 
       {drafts.length === 0 && (
-        <p className="rounded-panel border border-dashed border-line-strong p-8 text-center text-subtle">
+        <EmptyState>
           {t('Košík je prázdný. U karty v sekci „Kdo ji nabízí“ klikni na')} <strong>{t('Chci')}</strong>.
-        </p>
+        </EmptyState>
       )}
 
       {drafts.map((d) => {

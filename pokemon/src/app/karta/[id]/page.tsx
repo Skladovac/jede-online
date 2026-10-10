@@ -15,6 +15,7 @@ import { MyCardPanel } from '@/components/MyCardPanel'
 import { ensureEurCzk } from '@/lib/fx'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO } from '@/lib/i18n/config'
+import { TypeBadge } from '@/components/TypeBadge'
 
 export const dynamic = 'force-dynamic'
 
@@ -108,7 +109,12 @@ export default async function CardPage({ params }: Props) {
             {card.category && (
               <>
                 <dt className="text-subtle">{t('Typ')}</dt>
-                <dd>{t(categoryLabel(card.category))}</dd>
+                <dd className="flex flex-wrap items-center gap-1.5">
+                  {t(categoryLabel(card.category))}
+                  {card.types.map((ty) => (
+                    <TypeBadge key={ty} type={ty} />
+                  ))}
+                </dd>
               </>
             )}
             {variants.length > 0 && (
