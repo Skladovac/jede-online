@@ -120,6 +120,53 @@ body {
   background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 14px);
 }
 
+/* Karta v galerii: rám se stínem, po najetí se zvedne a přeleskne. Použití: .card-tile > .card-frame */
+.card-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4.5% / 3.2%;
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.35s;
+}
+.card-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.38) 45%, transparent 60%);
+  transform: translateX(-120%);
+  transition: transform 0.7s ease;
+}
+.card-tile:hover .card-frame {
+  transform: translateY(-6px) rotate(-0.6deg);
+  box-shadow: var(--shadow-lift);
+}
+.card-tile:hover .card-frame::after {
+  transform: translateX(120%);
+}
+
+/* Nástup obsahu hero (postupně po řádcích). */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-rise > * {
+  animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.hero-rise > *:nth-child(2) { animation-delay: 0.08s; }
+.hero-rise > *:nth-child(3) { animation-delay: 0.16s; }
+.hero-rise > *:nth-child(4) { animation-delay: 0.24s; }
+.hero-rise > *:nth-child(5) { animation-delay: 0.32s; }
+
 /* Viditelný focus pro klávesnici (WCAG). */
 :focus-visible {
   outline: 2px solid var(--pokemon-blue);
@@ -134,5 +181,6 @@ body {
   *::before,
   *::after {
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }
