@@ -23,7 +23,7 @@ export async function SetTile({ id, name, code, logoUrl, officialCount, cardCoun
   const count = officialCount || cardCount
   return (
     <Link href={`/sady/${encodeURIComponent(id)}`} className={`${panelInteractive} group flex h-full flex-col gap-4 p-4`}>
-      <div className="grid h-20 place-items-center rounded-lg bg-surface px-3">
+      <div className="grid h-20 place-items-center rounded-[10px] bg-[radial-gradient(circle_at_50%_40%,#ffffff,var(--bg-secondary))] px-3 dark:bg-[radial-gradient(circle_at_50%_40%,#22385a,var(--bg-secondary))]">
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logo} alt="" loading="lazy" width={160} height={64} className="max-h-14 w-auto max-w-full object-contain" />
@@ -36,11 +36,14 @@ export async function SetTile({ id, name, code, logoUrl, officialCount, cardCoun
         <p className="mt-1 text-xs tabular-nums text-muted">
           {[code, releaseDate?.getFullYear(), t('{n} karet', { n: count })].filter(Boolean).join(' · ')}
         </p>
-        {progress && progress.total > 0 && (
-          <div className="mt-auto pt-3">
-            <ProgressMeter owned={progress.owned} total={progress.total} />
-          </div>
-        )}
+        <div className="mt-auto pt-3">
+          {progress && progress.total > 0 && (
+            <div className="mb-3">
+              <ProgressMeter owned={progress.owned} total={progress.total} />
+            </div>
+          )}
+          <span className="text-sm font-semibold text-brand-blue group-hover:underline dark:text-accent">{t('Zobrazit set')} →</span>
+        </div>
       </div>
     </Link>
   )

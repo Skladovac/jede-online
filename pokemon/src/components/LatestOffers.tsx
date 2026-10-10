@@ -6,9 +6,9 @@ import { Badge, SectionHeader, panelInteractive } from '@/components/design'
 import { getT } from '@/lib/i18n/server'
 
 const TYPE = {
-  SELL: { label: 'Prodej', tone: 'accent' },
-  TRADE: { label: 'Výměna', tone: 'warning' },
-  GIFT: { label: 'Za poštovné', tone: 'positive' },
+  SELL: { label: 'Prodej', tone: 'green' },
+  TRADE: { label: 'Výměna', tone: 'blue' },
+  GIFT: { label: 'Za poštovné', tone: 'yellow' },
 } as const
 
 /**
@@ -81,12 +81,18 @@ export async function LatestOffers({ take = 6, note }: { take?: number; note?: R
                   <p className="truncate text-xs text-muted" title={o.card.set.name}>
                     {o.card.set.name} · <span className="tabular-nums">{number}</span>
                   </p>
-                  <p className="mt-auto pt-1 text-base font-bold tabular-nums text-fg">
+                  <p className="mt-auto pt-1 text-lg font-extrabold tabular-nums text-brand-blue-deep dark:text-white">
                     {o.offerType === 'SELL' ? (o.priceCzk ? `${o.priceCzk.toLocaleString('cs-CZ')} Kč` : t('cena dohodou')) : o.offerType === 'GIFT' ? t('zdarma') : t('na výměnu')}
                   </p>
-                  <p className="flex items-center gap-1 truncate text-xs text-subtle">
-                    <span className="truncate">{o.user.nickname}</span>
-                    {pct !== null && <span className="shrink-0 tabular-nums">· 👍 {pct} %</span>}
+                  {o.card.priceEur && (
+                    <p className="text-[11px] tabular-nums text-subtle">Cardmarket: {Number(o.card.priceEur).toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</p>
+                  )}
+                  <p className="mt-1 flex items-center gap-1.5 truncate border-t border-line pt-2 text-xs text-muted">
+                    <span aria-hidden className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-yellow text-[10px] font-black text-brand-blue-deep">
+                      {o.user.nickname.slice(0, 1).toUpperCase()}
+                    </span>
+                    <span className="truncate font-medium">{o.user.nickname}</span>
+                    {pct !== null && <span className="shrink-0 tabular-nums text-subtle">· 👍 {pct} %</span>}
                   </p>
                 </div>
               </Link>

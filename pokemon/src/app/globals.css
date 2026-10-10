@@ -3,57 +3,107 @@
 @tailwind utilities;
 
 /*
- * Design tokeny (collector dashboard). Výchozí je tmavý vzhled (třída .dark na <html>, podle cookie „theme“),
- * světlý je přepínatelný. Tailwind je mapuje jako barvy: bg-base, bg-surface, bg-card, border-line, text-fg, text-muted, accent…
+ * Design tokeny — „Modern Pokémon TCG fan community“: Pokémon modrá + žlutá, bílé panely, jemná červená jako akcent.
+ * Výchozí je světlý vzhled; tmavý (třída .dark na <html>, cookie „theme“) je přepínatelný.
+ * Tailwind je mapuje jako barvy: bg-base, bg-surface, bg-card, border-line, text-fg, text-muted, accent, brand-*…
  */
 :root {
   color-scheme: light;
+  /* Značkové barvy */
+  --pokemon-blue: #2a75bb;
+  --pokemon-blue-dark: #1d4e89;
+  --pokemon-blue-deep: #163a66;
+  --pokemon-yellow: #ffcb05;
+  --pokemon-yellow-dark: #c7a008;
+  --pokemon-red: #e3350d;
+  --pokemon-red-dark: #b72a0a;
+
+  /* Plochy a text */
   --bg-primary: #f5f7fb;
-  --bg-secondary: #eef1f6;
+  --bg-secondary: #eef3f8;
   --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
-  --border: rgba(15, 23, 42, 0.09);
-  --border-strong: rgba(15, 23, 42, 0.18);
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #5b6678;
-  --accent: #4f46e5;
-  --accent-strong: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-soft: rgba(79, 70, 229, 0.1);
-  --on-accent: #ffffff;
-  --positive: #047857;
+  --bg-card-hover: #f8fbff;
+  --border: rgba(23, 32, 51, 0.08);
+  --border-strong: rgba(23, 32, 51, 0.14);
+  --border-hover: rgba(42, 117, 187, 0.32);
+  --text-primary: #172033;
+  --text-secondary: #4b5565;
+  --text-muted: #5e6878;
+
+  /* Akce: odkazy modře, hlavní tlačítka žlutě s tmavě modrým textem */
+  --accent: #2a75bb;
+  --accent-strong: #ffcb05;
+  --accent-hover: #f4c000;
+  --accent-soft: rgba(42, 117, 187, 0.1);
+  --on-accent: #1d4e89;
+
+  --positive: #15803d;
   --warning: #b45309;
-  --danger: #dc2626;
-  --glow: rgba(99, 102, 241, 0.16);
+  --danger: #d92d20;
+  --shadow-soft: 0 8px 30px rgba(20, 35, 60, 0.06);
+  --glow: rgba(255, 203, 5, 0.18);
+
+  /* Pozadí stránky: jemné vrstvené gradienty (modrá vlevo nahoře, žlutá vpravo, náznak červené níž) */
+  --page-bg:
+    radial-gradient(circle at 15% 10%, rgba(42, 117, 187, 0.12), transparent 30%),
+    radial-gradient(circle at 85% 15%, rgba(255, 203, 5, 0.12), transparent 28%),
+    radial-gradient(circle at 75% 75%, rgba(227, 53, 13, 0.04), transparent 25%), #f5f7fb;
 }
 
 .dark {
   color-scheme: dark;
-  --bg-primary: #0d131c;
-  --bg-secondary: #111824;
-  --bg-card: #151d29;
-  --bg-card-hover: #1a2433;
-  --border: rgba(255, 255, 255, 0.07);
+  --bg-primary: #0e1a2c;
+  --bg-secondary: #12223a;
+  --bg-card: #172a45;
+  --bg-card-hover: #1c3253;
+  --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
-  --text-primary: #e8edf5;
-  --text-secondary: #a3afc2;
-  --text-muted: #8c98ab;
-  --accent: #8b91ff;
-  --accent-strong: #5b5ef0;
-  --accent-hover: #6c6ff5;
-  --accent-soft: rgba(139, 145, 255, 0.14);
-  --on-accent: #ffffff;
-  --positive: #34d399;
+  --border-hover: rgba(127, 178, 234, 0.45);
+  --text-primary: #eaf1fb;
+  --text-secondary: #b3c2d8;
+  --text-muted: #93a4bd;
+  --accent: #7fb2ea;
+  --accent-strong: #ffcb05;
+  --accent-hover: #ffd633;
+  --accent-soft: rgba(127, 178, 234, 0.14);
+  --on-accent: #163a66;
+  --positive: #4ade80;
   --warning: #fbbf24;
   --danger: #f87171;
-  --glow: rgba(99, 102, 241, 0.22);
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.25);
+  --glow: rgba(255, 203, 5, 0.12);
+  --page-bg:
+    radial-gradient(circle at 15% 10%, rgba(42, 117, 187, 0.22), transparent 32%),
+    radial-gradient(circle at 85% 15%, rgba(255, 203, 5, 0.06), transparent 28%), #0e1a2c;
+}
+
+body {
+  background: var(--page-bg);
+  background-attachment: fixed;
+}
+
+/* Jemné textury sekcí (2–4 %) — každá sekce jiná, ne přes celou stránku. */
+.texture-dots {
+  background-image: radial-gradient(rgba(29, 78, 137, 0.07) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+.texture-lines {
+  background-image: repeating-linear-gradient(135deg, rgba(29, 78, 137, 0.035) 0 1px, transparent 1px 14px);
+}
+.dark .texture-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+.dark .texture-lines {
+  background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 14px);
 }
 
 /* Viditelný focus pro klávesnici (WCAG). */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--pokemon-blue);
   outline-offset: 2px;
+}
+.dark :focus-visible {
+  outline-color: var(--pokemon-yellow);
 }
 
 @media (prefers-reduced-motion: reduce) {

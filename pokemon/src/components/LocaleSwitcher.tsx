@@ -16,7 +16,7 @@ export function LocaleSwitcher() {
   return (
     <details ref={ref} className="relative">
       <summary
-        className="grid h-10 w-10 cursor-pointer list-none place-items-center rounded-full hover:bg-card-hover"
+        className="grid h-10 w-10 cursor-pointer list-none place-items-center rounded-full hover:bg-white/10"
         aria-label={LOCALE_INFO[locale].label}
         title={LOCALE_INFO[locale].label}
       >

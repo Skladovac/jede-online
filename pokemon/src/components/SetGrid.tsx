@@ -153,7 +153,7 @@ export function SetGrid({
   return (
     <div className="mt-6">
       {loggedIn ? (
-        <div className="sticky top-[120px] z-10 -mx-4 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_95%,transparent)] px-4 py-3 backdrop-blur md:top-16">
+        <div className="sticky top-[119px] z-10 -mx-4 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_95%,transparent)] px-4 py-3 backdrop-blur md:top-[67px] lg:top-[71px]">
           <div className="flex flex-wrap items-center gap-2">
             {MODES.map((m) => (
               <button

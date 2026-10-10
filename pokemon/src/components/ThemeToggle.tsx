@@ -6,9 +6,9 @@ import { useT } from '@/lib/i18n/client'
 const THEME_COOKIE = 'theme' // stejný název čte layout.tsx
 
 /** Přepínač tmavý / světlý vzhled. Volba se uloží do cookie (server podle ní vykreslí stránku bez probliknutí). */
-export function ThemeToggle({ variant = 'icon' }: { variant?: 'icon' | 'menu' }) {
+export function ThemeToggle({ variant = 'icon' }: { variant?: 'icon' | 'menu' | 'header' }) {
   const t = useT()
-  const [dark, setDark] = useState(true)
+  const [dark, setDark] = useState(false)
   useEffect(() => setDark(document.documentElement.classList.contains('dark')), [])
 
   function toggle() {
@@ -31,7 +31,9 @@ export function ThemeToggle({ variant = 'icon' }: { variant?: 'icon' | 'menu' })
       onClick={toggle}
       aria-label={label}
       title={label}
-      className="grid h-10 w-10 place-items-center rounded-full text-muted transition-colors duration-200 hover:bg-card-hover hover:text-fg"
+      className={`grid h-10 w-10 place-items-center rounded-full transition-colors duration-200 ${
+        variant === 'header' ? 'text-white/90 hover:bg-white/10 hover:text-white' : 'text-muted hover:bg-card-hover hover:text-fg'
+      }`}
     >
       {dark ? (
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>

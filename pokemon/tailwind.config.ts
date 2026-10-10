@@ -2,7 +2,7 @@ import type { Config } from 'tailwindcss'
 
 const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
-  // Tmavý vzhled podle třídy na <html> (výchozí tmavý, přepínač v hlavičce), ne podle systému.
+  // Tmavý vzhled podle třídy na <html> (výchozí světlý, přepínač v hlavičce), ne podle systému.
   darkMode: 'class',
   theme: {
     extend: {
@@ -25,8 +25,17 @@ const config: Config = {
         positive: 'var(--positive)',
         warning: 'var(--warning)',
         danger: 'var(--danger)',
+        'line-hover': 'var(--border-hover)',
+        // Značkové barvy (header, footer, odznaky, Pokéball motivy)
+        'brand-blue': 'var(--pokemon-blue)',
+        'brand-blue-dark': 'var(--pokemon-blue-dark)',
+        'brand-blue-deep': 'var(--pokemon-blue-deep)',
+        'brand-yellow': 'var(--pokemon-yellow)',
+        'brand-yellow-dark': 'var(--pokemon-yellow-dark)',
+        'brand-red': 'var(--pokemon-red)',
       },
-      borderRadius: { panel: '12px' },
+      borderRadius: { panel: '14px' },
+      boxShadow: { soft: 'var(--shadow-soft)' },
       maxWidth: { page: '1280px' },
     },
   },

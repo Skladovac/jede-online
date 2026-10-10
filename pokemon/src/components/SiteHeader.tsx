@@ -6,10 +6,12 @@ import { UserMenu } from '@/components/UserMenu'
 import { LocaleSwitcher } from '@/components/LocaleSwitcher'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { BottomNav } from '@/components/BottomNav'
-import { btnPrimary } from '@/components/design'
 import { getT } from '@/lib/i18n/server'
 
-const navLink = 'inline-flex min-h-10 items-center rounded-lg px-2.5 text-muted transition-colors duration-200 hover:bg-card-hover hover:text-fg'
+// Odkazy v tmavě modré hlavičce: bílé, při najetí žluté podtržení.
+const navLink =
+  'relative inline-flex min-h-10 items-center rounded-lg px-2.5 font-semibold text-white/85 transition-colors duration-200 hover:text-white after:absolute after:inset-x-2.5 after:bottom-1 after:h-0.5 after:scale-x-0 after:rounded-full after:bg-brand-yellow after:transition-transform after:duration-200 hover:after:scale-x-100'
+const iconLink = 'relative inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-white/90 hover:bg-white/10'
 
 export async function SiteHeader() {
   const user = await getCurrentUser()
@@ -24,86 +26,86 @@ export async function SiteHeader() {
     : [0, 0, 0]
   return (
     <>
-    <header className="sticky top-0 z-20 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_88%,transparent)] backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5 font-bold tracking-tight text-fg">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="" width={32} height={32} className="h-8 w-8" />
-          <span className="hidden sm:inline">pokemon.jede.online</span>
-          <span
-            className="hidden rounded-md border border-line-strong px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-muted lg:inline"
-            title={t('Zkušební provoz · komunitní projekt ve vývoji, zdarma a bez reklam')}
-          >
-            BETA
-          </span>
-        </Link>
-        {/* Hledání je hlavní navigace v katalogu: na širší obrazovce uprostřed lišty, na mobilu pod ní. */}
-        <div className="hidden max-w-xl flex-1 md:block">
-          <SearchBox />
-        </div>
-        <nav className="flex shrink-0 items-center gap-0.5 text-sm font-medium sm:gap-1" aria-label={t('Hlavní navigace')}>
-          {user ? (
-            <>
-              <Link href="/sady" className={`${navLink} hidden xl:inline-flex`}>
-                {t('Sady')}
-              </Link>
-              <Link href="/trziste" className={`${navLink} hidden sm:inline-flex`}>
-                {t('Tržiště')}
-              </Link>
-              {/* Na mobilu je Sbírka v menu pod přezdívkou (do lišty se nevejde vedle Tržiště a Výměn). */}
-              <Link href="/sbirka" className={`${navLink} hidden sm:inline-flex`}>
+      <header className="sticky top-0 z-20 border-b-[3px] border-brand-yellow bg-brand-blue-dark text-white shadow-md">
+        <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-3 px-4 sm:px-6 lg:h-[68px]">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5 font-extrabold tracking-tight text-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="" width={34} height={34} className="h-[34px] w-[34px] drop-shadow" />
+            <span className="hidden text-[17px] sm:inline">
+              pokemon<span className="text-brand-yellow">.jede.online</span>
+            </span>
+          </Link>
+
+          {/* Hlavní navigace uprostřed (desktop). */}
+          <nav className="hidden items-center gap-0.5 text-sm lg:flex" aria-label={t('Hlavní navigace')}>
+            {user && (
+              <Link href="/sbirka" className={navLink}>
                 {t('Sbírka')}
               </Link>
-              <Link href="/sberatele" className={`${navLink} hidden lg:inline-flex`}>
-                {t('Sběratelé')}
-              </Link>
-              <Link href="/poptavky" className={`${navLink} relative hidden sm:inline-flex`}>
-                {t('Výměny')}
-                {pendingCount > 0 && <Dot n={pendingCount} />}
-              </Link>
-              <Link href="/upozorneni" aria-label={t('Upozornění')} className={`${navLink} relative`}>
-                🔔
-                {unreadCount > 0 && <Dot n={unreadCount} />}
-              </Link>
-              <Link href="/kosik" aria-label={t('Košík')} className={`${navLink} relative`}>
-                🛒
-                {cartCount > 0 && <Dot n={cartCount} />}
-              </Link>
-              <LocaleSwitcher />
-              <span className="hidden sm:block">
-                <ThemeToggle />
-              </span>
-              <UserMenu nickname={user.nickname} isAdmin={user.isAdmin} />
-            </>
-          ) : (
-            <>
-              <Link href="/trziste" className={`${navLink} hidden sm:inline-flex`}>
-                {t('Tržiště')}
-              </Link>
-              <LocaleSwitcher />
-              <ThemeToggle />
-              <Link href="/prihlaseni" className={navLink}>
-                {t('Přihlásit')}
-              </Link>
-              <Link href="/registrace" className={`${btnPrimary} ml-1 !min-h-10 !px-3.5 !py-1.5 text-sm`}>
-                {t('Registrace')}
-              </Link>
-            </>
-          )}
-        </nav>
-      </div>
-      <div className="px-4 pb-3 md:hidden">
-        <SearchBox />
-      </div>
-    </header>
-    <BottomNav loggedIn={!!user} nickname={user?.nickname} pending={pendingCount} />
+            )}
+            <Link href="/sady" className={navLink}>
+              {t('Sady')}
+            </Link>
+            <Link href="/trziste" className={navLink}>
+              {t('Tržiště')}
+            </Link>
+            <Link href={user ? '/sberatele' : '/hodnoceni'} className={navLink}>
+              {t('Sběratelé')}
+            </Link>
+          </nav>
+
+          <div className="flex min-w-0 items-center gap-1 text-sm">
+            <div className="hidden w-60 md:block xl:w-72">
+              <SearchBox />
+            </div>
+            {user ? (
+              <>
+                <Link href="/poptavky" aria-label={t('Výměny')} title={t('Výměny')} className={`${iconLink} hidden sm:inline-flex`}>
+                  ⇄{pendingCount > 0 && <Dot n={pendingCount} />}
+                </Link>
+                <Link href="/upozorneni" aria-label={t('Upozornění')} className={iconLink}>
+                  🔔
+                  {unreadCount > 0 && <Dot n={unreadCount} />}
+                </Link>
+                <Link href="/kosik" aria-label={t('Košík')} className={iconLink}>
+                  🛒
+                  {cartCount > 0 && <Dot n={cartCount} />}
+                </Link>
+                <LocaleSwitcher />
+                <span className="hidden sm:block">
+                  <ThemeToggle variant="header" />
+                </span>
+                <UserMenu nickname={user.nickname} isAdmin={user.isAdmin} />
+              </>
+            ) : (
+              <>
+                <LocaleSwitcher />
+                <ThemeToggle variant="header" />
+                <Link href="/prihlaseni" className={navLink}>
+                  {t('Přihlásit')}
+                </Link>
+                <Link
+                  href="/registrace"
+                  className="ml-1 inline-flex min-h-10 items-center rounded-[10px] bg-brand-yellow px-3.5 font-bold text-brand-blue-dark transition-colors duration-200 hover:bg-[#f4c000]"
+                >
+                  {t('Registrovat')}
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="px-4 pb-3 md:hidden">
+          <SearchBox />
+        </div>
+      </header>
+      <BottomNav loggedIn={!!user} nickname={user?.nickname} pending={pendingCount} />
     </>
   )
 }
 
 function Dot({ n }: { n: number }) {
   return (
-    <span className="absolute -right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+    <span className="absolute -right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand-red px-1 text-[10px] font-bold text-white ring-2 ring-brand-blue-dark">
       {n}
     </span>
   )
