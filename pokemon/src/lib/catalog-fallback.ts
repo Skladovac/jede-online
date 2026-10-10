@@ -58,6 +58,7 @@ async function ptcgCards(setId: string) {
 const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' }> = {
   '30th': { group: 24722, match: 'number' },
   '30th-c': { group: 24837, match: 'name' },
+  mep: { group: 24451, match: 'number' }, // MEP Black Star Promos (nové promo karty TCGdex dlouho nemá s obrázkem)
 }
 const TCGP_CDN = 'https://tcgplayer-cdn.tcgplayer.com/product/'
 
@@ -107,7 +108,9 @@ async function fillFromTcgplayer(log: (m: string) => void) {
       const byName = new Map<string, TcgpProduct[]>()
       for (const p of products) {
         const num = p.extendedData!.find((e) => e.name === 'Number')!.value.split('/')[0]
-        byNum.set(numKey(num), p)
+        // Stejné číslo má víc verzí („[Staff]“, „Pokemon Center Exclusive“) — bereme základní (nejkratší název).
+        const prev = byNum.get(numKey(num))
+        if (!prev || p.name.length < prev.name.length) byNum.set(numKey(num), p)
         const k = nameKey(p.name)
         byName.set(k, [...(byName.get(k) ?? []), p])
       }

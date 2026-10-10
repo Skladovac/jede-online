@@ -35,7 +35,9 @@ export default async function AdminTraffic() {
   const topPaths = [...top].sort((a, b) => (b._sum.views ?? 0) - (a._sum.views ?? 0)).slice(0, 25)
   const sections = new Map<string, number>()
   for (const t of top) {
-    const key = SECTION[t.path.split('/')[1] ?? ''] ?? 'Ostatní'
+    const first = t.path.split('/')[1] ?? ''
+    // Profily mají adresu /@přezdívka.
+    const key = first.startsWith('@') ? 'Profily' : SECTION[first] ?? 'Ostatní'
     sections.set(key, (sections.get(key) ?? 0) + (t._sum.views ?? 0))
   }
   const sectionRows = [...sections.entries()].sort((a, b) => b[1] - a[1])
