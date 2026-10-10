@@ -7,6 +7,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { str, type FormState } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
 import { searchCards, searchCardsById } from '@/lib/search'
+import { notifyDeals } from '@/lib/deals'
 
 const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']
 const CONDITIONS: Condition[] = ['MINT', 'LIGHT_PLAYED', 'DAMAGED']
@@ -90,6 +91,7 @@ export async function changeSpare(cardId: string, delta: 1 | -1): Promise<QuickS
         ...(item.spareQty === 0 && { offeredAt: new Date() }),
       },
     })
+    if (item.spareQty === 0) await notifyDeals([item.id])
     await prisma.wantItem.deleteMany({ where: { userId: user.id, cardId, OR: [{ variant: null }, { variant: item.variant }] } })
   } else {
     const item = [...items].reverse().find((i) => i.spareQty > 0)
@@ -170,6 +172,10 @@ export async function saveItem(_: FormState, fd: FormData): Promise<FormState> {
     await prisma.collectionItem.create({ data: { ...data, ...stamp, userId: user.id, cardId } })
   }
   await prisma.wantItem.deleteMany({ where: { userId: user.id, cardId, OR: [{ variant: null }, { variant }] } })
+  if (offerChanged) {
+    const saved = await prisma.collectionItem.findFirst({ where: { userId: user.id, cardId, variant, condition, language }, select: { id: true } })
+    if (saved) await notifyDeals([saved.id])
+  }
   revalidatePath(`/karta/${cardId}`)
   return { ok: t('Uloženo.') }
 }
@@ -404,16 +410,18 @@ export async function bulkOffer(_: FormState, fd: FormData): Promise<FormState> 
   if (offerType === 'SELL' && (!Number.isInteger(priceCzk) || priceCzk! < 1 || priceCzk! > 1_000_000))
     return { error: t('Zadej cenu v celých korunách.') }
   const now = new Date()
+  const changedIds = items.filter((i) => i.spareQty === 0 || i.offerType !== offerType || i.priceCzk !== priceCzk).map((i) => i.id)
   await prisma.$transaction(
     items.map((i) => {
       const spareQty = Math.min(spare, i.quantity)
-      const changed = i.spareQty === 0 || i.offerType !== offerType || i.priceCzk !== priceCzk
+      const changed = changedIds.includes(i.id)
       return prisma.collectionItem.update({
         where: { id: i.id },
         data: { spareQty, offerType, priceCzk, ...(changed && { offeredAt: now }) },
       })
     }),
   )
+  await notifyDeals(changedIds)
   revalidatePath('/sbirka')
   revalidatePath('/sbirka/nabidka')
   return { ok: t('Nabídka uložena u {n} karet.', { n: items.length }) }
