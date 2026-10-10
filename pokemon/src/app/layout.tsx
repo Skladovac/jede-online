@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
+import { InstallPrompt } from '@/components/InstallApp'
 import { Analytics } from '@/components/Analytics'
 import { getLocale } from '@/lib/i18n/server'
 import { dictFor } from '@/lib/i18n/dicts'
@@ -51,6 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <SiteHeader />
         {children}
         <SiteFooter />
+        <InstallPrompt />
         <Analytics />
         </I18nProvider>
       </body>

@@ -6,6 +6,7 @@ import { UserMenu } from '@/components/UserMenu'
 import { LocaleSwitcher } from '@/components/LocaleSwitcher'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { BottomNav } from '@/components/BottomNav'
+import { InstallHeaderButton } from '@/components/InstallApp'
 import { getT } from '@/lib/i18n/server'
 
 // Odkazy v tmavě modré hlavičce: bílé, při najetí žluté podtržení.
@@ -79,6 +80,7 @@ export async function SiteHeader() {
               </>
             ) : (
               <>
+                <InstallHeaderButton className={iconLink} />
                 <LocaleSwitcher />
                 <ThemeToggle variant="header" />
                 <Link href="/prihlaseni" className={navLink}>

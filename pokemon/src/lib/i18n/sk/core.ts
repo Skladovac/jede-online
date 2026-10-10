@@ -227,5 +227,14 @@ const dict: Record<string, string> = {
   'Obchoduj s komunitou': 'Obchoduj s komunitou',
   'Prodávej a vyměňuj karty s dalšími sběrateli z Česka a Slovenska.': 'Predávaj a vymieňaj karty s ďalšími zberateľmi z Česka a Slovenska.',
   'Zobrazit set': 'Zobraziť set',
+  'Stáhni si aplikaci': 'Stiahni si aplikáciu',
+  'Sbírka, výměny a upozornění jedním klepnutím z plochy telefonu. Zdarma, bez obchodu s aplikacemi.': 'Zbierka, výmeny a upozornenia jedným ťuknutím z plochy telefónu. Zadarmo, bez obchodu s aplikáciami.',
+  'Stáhnout aplikaci': 'Stiahnuť aplikáciu',
+  'Teď ne': 'Teraz nie',
+  'Klepni dole na ikonu Sdílet': 'Ťukni dole na ikonu Zdieľať',
+  'Vyber „Přidat na plochu“': 'Vyber „Pridať na plochu“',
+  'Potvrď „Přidat“ vpravo nahoře': 'Potvrď „Pridať“ vpravo hore',
+  'Otevři menu prohlížeče (⋮ vpravo nahoře)': 'Otvor menu prehliadača (⋮ vpravo hore)',
+  'Vyber „Instalovat aplikaci“ nebo „Přidat na plochu“': 'Vyber „Inštalovať aplikáciu“ alebo „Pridať na plochu“',
 }
 export default dict
