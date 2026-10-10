@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { removePushSubscription, savePushSubscription, sendTestPush, setNightQuiet } from '@/app/actions/push'
 import { useT } from '@/lib/i18n/client'
+import { Bell, CircleCheck, Smartphone } from 'lucide-react'
+import { btnPrimary, btnSecondary, panel } from '@/components/design'
 
 /**
  * Push notifikace v prohlížeči: dotaz ve vhodnou chvíli (po žádosti o výměnu / zapnutí hlídání ceny)
@@ -99,10 +101,11 @@ export function PushAsk({ publicKey }: { publicKey: string }) {
     <div
       role="dialog"
       aria-labelledby="push-ask-title"
-      className="fixed inset-x-3 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md rounded-panel border border-line-strong bg-card p-4 text-fg shadow-2xl sm:bottom-6"
+      className={`fixed inset-x-3 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md ${panel} p-4 text-fg !shadow-lift sm:bottom-6`}
     >
-      <p id="push-ask-title" className="font-extrabold">
-        🔔 {t('Chceš, aby ti telefon pípl?')}
+      <p id="push-ask-title" className="flex items-center gap-2 font-extrabold">
+        <Bell className="h-5 w-5 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
+        {t('Chceš, aby ti telefon pípl?')}
       </p>
       <p className="mt-1 text-sm text-muted">{t('Dáme ti hned vědět, když ti někdo odpoví na výměnu, napíše zprávu nebo nabídne kartu, kterou hledáš. V noci (21–8) je klid.')}</p>
       <div className="mt-3 flex gap-2">
@@ -115,11 +118,11 @@ export function PushAsk({ publicKey }: { publicKey: string }) {
             setBusy(false)
             setOpen(false)
           }}
-          className="min-h-11 flex-1 rounded-[11px] bg-accent-strong px-4 font-bold text-on-accent transition-colors duration-200 hover:bg-accent-hover disabled:opacity-50"
+          className={`${btnPrimary} flex-1 disabled:opacity-50`}
         >
           {busy ? '…' : t('Ano, zapnout')}
         </button>
-        <button type="button" onClick={() => setOpen(false)} className="min-h-11 rounded-[11px] border border-line-strong px-4 text-sm font-semibold text-muted hover:text-fg">
+        <button type="button" onClick={() => setOpen(false)} className={`${btnSecondary} text-sm`}>
           {t('Teď ne')}
         </button>
       </div>
@@ -165,10 +168,15 @@ export function PushSettings({ publicKey, isMinor, nightQuiet: initialQuiet }: {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-semibold">{t('Na tomhle zařízení')}</p>
+          <p className="font-semibold text-fg">{t('Na tomhle zařízení')}</p>
           <p className="text-sm text-muted">
             {state === 'loading' && '…'}
-            {state === 'on' && `✅ ${t('Zapnuté — telefon pípne při všem, co přijde pod zvoneček.')}`}
+            {state === 'on' && (
+              <span className="inline-flex items-start gap-1.5">
+                <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-positive" strokeWidth={1.75} aria-hidden />
+                {t('Zapnuté — telefon pípne při všem, co přijde pod zvoneček.')}
+              </span>
+            )}
             {state === 'off' && t('Vypnuté.')}
             {state === 'blocked' && t('Zablokované v prohlížeči. Povol notifikace pro tento web v nastavení prohlížeče (ikona zámku vedle adresy).')}
             {state === 'unsupported' && t('Tento prohlížeč notifikace neumí.')}
@@ -180,16 +188,15 @@ export function PushSettings({ publicKey, isMinor, nightQuiet: initialQuiet }: {
             type="button"
             disabled={busy}
             onClick={toggle}
-            className={`min-h-11 rounded-[11px] px-4 font-bold transition-colors duration-200 disabled:opacity-50 ${
-              state === 'on' ? 'border border-line-strong text-muted hover:text-fg' : 'bg-accent-strong text-on-accent hover:bg-accent-hover'
-            }`}
+            className={`${state === 'on' ? btnSecondary : btnPrimary} disabled:opacity-50`}
           >
             {busy ? '…' : state === 'on' ? t('Vypnout') : t('Zapnout notifikace')}
           </button>
         )}
         {state === 'ios-install' && (
-          <button type="button" onClick={() => window.dispatchEvent(new Event('pk-install-open'))} className="min-h-11 rounded-[11px] bg-accent-strong px-4 font-bold text-on-accent">
-            📲 {t('Stáhnout aplikaci')}
+          <button type="button" onClick={() => window.dispatchEvent(new Event('pk-install-open'))} className={btnPrimary}>
+            <Smartphone strokeWidth={1.75} aria-hidden />
+            {t('Stáhnout aplikaci')}
           </button>
         )}
       </div>
@@ -203,13 +210,13 @@ export function PushSettings({ publicKey, isMinor, nightQuiet: initialQuiet }: {
             setMsg(await sendTestPush())
             setBusy(false)
           }}
-          className="text-sm font-semibold text-brand-blue underline dark:text-accent"
+          className="min-h-11 text-sm font-semibold text-accent underline underline-offset-4"
         >
           {t('Poslat zkušební notifikaci')}
         </button>
       )}
 
-      <label className={`flex items-start gap-3 text-sm ${isMinor ? 'opacity-70' : 'cursor-pointer'}`}>
+      <label className={`flex items-start gap-3 text-sm text-fg ${isMinor ? 'opacity-70' : 'cursor-pointer'}`}>
         <input
           type="checkbox"
           checked={isMinor || quiet}
@@ -224,7 +231,7 @@ export function PushSettings({ publicKey, isMinor, nightQuiet: initialQuiet }: {
         />
         <span>
           {t('Noční klid 21:00–8:00 (telefon nepípá, upozornění počká pod zvonečkem)')}
-          {isMinor && <span className="block text-xs text-subtle">{t('U dětských účtů je noční klid vždy zapnutý.')}</span>}
+          {isMinor && <span className="block text-xs text-muted">{t('U dětských účtů je noční klid vždy zapnutý.')}</span>}
         </span>
       </label>
       {msg?.ok && <p className="text-sm text-positive">{msg.ok}</p>}

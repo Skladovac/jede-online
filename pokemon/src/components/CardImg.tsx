@@ -18,7 +18,7 @@ export function CardImg({ src, alt, className = '', eager = false }: { src: stri
   }, [src])
   if (!src || broken)
     return (
-      <div className="grid h-full w-full place-items-center bg-gradient-to-br from-blue-700 to-blue-900 p-2 text-center text-xs font-semibold text-white">
+      <div className="grid h-full w-full place-items-center bg-gradient-to-br from-brand-blue-dark to-brand-blue-deep p-2 text-center text-xs font-semibold text-white">
         {alt}
       </div>
     )

@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { getT } from '@/lib/i18n/server'
+import { btnPrimary, panel } from '@/components/design'
+import { ArrowRight, Check } from 'lucide-react'
 
 /**
  * Průvodce „Jak začít“ pro nové uživatele (hlavní stránka a Můj účet po registraci).
@@ -49,40 +51,39 @@ export async function GettingStarted({ userId, nickname, emailVerified }: { user
   const next = steps.find((s) => !s.done)!
 
   return (
-    <section className="mb-10 rounded-panel border-2 border-accent bg-accent-soft p-5">
+    <section className={`mb-10 ${panel} p-5 sm:p-6`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-xl font-bold">{t('Vítej, {nickname}! Jak začít', { nickname })}</h2>
-        <span className="text-sm text-muted">
+        <h2 className="text-2xl font-bold text-fg">{t('Vítej, {nickname}! Jak začít', { nickname })}</h2>
+        <span className="font-mono text-xs tabular-nums text-subtle">
           {t('hotovo {done} ze {total}', { done: doneCount, total: steps.length })}
         </span>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface">
-        <div className="h-full rounded-full bg-accent-strong" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line">
+        <div className="h-full rounded-full bg-gradient-to-r from-brand-blue to-brand-blue-dark dark:from-accent dark:to-brand-blue" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
       </div>
       <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((s, i) => (
           <li
             key={s.title}
-            className={`rounded-xl border p-3 text-sm ${
+            className={`rounded-xl border p-4 text-sm ${
               s.done
-                ? 'border-green-200 bg-green-50 text-green-900 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-200'
+                ? 'border-[color-mix(in_srgb,var(--positive)_25%,transparent)] bg-[color-mix(in_srgb,var(--positive)_10%,transparent)] text-positive'
                 : s === next
-                  ? 'border-accent bg-card'
-                  : 'border-line bg-card opacity-70'
+                  ? 'border-line-strong bg-surface'
+                  : 'border-line bg-surface opacity-70'
             }`}
           >
-            <p className="font-semibold">
-              {s.done ? '✓' : `${i + 1}.`} {s.title}
+            <p className="flex items-center gap-1.5 font-semibold">
+              {s.done ? <Check className="h-4 w-4 shrink-0" strokeWidth={2.6} aria-hidden /> : <span className="font-mono text-xs text-subtle">{i + 1}.</span>}
+              <span className={s.done ? '' : 'text-fg'}>{s.title}</span>
             </p>
             {!s.done && (
               <>
                 <p className="mt-1 text-muted">{s.text}</p>
                 {s === next && (
-                  <Link
-                    href={s.href}
-                    className="mt-2 inline-block rounded-full bg-accent-strong px-3 py-1 text-xs font-semibold text-on-accent hover:bg-accent-hover"
-                  >
-                    {s.cta} →
+                  <Link href={s.href} className={`${btnPrimary} mt-3 !min-h-9 !px-4 !py-1.5 text-sm`}>
+                    {s.cta}
+                    <ArrowRight aria-hidden />
                   </Link>
                 )}
               </>

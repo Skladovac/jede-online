@@ -5,6 +5,7 @@ import { getCurrentUser, isLimited } from '@/lib/auth'
 import { BulkOffer, type BulkItem } from '@/components/BulkOffer'
 import { byLocalId } from '@/lib/format'
 import { getT } from '@/lib/i18n/server'
+import { ArrowLeft } from 'lucide-react'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -43,10 +44,11 @@ export default async function BulkOfferPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <Link href="/sbirka" className="text-sm text-subtle hover:underline">
-        ← {t('Moje sbírka')}
+      <Link href="/sbirka" className="inline-flex items-center gap-1 text-sm text-subtle hover:underline">
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+        {t('Moje sbírka')}
       </Link>
-      <h1 className="mt-3 text-3xl font-black tracking-tight">{t('Hromadná nabídka')}</h1>
+      <h1 className="mt-3 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Hromadná nabídka')}</h1>
       <p className="mb-6 mt-2 text-muted">
         {t('Klepni na karty, které chceš nabídnout, a dole nastav počet kusů navíc a typ nabídky. Uloží se všem vybraným najednou.')}
       </p>

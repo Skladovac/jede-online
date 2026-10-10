@@ -61,8 +61,8 @@ export async function PriceChart({ cardId, stats }: { cardId: string; stats: Pri
   return (
     <div className="mt-5 border-t border-line pt-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-sm font-semibold">{t('Vývoj ceny')}</p>
-        <p className={`text-sm font-semibold ${up ? 'text-green-700 dark:text-green-400' : 'text-red-600'}`}>
+        <p className="eyebrow">{t('Vývoj ceny')}</p>
+        <p className={`text-sm font-semibold tabular-nums ${up ? 'text-positive' : 'text-danger'}`}>
           {change >= 0 ? '+' : ''}
           {change.toFixed(0)} %
         </p>
@@ -70,11 +70,11 @@ export async function PriceChart({ cardId, stats }: { cardId: string; stats: Pri
       <svg viewBox={`0 0 ${W} ${H}`} className="mt-1 h-36 w-full" role="img" aria-label={t('Vývoj ceny')}>
         <path
           d={`${d} L${x(points[points.length - 1].day)},${H} L${x(points[0].day)},${H} Z`}
-          className={up ? 'fill-green-500/10' : 'fill-red-500/10'}
+          className={up ? 'fill-[color-mix(in_srgb,var(--positive)_10%,transparent)]' : 'fill-[color-mix(in_srgb,var(--danger)_10%,transparent)]'}
         />
-        <path d={d} fill="none" strokeWidth="2.5" strokeDasharray={estimate ? '6 4' : undefined} className={up ? 'stroke-green-500' : 'stroke-red-500'} />
+        <path d={d} fill="none" strokeWidth="2.5" strokeDasharray={estimate ? '6 4' : undefined} className={up ? 'stroke-positive' : 'stroke-danger'} />
       </svg>
-      <div className="flex justify-between text-xs text-subtle">
+      <div className="flex justify-between text-xs tabular-nums text-subtle">
         <span>
           {fmtDay(points[0].day)}: {fmt(vals[0])}
         </span>

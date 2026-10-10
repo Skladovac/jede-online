@@ -6,7 +6,7 @@ import { useT } from '@/lib/i18n/client'
 import { changeSpare, clearSetWanted, markByNumbers, markRestWanted, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
 import { CardImg } from '@/components/CardImg'
 import { POKEMON_TYPES } from '@/lib/pokemon-types'
-import { BookOpen, Check, LayoutGrid, Minus } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, Check, LayoutGrid, Minus } from 'lucide-react'
 
 export type GridCard = { id: string; localId: string; name: string; image: string | null; price: string | null; types?: string[] }
 type Mode = 'view' | 'owned' | 'want' | 'spare'
@@ -274,7 +274,7 @@ export function SetGrid({
       {layout === 'album' && (
         <div className="mx-auto mt-4 max-w-xl">
           {/* Stránka alba: 3×3 kapsy jako v pořadači. Prázdná kapsa = karta, kterou nemám. */}
-          <div className="grid grid-cols-3 gap-2 rounded-panel border-4 border-slate-700 bg-slate-800 p-3 shadow-inner sm:gap-3 sm:p-4">
+          <div className="grid grid-cols-3 gap-2 rounded-[18px] bg-[#16243a] p-3 shadow-[inset_0_2px_10px_rgba(0,0,0,0.45),0_20px_40px_-20px_rgba(14,27,46,0.6)] ring-1 ring-[rgba(255,255,255,0.06)] sm:gap-3 sm:p-4">
             {cards.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE).map((c) => {
               const s = state[c.id] ?? { owned: 0, spare: 0, want: false }
               const pocket = s.owned ? (
@@ -282,7 +282,7 @@ export function SetGrid({
                   {c.image ? (
                     <CardImg src={c.image} alt={c.name} />
                   ) : (
-                    <div className="grid h-full place-items-center p-2 text-center text-xs text-slate-300">{c.name}</div>
+                    <div className="grid h-full place-items-center p-2 text-center text-xs text-[#c9d3e3]">{c.name}</div>
                   )}
                   {/* Lesk fólie kapsy. */}
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-transparent" />
@@ -290,7 +290,7 @@ export function SetGrid({
               ) : (
                 <div
                   className={`relative grid aspect-[63/88] place-items-center overflow-hidden rounded-md border-2 border-dashed p-1 text-center ${
-                    s.want ? 'border-orange-400 bg-orange-500/10' : 'border-slate-500 bg-slate-900/40'
+                    s.want ? 'border-brand-yellow bg-[rgba(255,203,5,0.08)]' : 'border-[rgba(255,255,255,0.18)] bg-[rgba(0,0,0,0.2)]'
                   }`}
                 >
                   {c.image && (
@@ -300,9 +300,9 @@ export function SetGrid({
                     </span>
                   )}
                   <div className="relative">
-                    <p className="text-lg font-black text-slate-300 sm:text-2xl">{c.localId}</p>
+                    <p className="font-mono text-lg font-bold text-[#c9d3e3] sm:text-2xl">{c.localId}</p>
                     <p className="line-clamp-2 text-[10px] text-subtle sm:text-xs">{c.name}</p>
-                    {s.want && <p className="mt-1 text-[10px] font-semibold text-orange-300">{t('chybí')}</p>}
+                    {s.want && <p className="mt-1 text-[10px] font-semibold text-brand-yellow">{t('chybí')}</p>}
                   </div>
                 </div>
               )
@@ -326,18 +326,20 @@ export function SetGrid({
               type="button"
               disabled={page === 0}
               onClick={() => setPage((p) => Math.max(0, p - 1))}
-              className="rounded-full border border-line-strong px-4 py-1.5 font-medium disabled:opacity-40"
+              className="inline-flex items-center gap-1 rounded-full border border-line-strong px-4 py-1.5 font-medium disabled:opacity-40"
             >
-              ← {t('Předchozí')}
+              <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+              {t('Předchozí')}
             </button>
             <span className="text-subtle">{t('Strana {page} z {pages}', { page: page + 1, pages })}</span>
             <button
               type="button"
               disabled={page >= pages - 1}
               onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
-              className="rounded-full border border-line-strong px-4 py-1.5 font-medium disabled:opacity-40"
+              className="inline-flex items-center gap-1 rounded-full border border-line-strong px-4 py-1.5 font-medium disabled:opacity-40"
             >
-              {t('Další')} →
+              {t('Další')}
+              <ArrowRight className="h-4 w-4" strokeWidth={1.75} aria-hidden />
             </button>
           </div>
         </div>

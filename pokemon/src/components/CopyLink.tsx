@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useT } from '@/lib/i18n/client'
+import { btnBlue, btnSecondary } from '@/components/design'
+import { Check, Copy, Share2 } from 'lucide-react'
 
 /** Odkaz k zkopírování (např. na Facebook). Na mobilu nabídne i systémové sdílení. */
 export function CopyLink({ url, title }: { url: string; title: string }) {
@@ -37,17 +39,19 @@ export function CopyLink({ url, title }: { url: string; title: string }) {
         readOnly
         value={url}
         onFocus={(e) => e.currentTarget.select()}
-        className="min-w-0 flex-1 rounded-lg border border-line-strong bg-card px-3 py-1.5 text-sm"
+        className="min-h-11 min-w-0 flex-1 rounded-xl border border-line-strong bg-surface px-3 py-2 font-mono text-[13px] text-fg"
       />
       <button
         type="button"
         onClick={copy}
-        className="rounded-full bg-accent-strong px-4 py-1.5 text-sm font-semibold text-on-accent hover:bg-accent-hover"
+        className={`${btnBlue} text-sm`}
       >
-        {copied ? t('Zkopírováno ✓') : t('Zkopírovat')}
+        {copied ? <Check strokeWidth={2.6} aria-hidden /> : <Copy strokeWidth={1.75} aria-hidden />}
+        {copied ? t('Zkopírováno') : t('Zkopírovat')}
       </button>
       {canShare && (
-        <button type="button" onClick={share} className="rounded-full border border-line-strong px-4 py-1.5 text-sm">
+        <button type="button" onClick={share} className={`${btnSecondary} text-sm`}>
+          <Share2 strokeWidth={1.75} aria-hidden />
           {t('Sdílet')}
         </button>
       )}

@@ -11,6 +11,8 @@ import { TAG_LABEL } from '@/lib/rating-tags'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO } from '@/lib/i18n/config'
 import { TradeChat } from '@/components/TradeChat'
+import { panel } from '@/components/design'
+import { ArrowLeft, Check, Mail, ShieldCheck, ThumbsDown, ThumbsUp } from 'lucide-react'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -53,11 +55,12 @@ export default async function RequestDetail({
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
-      <Link href="/poptavky" className="text-sm text-subtle hover:underline">
-        ← {t('Výměny')}
+      <Link href="/poptavky" className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg hover:underline">
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        {t('Výměny')}
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-black tracking-tight">
+        <h1 className="text-3xl font-extrabold text-fg sm:text-4xl">
           {iAmBuyer ? t('Žádost o výměnu pro') : t('Žádost o výměnu od')}{' '}
           <Link href={`/@${encodeURIComponent(other.nickname)}`} className="hover:underline">
             {other.nickname}
@@ -70,27 +73,29 @@ export default async function RequestDetail({
       <p className="-mt-3 text-xs">
         <Link
           href={`/@${encodeURIComponent(other.nickname)}?nahlasit=1#nahlasit`}
-          className="text-subtle hover:text-red-600 hover:underline"
+          className="text-subtle hover:text-danger hover:underline"
         >
           {t('Něco nesedí? Nahlásit {name}', { name: other.nickname })}
         </Link>
         <span className="text-subtle"> · </span>
-        <Link href="/bezpecny-obchod" className="font-medium text-accent hover:underline">
-          🛡️ {t('Jak obchodovat bezpečně')}
+        <Link href="/bezpecny-obchod" className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
+          <ShieldCheck className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+          {t('Jak obchodovat bezpečně')}
         </Link>
       </p>
       {odeslano && (
-        <p className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-900 dark:bg-green-500/10 dark:text-green-200">
+        <p className="flex items-start gap-2.5 rounded-xl bg-[color-mix(in_srgb,var(--positive)_10%,transparent)] px-4 py-3 text-sm text-fg">
+          <Check className="mt-0.5 h-4 w-4 shrink-0 text-positive" strokeWidth={2.4} aria-hidden />
           {t('Odesláno! {name} dostal(a) e-mail. Jakmile odpoví, dáme ti vědět e-mailem (může skončit ve složce Spam / Nevyžádaná pošta). Stav uvidíš i tady ve Výměnách.', { name: other.nickname })}
         </p>
       )}
 
-      <section className="rounded-panel border border-line bg-card p-5">
-        <h2 className="font-bold">{iAmBuyer ? t('Chci od něj/ní') : t('Chce ode mě')}</h2>
+      <section className={`${panel} p-5`}>
+        <h2 className="text-xl font-bold text-fg">{iAmBuyer ? t('Chci od něj/ní') : t('Chce ode mě')}</h2>
         <RequestItems items={wanted} />
         {offered.length > 0 && (
           <>
-            <h2 className="mt-5 font-bold">{iAmBuyer ? t('Nabízím na výměnu') : t('Nabízí na výměnu')}</h2>
+            <h2 className="mt-6 text-xl font-bold text-fg">{iAmBuyer ? t('Nabízím na výměnu') : t('Nabízí na výměnu')}</h2>
             <RequestItems items={offered} />
           </>
         )}
@@ -98,18 +103,23 @@ export default async function RequestDetail({
 
       {/* Kontakt až po přijetí. */}
       {(req.status === 'ACCEPTED' || req.status === 'COMPLETED') && !other.bannedAt && (
-        <section className="rounded-panel border border-blue-200 bg-blue-50 p-5 dark:border-blue-500/30 dark:bg-blue-500/10">
-          <h2 className="font-bold">{t('Kontakt na {name}', { name: other.nickname })}</h2>
-          <p className="mt-2 text-sm">
+        <section className={`${panel} p-5`}>
+          <h2 className="flex items-center gap-3 text-xl font-bold text-fg">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
+              <Mail className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+            </span>
+            {t('Kontakt na {name}', { name: other.nickname })}
+          </h2>
+          <p className="mt-3 text-sm text-fg">
             {t('E-mail:')}{' '}
-            <a href={`mailto:${other.email}`} className="font-semibold underline">
+            <a href={`mailto:${other.email}`} className="font-semibold text-accent underline underline-offset-4">
               {other.email}
             </a>
             {other.isMinor && other.parentEmail && (
               <>
                 {' '}
                 · {t('rodič:')}{' '}
-                <a href={`mailto:${other.parentEmail}`} className="underline">
+                <a href={`mailto:${other.parentEmail}`} className="text-accent underline underline-offset-4">
                   {other.parentEmail}
                 </a>
               </>
@@ -169,15 +179,15 @@ export default async function RequestDetail({
       </div>
 
       {req.status === 'COMPLETED' && (
-        <section className="rounded-panel border border-line bg-card p-5">
-          <h2 className="font-bold">{t('Hodnocení')}</h2>
+        <section className={`${panel} p-5`}>
+          <h2 className="text-xl font-bold text-fg">{t('Hodnocení')}</h2>
           <ActionForm action={rateRequest} className="mt-3 flex flex-wrap items-end gap-3">
             <input type="hidden" name="requestId" value={req.id} />
             <label className="space-y-1 text-sm">
               <span className="block text-subtle">{t('Jak to proběhlo s {name}?', { name: other.nickname })}</span>
               <select name="positive" defaultValue={myRating ? (myRating.positive ? '1' : '0') : '1'} className={inputCls}>
-                <option value="1">👍 {t('Dobře')}</option>
-                <option value="0">👎 {t('Špatně')}</option>
+                <option value="1">{t('Dobře')}</option>
+                <option value="0">{t('Špatně')}</option>
               </select>
             </label>
             <label className="space-y-1 text-sm">
@@ -194,8 +204,13 @@ export default async function RequestDetail({
             <Submit>{myRating ? t('Upravit hodnocení') : t('Ohodnotit')}</Submit>
           </ActionForm>
           {theirRating && (
-            <p className="mt-3 text-sm text-subtle">
-              {t('{name} tě ohodnotil(a):', { name: other.nickname })} {theirRating.positive ? '👍' : '👎'}
+            <p className="mt-3 flex flex-wrap items-center gap-1 text-sm text-muted">
+              {t('{name} tě ohodnotil(a):', { name: other.nickname })}{' '}
+              {theirRating.positive ? (
+                <ThumbsUp className="h-4 w-4 text-positive" strokeWidth={1.75} role="img" aria-label={t('Kladná')} />
+              ) : (
+                <ThumbsDown className="h-4 w-4 text-danger" strokeWidth={1.75} role="img" aria-label={t('Záporná')} />
+              )}
               {theirRating.tag && ` · ${t(TAG_LABEL[theirRating.tag])}`}
             </p>
           )}

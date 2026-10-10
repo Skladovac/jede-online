@@ -7,7 +7,8 @@ import { ActionForm } from '@/components/ActionForm'
 import { Submit, inputCls } from '@/components/ui'
 import { RequestItems } from '@/components/RequestItems'
 import { getT } from '@/lib/i18n/server'
-import { EmptyState } from '@/components/design'
+import { EmptyState, panel } from '@/components/design'
+import { AlertTriangle, ArrowLeftRight, ShieldCheck } from 'lucide-react'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -46,16 +47,18 @@ export default async function CartPage() {
   return (
     <main className="mx-auto max-w-3xl space-y-8 px-4 py-10">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">{t('Košík')}</h1>
-        <p className="mt-2 text-sm text-muted">
+        <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Košík')}</h1>
+        <p className="mt-2 text-muted">
           {t('Každému sběrateli se posílá samostatná žádost o výměnu. Když ji přijme, uvidíte navzájem e-mail a domluvíte se na předání. Web neřeší platby ani dopravu.')}{' '}
-          <Link href="/bezpecny-obchod" className="font-medium underline">
-            🛡️ {t('Jak obchodovat bezpečně')}
+          <Link href="/bezpecny-obchod" className="inline-flex items-center gap-1 font-medium text-accent underline-offset-4 hover:underline">
+            <ShieldCheck className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+            {t('Jak obchodovat bezpečně')}
           </Link>
         </p>
       </div>
       {blocked && (
-        <p className="rounded-xl bg-accent-soft px-4 py-3 text-sm text-fg">
+        <p className="flex items-start gap-2.5 rounded-xl bg-[#fff6d6] px-4 py-3 text-sm text-[#7a5600] ring-1 ring-inset ring-[#f5e19a] dark:bg-[rgba(255,203,5,0.12)] dark:text-[#ffd95c] dark:ring-[rgba(255,203,5,0.3)]">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden />
           {blocked}
         </p>
       )}
@@ -76,8 +79,8 @@ export default async function CartPage() {
         ].filter((o) => !offeredIds.has(o.v))
         const hasTrade = wanted.some((i) => i.offerType === 'TRADE')
         return (
-          <section key={d.id} className="rounded-panel border border-line bg-card p-5">
-            <h2 className="text-lg font-bold">
+          <section key={d.id} className={`${panel} p-5`}>
+            <h2 className="text-xl font-bold text-fg">
               {t('Od')}{' '}
               <Link href={`/@${encodeURIComponent(d.to.nickname)}`} className="hover:underline">
                 {d.to.nickname}
@@ -90,14 +93,17 @@ export default async function CartPage() {
                 <ActionForm action={setCartQty} className="mt-1 flex items-center justify-end gap-2">
                   <input type="hidden" name="itemId" value={i.id} />
                   <input type="hidden" name="quantity" value={0} />
-                  <button className="text-xs text-red-600 underline">{t('Odebrat')}</button>
+                  <button className="min-h-8 text-xs text-danger underline underline-offset-2">{t('Odebrat')}</button>
                 </ActionForm>
               )}
             />
 
             {(hasTrade || offered.length > 0) && (
-              <div className="mt-5 rounded-xl bg-blue-50 p-4 dark:bg-blue-500/10">
-                <h3 className="text-sm font-semibold">{t('Na výměnu nabízím')}</h3>
+              <div className="mt-5 rounded-xl border border-line bg-surface p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-fg">
+                  <ArrowLeftRight className="h-4 w-4 text-accent" strokeWidth={1.75} aria-hidden />
+                  {t('Na výměnu nabízím')}
+                </h3>
                 {offered.length > 0 ? (
                   <RequestItems
                     items={offered}
@@ -105,7 +111,7 @@ export default async function CartPage() {
                       <ActionForm action={setCartQty} className="mt-1 flex justify-end">
                         <input type="hidden" name="itemId" value={i.id} />
                         <input type="hidden" name="quantity" value={0} />
-                        <button className="text-xs text-red-600 underline">{t('Odebrat')}</button>
+                        <button className="min-h-8 text-xs text-danger underline underline-offset-2">{t('Odebrat')}</button>
                       </ActionForm>
                     )}
                   />

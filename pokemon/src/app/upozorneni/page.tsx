@@ -5,7 +5,8 @@ import { getCurrentUser } from '@/lib/auth'
 import { MarkRead } from '@/components/MarkRead'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO, type TFunc } from '@/lib/i18n/config'
-import { EmptyState } from '@/components/design'
+import { Bell } from 'lucide-react'
+import { EmptyState, panel } from '@/components/design'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -33,21 +34,21 @@ export default async function NotificationsPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-3xl font-black tracking-tight">{t('Upozornění')}</h1>
+      <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Upozornění')}</h1>
       <MarkRead unread={unread} />
       {list.length ? (
-        <ul className="mt-6 divide-y divide-line overflow-hidden rounded-panel border border-line bg-card">
+        <ul className={`mt-6 divide-y divide-line overflow-hidden ${panel}`}>
           {list.map((n) => {
             const inner = (
               <div className={`flex gap-3 px-4 py-3 ${n.readAt ? '' : 'bg-accent-soft'}`}>
-                <span className="text-xl" aria-hidden>
-                  {n.icon ?? '🔔'}
+                <span className="grid h-7 w-7 shrink-0 place-items-center text-xl" aria-hidden>
+                  {n.icon ?? <Bell className="h-5 w-5 text-accent" strokeWidth={1.75} aria-hidden />}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className={`text-sm ${n.readAt ? '' : 'font-semibold'}`}>{n.title}</p>
-                  {n.body && <p className="truncate text-xs text-subtle">{n.body}</p>}
+                  <p className={`text-sm text-fg ${n.readAt ? '' : 'font-semibold'}`}>{n.title}</p>
+                  {n.body && <p className="truncate text-xs text-muted">{n.body}</p>}
                 </div>
-                <span className="shrink-0 text-xs text-subtle">{ago(n.createdAt, t, intl)}</span>
+                <span className="shrink-0 font-mono text-xs text-subtle">{ago(n.createdAt, t, intl)}</span>
               </div>
             )
             return (
@@ -66,7 +67,7 @@ export default async function NotificationsPage() {
       ) : (
         <EmptyState className="mt-6">{t('Zatím žádná upozornění. Přijdou sem nové žádosti o výměnu, odpovědi, hodnocení a shody.')}</EmptyState>
       )}
-      <p className="mt-4 text-xs text-subtle">{t('Upozornění starší než 90 dní mažeme. E-maily nastavíš v Můj účet.')}</p>
+      <p className="mt-4 text-xs text-muted">{t('Upozornění starší než 90 dní mažeme. E-maily nastavíš v Můj účet.')}</p>
     </main>
   )
 }

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin'
+import { panel, panelInteractive } from '@/components/design'
 
 export default async function AdminHome() {
   // Kontrola i na stránce, ne jen v layoutu (Next může layout při částečném vykreslení přeskočit).
@@ -44,10 +45,10 @@ export default async function AdminHome() {
   const Tile = ({ label, value, href, warn }: { label: string; value: number; href?: string; warn?: boolean }) => {
     const body = (
       <div
-        className={`rounded-panel border p-4 ${warn && value > 0 ? 'border-red-300 bg-red-50 dark:border-red-500/40 dark:bg-red-500/10' : 'border-line bg-card'}`}
+        className={`${href ? panelInteractive : panel} h-full px-4 py-3.5 ${warn && value > 0 ? '!border-[color-mix(in_srgb,var(--danger)_40%,transparent)] !bg-[color-mix(in_srgb,var(--danger)_8%,transparent)]' : ''}`}
       >
-        <p className="text-xs text-subtle">{label}</p>
-        <p className="text-2xl font-black tabular-nums">{value.toLocaleString('cs-CZ')}</p>
+        <p className="eyebrow !text-[10.5px]">{label}</p>
+        <p className={`mt-1.5 font-display text-[26px] font-bold leading-tight tabular-nums ${warn && value > 0 ? 'text-danger' : 'text-fg'}`}>{value.toLocaleString('cs-CZ')}</p>
       </div>
     )
     return href ? <Link href={href}>{body}</Link> : body
@@ -55,9 +56,9 @@ export default async function AdminHome() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-black tracking-tight">Přehled</h1>
+      <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">Přehled</h1>
       <section>
-        <h2 className="mb-3 font-bold">Uživatelé</h2>
+        <h2 className="mb-3 text-xl font-bold text-fg">Uživatelé</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
           <Tile label="Celkem" value={users} href="/admin/uzivatele" />
           <Tile label="Dětí" value={minors} href="/admin/uzivatele?filtr=deti" />
@@ -69,7 +70,7 @@ export default async function AdminHome() {
         </div>
       </section>
       <section>
-        <h2 className="mb-3 font-bold">Aktivita</h2>
+        <h2 className="mb-3 text-xl font-bold text-fg">Aktivita</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
           <Tile label="Nabídky karet" value={cardOffers} />
           <Tile label="Nabídky produktů" value={productOffers} />
@@ -81,25 +82,25 @@ export default async function AdminHome() {
         </div>
       </section>
       <section>
-        <h2 className="mb-3 font-bold">K vyřízení</h2>
+        <h2 className="mb-3 text-xl font-bold text-fg">K vyřízení</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Tile label="Otevřená nahlášení" value={openReports} href="/admin/nahlaseni" warn />
           <Tile label="Nové chyby" value={newBugs} href="/admin/chyby" warn />
         </div>
       </section>
       <section>
-        <h2 className="mb-3 font-bold">Poslední registrace</h2>
-        <ul className="divide-y divide-line rounded-panel border border-line bg-card text-sm">
+        <h2 className="mb-3 text-xl font-bold text-fg">Poslední registrace</h2>
+        <ul className={`divide-y divide-line overflow-hidden ${panel} text-sm`}>
           {recentUsers.map((u) => (
             <li key={u.id}>
               <Link href={`/admin/uzivatele/${u.id}`} className="flex justify-between gap-3 px-4 py-2 hover:bg-card-hover">
-                <span className="font-medium">
+                <span className="font-semibold text-fg">
                   {u.nickname}
                   {u.isMinor && (
-                    <span className="ml-2 text-xs text-subtle">dítě{u.parentConsentAt ? '' : ' · čeká na rodiče'}</span>
+                    <span className="ml-2 text-xs text-muted">dítě{u.parentConsentAt ? '' : ' · čeká na rodiče'}</span>
                   )}
                 </span>
-                <span className="text-subtle">{u.createdAt.toLocaleString('cs-CZ')}</span>
+                <span className="tabular-nums text-muted">{u.createdAt.toLocaleString('cs-CZ')}</span>
               </Link>
             </li>
           ))}

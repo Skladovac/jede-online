@@ -19,6 +19,8 @@ import { AddToCart } from '@/components/AddToCart'
 import { ensureEurCzk } from '@/lib/fx'
 import { getT } from '@/lib/i18n/server'
 import { BadgeIcon } from '@/components/Badges'
+import { EmptyState, panel } from '@/components/design'
+import { ArrowLeft, Plus, Star } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,11 +74,12 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <Link href={p.set ? `/sady/${encodeURIComponent(p.set.id)}?tab=produkty` : '/produkty'} className="text-sm text-subtle hover:underline">
-        ← {p.set ? p.set.name : t('Produkty')}
+      <Link href={p.set ? `/sady/${encodeURIComponent(p.set.id)}?tab=produkty` : '/produkty'} className="inline-flex items-center gap-1 text-sm text-subtle hover:underline">
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+        {p.set ? p.set.name : t('Produkty')}
       </Link>
       <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,360px)_1fr]">
-        <div className="mx-auto grid aspect-square w-full max-w-[360px] place-items-center overflow-hidden rounded-panel border border-line bg-card p-4">
+        <div className="mx-auto grid aspect-square w-full max-w-[360px] place-items-center overflow-hidden rounded-[18px] border border-line bg-card p-4 shadow-soft">
           {img ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={img} alt={p.name} className="max-h-full max-w-full object-contain" />
@@ -92,7 +95,7 @@ export default async function ProductPage({ params }: Props) {
           )}
         </div>
         <div>
-          <h1 className="text-3xl font-black tracking-tight">{p.name}</h1>
+          <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{p.name}</h1>
           <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
             <dt className="text-subtle">{t('Typ')}</dt>
             <dd>{t(KIND_LABEL[p.kind])}</dd>
@@ -100,7 +103,7 @@ export default async function ProductPage({ params }: Props) {
               <>
                 <dt className="text-subtle">{t('Sada')}</dt>
                 <dd>
-                  <Link href={`/sady/${encodeURIComponent(p.set.id)}`} className="font-medium hover:underline">
+                  <Link href={`/sady/${encodeURIComponent(p.set.id)}`} className="font-semibold text-accent underline-offset-4 hover:underline">
                     {p.set.name}
                   </Link>
                 </dd>
@@ -115,9 +118,9 @@ export default async function ProductPage({ params }: Props) {
               </>
             )}
           </dl>
-          <section className="mt-8 rounded-panel border border-line bg-card p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-subtle">{t('Orientační cena')}</h2>
-            <p className="mt-3 text-2xl font-bold">{price ? `≈ ${price}` : t('Cena zatím není k dispozici.')}</p>
+          <section className={`mt-8 ${panel} p-5`}>
+            <h2 className="eyebrow">{t('Orientační cena')}</h2>
+            <p className="mt-3 font-display text-3xl font-bold tabular-nums text-fg">{price ? `≈ ${price}` : t('Cena zatím není k dispozici.')}</p>
             {p.priceStats && (
               <div className="mt-5 border-t border-line pt-4">
                 <PriceStatsTable stats={p.priceStats as PriceStats} title="Cardmarket" />
@@ -132,11 +135,14 @@ export default async function ProductPage({ params }: Props) {
       {viewer ? (
         <section className="mt-8 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-bold">{t('Moje sbírka')}</h2>
+            <h2 className="text-2xl font-bold text-fg">{t('Moje sbírka')}</h2>
             {!mine.length && (
               <ActionForm action={toggleProductWant} className="flex items-center gap-2">
                 <input type="hidden" name="productId" value={p.id} />
-                <Submit variant={want ? 'primary' : 'ghost'}>{want ? `★ ${t('Sháním')}` : `☆ ${t('Sháním')}`}</Submit>
+                <Submit variant={want ? 'primary' : 'ghost'}>
+                  <Star className="h-4 w-4" strokeWidth={1.75} fill={want ? 'currentColor' : 'none'} aria-hidden />
+                  {t('Sháním')}
+                </Submit>
               </ActionForm>
             )}
           </div>
@@ -145,8 +151,15 @@ export default async function ProductPage({ params }: Props) {
             <ProductItemForm key={i.id} productId={p.id} item={i} />
           ))}
           <details open={!mine.length}>
-            <summary className="cursor-pointer text-sm font-medium text-accent">
-              {mine.length ? `+ ${t('Přidat v jiném jazyce')}` : t('Přidat do sbírky / nabídnout')}
+            <summary className="cursor-pointer text-sm font-semibold text-accent">
+              {mine.length ? (
+                <span className="inline-flex items-center gap-1">
+                  <Plus className="h-4 w-4" strokeWidth={2} aria-hidden />
+                  {t('Přidat v jiném jazyce')}
+                </span>
+              ) : (
+                t('Přidat do sbírky / nabídnout')
+              )}
             </summary>
             <div className="mt-3">
               <ProductItemForm
@@ -168,24 +181,22 @@ export default async function ProductPage({ params }: Props) {
       <ProductBuyers productId={p.id} />
 
       <section className="mt-10">
-        <h2 className="text-xl font-bold">{t('Kdo ho nabízí')}</h2>
+        <h2 className="text-2xl font-bold text-fg">{t('Kdo ho nabízí')}</h2>
         {offers.length === 0 ? (
-          <p className="mt-3 rounded-panel border border-dashed border-line-strong p-6 text-center text-subtle">
-            {t('Zatím ho nikdo nenabízí.')}
-          </p>
+          <EmptyState className="mt-4">{t('Zatím ho nikdo nenabízí.')}</EmptyState>
         ) : (
-          <ul className="mt-3 divide-y divide-line overflow-hidden rounded-panel border border-line bg-card">
+          <ul className={`mt-4 divide-y divide-line overflow-hidden ${panel}`}>
             {offers.map((o) => (
               <li key={o.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <Link href={`/@${encodeURIComponent(o.user.nickname)}`} className="font-semibold hover:underline">
+                  <Link href={`/@${encodeURIComponent(o.user.nickname)}`} className="font-semibold text-fg hover:underline">
                     {o.user.nickname}
                   </Link>{' '}
                 <BadgeIcon nickname={o.user.nickname} />
                   {viewer && viewer.id !== o.userId && (
                     <Link
                       href={`/@${encodeURIComponent(o.user.nickname)}?nahlasit=1#nahlasit`}
-                      className="ml-2 text-xs text-subtle hover:text-red-600 hover:underline"
+                      className="ml-2 text-xs text-subtle hover:text-danger hover:underline"
                     >
                       {t('nahlásit')}
                     </Link>
@@ -196,7 +207,7 @@ export default async function ProductPage({ params }: Props) {
                     {o.note && <span className="italic"> · „{o.note}“</span>}
                   </p>
                 </div>
-                <span className="flex items-center gap-3 font-semibold">
+                <span className="flex items-center gap-3 font-semibold tabular-nums text-fg">
                   {o.offerType === 'SELL' && o.priceCzk != null
                     ? `${o.priceCzk.toLocaleString('cs-CZ')} Kč`
                     : o.offerType === 'GIFT'

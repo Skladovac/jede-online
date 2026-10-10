@@ -8,6 +8,10 @@ import { prisma } from '@/lib/prisma'
 import { ratingSummary } from '@/lib/ratings'
 import { getT } from '@/lib/i18n/server'
 import { BadgeIcon } from '@/components/Badges'
+import { btnInk, panel } from '@/components/design'
+import { ArrowRight, ThumbsDown, ThumbsUp } from 'lucide-react'
+
+const arrowLink = 'inline-flex items-center gap-1 font-semibold text-accent underline-offset-4 hover:underline'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -32,40 +36,52 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="text-3xl font-black tracking-tight">{t('Najdi sběratele')}</h1>
+      <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Najdi sběratele')}</h1>
       <p className="mt-2 text-muted">
         {t('Lidé, kteří mají nejvíc z toho, co ti chybí. Napřed ti, se kterými jde udělat výměnu oběma směry.')}
       </p>
 
-      <section className="mt-6 rounded-panel border-2 border-dashed border-accent bg-accent-soft p-4">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg">{t('Takhle tě vidí ostatní')}</p>
+      <section className={`${panel} mt-6 p-5`}>
+        <p className="eyebrow mb-3">{t('Takhle tě vidí ostatní')}</p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-yellow-400 font-black text-slate-900">
+          <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--ink)] font-extrabold text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
             {user.nickname.slice(0, 1).toUpperCase()}
           </span>
-          <span className="font-bold">{user.nickname}</span>
+          <span className="font-bold text-fg">{user.nickname}</span>
           <BadgeIcon nickname={user.nickname} />
-          <span className="text-xs text-subtle">
+          <span className="inline-flex flex-wrap items-center gap-x-1 text-xs tabular-nums text-subtle">
             {[user.city, user.region, t(COUNTRY_LABEL[user.country])].filter(Boolean).join(', ')}
-            {summary.total > 0 ? ` · 👍 ${summary.pos} · 👎 ${summary.neg}` : ` · ${t('zatím bez hodnocení')}`}
+            {summary.total > 0 ? (
+              <>
+                {' · '}
+                <ThumbsUp className="h-3.5 w-3.5 text-positive" strokeWidth={1.75} role="img" aria-label={t('Kladná')} /> {summary.pos} ·{' '}
+                <ThumbsDown className="h-3.5 w-3.5 text-danger" strokeWidth={1.75} role="img" aria-label={t('Záporná')} /> {summary.neg}
+              </>
+            ) : (
+              ` · ${t('zatím bez hodnocení')}`
+            )}
           </span>
         </div>
         <p className="mt-2 text-sm text-muted">
           {t('Nabízíš {offers} · chybí ti {wanted}', { offers: offerCount, wanted: mine.wantCards.length + mine.wantProducts.length })}
           {buyCount > 0 && ` · ${t('chceš koupit {count}', { count: buyCount })}`}
         </p>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
-          <Link href={`/@${nick}`} className="text-accent hover:underline">
-            {t('Můj veřejný profil →')}
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+          <Link href={`/@${nick}`} className={arrowLink}>
+            {t('Můj veřejný profil')}
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
-          <Link href={`/@${nick}/hodnoceni`} className="text-accent hover:underline">
-            {t('Moje hodnocení →')}
+          <Link href={`/@${nick}/hodnoceni`} className={arrowLink}>
+            {t('Moje hodnocení')}
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
-          <Link href={`/@${nick}?ukaz=hledam`} className="text-accent hover:underline">
-            {t('Co hledám (sdílet) →')}
+          <Link href={`/@${nick}?ukaz=hledam`} className={arrowLink}>
+            {t('Co hledám (sdílet)')}
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
-          <Link href="/ucet#pozvi" className="text-accent hover:underline">
-            {t('Pozvi kamaráda →')}
+          <Link href="/ucet#pozvi" className={arrowLink}>
+            {t('Pozvi kamaráda')}
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
         {!user.region && (
@@ -80,14 +96,14 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
       </section>
 
       <form className="mt-6 flex flex-wrap items-center gap-2 text-sm">
-        <label htmlFor="kde" className="font-medium">
+        <label htmlFor="kde" className="font-medium text-fg">
           {t('Kde:')}
         </label>
         <select
           id="kde"
           name="kde"
           defaultValue={key}
-          className="rounded-lg border border-line-strong bg-card px-3 py-1.5"
+          className="min-h-11 rounded-xl border border-line-strong bg-card px-3 py-2 text-fg"
         >
           <option value="vse">{t('Celé Česko a Slovensko')}</option>
           {(['CZ', 'SK'] as const).map((c) => (
@@ -102,9 +118,7 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
             </optgroup>
           ))}
         </select>
-        <button className="rounded-full bg-accent-strong px-4 py-1.5 font-semibold text-on-accent">
-          {t('Hledat')}
-        </button>
+        <button className={btnInk}>{t('Hledat')}</button>
       </form>
 
       <div className="mt-8">

@@ -7,6 +7,8 @@ import { KIND_LABEL } from '@/lib/products'
 import { ProductTile } from '@/components/ProductTile'
 import { PriceNote } from '@/components/PriceNote'
 import { getT } from '@/lib/i18n/server'
+import { EmptyState, btnPrimary } from '@/components/design'
+import { ArrowLeft, ArrowRight, Search } from 'lucide-react'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
@@ -63,11 +65,11 @@ export default async function ProductsPage({
     return `/produkty${p.size ? `?${p}` : ''}`
   }
   const chip = (active: boolean) =>
-    `rounded-full px-3 py-1 text-sm ${active ? 'bg-accent-strong text-on-accent' : 'border border-line-strong'}`
+    `inline-flex min-h-9 items-center rounded-full px-3.5 py-1 text-sm font-semibold transition ${active ? 'bg-[var(--ink)] text-white dark:bg-white dark:text-[var(--ink)]' : 'text-muted shadow-[inset_0_0_0_1px_var(--border-strong)] hover:text-fg'}`
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-3xl font-black tracking-tight">{t('Zapečetěné produkty')}</h1>
+      <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Zapečetěné produkty')}</h1>
       <p className="mt-2 text-muted">
         {t('Boostery, Elite Trainer Boxy, tins, kolekce a mince.')} {t('{n} produktů.', { n: total.toLocaleString('cs-CZ') })}
       </p>
@@ -79,9 +81,10 @@ export default async function ProductsPage({
           name="q"
           defaultValue={q}
           placeholder={t('Hledat produkt: Prismatic Evolutions ETB…')}
-          className="w-full max-w-md rounded-full border border-line-strong bg-card px-4 py-2 text-sm"
+          className="min-h-11 w-full max-w-md rounded-xl border border-line-strong bg-card px-4 py-2 text-base text-fg outline-none placeholder:text-subtle focus:border-brand-blue focus:ring-4 focus:ring-[rgba(42,117,187,0.15)]"
         />
-        <button className="rounded-full bg-accent-strong px-4 py-2 text-sm font-semibold text-on-accent">
+        <button className={btnPrimary}>
+          <Search strokeWidth={1.75} aria-hidden />
           {t('Hledat')}
         </button>
       </form>
@@ -109,16 +112,26 @@ export default async function ProductsPage({
           ))}
         </ul>
       ) : (
-        <p className="mt-8 text-subtle">{t('Nic jsme nenašli.')}</p>
+        <EmptyState className="mt-8">{t('Nic jsme nenašli.')}</EmptyState>
       )}
 
       {total > PAGE && (
         <div className="mt-8 flex items-center justify-center gap-4 text-sm">
-          {page > 1 && <Link href={href({ strana: String(page - 1) })}>← {t('Předchozí')}</Link>}
-          <span className="text-subtle">
+          {page > 1 && (
+            <Link href={href({ strana: String(page - 1) })} className="inline-flex min-h-11 items-center gap-1 font-semibold text-accent">
+              <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+              {t('Předchozí')}
+            </Link>
+          )}
+          <span className="font-mono tabular-nums text-subtle">
             {page} / {Math.ceil(total / PAGE)}
           </span>
-          {page * PAGE < total && <Link href={href({ strana: String(page + 1) })}>{t('Další')} →</Link>}
+          {page * PAGE < total && (
+            <Link href={href({ strana: String(page + 1) })} className="inline-flex min-h-11 items-center gap-1 font-semibold text-accent">
+              {t('Další')}
+              <ArrowRight className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+            </Link>
+          )}
         </div>
       )}
       <PriceNote className="mt-8" />

@@ -24,15 +24,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-line pb-3">
-        <span className="mr-2 rounded-full bg-red-600 px-2.5 py-0.5 text-xs font-bold uppercase text-white">Admin</span>
+        <span className="eyebrow mr-2 rounded-full bg-brand-red px-2.5 py-0.5 !text-white">Admin</span>
         {nav.map(([href, label, n]) => (
           <Link
             key={href}
             href={href}
-            className="rounded-full px-3 py-1.5 text-sm font-medium hover:bg-card-hover"
+            className="inline-flex min-h-9 items-center rounded-full px-3 py-1.5 text-sm font-semibold text-fg hover:bg-card-hover"
           >
             {label}
-            {!!n && <span className="ml-1.5 rounded-full bg-red-600 px-1.5 text-xs text-white">{n}</span>}
+            {!!n && <span className="ml-1.5 rounded-full bg-brand-red px-1.5 text-xs font-bold text-white tabular-nums">{n}</span>}
           </Link>
         ))}
       </div>

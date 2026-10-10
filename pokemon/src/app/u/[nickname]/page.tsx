@@ -23,6 +23,8 @@ import { BadgeIcon, BadgeShelf } from '@/components/Badges'
 import { refreshBadges } from '@/lib/badges'
 import { FollowButton } from '@/components/Social'
 import { CopyLink } from '@/components/CopyLink'
+import { panel } from '@/components/design'
+import { ArrowUpRight, Eye, Gift, Link2, Search, Tag, ThumbsDown, ThumbsUp } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -94,38 +96,40 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex items-center gap-4">
-        <span className="grid h-16 w-16 place-items-center rounded-full bg-yellow-400 text-2xl font-black text-slate-900">
+        <span aria-hidden className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[var(--ink)] text-2xl font-extrabold text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
           {user.nickname.slice(0, 1).toUpperCase()}
         </span>
         <div>
-          <h1 className="flex items-center gap-2 text-3xl font-black tracking-tight">
+          <h1 className="flex items-center gap-2 text-4xl font-extrabold text-fg sm:text-[44px]">
             {user.nickname}
             <BadgeIcon nickname={user.nickname} />
           </h1>
-          <p className="text-sm text-subtle">
+          <p className="mt-1 text-sm text-muted">
             {[user.city, user.region, t(COUNTRY_LABEL[user.country])].filter(Boolean).join(', ')} · {t('členem od')}{' '}
             {user.createdAt.toLocaleDateString(LOCALE_INFO[locale].intl, { month: 'numeric', year: 'numeric' })}
           </p>
-          <p className="mt-1 text-sm">
+          <p className="mt-1 flex flex-wrap items-center gap-x-1 text-sm tabular-nums text-fg">
             {completed} {completed === 1 ? t('dokončená výměna') : completed >= 2 && completed <= 4 ? t('dokončené výměny') : t('dokončených výměn')}
             {pos + neg > 0 && (
               <>
                 {' '}
-                · 👍 {pos} · 👎 {neg} ({t('{percent} % kladných', { percent: Math.round((pos / (pos + neg)) * 100) })})
+                · <ThumbsUp className="h-4 w-4 text-positive" strokeWidth={1.75} role="img" aria-label={t('Kladná')} /> {pos} ·{' '}
+                <ThumbsDown className="h-4 w-4 text-danger" strokeWidth={1.75} role="img" aria-label={t('Záporná')} /> {neg} (
+                {t('{percent} % kladných', { percent: Math.round((pos / (pos + neg)) * 100) })})
               </>
             )}{' '}
             ·{' '}
-            <Link href={`/@${encodeURIComponent(user.nickname)}/hodnoceni`} className="font-medium text-accent underline">
+            <Link href={`/@${encodeURIComponent(user.nickname)}/hodnoceni`} className="font-semibold text-accent underline underline-offset-4">
               {pos + neg > 0 ? t('Zobrazit hodnocení') : t('Ohodnotit')}
             </Link>
           </p>
-          <p className="mt-1 text-sm text-subtle">
-            👀 {t('Sledujících: {count}', { count: followers })}
+          <p className="mt-1 flex flex-wrap items-center gap-x-1 text-sm text-muted">
+            <Eye className="h-4 w-4" strokeWidth={1.75} aria-hidden /> {t('Sledujících: {count}', { count: followers })}
             {inviter && (
               <>
                 {' '}
-                · 🎁 {t('Pozval(a):')}{' '}
-                <Link href={`/@${encodeURIComponent(inviter.nickname)}`} className="underline">
+                · <Gift className="h-4 w-4" strokeWidth={1.75} aria-hidden /> {t('Pozval(a):')}{' '}
+                <Link href={`/@${encodeURIComponent(inviter.nickname)}`} className="underline underline-offset-4 hover:text-fg">
                   {inviter.nickname}
                 </Link>
               </>
@@ -148,9 +152,10 @@ export default async function ProfilePage({ params, searchParams }: Props) {
               href={v}
               target="_blank"
               rel="noopener noreferrer nofollow ugc"
-              className="rounded-full border border-line-strong px-3 py-1 text-sm hover:border-line-strong"
+              className="inline-flex min-h-9 items-center gap-1 rounded-full border border-line-strong bg-card px-3 py-1 text-sm font-medium text-fg transition-colors hover:bg-card-hover"
             >
-              {k} ↗
+              {k}
+              <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} aria-hidden />
             </a>
           ))}
         </div>
@@ -171,15 +176,26 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           // Přepínač Nabízím / Hledám: výchozí je to, co má uživatel neprázdné (nabídky napřed). Volba je v URL, jde sdílet.
           const counts = { nabizim: overview.offers.length + overview.productItems.filter((i) => i.spareQty > 0 && i.offerType).length, hledam: overview.wanted.length + overview.productWants.length }
           const view = ukaz === 'hledam' || ukaz === 'nabizim' ? ukaz : counts.nabizim || !counts.hledam ? 'nabizim' : 'hledam'
-          const tab = (id: 'nabizim' | 'hledam', label: string, active: string, idle: string) => (
+          const tab = (id: 'nabizim' | 'hledam', label: string, Icon: typeof Tag) => (
             <Link
               href={`/@${encodeURIComponent(user.nickname)}?ukaz=${id}#karty`}
               scroll={false}
               aria-current={view === id ? 'page' : undefined}
-              className={`flex-1 rounded-panel px-4 py-4 text-center text-lg font-black transition sm:text-xl ${view === id ? active : idle}`}
+              className={`flex flex-1 items-center justify-center gap-2.5 rounded-[18px] px-4 py-4 text-center font-display text-lg font-bold transition duration-200 sm:text-xl ${
+                view === id
+                  ? 'bg-[var(--ink)] text-white shadow-[0_10px_24px_-12px_rgba(14,27,46,0.7)] dark:bg-brand-yellow dark:text-[var(--ink)]'
+                  : 'border border-line-strong bg-card text-fg hover:-translate-y-0.5 hover:bg-card-hover'
+              }`}
             >
+              <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
               {label}
-              <span className="ml-2 rounded-full bg-black/10 px-2 py-0.5 text-sm font-bold dark:bg-white/15">{counts[id]}</span>
+              <span
+                className={`rounded-full px-2 py-0.5 font-sans text-sm font-bold tabular-nums ${
+                  view === id ? 'bg-brand-yellow text-[var(--ink)] dark:bg-[var(--ink)] dark:text-brand-yellow' : 'bg-surface text-muted'
+                }`}
+              >
+                {counts[id]}
+              </span>
             </Link>
           )
           // Majitel vidí „Nabízím / Hledám“, ostatní „Nabízí / Hledá“.
@@ -187,16 +203,17 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           return (
             <>
               {own && (
-                <div className="mb-4 rounded-panel border border-line bg-card p-4 shadow-soft">
-                  <p className="mb-2 text-sm font-semibold text-fg">
-                    🔗 {t('Sdílej svůj profil — kdo odkaz otevře, uvidí přepínač Nabízí / Hledá:')}
+                <div className={`${panel} mb-4 p-4`}>
+                  <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-fg">
+                    <Link2 className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
+                    {t('Sdílej svůj profil — kdo odkaz otevře, uvidí přepínač Nabízí / Hledá:')}
                   </p>
                   <CopyLink url={`https://pokemon.jede.online/@${encodeURIComponent(user.nickname)}`} title={t('Co nabízím a co hledám')} />
                 </div>
               )}
               <div className="mb-8 flex gap-3">
-                {tab('nabizim', `🏷️ ${own ? t('Nabízím') : t('Nabízí')}`, 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-200 dark:ring-blue-500/30', 'border-2 border-blue-200 bg-card text-blue-700 hover:bg-blue-50 dark:border-blue-500/30 dark:text-blue-300')}
-                {tab('hledam', `🔍 ${own ? t('Hledám') : t('Hledá')}`, 'bg-orange-500 text-white shadow-lg ring-4 ring-orange-200 dark:ring-orange-500/30', 'border-2 border-orange-200 bg-card text-orange-700 hover:bg-orange-50 dark:border-orange-500/30 dark:text-orange-300')}
+                {tab('nabizim', own ? t('Nabízím') : t('Nabízí'), Tag)}
+                {tab('hledam', own ? t('Hledám') : t('Hledá'), Search)}
               </div>
               <CollectionOverview data={overview} own={false} view={view} />
             </>
@@ -206,7 +223,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
 
       {viewer && viewer.id !== user.id && (
         <details id="nahlasit" className="mt-12 text-sm" open={!!(await searchParams)?.nahlasit}>
-          <summary className="cursor-pointer text-subtle underline">{t('Nahlásit uživatele')}</summary>
+          <summary className="cursor-pointer text-subtle underline underline-offset-4 hover:text-fg">{t('Nahlásit uživatele')}</summary>
           <ActionForm action={reportUser} className="mt-3 max-w-lg space-y-3">
             <input type="hidden" name="againstId" value={user.id} />
             <textarea

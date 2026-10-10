@@ -5,6 +5,8 @@ import { saveCardBuy, saveProductBuy } from '@/app/actions/buy'
 import { Alert, inputCls } from '@/components/ui'
 import { CONDITION_LABEL, LANGS, VARIANT_LABEL } from '@/lib/labels'
 import { useT } from '@/lib/i18n/client'
+import { btnBlue, panel } from '@/components/design'
+import { Coins } from 'lucide-react'
 
 const small = inputCls.replace('py-2.5', 'py-2') + ' text-sm'
 
@@ -16,20 +18,23 @@ export function CardBuyForm({ cardId, variants, want }: { cardId: string; varian
   const [state, action, pending] = useActionState(saveCardBuy, undefined)
   const [buy, setBuy] = useState(want?.buy ?? false)
   return (
-    <form action={action} className="space-y-3 rounded-panel border-2 border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-500/40 dark:bg-emerald-500/10">
+    <form action={action} className={`space-y-3 ${panel} p-5`}>
       <input type="hidden" name="cardId" value={cardId} />
-      <label className="flex items-center gap-2 font-semibold text-emerald-900 dark:text-emerald-200">
-        <input type="checkbox" name="buy" checked={buy} onChange={(e) => setBuy(e.target.checked)} className="h-4 w-4" />
-        💰 {t('Chci koupit')}
+      <label className="flex items-center gap-3 font-bold text-fg">
+        <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
+          <Coins className="h-[18px] w-[18px]" strokeWidth={1.75} />
+        </span>
+        <input type="checkbox" name="buy" checked={buy} onChange={(e) => setBuy(e.target.checked)} className="h-4 w-4 accent-[var(--positive)]" />
+        {t('Chci koupit')}
       </label>
       {buy && (
         <>
           <label className="block space-y-1 text-sm">
-            <span className="text-emerald-900/80 dark:text-emerald-200/80">{t('Zaplatím nejvýš (Kč, nepovinné)')}</span>
+            <span className="text-muted">{t('Zaplatím nejvýš (Kč, nepovinné)')}</span>
             <input name="maxPriceCzk" inputMode="numeric" defaultValue={want?.maxPriceCzk ?? ''} placeholder={t('např. {n}', { n: 150 })} className={small + ' max-w-[10rem]'} />
           </label>
           <details className="text-sm">
-            <summary className="cursor-pointer text-emerald-800 dark:text-emerald-300">{t('Podrobnosti (varianta, stav, jazyk)')}</summary>
+            <summary className="cursor-pointer font-semibold text-accent">{t('Podrobnosti (varianta, stav, jazyk)')}</summary>
             <div className="mt-2 grid gap-2 sm:grid-cols-3">
               <label className="space-y-1 text-xs">
                 <span className="text-subtle">{t('Varianta')}</span>
@@ -63,14 +68,14 @@ export function CardBuyForm({ cardId, variants, want }: { cardId: string; varian
               </label>
             </div>
           </details>
-          <p className="text-xs text-emerald-900/70 dark:text-emerald-200/70">
+          <p className="text-xs text-subtle">
             {t('Poptávku uvidí ostatní u karty i na tvém profilu. Kdo kartu nabízí, dostane upozornění.')}
           </p>
         </>
       )}
       <button
         disabled={pending}
-        className="rounded-full bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+        className={`${btnBlue} text-sm disabled:opacity-50`}
       >
         {pending ? t('Ukládám…') : t('Uložit')}
       </button>
@@ -85,21 +90,24 @@ export function ProductBuyForm({ productId, want }: { productId: number; want: {
   const [state, action, pending] = useActionState(saveProductBuy, undefined)
   const [buy, setBuy] = useState(want?.buy ?? false)
   return (
-    <form action={action} className="space-y-3 rounded-panel border-2 border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-500/40 dark:bg-emerald-500/10">
+    <form action={action} className={`space-y-3 ${panel} p-5`}>
       <input type="hidden" name="productId" value={productId} />
-      <label className="flex items-center gap-2 font-semibold text-emerald-900 dark:text-emerald-200">
-        <input type="checkbox" name="buy" checked={buy} onChange={(e) => setBuy(e.target.checked)} className="h-4 w-4" />
-        💰 {t('Chci koupit')}
+      <label className="flex items-center gap-3 font-bold text-fg">
+        <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
+          <Coins className="h-[18px] w-[18px]" strokeWidth={1.75} />
+        </span>
+        <input type="checkbox" name="buy" checked={buy} onChange={(e) => setBuy(e.target.checked)} className="h-4 w-4 accent-[var(--positive)]" />
+        {t('Chci koupit')}
       </label>
       {buy && (
         <label className="block space-y-1 text-sm">
-          <span className="text-emerald-900/80 dark:text-emerald-200/80">{t('Zaplatím nejvýš (Kč, nepovinné)')}</span>
+          <span className="text-muted">{t('Zaplatím nejvýš (Kč, nepovinné)')}</span>
           <input name="maxPriceCzk" inputMode="numeric" defaultValue={want?.maxPriceCzk ?? ''} placeholder={t('např. {n}', { n: 1200 })} className={small + ' max-w-[10rem]'} />
         </label>
       )}
       <button
         disabled={pending}
-        className="rounded-full bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+        className={`${btnBlue} text-sm disabled:opacity-50`}
       >
         {pending ? t('Ukládám…') : t('Uložit')}
       </button>

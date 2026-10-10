@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { CONDITION_LABEL, VARIANT_LABEL } from '@/lib/labels'
 import { getT } from '@/lib/i18n/server'
 import { BadgeIcon } from '@/components/Badges'
+import { EmptyState, panel } from '@/components/design'
+import { Coins } from 'lucide-react'
 
 const visibleUser = { bannedAt: null, OR: [{ isMinor: false }, { parentConsentAt: { not: null } }] }
 
@@ -18,30 +20,33 @@ async function BuyersList({ rows, kind }: { rows: Row[]; kind: 'card' | 'product
   const card = kind === 'card'
   return (
     <section className="mt-10">
-      <h2 className="text-xl font-bold">💰 {t('Chtějí koupit ({n})', { n: rows.length })}</h2>
+      <h2 className="flex items-center gap-2 text-2xl font-bold text-fg">
+        <Coins className="h-5 w-5 text-positive" strokeWidth={1.75} aria-hidden />
+        {t('Chtějí koupit ({n})', { n: rows.length })}
+      </h2>
       {rows.length === 0 ? (
-        <p className="mt-3 rounded-panel border border-dashed border-line-strong p-6 text-center text-subtle">
+        <EmptyState className="mt-4">
           {card ? t('Zatím kartu nikdo nepoptává.') : t('Zatím produkt nikdo nepoptává.')}
-        </p>
+        </EmptyState>
       ) : (
         <>
-          <p className="mt-1 text-sm text-subtle">
+          <p className="mt-1 text-sm text-muted">
             {card
               ? t('Máš kartu? Napiš zájemci přes jeho profil nebo kartu nabídni ve své sbírce.')
               : t('Máš produkt? Napiš zájemci přes jeho profil nebo produkt nabídni ve své sbírce.')}
           </p>
-          <ul className="mt-3 divide-y divide-line overflow-hidden rounded-panel border border-emerald-200 bg-card dark:border-emerald-500/30">
+          <ul className={`mt-4 divide-y divide-line overflow-hidden ${panel}`}>
             {rows.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <Link href={`/@${encodeURIComponent(r.user.nickname)}`} className="font-semibold hover:underline">
+                  <Link href={`/@${encodeURIComponent(r.user.nickname)}`} className="font-semibold text-fg hover:underline">
                     {r.user.nickname}
                   </Link>{' '}
                   <BadgeIcon nickname={r.user.nickname} />
                   <span className="text-sm text-subtle"> · {r.user.city ?? r.user.region ?? t('neuvedeno')}</span>
                   {r.detail.length > 0 && <p className="text-xs text-subtle">{r.detail.join(' · ')}</p>}
                 </div>
-                <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                <span className="font-semibold tabular-nums text-positive">
                   {r.maxPriceCzk ? t('koupí do {price} Kč', { price: r.maxPriceCzk.toLocaleString('cs-CZ') }) : t('koupí (cena dohodou)')}
                 </span>
               </li>

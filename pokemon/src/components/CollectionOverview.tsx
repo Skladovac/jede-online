@@ -7,6 +7,8 @@ import { ProductTile } from '@/components/ProductTile'
 import { ProgressBars } from '@/components/ProgressBars'
 import { getT } from '@/lib/i18n/server'
 import type { TFunc } from '@/lib/i18n/config'
+import { Badge, panel } from '@/components/design'
+import { ChevronRight, Coins } from 'lucide-react'
 
 const OFFER = { TRADE: 'vyměním', SELL: 'prodám', GIFT: 'daruji za poštovné' } as const
 
@@ -19,13 +21,14 @@ function CardStrip({ cards, extra }: { cards: MiniCard[]; extra?: (c: MiniCard, 
         const img = cardImage(c.imageUrl)
         return (
           <li key={`${c.id}-${i}`}>
-            <Link href={`/karta/${encodeURIComponent(c.id)}`} className="group block">
-              <div className="aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm">
+            <Link href={`/karta/${encodeURIComponent(c.id)}`} className="card-tile group block">
+              <div className="card-frame aspect-[63/88]">
                 <CardImg src={img} alt={c.name} />
               </div>
-              <p className="mt-1 truncate text-xs font-medium">{c.name}</p>
-              <p className="truncate text-xs text-subtle">
-                {c.set.name} · {c.localId}
+              <p className="mt-2 truncate text-xs font-semibold text-fg">{c.name}</p>
+              <p className="flex items-baseline gap-1 truncate text-xs text-muted">
+                <span className="truncate">{c.set.name}</span>
+                <span className="shrink-0 font-mono text-[11.5px] text-subtle">{c.localId}</span>
               </p>
               {extra?.(c, i)}
             </Link>
@@ -40,8 +43,9 @@ function CardStrip({ cards, extra }: { cards: MiniCard[]; extra?: (c: MiniCard, 
 export async function BuyBadge({ price }: { price: number | null }) {
   const t = await getT()
   return (
-    <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-      💰 {price ? t('koupím do {price} Kč', { price: price.toLocaleString('cs-CZ') }) : t('koupím')}
+    <p className="mt-1 flex items-center gap-1 text-xs font-semibold tabular-nums text-positive">
+      <Coins className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
+      {price ? t('koupím do {price} Kč', { price: price.toLocaleString('cs-CZ') }) : t('koupím')}
     </p>
   )
 }
@@ -71,12 +75,12 @@ function BySet<T>({
   return (
     <div className="space-y-3">
       {sorted.map(({ set, items: list }) => (
-        <details key={set.id} open className="group rounded-panel border border-line bg-card p-3">
-          <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold">
-            <span className="text-subtle transition group-open:rotate-90">▸</span>
+        <details key={set.id} open className={`group ${panel} p-4`}>
+          <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold text-fg">
+            <ChevronRight className="h-4 w-4 shrink-0 text-subtle transition group-open:rotate-90" strokeWidth={1.75} aria-hidden />
             <span className="min-w-0 flex-1 truncate">{set.name}</span>
-            <span className="rounded-full bg-surface px-2 py-0.5 text-xs">{list.length}</span>
-            <Link href={`/sady/${encodeURIComponent(set.id)}`} className="text-xs font-normal text-subtle underline">
+            <Badge>{list.length}</Badge>
+            <Link href={`/sady/${encodeURIComponent(set.id)}`} className="text-xs font-semibold text-accent underline-offset-4 hover:underline">
               {t('sada')}
             </Link>
           </summary>
@@ -89,7 +93,7 @@ function BySet<T>({
                   {base.length > 0 && (
                     <div>
                       {set.officialCount > 0 && (
-                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-subtle">
+                        <p className="eyebrow mb-3">
                           Base set (1–{set.officialCount}) · {base.length}
                         </p>
                       )}
@@ -98,7 +102,7 @@ function BySet<T>({
                   )}
                   {rest.length > 0 && (
                     <div>
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-purple-600 dark:text-purple-400">
+                      <p className="eyebrow mb-3">
                         {t('Secret rare a mimo číslování')} · {rest.length}
                       </p>
                       <CardStrip cards={rest.map(card)} extra={extra && ((_, i) => extra(rest[i]))} />
@@ -134,9 +138,9 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
           [t('Navíc k výměně'), totals.spare],
           [t('Chybí'), totals.wanted],
         ].map(([k, v]) => (
-          <div key={k} className="rounded-panel border border-line bg-card p-4">
-            <dt className="text-xs text-subtle">{k}</dt>
-            <dd className="text-2xl font-black">{v}</dd>
+          <div key={k} className={`${panel} px-4 py-3.5`}>
+            <dt className="eyebrow !text-[10.5px]">{k}</dt>
+            <dd className="mt-1.5 font-display text-[26px] font-bold leading-tight tabular-nums text-fg">{v}</dd>
           </div>
         ))}
       </dl>
@@ -148,14 +152,14 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
 
       {showOffers && (
       <section>
-        <h2 className="mb-3 text-xl font-bold">{t('Nabízí')} ({offers.length})</h2>
+        <h2 className="mb-4 text-2xl font-bold text-fg">{t('Nabízí')} ({offers.length})</h2>
         {offers.length ? (
           <BySet
             t={t}
             items={offers}
             card={(o) => o.card}
             extra={(o) => (
-              <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">
+              <p className="mt-1 text-xs font-semibold tabular-nums text-accent">
                 {o.spareQty}× {o.offerType === 'SELL' && o.priceCzk ? `${o.priceCzk} Kč` : t(OFFER[o.offerType!])}
               </p>
             )}
@@ -170,7 +174,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
 
       {showWanted && (
       <section>
-        <h2 className="mb-3 text-xl font-bold">{t('Chybí')} ({wanted.length})</h2>
+        <h2 className="mb-4 text-2xl font-bold text-fg">{t('Chybí')} ({wanted.length})</h2>
         {wanted.length ? (
           <BySet
             t={t}
@@ -188,7 +192,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
 
       {(productItems.length > 0 || productWants.length > 0 || (own && !view)) && (
         <section>
-          <h2 className="mb-3 text-xl font-bold">{t('Zapečetěné produkty')}</h2>
+          <h2 className="mb-4 text-2xl font-bold text-fg">{t('Zapečetěné produkty')}</h2>
           {productItems.length ? (
             <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
               {productItems.map((i) => (
@@ -196,7 +200,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
                   <ProductTile
                     p={i.product}
                     extra={
-                      <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">
+                      <p className="text-xs font-semibold tabular-nums text-accent">
                         {i.quantity}× {i.language.toUpperCase()}
                         {i.spareQty > 0 && i.offerType &&
                           ` · ${i.spareQty}× ${i.offerType === 'SELL' && i.priceCzk ? `${i.priceCzk} Kč` : t(OFFER_SHORT[i.offerType])}`}
@@ -223,7 +227,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
           )}
           {productWants.length > 0 && (
             <>
-              <h3 className="mb-3 mt-6 font-semibold">{t('Shání')} ({productWants.length})</h3>
+              <h3 className="mb-3 mt-6 text-lg font-bold text-fg">{t('Shání')} ({productWants.length})</h3>
               <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
                 {productWants.map((p) => (
                   <li key={p.id}>
@@ -239,22 +243,22 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
       {view && stats}
 
       <section>
-        <h2 className="mb-3 text-xl font-bold">{t('Sady')}</h2>
+        <h2 className="mb-4 text-2xl font-bold text-fg">{t('Sady')}</h2>
         {sets.length ? (
           <ul className="space-y-2">
             {sets.map(({ set, owned, progress }) => (
               <li key={set.id}>
                 <Link
                   href={`/sady/${encodeURIComponent(set.id)}`}
-                  className="flex items-center gap-4 rounded-xl border border-line bg-card px-4 py-3 hover:border-line-strong"
+                  className={`flex items-center gap-4 ${panel} px-4 py-3 transition hover:border-line-strong`}
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{set.name}</span>
+                    <span className="block truncate font-semibold text-fg">{set.name}</span>
                     <ProgressBars p={progress} compact />
                   </span>
-                  <span className="hidden h-2 w-32 overflow-hidden rounded-full bg-surface sm:block" title="Base">
+                  <span className="hidden h-1.5 w-32 overflow-hidden rounded-full bg-line sm:block" title="Base">
                     <span
-                      className="block h-full rounded-full bg-green-500"
+                      className="block h-full rounded-full bg-positive"
                       style={{ width: `${progress.base ? Math.min(100, (progress.base.owned / Math.max(progress.base.total, 1)) * 100) : Math.min(100, (owned / Math.max(progress.complete.total, 1)) * 100)}%` }}
                     />
                   </span>

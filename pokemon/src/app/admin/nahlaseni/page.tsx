@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin'
 import { adminResolveReport } from '@/app/actions/admin'
 import { ActionForm } from '@/components/ActionForm'
+import { EmptyState, linkAccent, panel } from '@/components/design'
 
 export default async function AdminReports({ searchParams }: { searchParams: Promise<{ vse?: string }> }) {
   // Kontrola i na stránce, ne jen v layoutu (Next může layout při částečném vykreslení přeskočit).
@@ -17,8 +18,8 @@ export default async function AdminReports({ searchParams }: { searchParams: Pro
   return (
     <div className="space-y-5">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-3xl font-black tracking-tight">Nahlášení</h1>
-        <Link href={all ? '/admin/nahlaseni' : '/admin/nahlaseni?vse=1'} className="text-sm underline">
+        <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">Nahlášení</h1>
+        <Link href={all ? '/admin/nahlaseni' : '/admin/nahlaseni?vse=1'} className={`text-sm ${linkAccent}`}>
           {all ? 'Jen otevřená' : 'Zobrazit i vyřízená'}
         </Link>
       </div>
@@ -27,14 +28,14 @@ export default async function AdminReports({ searchParams }: { searchParams: Pro
           {reports.map((r) => (
             <li
               key={r.id}
-              className={`rounded-panel border border-line bg-card p-4 text-sm ${r.resolvedAt ? 'opacity-50' : ''}`}
+              className={`${panel} p-4 text-sm text-fg ${r.resolvedAt ? 'opacity-50' : ''}`}
             >
               <p>
                 <Link href={`/admin/uzivatele/${r.from.id}`} className="font-semibold hover:underline">
                   {r.from.nickname}
                 </Link>{' '}
                 nahlásil(a){' '}
-                <Link href={`/admin/uzivatele/${r.against.id}`} className="font-semibold text-red-700 hover:underline">
+                <Link href={`/admin/uzivatele/${r.against.id}`} className="font-semibold text-danger hover:underline">
                   {r.against.nickname}
                 </Link>
                 {r.against.bannedAt && ' (už zablokován)'} · {r.createdAt.toLocaleString('cs-CZ')}
@@ -43,13 +44,13 @@ export default async function AdminReports({ searchParams }: { searchParams: Pro
               <ActionForm action={adminResolveReport} className="mt-2">
                 <input type="hidden" name="reportId" value={r.id} />
                 <input type="hidden" name="resolved" value={r.resolvedAt ? '0' : '1'} />
-                <button className="text-xs underline">{r.resolvedAt ? 'Otevřít znovu' : 'Označit jako vyřízené'}</button>
+                <button className="text-xs font-semibold text-accent underline underline-offset-4">{r.resolvedAt ? 'Otevřít znovu' : 'Označit jako vyřízené'}</button>
               </ActionForm>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-subtle">Nic k vyřízení. 🎉</p>
+        <EmptyState>Nic k vyřízení.</EmptyState>
       )}
     </div>
   )

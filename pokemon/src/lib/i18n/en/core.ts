@@ -42,7 +42,7 @@ const dict: Record<string, string> = {
   "a vyber": "and choose",
   "nebo": "or",
   "Nainstalovat aplikaci": "Install app",
-  "Zkopírováno ✓": "Copied ✓",
+  "Zkopírováno": "Copied",
   "Zkopírovat": "Copy",
   "Moment…": "One moment…",
   "Hledat: Charizard, SVI 045, Prismatic ETB…": "Search: Charizard, SVI 045, Prismatic ETB…",
