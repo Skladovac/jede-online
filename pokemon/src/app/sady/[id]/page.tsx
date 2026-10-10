@@ -6,7 +6,9 @@ import { safeDecode } from '@/lib/validation'
 import { getCurrentUser } from '@/lib/auth'
 import { setProgress } from '@/lib/progress'
 import { ProgressBars } from '@/components/ProgressBars'
-import { byLocalId, cardImage, formatEur, setLogo } from '@/lib/format'
+import { byLocalId, cardImage, formatCzk, formatEur, setLogo } from '@/lib/format'
+import { ChevronRight } from 'lucide-react'
+import { panel } from '@/components/design'
 import { PriceNote } from '@/components/PriceNote'
 import { SetGrid } from '@/components/SetGrid'
 import { ProductTile } from '@/components/ProductTile'
@@ -56,14 +58,10 @@ export default async function SetPage({ params, searchParams }: Props) {
   })
   const cards = [...set.cards].sort(byLocalId)
   const logo = setLogo(set.logoUrl)
-  const meta = [
-    set.series,
-    set.code,
-    set.officialCount
-      ? t('{n} karet ({total} včetně secret)', { n: set.officialCount, total: set.cardCount })
-      : t('{n} karet', { n: set.cardCount }),
-    set.releaseDate?.toLocaleDateString(LOCALE_INFO[locale].intl),
-  ]
+  const meta = [set.series, set.code, set.releaseDate?.toLocaleDateString(LOCALE_INFO[locale].intl, { month: 'long', year: 'numeric' })]
+  const countLabel = set.officialCount
+    ? t('{n} karet ({total} včetně secret)', { n: set.officialCount, total: set.cardCount })
+    : t('{n} karet', { n: set.cardCount })
 
   // Stav sbírky přihlášeného uživatele pro karty této sady.
   const initial: Record<string, QuickState> = {}
@@ -81,38 +79,82 @@ export default async function SetPage({ params, searchParams }: Props) {
     for (const w of wants) (initial[w.cardId] ??= { owned: 0, spare: 0, want: false }).want = true
   }
 
-  return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <Link href="/sady" className="text-sm text-subtle hover:underline">
-        ← {t('Všechny sady')}
-      </Link>
-      <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
-        {logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logo} alt="" className="h-16 w-auto max-w-[200px] object-contain" />
-        ) : (
-          <CardBack />
-        )}
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">
-            {setDisplayName(set)}
-            {set.language === 'ja' && (
-              <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 align-middle text-xs font-semibold text-red-800 dark:bg-red-400/10 dark:text-red-300">
-                🇯🇵 {t('Japonská')}
-              </span>
-            )}
-          </h1>
-          {set.nameOriginal && <p className="text-sm text-subtle">{set.nameOriginal}</p>}
-          <p className="mt-1 text-sm text-subtle">{meta.filter(Boolean).join(' · ')}</p>
-        </div>
-      </header>
-      {progress && (
-        <div className="mt-5">
-          <ProgressBars p={progress} />
-        </div>
-      )}
+  // Souhrn sbírky přihlášeného v této sadě: kolik karet má, kolik chybí do kompletu, odhad hodnoty.
+  const ownedIds = cards.filter((c) => (initial[c.id]?.owned ?? 0) > 0)
+  const ownedValue = formatCzk(ownedIds.reduce((sum, c) => sum + Number(c.priceEur ?? 0) * (initial[c.id]?.owned ?? 0), 0))
+  const total = set.officialCount || set.cardCount
 
-      <nav className="mt-6 flex gap-2 border-b border-line">
+  return (
+    <main className="mx-auto max-w-page px-4 pb-10 pt-6 sm:px-6">
+      <nav aria-label={t('Drobečková navigace')} className="flex items-center gap-1.5 text-sm text-subtle">
+        <Link href="/sady" className="text-muted hover:text-fg">
+          {t('Sady')}
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+        {set.series && set.series !== setDisplayName(set) && (
+          <>
+            <span>{set.series}</span>
+            <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+          </>
+        )}
+        <span className="truncate text-fg">{setDisplayName(set)}</span>
+      </nav>
+
+      <header className={`${panel} relative mt-4 overflow-hidden p-6 sm:p-8`}>
+        <div aria-hidden className="pointer-events-none absolute -right-32 -top-36 h-[420px] w-[420px] rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.22),transparent_70%)] dark:opacity-50" />
+        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:gap-9">
+          <div className="grid h-[110px] w-full shrink-0 place-items-center rounded-2xl bg-surface ring-1 ring-inset ring-line md:w-[210px]">
+            {logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo} alt="" className="max-h-20 w-auto max-w-[170px] object-contain" />
+            ) : (
+              <CardBack />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="eyebrow">{meta.filter(Boolean).join(' · ')}</p>
+            <h1 className="mt-2 text-3xl font-extrabold text-fg sm:text-[44px] sm:leading-[1.05]">
+              {setDisplayName(set)}
+              {set.language === 'ja' && (
+                <span className="ml-3 inline-flex items-center rounded-[7px] bg-[#fdecea] px-2 py-0.5 align-middle font-sans text-xs font-semibold tracking-normal text-[#b42318] ring-1 ring-inset ring-[#f6cfca] dark:bg-[rgba(216,52,26,0.16)] dark:text-[#ff9b8a] dark:ring-[rgba(216,52,26,0.35)]">
+                  {t('Japonská')}
+                </span>
+              )}
+            </h1>
+            {set.nameOriginal && <p className="mt-1 text-sm text-subtle">{set.nameOriginal}</p>}
+            {user ? (
+              <dl className="mt-5 flex flex-wrap gap-y-3">
+                {[
+                  [
+                    <>
+                      {ownedIds.length}
+                      <span className="text-xl text-subtle"> / {total}</span>
+                    </>,
+                    t('karet ve sbírce'),
+                  ],
+                  [Math.max(0, total - ownedIds.length), t('chybí do kompletu')],
+                  ...(ownedValue && ownedIds.length ? [[`≈ ${ownedValue}`, t('hodnota tvých karet')]] : []),
+                ].map(([v, label], n) => (
+                  <div key={n} className={n ? 'border-l border-line pl-6 pr-6' : 'pr-6'}>
+                    <dt className="sr-only">{label}</dt>
+                    <dd className="font-display text-[28px] font-bold leading-tight tabular-nums text-fg">{v}</dd>
+                    <dd className="text-sm text-muted">{label}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="mt-3 font-mono text-[13px] text-muted">{countLabel}</p>
+            )}
+          </div>
+        </div>
+        {progress && (
+          <div className="relative mt-7 border-t border-line pt-6">
+            <ProgressBars p={progress} />
+          </div>
+        )}
+      </header>
+
+      <nav className="mt-7 flex gap-6 border-b border-line">
         {[
           ['karty', t('Karty ({n})', { n: cards.length })],
           ['produkty', t('Produkty ({n})', { n: products.length })],
@@ -120,7 +162,8 @@ export default async function SetPage({ params, searchParams }: Props) {
           <Link
             key={k}
             href={`/sady/${encodeURIComponent(set.id)}${k === 'produkty' ? '?tab=produkty' : ''}`}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-semibold ${tab === k ? 'border-accent text-fg' : 'border-transparent text-subtle'}`}
+            aria-current={tab === k ? 'page' : undefined}
+            className={`-mb-px border-b-2 py-2.5 text-[15px] font-semibold transition-colors ${tab === k ? 'border-fg text-fg' : 'border-transparent text-muted hover:text-fg'}`}
           >
             {label}
           </Link>

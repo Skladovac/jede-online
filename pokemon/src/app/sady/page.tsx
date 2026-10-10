@@ -27,8 +27,9 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-3xl font-black tracking-tight">{t('Všechny sady')}</h1>
-      <nav className="mt-4 flex gap-2 border-b border-line">
+      <p className="eyebrow">{t('Katalog')}</p>
+      <h1 className="mt-2 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Všechny sady')}</h1>
+      <nav className="mt-6 flex gap-6 border-b border-line">
         {(
           [
             ['en', t('Anglické sady')],
@@ -38,8 +39,9 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
           <Link
             key={l}
             href={l === 'ja' ? '/sady?jazyk=ja' : '/sady'}
-            className={`-mb-px border-b-2 px-4 py-2 font-semibold ${
-              l === language ? 'border-accent text-fg' : 'border-transparent text-subtle hover:text-fg'
+            aria-current={l === language ? 'page' : undefined}
+            className={`-mb-px border-b-2 py-2.5 text-[15px] font-semibold transition-colors ${
+              l === language ? 'border-fg text-fg' : 'border-transparent text-muted hover:text-fg'
             }`}
           >
             {label}
@@ -57,7 +59,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
           <a
             key={series}
             href={`#${encodeURIComponent(series)}`}
-            className="rounded-full border border-line-strong px-3 py-1 text-sm hover:border-line-strong"
+            className="inline-flex min-h-9 items-center rounded-full bg-card px-3.5 text-sm font-semibold text-muted ring-1 ring-inset ring-line transition hover:text-fg hover:ring-line-strong"
           >
             {series}
           </a>
@@ -68,8 +70,8 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
         const labels = subsetLabels(list)
         return (
         <section key={series} id={encodeURIComponent(series)} className="scroll-mt-24 pt-10">
-          <h2 className="mb-4 text-xl font-bold">{series}</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <h2 className="mb-5 text-2xl font-bold text-fg">{series}</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
             {list.map((s) => (
               <SetTile key={s.id} {...s} subLabel={labels.get(s.id)} />
             ))}

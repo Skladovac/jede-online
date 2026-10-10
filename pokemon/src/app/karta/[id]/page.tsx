@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { ChevronRight } from 'lucide-react'
+import { panel } from '@/components/design'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { safeDecode } from '@/lib/validation'
@@ -71,24 +73,40 @@ export default async function CardPage({ params }: Props) {
   const setHref = `/sady/${encodeURIComponent(card.setId)}`
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <Link href={setHref} className="text-sm text-subtle hover:underline">
-        ← {setDisplayName(card.set)}
-      </Link>
-      <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,360px)_1fr]">
+    <main className="mx-auto max-w-page px-4 pb-10 pt-6 sm:px-6">
+      <nav aria-label={t('Drobečková navigace')} className="flex items-center gap-1.5 text-sm text-subtle">
+        <Link href="/sady" className="text-muted hover:text-fg">
+          {t('Sady')}
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+        <Link href={setHref} className="text-muted hover:text-fg">
+          {setDisplayName(card.set)}
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+        <span className="truncate text-fg">{card.name}</span>
+      </nav>
+      <div className="mt-6 grid gap-10 md:grid-cols-[minmax(0,400px)_1fr] lg:gap-14">
         {img ? (
           // Přirozený poměr stran: karty tištěné naležato (BREAK, LEGEND) se zobrazí celé, neořízlé.
-          <div className="mx-auto w-full max-w-[360px] self-start overflow-hidden rounded-panel bg-surface shadow-lg">
+          <div className="relative mx-auto w-full max-w-[400px] self-start">
+            <div aria-hidden className="pointer-events-none absolute -inset-10 rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.28),transparent_72%)] dark:opacity-50" />
+            <div className="relative overflow-hidden rounded-[4.5%/3.2%] bg-surface shadow-[0_2px_2px_rgba(14,27,46,0.1),0_30px_50px_-18px_rgba(14,27,46,0.55)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={img} alt={card.name} className="block h-auto w-full" />
+            </div>
           </div>
         ) : (
-          <div className="mx-auto aspect-[63/88] w-full max-w-[360px] overflow-hidden rounded-panel bg-surface shadow-lg" />
+          <div className="mx-auto aspect-[63/88] w-full max-w-[400px] overflow-hidden rounded-[4.5%/3.2%] bg-surface shadow-card" />
         )}
         <div>
-          <h1 className="text-3xl font-black tracking-tight">{card.name}</h1>
+          <p className="eyebrow">
+            {setDisplayName(card.set)} · {card.set.code ? `${card.set.code} ` : ''}
+            {card.localId}
+            {card.set.officialCount ? `/${card.set.officialCount}` : ''}
+          </p>
+          <h1 className="mt-2 text-4xl font-extrabold text-fg sm:text-5xl">{card.name}</h1>
           {card.nameOriginal && card.nameOriginal !== card.name && <p className="text-sm text-subtle">{card.nameOriginal}</p>}
-          <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
+          <dl className="mt-7 grid grid-cols-[auto_1fr] gap-x-8 gap-y-3.5 border-t border-line pt-6 text-[15px]">
             <dt className="text-subtle">{t('Sada')}</dt>
             <dd>
               <Link href={setHref} className="font-medium hover:underline">
@@ -123,7 +141,7 @@ export default async function CardPage({ params }: Props) {
                 <dt className="text-subtle">{t('Varianty')}</dt>
                 <dd className="flex flex-wrap gap-1.5">
                   {variants.map((v) => (
-                    <span key={v} className="rounded-full bg-surface px-2 py-0.5 text-xs">
+                    <span key={v} className="rounded-[7px] bg-surface px-2 py-0.5 text-xs font-semibold text-muted ring-1 ring-inset ring-line">
                       {v}
                     </span>
                   ))}
@@ -132,19 +150,19 @@ export default async function CardPage({ params }: Props) {
             )}
           </dl>
 
-          <section className="mt-8 rounded-panel border border-line bg-card p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-subtle">{t('Orientační cena')}</h2>
+          <section className={`${panel} mt-8 p-6`}>
+            <h2 className="eyebrow">{t('Orientační cena')}</h2>
             {price || priceReverse ? (
               <div className="mt-3 flex flex-wrap gap-8">
                 {price && (
                   <div>
-                    <p className="text-2xl font-bold">≈ {price}</p>
+                    <p className="font-display text-3xl font-bold tabular-nums text-fg">≈ {price}</p>
                     <p className="text-xs text-subtle">{card.hasHolo && !card.hasNormal ? 'holo' : t('běžná verze')}</p>
                   </div>
                 )}
                 {priceReverse && (
                   <div>
-                    <p className="text-2xl font-bold">≈ {priceReverse}</p>
+                    <p className="font-display text-3xl font-bold tabular-nums text-fg">≈ {priceReverse}</p>
                     <p className="text-xs text-subtle">reverse holo</p>
                   </div>
                 )}
