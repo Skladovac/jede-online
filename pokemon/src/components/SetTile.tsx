@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { setLogo } from '@/lib/format'
 import { CardBack } from '@/components/CardBack'
+import { ProgressMeter, panelInteractive } from '@/components/design'
 import { getT } from '@/lib/i18n/server'
 
 type Props = {
@@ -11,31 +12,35 @@ type Props = {
   officialCount: number
   cardCount: number
   releaseDate: Date | null
+  /** Postup přihlášeného uživatele (vlastní / celkem), pokud ho stránka zná. */
+  progress?: { owned: number; total: number } | null
 }
 
-export async function SetTile({ id, name, code, logoUrl, officialCount, cardCount, releaseDate }: Props) {
+export async function SetTile({ id, name, code, logoUrl, officialCount, cardCount, releaseDate, progress }: Props) {
   const t = await getT()
   const logo = setLogo(logoUrl)
   // Promo sady nemají oficiální počet (0) — ukážeme skutečný počet karet.
   const count = officialCount || cardCount
   return (
-    <Link
-      href={`/sady/${encodeURIComponent(id)}`}
-      className="group flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-yellow-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
-    >
-      <div className="grid h-16 place-items-center">
+    <Link href={`/sady/${encodeURIComponent(id)}`} className={`${panelInteractive} group flex h-full flex-col gap-4 p-4`}>
+      <div className="grid h-20 place-items-center rounded-lg bg-surface px-3">
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={logo} alt="" loading="lazy" className="max-h-16 max-w-full object-contain" />
+          <img src={logo} alt="" loading="lazy" width={160} height={64} className="max-h-14 w-auto max-w-full object-contain" />
         ) : (
-          <CardBack />
+          <CardBack className="h-14" />
         )}
       </div>
-      <div>
-        <p className="font-semibold leading-tight group-hover:text-yellow-700 dark:group-hover:text-yellow-400">{name}</p>
-        <p className="mt-1 text-xs text-slate-500">
-          {[code, t('{n} karet', { n: count }), releaseDate?.getFullYear()].filter(Boolean).join(' · ')}
+      <div className="flex flex-1 flex-col">
+        <p className="font-semibold leading-snug text-fg">{name}</p>
+        <p className="mt-1 text-xs tabular-nums text-muted">
+          {[code, releaseDate?.getFullYear(), t('{n} karet', { n: count })].filter(Boolean).join(' · ')}
         </p>
+        {progress && progress.total > 0 && (
+          <div className="mt-auto pt-3">
+            <ProgressMeter owned={progress.owned} total={progress.total} />
+          </div>
+        )}
       </div>
     </Link>
   )

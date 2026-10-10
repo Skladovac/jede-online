@@ -6,6 +6,7 @@ import { getLocale } from '@/lib/i18n/server'
 import { dictFor } from '@/lib/i18n/dicts'
 import { I18nProvider } from '@/lib/i18n/client'
 import { LOCALE_INFO, makeT } from '@/lib/i18n/config'
+import { cookies } from 'next/headers'
 import './globals.css'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -35,20 +36,18 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0f172a',
+  themeColor: '#0d131c',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale()
   const dict = dictFor(locale)
-  const t = makeT(dict)
+  const theme = (await cookies()).get('theme')?.value
   return (
-    <html lang={LOCALE_INFO[locale].htmlLang}>
-      <body className="min-h-dvh bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
+    // Vzhled: výchozí tmavý, světlý jen když si ho uživatel přepnul (cookie „theme“ z ThemeToggle).
+    <html lang={LOCALE_INFO[locale].htmlLang} className={theme === 'light' ? '' : 'dark'}>
+      <body className="min-h-dvh bg-base text-fg antialiased">
         <I18nProvider locale={locale} dict={dict}>
-        <div className="bg-yellow-400 px-4 py-1.5 text-center text-xs font-semibold text-slate-900">
-          {t('Zkušební provoz · komunitní projekt ve vývoji, zdarma a bez reklam')}
-        </div>
         <SiteHeader />
         {children}
         <SiteFooter />

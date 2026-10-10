@@ -4,7 +4,11 @@ import { prisma } from '@/lib/prisma'
 import { SearchBox } from '@/components/SearchBox'
 import { UserMenu } from '@/components/UserMenu'
 import { LocaleSwitcher } from '@/components/LocaleSwitcher'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { btnPrimary } from '@/components/design'
 import { getT } from '@/lib/i18n/server'
+
+const navLink = 'inline-flex min-h-10 items-center rounded-lg px-2.5 text-muted transition-colors duration-200 hover:bg-card-hover hover:text-fg'
 
 export async function SiteHeader() {
   const user = await getCurrentUser()
@@ -18,61 +22,68 @@ export async function SiteHeader() {
       ])
     : [0, 0, 0]
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4">
-        <Link href="/" className="flex shrink-0 items-center gap-2 font-bold tracking-tight">
+    <header className="sticky top-0 z-20 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_88%,transparent)] backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-3 px-4 sm:px-6">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5 font-bold tracking-tight text-fg">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" width={32} height={32} className="h-8 w-8" />
           <span className="hidden sm:inline">pokemon.jede.online</span>
+          <span
+            className="hidden rounded-md border border-line-strong px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-muted lg:inline"
+            title={t('Zkušební provoz · komunitní projekt ve vývoji, zdarma a bez reklam')}
+          >
+            BETA
+          </span>
         </Link>
-        {/* Na širší obrazovce je hledání v řádku, na mobilu pod ním. */}
-        <div className="hidden max-w-md flex-1 md:block">
+        {/* Hledání je hlavní navigace v katalogu: na širší obrazovce uprostřed lišty, na mobilu pod ní. */}
+        <div className="hidden max-w-xl flex-1 md:block">
           <SearchBox />
         </div>
-        <nav className="flex shrink-0 items-center gap-2.5 text-sm font-medium sm:gap-4">
-          <Link href="/sady" className="hidden hover:text-yellow-600 dark:hover:text-yellow-400 sm:inline">
-            {t('Sady')}
-          </Link>
-          <Link href="/produkty" className="hidden hover:text-yellow-600 dark:hover:text-yellow-400 lg:inline">
-            {t('Produkty')}
-          </Link>
-          <Link href="/trziste" className="hover:text-yellow-600 dark:hover:text-yellow-400">
-            {t('Tržiště')}
-          </Link>
+        <nav className="flex shrink-0 items-center gap-0.5 text-sm font-medium sm:gap-1" aria-label={t('Hlavní navigace')}>
           {user ? (
             <>
+              <Link href="/sady" className={`${navLink} hidden xl:inline-flex`}>
+                {t('Sady')}
+              </Link>
+              <Link href="/trziste" className={navLink}>
+                {t('Tržiště')}
+              </Link>
               {/* Na mobilu je Sbírka v menu pod přezdívkou (do lišty se nevejde vedle Tržiště a Výměn). */}
-              <Link href="/sbirka" className="hidden hover:text-yellow-600 dark:hover:text-yellow-400 sm:inline">
+              <Link href="/sbirka" className={`${navLink} hidden sm:inline-flex`}>
                 {t('Sbírka')}
               </Link>
-              <Link href="/sberatele" className="hidden hover:text-yellow-600 dark:hover:text-yellow-400 sm:inline">
+              <Link href="/sberatele" className={`${navLink} hidden lg:inline-flex`}>
                 {t('Sběratelé')}
               </Link>
-              <Link href="/poptavky" className="relative hover:text-yellow-600 dark:hover:text-yellow-400">
+              <Link href="/poptavky" className={`${navLink} relative`}>
                 {t('Výměny')}
                 {pendingCount > 0 && <Dot n={pendingCount} />}
               </Link>
-              <Link href="/upozorneni" aria-label={t('Upozornění')} className="relative hover:text-yellow-600 dark:hover:text-yellow-400">
+              <Link href="/upozorneni" aria-label={t('Upozornění')} className={`${navLink} relative`}>
                 🔔
                 {unreadCount > 0 && <Dot n={unreadCount} />}
               </Link>
-              <Link href="/kosik" aria-label={t('Košík')} className="relative hover:text-yellow-600 dark:hover:text-yellow-400">
+              <Link href="/kosik" aria-label={t('Košík')} className={`${navLink} relative`}>
                 🛒
                 {cartCount > 0 && <Dot n={cartCount} />}
               </Link>
               <LocaleSwitcher />
+              <span className="hidden sm:block">
+                <ThemeToggle />
+              </span>
               <UserMenu nickname={user.nickname} isAdmin={user.isAdmin} />
             </>
           ) : (
             <>
+              <Link href="/trziste" className={`${navLink} hidden sm:inline-flex`}>
+                {t('Tržiště')}
+              </Link>
               <LocaleSwitcher />
-              <Link href="/prihlaseni" className="hover:text-yellow-600 dark:hover:text-yellow-400">
+              <ThemeToggle />
+              <Link href="/prihlaseni" className={navLink}>
                 {t('Přihlásit')}
               </Link>
-              <Link
-                href="/registrace"
-                className="rounded-full bg-yellow-400 px-3 py-1.5 text-slate-900 hover:bg-yellow-300"
-              >
+              <Link href="/registrace" className={`${btnPrimary} ml-1 !min-h-10 !px-3.5 !py-1.5 text-sm`}>
                 {t('Registrace')}
               </Link>
             </>
@@ -88,7 +99,7 @@ export async function SiteHeader() {
 
 function Dot({ n }: { n: number }) {
   return (
-    <span className="absolute -right-3 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+    <span className="absolute -right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
       {n}
     </span>
   )
