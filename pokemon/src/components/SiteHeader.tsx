@@ -11,10 +11,10 @@ import { PushAsk } from '@/components/Push'
 import { pushPublicKey } from '@/lib/push'
 import { getT } from '@/lib/i18n/server'
 
-// Odkazy v tmavě modré hlavičce: bílé, při najetí žluté podtržení.
+// Odkazy ve žluté hlavičce: tmavě modré, při najetí modré podtržení.
 const navLink =
-  'relative inline-flex min-h-10 items-center rounded-lg px-2.5 font-semibold text-white/85 transition-colors duration-200 hover:text-white after:absolute after:inset-x-2.5 after:bottom-1 after:h-0.5 after:scale-x-0 after:rounded-full after:bg-brand-yellow after:transition-transform after:duration-200 hover:after:scale-x-100'
-const iconLink = 'relative inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-white/90 hover:bg-white/10'
+  'relative inline-flex min-h-10 items-center rounded-lg px-2.5 font-semibold text-brand-blue-deep transition-colors duration-200 hover:text-brand-blue after:absolute after:inset-x-2.5 after:bottom-1 after:h-0.5 after:scale-x-0 after:rounded-full after:bg-brand-blue after:transition-transform after:duration-200 hover:after:scale-x-100'
+const iconLink = 'relative inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-brand-blue-deep hover:bg-[rgba(22,58,102,0.1)]'
 
 export async function SiteHeader() {
   const user = await getCurrentUser()
@@ -29,13 +29,13 @@ export async function SiteHeader() {
     : [0, 0, 0]
   return (
     <>
-      <header className="sticky top-0 z-20 border-b-[3px] border-brand-yellow bg-brand-blue-dark text-white shadow-md">
+      <header className="sticky top-0 z-20 border-b-[3px] border-brand-blue bg-brand-yellow text-brand-blue-deep shadow-md">
         <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-3 px-4 sm:px-6 lg:h-[68px]">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5 font-extrabold tracking-tight text-white">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5 font-extrabold tracking-tight text-brand-blue-deep">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.svg" alt="" width={34} height={34} className="h-[34px] w-[34px] drop-shadow" />
             <span className="hidden text-[17px] sm:inline">
-              pokemon<span className="text-brand-yellow">.jede.online</span>
+              pokemon<span className="text-brand-blue">.jede.online</span>
             </span>
           </Link>
 
@@ -90,7 +90,7 @@ export async function SiteHeader() {
                 </Link>
                 <Link
                   href="/registrace"
-                  className="ml-1 inline-flex min-h-10 items-center rounded-[10px] bg-brand-yellow px-3.5 font-bold text-brand-blue-dark transition-colors duration-200 hover:bg-[#f4c000]"
+                  className="ml-1 inline-flex min-h-10 items-center rounded-[10px] bg-brand-blue-dark px-3.5 font-bold text-white transition-colors duration-200 hover:bg-brand-blue-deep"
                 >
                   {t('Registrovat')}
                 </Link>
@@ -110,7 +110,7 @@ export async function SiteHeader() {
 
 function Dot({ n }: { n: number }) {
   return (
-    <span className="absolute -right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand-red px-1 text-[10px] font-bold text-white ring-2 ring-brand-blue-dark">
+    <span className="absolute -right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand-red px-1 text-[10px] font-bold text-white ring-2 ring-brand-yellow">
       {n}
     </span>
   )
