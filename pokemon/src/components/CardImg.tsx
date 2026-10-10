@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /**
  * Obrázek karty do rámečku na výšku (63 : 88).
@@ -10,6 +10,12 @@ import { useState } from 'react'
 export function CardImg({ src, alt, className = '', eager = false }: { src: string | null; alt: string; className?: string; eager?: boolean }) {
   const [broken, setBroken] = useState(false)
   const [landscape, setLandscape] = useState(false)
+  const ref = useRef<HTMLImageElement>(null)
+  // Obrázek z mezipaměti se může načíst dřív, než React připojí onLoad — zkontrolovat i po připojení.
+  useEffect(() => {
+    const i = ref.current
+    if (i?.complete && i.naturalWidth) setLandscape(i.naturalWidth > i.naturalHeight * 1.1)
+  }, [src])
   if (!src || broken)
     return (
       <div className="grid h-full w-full place-items-center bg-gradient-to-br from-blue-700 to-blue-900 p-2 text-center text-xs font-semibold text-white">
@@ -20,6 +26,7 @@ export function CardImg({ src, alt, className = '', eager = false }: { src: stri
     <span className="relative block h-full w-full overflow-hidden">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        ref={ref}
         src={src}
         alt={alt}
         loading={eager ? 'eager' : 'lazy'}
