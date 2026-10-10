@@ -4,6 +4,7 @@ import { cardImage } from '@/lib/format'
 import { COUNTRY_LABEL } from '@/lib/regions'
 import { getT } from '@/lib/i18n/server'
 import { BadgeIcon } from '@/components/Badges'
+import { CardImg } from '@/components/CardImg'
 
 /** Žebříček sběratelů podle shod (stránka /sberatele a blok na hlavní stránce). */
 export async function CollectorList({ collectors }: { collectors: Collector[] }) {
@@ -58,8 +59,7 @@ export async function CollectorList({ collectors }: { collectors: Collector[] })
                       className={`aspect-[63/88] w-12 shrink-0 overflow-hidden rounded bg-surface ${p.offered ? 'ring-2 ring-blue-500' : 'opacity-70'}`}
                     >
                       {img && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={img} alt={p.name} loading="lazy" className="h-full w-full object-cover" />
+                        <CardImg src={img} alt={p.name} />
                       )}
                     </div>
                   )

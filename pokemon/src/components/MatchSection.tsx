@@ -4,6 +4,7 @@ import { cardImage } from '@/lib/format'
 import { AddToCart } from '@/components/AddToCart'
 import { ProductTile } from '@/components/ProductTile'
 import { getT } from '@/lib/i18n/server'
+import { CardImg } from '@/components/CardImg'
 
 type Data = Awaited<ReturnType<typeof pairMatches>>
 type MiniCard = { id: string; name: string; localId: string; imageUrl: string | null; set: { name: string } }
@@ -17,8 +18,7 @@ function Thumb({ c, children }: { c: MiniCard; children?: React.ReactNode }) {
       <Link href={`/karta/${encodeURIComponent(c.id)}`} className="block">
         <div className="aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm">
           {img && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
+            <CardImg src={img} alt={c.name} />
           )}
         </div>
         <p className="mt-1 truncate text-xs font-medium">{c.name}</p>

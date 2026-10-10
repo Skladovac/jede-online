@@ -6,6 +6,7 @@ import { cardImage, formatEur } from '@/lib/format'
 import { PriceNote } from '@/components/PriceNote'
 import { ensureEurCzk } from '@/lib/fx'
 import { getT } from '@/lib/i18n/server'
+import { CardImg } from '@/components/CardImg'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,8 +50,7 @@ export default async function SearchPage({ searchParams }: Props) {
               <Link href={`/karta/${encodeURIComponent(c.id)}`} className="group block">
                 <div className="aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm transition group-hover:-translate-y-0.5 group-hover:shadow-md">
                   {img ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={img} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
+                    <CardImg src={img} alt={c.name} />
                   ) : (
                     <div className="grid h-full place-items-center p-2 text-center text-xs text-subtle">{c.name}</div>
                   )}

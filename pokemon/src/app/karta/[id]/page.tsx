@@ -74,12 +74,15 @@ export default async function CardPage({ params }: Props) {
         ← {card.set.name}
       </Link>
       <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,360px)_1fr]">
-        <div className="mx-auto aspect-[63/88] w-full max-w-[360px] overflow-hidden rounded-panel bg-surface shadow-lg">
-          {img && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt={card.name} className="h-full w-full object-cover" />
-          )}
-        </div>
+        {img ? (
+          // Přirozený poměr stran: karty tištěné naležato (BREAK, LEGEND) se zobrazí celé, neořízlé.
+          <div className="mx-auto w-full max-w-[360px] self-start overflow-hidden rounded-panel bg-surface shadow-lg">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={img} alt={card.name} className="block h-auto w-full" />
+          </div>
+        ) : (
+          <div className="mx-auto aspect-[63/88] w-full max-w-[360px] overflow-hidden rounded-panel bg-surface shadow-lg" />
+        )}
         <div>
           <h1 className="text-3xl font-black tracking-tight">{card.name}</h1>
           {card.nameOriginal && card.nameOriginal !== card.name && <p className="text-sm text-subtle">{card.nameOriginal}</p>}

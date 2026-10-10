@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRef, useState, useTransition } from 'react'
 import { useT } from '@/lib/i18n/client'
 import { changeSpare, clearSetWanted, markByNumbers, markRestWanted, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
+import { CardImg } from '@/components/CardImg'
 
 export type GridCard = { id: string; localId: string; name: string; image: string | null; price: string | null }
 type Mode = 'view' | 'owned' | 'want' | 'spare'
@@ -270,8 +271,7 @@ export function SetGrid({
               const pocket = s.owned ? (
                 <div className="relative aspect-[63/88] overflow-hidden rounded-md bg-accent-strong shadow-md ring-1 ring-white/20">
                   {c.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.image} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
+                    <CardImg src={c.image} alt={c.name} />
                   ) : (
                     <div className="grid h-full place-items-center p-2 text-center text-xs text-slate-300">{c.name}</div>
                   )}
@@ -286,8 +286,9 @@ export function SetGrid({
                 >
                   {c.image && (
                     // Obrys karty jen velmi slabě, ať je jasné, co do kapsy patří.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-10 grayscale" />
+                    <span className="absolute inset-0">
+                      <CardImg src={c.image} alt="" className="opacity-10 grayscale" />
+                    </span>
                   )}
                   <div className="relative">
                     <p className="text-lg font-black text-slate-300 sm:text-2xl">{c.localId}</p>
@@ -346,8 +347,7 @@ export function SetGrid({
                 } ${s.want ? 'ring-4 ring-orange-400' : s.owned ? 'ring-2 ring-green-500' : ''}`}
               >
                 {c.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.image} alt={c.name} loading="lazy" className={`h-full w-full object-cover ${s.want ? 'opacity-60 grayscale' : ''}`} />
+                  <CardImg src={c.image} alt={c.name} className={s.want ? 'opacity-60 grayscale' : ''} />
                 ) : (
                   <div className="grid h-full place-items-center p-2 text-center text-xs text-subtle">{c.name}</div>
                 )}
