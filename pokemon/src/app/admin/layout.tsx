@@ -15,6 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const nav: [string, string, number?][] = [
     ['/admin', 'Přehled'],
     ['/admin/uzivatele', 'Uživatelé'],
+    ['/admin/rust', 'Růst'],
     ['/admin/navstevnost', 'Návštěvnost'],
     ['/admin/nahlaseni', 'Nahlášení', reports],
     ['/admin/chyby', 'Chyby', bugs],
