@@ -35,6 +35,11 @@ export default async function MyCollectionPage() {
       )}
       <div className="mt-6">
         <QuickAdd />
+        <p className="mt-2 text-right text-sm">
+          <Link href="/sbirka/nabidka" className="font-medium text-accent hover:underline">
+            🏷️ {t('Hromadná nabídka: nabídni víc karet najednou')} →
+          </Link>
+        </p>
       </div>
       <div className="mt-6">
         <Dashboard userId={user.id} />
