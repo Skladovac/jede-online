@@ -8,6 +8,8 @@ import { str, type FormState } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
 import { searchCards, searchCardsById } from '@/lib/search'
 import { notifyDeals } from '@/lib/deals'
+import { readCardPhoto, visionEnabled } from '@/lib/card-vision'
+import { rateLimit } from '@/lib/rate-limit'
 
 const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']
 const CONDITIONS: Condition[] = ['MINT', 'LIGHT_PLAYED', 'DAMAGED']
@@ -425,4 +427,49 @@ export async function bulkOffer(_: FormState, fd: FormData): Promise<FormState> 
   revalidatePath('/sbirka')
   revalidatePath('/sbirka/nabidka')
   return { ok: t('Nabídka uložena u {n} karet.', { n: items.length }) }
+}
+
+/**
+ * Přidání karty z fotky: model přečte jméno, kód sady a číslo, pak stejné hledání jako u „Přidej kartu číslem“.
+ * Jedna jistá shoda se rovnou přidá, víc shod se nabídne k výběru. Limit 200 fotek denně na uživatele.
+ */
+export async function quickAddPhoto(_: QuickAddState, fd: FormData): Promise<QuickAddState> {
+  const t = await getT()
+  const user = await requireUser()
+  if (!visionEnabled()) return { error: t('Rozpoznávání z fotky teď není k dispozici.') }
+  const file = fd.get('photo')
+  if (!(file instanceof File) || !file.size) return { error: t('Vyfoť kartu.') }
+  if (file.size > 3_000_000 || !/^image\/(jpeg|png|webp)$/.test(file.type)) return { error: t('Fotka je moc velká nebo v nepodporovaném formátu.') }
+  if (!rateLimit(`photo:${user.id}`, 200, 24 * 3_600_000)) return { error: t('Dnes už jsi vyfotil(a) hodně karet. Zkus to zítra.') }
+
+  const reading = await readCardPhoto(Buffer.from(await file.arrayBuffer()), file.type).catch(() => null)
+  if (!reading) return { error: t('Kartu se nepodařilo přečíst. Zkus ostřejší fotku celé karty, nebo napiš číslo ručně.') }
+  const recognized = [reading.name, [reading.setCode, reading.number && (reading.total ? `${reading.number}/${reading.total}` : reading.number)].filter(Boolean).join(' ')]
+    .filter(Boolean)
+    .join(' · ')
+
+  // Od nejpřesnějšího: kód sady + číslo, číslo/počet, jméno.
+  const queries = [
+    reading.setCode && reading.number ? `${reading.setCode} ${reading.number}` : null,
+    reading.number && reading.total ? `${reading.number}/${reading.total}` : null,
+    reading.name || null,
+  ].filter((q): q is string => !!q)
+  const nameKey = reading.name.toLowerCase()
+  for (const q of queries) {
+    let cards = await searchCards(q, 8)
+    if (!cards.length) continue
+    // Víc shod podle čísla: přednost těm se stejným jménem.
+    if (cards.length > 1 && nameKey) {
+      const same = cards.filter((c) => c.name.toLowerCase() === nameKey)
+      if (same.length) cards = same
+    }
+    if (cards.length === 1) {
+      await addPiece(user.id, cards[0].id)
+      revalidatePath('/sbirka')
+      const [hit] = await toHits(user.id, cards)
+      return { added: hit, q: recognized }
+    }
+    return { hits: await toHits(user.id, cards), q: recognized }
+  }
+  return { error: t('Přečetli jsme „{text}“, ale v katalogu jsme ji nenašli. Zkus číslo napsat ručně.', { text: recognized }) }
 }

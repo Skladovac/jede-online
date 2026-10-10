@@ -103,5 +103,16 @@ const dict: Record<string, string> = {
   'Nabídka zrušena u {n} karet.': 'Ponuka zrušená pri {n} kartách.',
   'Kusů navíc: 1–999.': 'Kusov navyše: 1–999.',
   'Nabídka uložena u {n} karet.': 'Ponuka uložená pri {n} kartách.',
+  'Rozpoznávání z fotky teď není k dispozici.': 'Rozpoznávanie z fotky teraz nie je k dispozícii.',
+  'Vyfoť kartu.': 'Odfoť kartu.',
+  'Fotka je moc velká nebo v nepodporovaném formátu.': 'Fotka je príliš veľká alebo v nepodporovanom formáte.',
+  'Dnes už jsi vyfotil(a) hodně karet. Zkus to zítra.': 'Dnes si už odfotil(a) veľa kariet. Skús to zajtra.',
+  'Kartu se nepodařilo přečíst. Zkus ostřejší fotku celé karty, nebo napiš číslo ručně.': 'Kartu sa nepodarilo prečítať. Skús ostrejšiu fotku celej karty alebo napíš číslo ručne.',
+  'Přečetli jsme „{text}“, ale v katalogu jsme ji nenašli. Zkus číslo napsat ručně.': 'Prečítali sme „{text}“, ale v katalógu sme ju nenašli. Skús číslo napísať ručne.',
+  'Vyfotit kartu': 'Odfotiť kartu',
+  'Vyfotit': 'Odfotiť',
+  '📷 Vyfoť celou kartu zepředu — web přečte jméno a číslo a kartu přidá.': '📷 Odfoť celú kartu spredu — web prečíta meno a číslo a kartu pridá.',
+  'Čtu kartu z fotky…': 'Čítam kartu z fotky…',
+  'Rozpoznáno: {text}': 'Rozpoznané: {text}',
 }
 export default dict
