@@ -65,6 +65,7 @@ model Card {
 
   items     CollectionItem[]
   wants     WantItem[]
+  auctionItems AuctionItem[]
   syncedAt  DateTime @updatedAt
 
   @@unique([setId, localId])
@@ -152,6 +153,7 @@ model User {
   activeDays     UserActiveDay[]
   photoScans     PhotoScan[]
   pushSubs       PushSubscription[]
+  auctions       Auction[]
   pushNightOk    Boolean   @default(false) // true = dospělý si vypnul noční klid push notifikací
   tradeMessages  TradeMessage[]
   following      Follow[]       @relation("Follower")
@@ -403,6 +405,7 @@ model Product {
 
   items ProductItem[]
   wants ProductWant[]
+  auctionItems AuctionItem[]
 
   @@index([setId])
   @@index([kind])
@@ -588,6 +591,39 @@ model Follow {
 }
 
 // Dny, kdy byl uživatel na webu (statistika „aktivní uživatelé po dnech“ v administraci).
+// Aukce na jiném webu (Facebook, Aukro, Vinted, Bazoš, eBay) — u nás jen odkaz, položky a čas konce.
+// Po konci zůstává jako archiv („jak aukce dopadla“ se dá dohledat přes odkaz).
+model Auction {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String        @db.VarChar(120)
+  url           String        @db.VarChar(500)
+  endsAt        DateTime
+  startPriceCzk Int?
+  note          String?       @db.VarChar(500)
+  hiddenAt      DateTime? // skryl admin (nahlášení)
+  createdAt     DateTime      @default(now())
+  items         AuctionItem[]
+
+  @@index([endsAt])
+  @@index([userId, endsAt])
+}
+
+model AuctionItem {
+  id        String   @id @default(cuid())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  cardId    String?
+  card      Card?    @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  productId Int?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([auctionId])
+  @@index([cardId])
+  @@index([productId])
+}
+
 // Push notifikace: jeden řádek = jedno zařízení/prohlížeč (endpoint od push služby prohlížeče).
 model PushSubscription {
   id        String   @id @default(cuid())

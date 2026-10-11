@@ -6,6 +6,7 @@ import { COUNTRY_LABEL, REGIONS } from '@/lib/regions'
 import { cardImage, productImage } from '@/lib/format'
 import { getT } from '@/lib/i18n/server'
 import { BadgeIcon } from '@/components/Badges'
+import { MarketNav } from '@/components/MarketNav'
 import { followingNicknames } from '@/lib/social'
 import { EmptyState, btnInk, btnSecondary, linkAccent } from '@/components/design'
 import { ArrowLeft, ArrowLeftRight, ArrowRight, Coins, Eye, Tag, type LucideIcon } from 'lucide-react'
@@ -71,21 +72,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
         </div>
       </div>
 
-      <nav className="mt-6 flex gap-2 overflow-x-auto border-b border-line">
-        {TABS.map((x) => (
-          <Link
-            key={x.id}
-            href={url({ tab: x.id, strana: '1' })}
-            aria-current={x.id === tab.id ? 'page' : undefined}
-            className={`-mb-px inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2.5 font-semibold transition-colors ${
-              x.id === tab.id ? 'border-accent-strong text-fg' : 'border-transparent text-subtle hover:text-fg'
-            }`}
-          >
-            <x.icon className="h-4 w-4" strokeWidth={1.75} aria-hidden />
-            {t(x.label)}
-          </Link>
-        ))}
-      </nav>
+      <MarketNav active={tab.id} hrefs={Object.fromEntries(TABS.map((x) => [x.id, url({ tab: x.id, strana: '1' })]))} />
       <p className="mt-3 text-sm text-muted">{t(tab.hint)}</p>
 
       <form className="mt-4 flex flex-wrap items-center gap-2 text-sm">

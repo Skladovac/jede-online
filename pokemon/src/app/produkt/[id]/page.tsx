@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { AuctionSection } from '@/components/AuctionCard'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
@@ -220,6 +221,7 @@ export default async function ProductPage({ params }: Props) {
           </ul>
         )}
       </section>
+      <AuctionSection where={{ items: { some: { productId: p.id } } }} />
     </main>
   )
 }
