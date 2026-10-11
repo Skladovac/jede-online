@@ -26,14 +26,18 @@ export async function photoQuota(user: { id: string; isAdmin?: boolean }) {
 /** Zapíše fotku do limitu. Vrací false, když už uživatel (nebo celý web) dnešní limit vyčerpal. */
 export async function takePhotoSlot(user: { id: string; isAdmin?: boolean }) {
   const since = pragueMidnight()
-  if (!user.isAdmin) {
-    const [mine, total] = await Promise.all([
-      prisma.photoScan.count({ where: { userId: user.id, createdAt: { gte: since } } }),
-      prisma.photoScan.count({ where: { createdAt: { gte: since } } }),
-    ])
-    if (mine >= PHOTO_DAILY) return { ok: false as const, reason: 'user' as const }
-    if (total >= PHOTO_DAILY_TOTAL) return { ok: false as const, reason: 'total' as const }
-  }
-  await prisma.photoScan.create({ data: { userId: user.id } })
-  return { ok: true as const }
+  // Zámek v Postgresu: souběžné fotky se zpracují postupně, takže limit nejde obejít odesláním 20 fotek naráz.
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('photo-quota'))`
+    if (!user.isAdmin) {
+      const [mine, total] = await Promise.all([
+        tx.photoScan.count({ where: { userId: user.id, createdAt: { gte: since } } }),
+        tx.photoScan.count({ where: { createdAt: { gte: since } } }),
+      ])
+      if (mine >= PHOTO_DAILY) return { ok: false as const, reason: 'user' as const }
+      if (total >= PHOTO_DAILY_TOTAL) return { ok: false as const, reason: 'total' as const }
+    }
+    await tx.photoScan.create({ data: { userId: user.id } })
+    return { ok: true as const }
+  })
 }

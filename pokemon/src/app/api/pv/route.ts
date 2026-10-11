@@ -24,7 +24,9 @@ export async function POST(req: NextRequest) {
   if (!rateLimit(`pv:${ip}`, 120, 60_000)) return new NextResponse(null, { status: 204 })
 
   let path = (await req.text()).trim().split(/[?#]/)[0].slice(0, 200)
-  if (!path.startsWith('/') || path.startsWith('/admin') || path.startsWith('/api')) return new NextResponse(null, { status: 204 })
+  // Jen cesty našeho webu: ne „//cizi.web“ ani zpětná lomítka (v administraci by z nich byly odkazy ven).
+  if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\') || path.startsWith('/admin') || path.startsWith('/api'))
+    return new NextResponse(null, { status: 204 })
   try {
     path = decodeURIComponent(path).slice(0, 200)
   } catch {

@@ -16,9 +16,16 @@ export async function reportBug(_: FormState, fd: FormData): Promise<FormState> 
 
   const message = str(fd, 'message')
   const contact = str(fd, 'contact')
-  // Adresu posílá prohlížeč — může být podvržená (např. "javascript:…"). Bereme jen http(s).
+  // Adresu posílá prohlížeč — může být podvržená (cizí web, „javascript:…“). Bereme jen stránky našeho webu.
   const rawUrl = str(fd, 'pageUrl').slice(0, 500)
-  const pageUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : ''
+  const pageUrl = (() => {
+    try {
+      const u = new URL(rawUrl)
+      return u.origin === (process.env.APP_URL ?? 'https://pokemon.jede.online') || u.origin === 'http://localhost:3400' ? u.href : ''
+    } catch {
+      return ''
+    }
+  })()
   if (message.length < 10) return { error: t('Popiš prosím chybu aspoň pár slovy (min. 10 znaků).') }
   if (message.length > 2000) return { error: t('Popis je moc dlouhý (max. 2000 znaků).') }
   if (contact && !EMAIL_RE.test(contact)) return { error: t('Kontaktní e-mail nevypadá správně (nebo ho nech prázdný).') }
