@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { AuctionSection } from '@/components/AuctionCard'
 import { ChevronRight } from 'lucide-react'
 import { panel } from '@/components/design'
 import { notFound } from 'next/navigation'
@@ -191,6 +192,7 @@ export default async function CardPage({ params }: Props) {
       <MyCardPanel card={card} />
       <CardOffers cardId={card.id} />
       <CardBuyers cardId={card.id} />
+      <AuctionSection where={{ items: { some: { cardId: card.id } } }} />
     </main>
   )
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { AuctionSection } from '@/components/AuctionCard'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
@@ -220,6 +221,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           )
         })()}
       </div>
+
+      <AuctionSection where={{ userId: user.id }} showSeller={false} />
 
       {viewer && viewer.id !== user.id && (
         <details id="nahlasit" className="mt-12 text-sm" open={!!(await searchParams)?.nahlasit}>
