@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { JsonLd, SITE } from '@/components/JsonLd'
 import { prisma } from '@/lib/prisma'
 import { SetTile } from '@/components/SetTile'
 import { getCurrentUser } from '@/lib/auth'
@@ -62,6 +63,28 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
 
   return (
     <main>
+      <JsonLd
+        data={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'pokemon.jede.online',
+            alternateName: t('Pokémon karty – sbírka a výměny'),
+            url: SITE,
+            inLanguage: ['cs', 'sk', 'en'],
+            description: t('Bezplatná komunita sběratelů Pokémon karet z Česka a Slovenska: sbírka, chybějící karty, ceny, výměny, tržiště a aukce.'),
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'pokemon.jede.online',
+            url: SITE,
+            logo: `${SITE}/logo-1024.png`,
+            email: 'pokemon@jede.online',
+            areaServed: ['CZ', 'SK'],
+          },
+        ]}
+      />
       {user ? (
         <UserDashboard user={user} vitej={!!vitej} t={t} />
       ) : (

@@ -1,4 +1,5 @@
-# pokemon.jede.online – veřejný katalog a profily ano, soukromé stránky ne.
+# pokemon.jede.online – veřejný katalog, tržiště, aukce a profily ano, soukromé stránky ne.
+# Vyhledávače i AI asistenti (ChatGPT, Claude, Perplexity, Gemini…) jsou vítáni na veřejných stránkách.
 User-agent: *
 Allow: /
 Disallow: /admin
@@ -13,7 +14,38 @@ Disallow: /overeni/
 Disallow: /nove-heslo/
 Disallow: /prihlaseni
 Disallow: /hledat
+Disallow: /aukce/nova
+Disallow: /pozvanka/
 
+# AI vyhledávače a asistenti: stejná pravidla jako výše (výslovně povoleno).
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /ucet
+Disallow: /sbirka
+Disallow: /kosik
+Disallow: /poptavky
+Disallow: /upozorneni
+Disallow: /rodic/
+Disallow: /overeni/
+Disallow: /nove-heslo/
+Disallow: /prihlaseni
+Disallow: /hledat
+Disallow: /aukce/nova
+Disallow: /pozvanka/
+
+Sitemap: https://pokemon.jede.online/sitemap_index.xml
 Sitemap: https://pokemon.jede.online/sitemap/0.xml
 Sitemap: https://pokemon.jede.online/sitemap/1.xml
 Sitemap: https://pokemon.jede.online/sitemap/2.xml
