@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createSession } from '@/lib/auth'
+import { createSession, hashPassword, randomToken } from '@/lib/auth'
 import { OAUTH_PENDING_COOKIE, OAUTH_STATE_COOKIE, fetchProfile, isProvider, sign, verify } from '@/lib/oauth'
 
 export const dynamic = 'force-dynamic'
@@ -37,10 +37,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ prov
   let user = linked?.user ?? null
   if (!user && profile.email && profile.emailVerified) {
     user = await prisma.user.findUnique({ where: { email: profile.email } })
+    if (user?.bannedAt) return fail('blokovan')
     if (user) {
+      if (!user.emailVerifiedAt) {
+        // Účet s tímto e-mailem mohl předem založit někdo cizí (e-mail nikdy nepotvrdil). Skutečný majitel e-mailu
+        // teď prokázal, že schránka je jeho — ostatní přístupy zrušíme: heslo, přihlášení, odkazy a jiná propojení.
+        await prisma.$transaction([
+          prisma.session.deleteMany({ where: { userId: user.id } }),
+          prisma.emailToken.deleteMany({ where: { userId: user.id } }),
+          prisma.oAuthAccount.deleteMany({ where: { userId: user.id } }),
+          prisma.user.update({ where: { id: user.id }, data: { emailVerifiedAt: new Date(), passwordHash: await hashPassword(randomToken()) } }),
+        ])
+      }
       await prisma.oAuthAccount.create({ data: { userId: user.id, provider, providerId: profile.providerId } })
-      // Poskytovatel e-mail ověřil — u nás ho tedy můžeme brát jako potvrzený.
-      if (!user.emailVerifiedAt) await prisma.user.update({ where: { id: user.id }, data: { emailVerifiedAt: new Date() } })
     }
   }
 

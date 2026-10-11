@@ -103,9 +103,10 @@ export async function login(_: FormState, fd: FormData): Promise<FormState> {
   const t = await getT()
   const email = str(fd, 'email').toLowerCase()
   const fail = (error: string): FormState => ({ error, fields: { email } })
-  if (!rateLimit(`login:${await clientIp()}`, 10, 15 * 60_000)) return fail(t('Příliš mnoho pokusů. Zkus to za 15 minut.'))
-
-  if (!rateLimit(`login-acc:${email}`, 10, 15 * 60_000)) return fail(t('Příliš mnoho pokusů. Zkus to za 15 minut.'))
+  const ip = await clientIp()
+  if (!rateLimit(`login:${ip}`, 10, 15 * 60_000)) return fail(t('Příliš mnoho pokusů. Zkus to za 15 minut.'))
+  // Pokusy na jeden účet počítáme po adresách — útočník tak nemůže dítěti zamknout přihlášení z jiného místa.
+  if (!rateLimit(`login-acc:${email}:${ip}`, 10, 15 * 60_000)) return fail(t('Příliš mnoho pokusů. Zkus to za 15 minut.'))
 
   const user = await prisma.user.findUnique({ where: { email } })
   // Stejná hláška i stejně dlouhá odpověď pro neexistující účet a špatné heslo — neprozrazujeme, kdo je registrovaný.
@@ -132,7 +133,11 @@ export async function requestReset(_: FormState, fd: FormData): Promise<FormStat
   if (!rateLimit(`reset:${await clientIp()}`, 5, 60 * 60_000) || !rateLimit(`reset-acc:${email}`, 3, 60 * 60_000))
     return { error: t('Příliš mnoho žádostí. Zkus to za hodinu.') }
   const user = await prisma.user.findUnique({ where: { email } })
-  if (user && !user.bannedAt) await sendResetEmail(email, await createEmailToken(user.id, 'RESET', 1), user.locale)
+  // E-mail posíláme na pozadí: odpověď trvá stejně dlouho, ať účet existuje, nebo ne (nejde zjistit, kdo je registrovaný).
+  if (user && !user.bannedAt)
+    void createEmailToken(user.id, 'RESET', 1)
+      .then((token) => sendResetEmail(email, token, user.locale))
+      .catch((err) => console.error('[reset]', err))
   return { ok: t('Pokud je e-mail zaregistrovaný, poslali jsme na něj odkaz pro nové heslo. Když nedorazí, podívej se i do složky Spam / Nevyžádaná pošta.') }
 }
 

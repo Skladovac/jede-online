@@ -152,6 +152,8 @@ export async function saveItem(_: FormState, fd: FormData): Promise<FormState> {
   const data = { variant, condition, language, quantity, spareQty, offerType, priceCzk, note: note || null, purchasePriceCzk }
   // Čas zveřejnění nabídky jen při skutečné změně (nově navíc, jiný typ nebo cena), ne při úpravě poznámky.
   const prev = id ? await prisma.collectionItem.findFirst({ where: { id, userId: user.id } }) : null
+  // Cizí (nebo neexistující) položka: nic neměnit — jinak by šly přesměrovat cizí žádosti o výměnu.
+  if (id && !prev) return { error: t('Položka nenalezena.') }
   const offerChanged = spareQty > 0 && (!prev || prev.spareQty === 0 || prev.offerType !== offerType || prev.priceCzk !== priceCzk)
   const stamp = offerChanged ? { offeredAt: new Date() } : {}
   // Stejná varianta + stav + jazyk = jeden řádek; při kolizi kusy sečteme.
@@ -166,7 +168,7 @@ export async function saveItem(_: FormState, fd: FormData): Promise<FormState> {
     })
     if (id) {
       // Rozpracované poptávky na slučovaný řádek přesměrovat, ať se po výměně kusy odečtou.
-      await prisma.tradeRequestItem.updateMany({ where: { collectionItemId: id }, data: { collectionItemId: clash.id } })
+      await prisma.tradeRequestItem.updateMany({ where: { collectionItemId: id, collectionItem: { userId: user.id } }, data: { collectionItemId: clash.id } })
       await prisma.collectionItem.deleteMany({ where: { id, userId: user.id } })
     }
   } else if (id) {

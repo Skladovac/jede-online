@@ -70,7 +70,12 @@ export async function fetchProfile(p: Provider, code: string): Promise<OAuthProf
 }
 
 // ── Podepsaná data v cookie (stav přihlášení, rozpracovaná registrace) ──
-const secretKey = () => process.env.AUTH_SECRET || process.env.CRON_SECRET || 'dev-secret'
+const secretKey = () => {
+  const key = process.env.AUTH_SECRET
+  // V produkci bez vlastního klíče nepouštět (náhradní klíč by šel uhodnout a podvrhnout přihlášení).
+  if (!key && process.env.NODE_ENV === 'production') throw new Error('AUTH_SECRET není nastavený')
+  return key || 'dev-secret'
+}
 
 export function sign(data: object, maxAgeSec: number) {
   const body = Buffer.from(JSON.stringify({ ...data, exp: Date.now() + maxAgeSec * 1000 })).toString('base64url')
