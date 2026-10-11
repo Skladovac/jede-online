@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { suspiciousParentEmail } from '@/lib/consent-check'
+import { ADMIN_EMAIL, APP_URL, esc, notify } from '@/lib/email'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser, sha256 } from '@/lib/auth'
 import { str, type FormState } from '@/lib/validation'
@@ -36,6 +38,14 @@ export async function giveConsent(_: FormState, fd: FormData): Promise<FormState
     },
   })
   await refreshBadgesSafe(child.id)
+  // E-mail rodiče vypadá jako druhá schránka dítěte → souhlas platí, ale admin by to měl ověřit.
+  if (suspiciousParentEmail(child.email, child.parentEmail))
+    await notify(ADMIN_EMAIL, [], `Ověřit souhlas rodiče: ${child.nickname}`, [
+      `Dítě: ${esc(child.nickname)} (${esc(child.email)})`,
+      `E-mail „rodiče“: ${esc(child.parentEmail ?? '')} — vypadá podobně jako e-mail dítěte.`,
+      `Jméno rodiče ze souhlasu: ${esc(name)}`,
+      `Detail: <a href="${APP_URL}/admin/uzivatele/${child.id}">${APP_URL}/admin/uzivatele/${child.id}</a>`,
+    ]).catch((err) => console.error('[souhlas]', err))
   revalidatePath(`/rodic/${str(fd, 'token')}`)
   return { ok: t('Děkujeme, souhlas je udělen. Účet je plně funkční.') }
 }

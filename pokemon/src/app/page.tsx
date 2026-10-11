@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Onboarding } from '@/components/Onboarding'
 import { JsonLd, SITE } from '@/components/JsonLd'
 import { prisma } from '@/lib/prisma'
 import { SetTile } from '@/components/SetTile'
@@ -85,6 +86,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
           },
         ]}
       />
+      {user && vitej && <Onboarding nickname={user.nickname} />}
       {user ? (
         <UserDashboard user={user} vitej={!!vitej} t={t} />
       ) : (

@@ -1,3 +1,4 @@
+import { suspiciousParentEmail } from '@/lib/consent-check'
 import Link from 'next/link'
 import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
@@ -111,6 +112,7 @@ export default async function AdminUsers({
                         ) : (
                           <Badge tone="warning">dítě – čeká</Badge>
                         ))}
+                      {u.isMinor && suspiciousParentEmail(u.email, u.parentEmail) && <Badge tone="red">ověřit souhlas</Badge>}
                       {!u.emailVerifiedAt && <Badge tone="neutral">e-mail nepotvrzen</Badge>}
                     </span>
                   ) : (

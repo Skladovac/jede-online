@@ -15,7 +15,7 @@ import Link from 'next/link'
 import { getT } from '@/lib/i18n/server'
 import { CardImg } from '@/components/CardImg'
 import { panel } from '@/components/design'
-import { ArrowRight, Coins, Link2, Tag } from 'lucide-react'
+import { ArrowRight, Coins, Link2, Printer, Tag } from 'lucide-react'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -40,7 +40,11 @@ export default async function MyCollectionPage() {
       )}
       <div className="mt-6">
         <QuickAdd photo={visionEnabled()} quota={visionEnabled() ? await photoQuota(user) : undefined} photoDaily={PHOTO_DAILY} />
-        <p className="mt-2 text-right text-sm">
+        <p className="mt-2 flex flex-wrap justify-end gap-x-6 gap-y-1 text-sm">
+          <Link href="/sbirka/tisk" className="inline-flex items-center gap-1.5 font-semibold text-accent underline-offset-4 hover:underline">
+            <Printer className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+            {t('Vytisknout seznam chybějících')}
+          </Link>
           <Link href="/sbirka/nabidka" className="inline-flex items-center gap-1.5 font-semibold text-accent underline-offset-4 hover:underline">
             <Tag className="h-4 w-4" strokeWidth={1.75} aria-hidden />
             {t('Hromadná nabídka: nabídni víc karet najednou')}

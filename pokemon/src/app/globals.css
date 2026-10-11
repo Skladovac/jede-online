@@ -167,6 +167,25 @@ body {
 .hero-rise > *:nth-child(4) { animation-delay: 0.24s; }
 .hero-rise > *:nth-child(5) { animation-delay: 0.32s; }
 
+/* Tisk (seznam chybějících karet): jen obsah stránky na bílém papíře. */
+@media print {
+  header.sticky,
+  footer,
+  nav.fixed,
+  [role='dialog'],
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+    padding-bottom: 0 !important;
+  }
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}
+
 /* Viditelný focus pro klávesnici (WCAG). */
 :focus-visible {
   outline: 2px solid var(--pokemon-blue);
