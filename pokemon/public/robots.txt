@@ -2,7 +2,6 @@
 # Vyhledávače i AI asistenti (ChatGPT, Claude, Perplexity, Gemini…) jsou vítáni na veřejných stránkách.
 User-agent: *
 Allow: /
-Disallow: /admin
 Disallow: /api/
 Disallow: /ucet
 Disallow: /sbirka
@@ -30,7 +29,6 @@ User-agent: Google-Extended
 User-agent: Applebot-Extended
 User-agent: Bingbot
 Allow: /
-Disallow: /admin
 Disallow: /api/
 Disallow: /ucet
 Disallow: /sbirka

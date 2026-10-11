@@ -2,6 +2,8 @@ import path from 'path'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // Neprozrazovat, na čem web běží (hlavička X-Powered-By).
+  poweredByHeader: false,
   // Docker image na vlastním serveru — standalone vyrobí .next/standalone se server.js.
   output: 'standalone',
 
