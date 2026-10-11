@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { JsonLd, breadcrumbs } from '@/components/JsonLd'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { safeDecode } from '@/lib/validation'
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     n: set.cardCount,
     name: setDisplayName(set),
   })
-  return { title, description, openGraph: { title, description } }
+  return { title, description, alternates: { canonical: `/sady/${encodeURIComponent(set.id)}` }, openGraph: { title, description } }
 }
 
 export default async function SetPage({ params, searchParams }: Props) {
@@ -86,6 +87,12 @@ export default async function SetPage({ params, searchParams }: Props) {
 
   return (
     <main className="mx-auto max-w-page px-4 pb-10 pt-6 sm:px-6">
+      <JsonLd
+        data={breadcrumbs([
+          { name: t('Sady'), url: '/sady' },
+          { name: setDisplayName(set), url: `/sady/${encodeURIComponent(set.id)}` },
+        ])}
+      />
       <nav aria-label={t('Drobečková navigace')} className="flex items-center gap-1.5 text-sm text-subtle">
         <Link href="/sady" className="text-muted hover:text-fg">
           {t('Sady')}

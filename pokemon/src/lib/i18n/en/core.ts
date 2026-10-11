@@ -251,5 +251,6 @@ const dict: Record<string, string> = {
   'Vyměň s ostatními': 'Trade with others',
   'Najdi lidi, kteří mají tvoje chybějící karty, a domluvte se v chatu.': 'Find people who have your missing cards and arrange it in chat.',
   'Tvoje sbírka': 'Your collection',
+  'Bezplatná komunita sběratelů Pokémon karet z Česka a Slovenska: sbírka, chybějící karty, ceny, výměny, tržiště a aukce.': 'Free Pokémon card collector community for Czechia and Slovakia: collection, missing cards, prices, trades, marketplace and auctions.',
 }
 export default dict

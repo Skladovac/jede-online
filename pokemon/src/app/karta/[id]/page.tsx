@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { JsonLd, SITE, breadcrumbs } from '@/components/JsonLd'
 import { AuctionSection } from '@/components/AuctionCard'
 import { ChevronRight } from 'lucide-react'
 import { panel } from '@/components/design'
@@ -50,7 +51,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .filter(Boolean)
     .join(' ')
   const img = cardImage(card.imageUrl, 'high')
-  return { title, description, openGraph: { title, description, ...(img && { images: [img.startsWith('/') ? `https://pokemon.jede.online${img}` : img] }) } }
+  return {
+    title,
+    description,
+    alternates: { canonical: `/karta/${encodeURIComponent(card.id)}` },
+    openGraph: { title, description, ...(img && { images: [img.startsWith('/') ? `https://pokemon.jede.online${img}` : img] }) },
+  }
 }
 
 export default async function CardPage({ params }: Props) {
@@ -75,6 +81,25 @@ export default async function CardPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-page px-4 pb-10 pt-6 sm:px-6">
+      <JsonLd
+        data={[
+          breadcrumbs([
+            { name: t('Sady'), url: '/sady' },
+            { name: setDisplayName(card.set), url: setHref },
+            { name: card.name, url: `/karta/${encodeURIComponent(card.id)}` },
+          ]),
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: `${card.name} (${setDisplayName(card.set)} ${card.localId})`,
+            sku: card.id,
+            category: 'Pokémon Trading Card Game',
+            brand: { '@type': 'Brand', name: 'Pokémon TCG' },
+            ...(img && { image: img.startsWith('/') ? `${SITE}${img}` : img }),
+            url: `${SITE}/karta/${encodeURIComponent(card.id)}`,
+          },
+        ]}
+      />
       <nav aria-label={t('Drobečková navigace')} className="flex items-center gap-1.5 text-sm text-subtle">
         <Link href="/sady" className="text-muted hover:text-fg">
           {t('Sady')}
