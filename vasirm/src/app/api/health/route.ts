@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { startSweeper } from '@/lib/realman-sync'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,6 +10,8 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET() {
   const commit = process.env.GIT_COMMIT ?? 'unknown'
+  // Deploy volá health hned po startu — tím se rozběhne i dokončování stahování fotek z Realmanu.
+  startSweeper()
 
   try {
     await prisma.$queryRaw`SELECT 1`

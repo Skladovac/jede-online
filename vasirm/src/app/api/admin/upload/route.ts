@@ -42,8 +42,9 @@ export async function POST(req: Request) {
     }
 
     const listingId = url.searchParams.get('listingId') ?? ''
-    const listing = await prisma.listing.findUnique({ where: { id: listingId }, select: { id: true, title: true, locality: true, videoPath: true } })
+    const listing = await prisma.listing.findUnique({ where: { id: listingId }, select: { id: true, title: true, locality: true, videoPath: true, source: true } })
     if (!listing) return err('Nemovitost neexistuje.', 404)
+    if (listing.source === 'REALMAN') return err('Fotky nemovitosti z Realmanu se nahrávají v Realmanu.', 403)
 
     if (kind === 'image') {
       const input = await readLimited(req, MAX_IMAGE_BYTES)

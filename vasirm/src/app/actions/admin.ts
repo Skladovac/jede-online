@@ -9,6 +9,7 @@ import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { deleteListingImageFiles, deleteListingMedia, mediaPath } from '@/lib/media'
 import { ENERGY_CLASSES, slugify } from '@/lib/format'
 import { rm } from 'fs/promises'
+import { enqueueSync } from '@/lib/realman-sync'
 
 export type AdminState = { ok?: boolean; error?: string; message?: string }
 
@@ -81,8 +82,9 @@ function embedUrl(raw: string) {
 
 export async function saveListing(id: string, _: AdminState, fd: FormData): Promise<AdminState> {
   await requireUser()
-  const current = await prisma.listing.findUnique({ where: { id }, select: { status: true, publishedAt: true, soldAt: true } })
+  const current = await prisma.listing.findUnique({ where: { id }, select: { status: true, publishedAt: true, soldAt: true, source: true } })
   if (!current) return { error: 'Nemovitost neexistuje.' }
+  if (current.source === 'REALMAN') return { error: 'Tahle nemovitost se upravuje v Realmanu.' }
 
   const title = str(fd, 'title', 160)
   if (!title) return { error: 'Vyplňte název.' }
@@ -144,8 +146,15 @@ export async function deleteListing(id: string) {
   redirect('/admin/nemovitosti')
 }
 
+/** Fotky a video nemovitostí z Realmanu spravuje Realman — tady se nesmí měnit. */
+async function assertManual(listingId: string) {
+  const l = await prisma.listing.findUnique({ where: { id: listingId }, select: { source: true } })
+  if (!l || l.source === 'REALMAN') throw new Error('Nemovitost z Realmanu se upravuje v Realmanu.')
+}
+
 export async function reorderImages(listingId: string, ids: string[]) {
   await requireUser()
+  await assertManual(listingId)
   const imgs = await prisma.listingImage.findMany({ where: { listingId }, select: { id: true } })
   const own = new Set(imgs.map((i) => i.id))
   await prisma.$transaction(ids.filter((i) => own.has(i)).map((imgId, sort) => prisma.listingImage.update({ where: { id: imgId }, data: { sort } })))
@@ -154,6 +163,9 @@ export async function reorderImages(listingId: string, ids: string[]) {
 
 export async function deleteImage(imageId: string) {
   await requireUser()
+  const owner = await prisma.listingImage.findUnique({ where: { id: imageId }, select: { listingId: true } })
+  if (!owner) return
+  await assertManual(owner.listingId)
   const img = await prisma.listingImage.delete({ where: { id: imageId } }).catch(() => null)
   if (img) await deleteListingImageFiles(img.listingId, img.id, img.sizes)
   revalidatePath('/', 'layout')
@@ -161,11 +173,15 @@ export async function deleteImage(imageId: string) {
 
 export async function updateImageAlt(imageId: string, alt: string) {
   await requireUser()
+  const owner = await prisma.listingImage.findUnique({ where: { id: imageId }, select: { listingId: true } })
+  if (!owner) return
+  await assertManual(owner.listingId)
   await prisma.listingImage.update({ where: { id: imageId }, data: { alt: alt.trim().slice(0, 200) } })
 }
 
 export async function deleteVideo(listingId: string) {
   await requireUser()
+  await assertManual(listingId)
   const l = await prisma.listing.findUnique({ where: { id: listingId }, select: { videoPath: true } })
   if (l?.videoPath) {
     const abs = mediaPath(l.videoPath)
@@ -173,6 +189,25 @@ export async function deleteVideo(listingId: string) {
   }
   await prisma.listing.update({ where: { id: listingId }, data: { videoPath: null } })
   revalidatePath('/', 'layout')
+}
+
+// ───────────── Realman ─────────────
+
+/** U nemovitosti z Realmanu jde na webu měnit jen zvýraznění. */
+export async function setFeatured(id: string, featured: boolean) {
+  await requireUser()
+  await prisma.listing.update({ where: { id }, data: { featured } })
+  revalidatePath('/', 'layout')
+}
+
+/** Zkusit znovu stáhnout fotky / video (odkazy z Realmanu mohly mezitím vypršet — pak pomůže nový export). */
+export async function retrySync(id: string) {
+  await requireUser()
+  const l = await prisma.listing.findUnique({ where: { id }, select: { source: true, syncPayload: true } })
+  if (l?.source !== 'REALMAN' || !l.syncPayload) return
+  await prisma.listing.update({ where: { id }, data: { syncState: 'pending', syncAttempts: 0, syncError: '' } })
+  enqueueSync(id)
+  revalidatePath('/admin', 'layout')
 }
 
 // ───────────── poptávky ─────────────

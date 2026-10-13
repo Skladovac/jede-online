@@ -17,6 +17,22 @@ Next.js 15 · Prisma + PostgreSQL · Tailwind · GSAP · sharp. Docker na Hetzne
 - **SEO:** strukturovaná data (RealEstateAgent, RealEstateListing, drobečky), sitemap, OG obrázky,
   301 ze starých adres WordPressu `/nemovitost/<slug>/`. Pracovní verze má `noindex` (ALLOW_INDEXING=0).
 
+## Napojení na Realman
+
+Zakázky se zadávají v Realmanu; tlačítko „Exportovat na web“ je pošle sem (dokumentace Realmanu
+„REST — export na externí web klienta v3“, atributy podle importu Sreality kap. 3.1).
+
+- `POST /import/estate/{ID}` — založí / aktualizuje nemovitost (`source = REALMAN`), odpoví hned;
+  fotky (JPEG z odkazů s omezenou platností) a video se stáhnou a zmenší ve frontě (`lib/realman-sync.ts`),
+  nepovedené soubory se zkusí znovu (max. 3×, pak čekají na další export).
+- `DELETE /import/estate/{ID}` — zakázka stažená z exportu → na webu „Prodáno“ (smazat jde ručně v administraci).
+- Ověření: hlavička `apikey` = `REALMAN_API_KEY` (vlastní, ne výchozí z dokumentace) a IP Realmanu 88.86.117.161–173.
+- Nemovitosti z Realmanu jsou v administraci jen ke čtení (kromě zvýraznění a smazání); přehled volání je v `/admin/realman`.
+- Makléř se páruje podle e-mailu z Realmanu na účet v administraci. Developerské projekty se zatím odmítají.
+- Po prvním exportu spárovat původní ruční nemovitosti (zachová 301 ze starého WordPressu):
+  `… run --rm vasirm-tools npx tsx --conditions=react-server scripts/realman-merge.ts <slug> <ID zakázky> --yes`
+- Do Realmanu (podpora@realman.cz) předat URL `https://<doména>/import/estate/` a klíč z `/opt/jede/vasirm-creds/realman-apikey.txt`.
+
 ## Lokální vývoj
 
 ```

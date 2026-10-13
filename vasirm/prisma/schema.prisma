@@ -36,6 +36,12 @@ model Session {
   @@index([userId])
 }
 
+/// Odkud nemovitost pochází: ručně z administrace, nebo exportem z Realmanu (pak se upravuje jen v Realmanu).
+enum ListingSource {
+  MANUAL
+  REALMAN
+}
+
 enum ListingStatus {
   DRAFT
   ACTIVE
@@ -58,53 +64,82 @@ enum PropertyType {
 }
 
 model Listing {
-  id           String         @id @default(cuid())
-  slug         String         @unique
+  id              String         @id @default(cuid())
+  slug            String         @unique
   /// Adresa ze starého WordPressu (/nemovitost/<legacySlug>/) — kvůli přesměrování a Googlu.
-  legacySlug   String?        @unique
-  title        String
-  status       ListingStatus  @default(DRAFT)
-  offerType    OfferType      @default(SALE)
-  propertyType PropertyType   @default(HOUSE)
-  locality     String /// „Zlín – Chlum“
-  mapQuery     String         @default("") /// pro mapu, bez přesné adresy
-  price        Int? /// null = cena v RK / na vyžádání
-  priceNote    String         @default("")
-  usableArea   Int?
-  landArea     Int?
-  disposition  String         @default("")
-  energyClass  String? /// A–G (PENB), zákon ji v inzerci vyžaduje
-  perex        String         @default("")
-  description  String         @default("") /// odstavce oddělené prázdným řádkem
-  params       Json           @default("[]") /// [{ label, value }]
-  videoPath    String? /// relativně k MEDIA_DIR
-  videoUrl     String? /// YouTube / Vimeo
-  agentId      String?
-  agent        User?          @relation(fields: [agentId], references: [id], onDelete: SetNull)
-  featured     Boolean        @default(false)
-  publishedAt  DateTime?
-  soldAt       DateTime?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  images       ListingImage[]
-  leads        Lead[]
+  legacySlug      String?        @unique
+  source          ListingSource  @default(MANUAL)
+  /// ID zakázky v Realmanu (/import/estate/{ID})
+  externalId      String?        @unique
+  /// Hodnota `updated` z posledního exportu
+  externalUpdated String?
+  /// Stažení fotek a videa z Realmanu: ok | pending | error
+  syncState       String         @default("ok")
+  syncError       String         @default("")
+  syncAttempts    Int            @default(0)
+  /// Poslední přijatá data z Realmanu (fotky a videa se stahují až po odpovědi)
+  syncPayload     Json?
+  /// Otisk aktuálně staženého videa (title|updated|url bez parametrů), ať se nestahuje znovu
+  videoSourceKey  String?
+  title           String
+  status          ListingStatus  @default(DRAFT)
+  offerType       OfferType      @default(SALE)
+  propertyType    PropertyType   @default(HOUSE)
+  locality        String /// „Zlín – Chlum“
+  mapQuery        String         @default("") /// pro mapu, bez přesné adresy
+  price           Int? /// null = cena v RK / na vyžádání
+  priceNote       String         @default("")
+  usableArea      Int?
+  landArea        Int?
+  disposition     String         @default("")
+  energyClass     String? /// A–G (PENB), zákon ji v inzerci vyžaduje
+  perex           String         @default("")
+  description     String         @default("") /// odstavce oddělené prázdným řádkem
+  params          Json           @default("[]") /// [{ label, value }]
+  videoPath       String? /// relativně k MEDIA_DIR
+  videoUrl        String? /// YouTube / Vimeo
+  agentId         String?
+  agent           User?          @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  featured        Boolean        @default(false)
+  publishedAt     DateTime?
+  soldAt          DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  images          ListingImage[]
+  leads           Lead[]
 
   @@index([status, publishedAt])
 }
 
 model ListingImage {
-  id        String   @id @default(cuid())
-  listingId String
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  sort      Int      @default(0)
-  width     Int
-  height    Int
-  sizes     Int[] /// vygenerované šířky webp
-  blur      String   @default("") /// malý náhled jako data URL
-  alt       String   @default("")
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  listingId    String
+  listing      Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  sort         Int      @default(0)
+  width        Int
+  height       Int
+  sizes        Int[] /// vygenerované šířky webp
+  blur         String   @default("") /// malý náhled jako data URL
+  alt          String   @default("")
+  /// Otisk fotky z Realmanu (`hash`) — stejnou fotku podruhé nestahujeme
+  externalHash String?
+  createdAt    DateTime @default(now())
 
   @@index([listingId, sort])
+}
+
+/// Záznam každého volání exportu z Realmanu (pro kontrolu v administraci).
+model RealmanLog {
+  id         String   @id @default(cuid())
+  externalId String
+  method     String
+  ok         Boolean
+  message    String
+  listingId  String?
+  ip         String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 enum LeadType {

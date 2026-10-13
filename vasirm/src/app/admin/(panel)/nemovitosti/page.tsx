@@ -59,6 +59,9 @@ export default async function ListingsAdmin() {
                 <div className="min-w-0 flex-1 py-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLE[l.status]}`}>{STATUS_LABEL[l.status]}</span>
+                    {l.source === 'REALMAN' && <span className="rounded-full border border-gold px-2 py-0.5 text-xs font-semibold text-gold-deep">Realman</span>}
+                    {l.source === 'REALMAN' && l.syncState === 'pending' && <span className="text-xs text-stone">stahují se fotky…</span>}
+                    {l.source === 'REALMAN' && l.syncState === 'error' && <span className="text-xs font-semibold text-amber-700">chyba fotek</span>}
                     {l.featured && <span className="text-xs font-semibold text-gold-deep">★ Zvýrazněno</span>}
                     {warn && (
                       <span className="flex items-center gap-1 text-xs font-semibold text-amber-700">
