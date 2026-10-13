@@ -114,3 +114,18 @@ test('popis: HTML a jednotlivé řádky na odstavce', () => {
   assert.equal(normalizeDescription('<p>A&nbsp;b</p><p>C<br>D</p>'), 'A b\n\nC\nD')
   assert.equal(normalizeDescription('A\r\n\r\n\r\nB'), 'A\n\nB')
 })
+
+test('SSRF: vnitřní adresy jsou blokované, veřejné ne', async () => {
+  const { isBlockedAddress } = await import('./safe-fetch')
+  for (const a of ['127.0.0.1', '10.1.2.3', '172.20.0.5', '192.168.1.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '::1', '::ffff:127.0.0.1', '::ffff:7f00:1', '::ffff:a9fe:a9fe', 'fd00::1', 'fe80::1', 'nesmysl'])
+    assert.equal(isBlockedAddress(a), true, a)
+  for (const a of ['88.86.117.161', '178.104.231.220', '::ffff:88.86.117.161', '2a01:4f8:1c18:32b5::1']) assert.equal(isBlockedAddress(a), false, a)
+})
+
+test('SSRF: http a vnitřní IP v adrese se vůbec nestahují', async () => {
+  const { safeFetch } = await import('./safe-fetch')
+  await assert.rejects(safeFetch('http://example.com/a.jpg', 1000), /https/)
+  await assert.rejects(safeFetch('https://127.0.0.1/a.jpg', 1000), /Neplatná/)
+  await assert.rejects(safeFetch('https://[::1]/a.jpg', 1000), /Neplatná/)
+  await assert.rejects(safeFetch('https://localhost/a.jpg', 1000), /neveřejnou/)
+})

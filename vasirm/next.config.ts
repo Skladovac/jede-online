@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   // Bez tohohle si Next kořen odvodí z nadřazeného lockfilu (kořen repa jede-online)
   // a server.js skončí zanořený, kde ho Dockerfile nenajde.
   outputFileTracingRoot: path.resolve(__dirname),
-  serverExternalPackages: ['@prisma/client', 'sharp'],
+  serverExternalPackages: ['@prisma/client', 'sharp', 'undici'],
   // Fotky si zmenšujeme sami při nahrání (lib/media.ts), optimalizátor Nextu nepotřebujeme.
   images: { unoptimized: true },
   // Zbytky starého WordPressu (detaily /nemovitost/<slug> řeší app/nemovitost/[...slug]/route.ts).

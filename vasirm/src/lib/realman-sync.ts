@@ -1,11 +1,11 @@
 import 'server-only'
 import { rm } from 'fs/promises'
-import { isIP } from 'net'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { slugify } from '@/lib/format'
 import { MAX_IMAGE_BYTES, deleteListingImageFiles, mediaPath, processListingImage, saveVideoStream } from '@/lib/media'
 import { mapEstate, type MappedEstate, type RealmanPhoto, type RealmanVideo } from '@/lib/realman'
+import { safeFetch } from '@/lib/safe-fetch'
 
 // Příjem exportu z Realmanu. Odpověď Realmanu musí přijít hned, takže se uloží jen údaje nemovitosti
 // a fotky / video se stahují až potom ve frontě (po jednom — malý server, sharp bere hodně paměti).
@@ -104,18 +104,8 @@ export async function logRealman(entry: { externalId: string; method: string; ok
 
 // ───────────── stahování souborů ─────────────
 
-/** Jen https a žádné vnitřní adresy (ochrana, kdyby někdo podvrhl data). */
-function safeUrl(raw: string) {
-  const u = new URL(raw)
-  if (u.protocol !== 'https:') throw new Error('Soubor není na https.')
-  const host = u.hostname.replace(/^\[|\]$/g, '')
-  if (host === 'localhost' || host.endsWith('.local') || host.endsWith('.internal')) throw new Error('Neplatná adresa souboru.')
-  if (isIP(host) && /^(10\.|127\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|0\.|::1|f[cd])/i.test(host)) throw new Error('Neplatná adresa souboru.')
-  return u.toString()
-}
-
 async function download(url: string, maxBytes: number) {
-  const res = await fetch(safeUrl(url), { signal: AbortSignal.timeout(90_000) })
+  const res = await safeFetch(url, 90_000)
   if (!res.ok) throw new Error(`Stažení selhalo (${res.status}) — odkaz už možná vypršel.`)
   const len = Number(res.headers.get('content-length') ?? 0)
   if (len > maxBytes) throw new Error('Soubor je příliš velký.')
@@ -169,9 +159,9 @@ export async function syncMedia(listingId: string) {
   if (media.video?.kind === 'file') {
     if (media.video.key !== l.videoSourceKey || !l.videoPath) {
       try {
-        const res = await fetch(safeUrl(media.video.url), { signal: AbortSignal.timeout(15 * 60_000) })
+        const res = await safeFetch(media.video.url, 15 * 60_000)
         if (!res.ok || !res.body) throw new Error(`Stažení videa selhalo (${res.status}).`)
-        const rel = await saveVideoStream(l.id, res.body)
+        const rel = await saveVideoStream(l.id, res.body as unknown as ReadableStream<Uint8Array>)
         await dropVideoFile()
         await prisma.listing.update({ where: { id: l.id }, data: { videoPath: rel, videoSourceKey: media.video.key } })
       } catch (e) {
