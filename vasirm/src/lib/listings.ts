@@ -1,6 +1,7 @@
 import 'server-only'
 import type { ListingStatus, Prisma, PropertyType } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { agentSelect } from '@/lib/agents'
 
 export { STATUS_LABEL, TYPE_LABEL, TYPE_PLURAL, TYPE_SLUG, OFFER_LABEL } from '@/lib/labels'
 
@@ -35,11 +36,13 @@ export async function getListingCards(opts: {
   sort?: 'new' | 'price-asc' | 'price-desc'
   take?: number
   excludeId?: string
+  agentId?: string
 }) {
   const where: Prisma.ListingWhereInput = {
     status: opts.sold ? 'SOLD' : { in: ['ACTIVE', 'RESERVED'] },
     ...(opts.type && { propertyType: opts.type }),
     ...(opts.excludeId && { id: { not: opts.excludeId } }),
+    ...(opts.agentId && { agentId: opts.agentId }),
   }
   const orderBy: Prisma.ListingOrderByWithRelationInput[] =
     opts.sort === 'price-asc'
@@ -54,7 +57,7 @@ export async function getListingCards(opts: {
 export function getListingBySlug(slug: string) {
   return prisma.listing.findFirst({
     where: { slug, status: { in: PUBLIC_STATUSES } },
-    include: { images: { orderBy: { sort: 'asc' } }, agent: true },
+    include: { images: { orderBy: { sort: 'asc' } }, agent: { select: agentSelect } },
   })
 }
 

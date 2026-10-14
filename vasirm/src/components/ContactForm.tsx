@@ -9,8 +9,11 @@ export function ContactForm({
   messageLabel = 'Zpráva',
   placeholder,
   submit = 'Odeslat zprávu',
+  agent,
 }: {
   source: string
+  /** slug makléře — dotaz z jeho osobní stránky */
+  agent?: string
   messageLabel?: string
   placeholder?: string
   submit?: string
@@ -22,6 +25,7 @@ export function ContactForm({
   return (
     <form action={action} className="relative space-y-4" noValidate>
       <input type="hidden" name="source" value={source} />
+      {agent && <input type="hidden" name="agent" value={agent} />}
       <BotTrap />
       <Field label="Jméno a příjmení" name="name" state={state} autoComplete="name" />
       <div className="grid gap-4 sm:grid-cols-2">

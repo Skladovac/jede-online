@@ -241,12 +241,77 @@ export async function saveProfile(_: AdminState, fd: FormData): Promise<AdminSta
   if (name.length < 3) return { error: 'Vyplňte jméno.' }
   const publicEmail = str(fd, 'publicEmail', 120).toLowerCase()
   if (publicEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(publicEmail)) return { error: 'E-mail nevypadá správně.' }
+  const video = embedUrl(str(fd, 'videoUrl', 300))
+  if (video === undefined) return { error: 'Odkaz na video musí být z YouTube nebo Vimea.' }
+  const specialties = str(fd, 'specialties', 400)
+    .split(',')
+    .map((s) => s.trim().slice(0, 40))
+    .filter(Boolean)
+    .slice(0, 8)
   await prisma.user.update({
     where: { id: user.id },
-    data: { name, role: str(fd, 'role', 60), phone: str(fd, 'phone', 40), publicEmail, bio: str(fd, 'bio', 2000) },
+    data: {
+      name,
+      role: str(fd, 'role', 60),
+      phone: str(fd, 'phone', 40),
+      publicEmail,
+      bio: str(fd, 'bio', 600),
+      story: str(fd, 'story', 8000),
+      specialties,
+      yearsInField: int(fd, 'yearsInField'),
+      soldCount: int(fd, 'soldCount'),
+      avgSaleDays: int(fd, 'avgSaleDays'),
+      videoUrl: video,
+    },
   })
   revalidatePath('/', 'layout')
   return { ok: true, message: 'Profil uložen.' }
+}
+
+// ───────────── tým a reference ─────────────
+
+export async function saveTeam(_: AdminState, fd: FormData): Promise<AdminState> {
+  await requireUser()
+  const data = { yearsInField: int(fd, 'yearsInField'), soldCount: int(fd, 'soldCount'), avgSaleDays: int(fd, 'avgSaleDays'), story: str(fd, 'story', 8000) }
+  await prisma.teamSettings.upsert({ where: { id: 1 }, create: { id: 1, ...data }, update: data })
+  revalidatePath('/', 'layout')
+  return { ok: true, message: 'Uloženo.' }
+}
+
+export async function saveTestimonial(id: string | null, _: AdminState, fd: FormData): Promise<AdminState> {
+  await requireUser()
+  const quote = str(fd, 'quote', 1200)
+  const clientName = str(fd, 'clientName', 60)
+  if (quote.length < 10) return { error: 'Vyplňte text reference.' }
+  if (!clientName) return { error: 'Vyplňte jméno klienta (stačí „Jana K.“).' }
+  const consent = fd.get('consent') === 'on'
+  const published = fd.get('published') === 'on'
+  if (published && !consent) return { error: 'Zveřejnit jde jen referenci, ke které má klient souhlas.' }
+  const agentId = str(fd, 'agentId', 40)
+  const listingId = str(fd, 'listingId', 40)
+  const data = {
+    quote,
+    clientName,
+    clientPlace: str(fd, 'clientPlace', 60),
+    propertyLabel: str(fd, 'propertyLabel', 80),
+    agentId: agentId ? ((await prisma.user.findUnique({ where: { id: agentId }, select: { id: true } }))?.id ?? null) : null,
+    listingId: listingId ? ((await prisma.listing.findUnique({ where: { id: listingId }, select: { id: true } }))?.id ?? null) : null,
+    consent,
+    published,
+    sort: int(fd, 'sort') ?? 0,
+  }
+  if (id) await prisma.testimonial.update({ where: { id }, data })
+  else await prisma.testimonial.create({ data })
+  revalidatePath('/', 'layout')
+  if (!id) redirect('/admin/reference')
+  return { ok: true, message: published ? 'Uloženo a zveřejněno.' : 'Uloženo (na webu zatím není).' }
+}
+
+export async function deleteTestimonial(id: string) {
+  await requireUser()
+  await prisma.testimonial.delete({ where: { id } }).catch(() => null)
+  revalidatePath('/', 'layout')
+  redirect('/admin/reference')
 }
 
 export async function changePassword(_: AdminState, fd: FormData): Promise<AdminState> {

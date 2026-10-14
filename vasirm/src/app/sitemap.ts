@@ -5,14 +5,16 @@ import { SITE_URL } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
 
-const PAGES = ['', '/nabidka', '/prodej-nemovitosti', '/koupe-nemovitosti', '/odhad-nemovitosti-zdarma', '/o-nas', '/kontakt', '/ochrana-osobnich-udaju']
+const PAGES = ['', '/o-nas', '/nabidka', '/reference', '/prodej-nemovitosti', '/koupe-nemovitosti', '/odhad-nemovitosti-zdarma', '/kontakt', '/ochrana-osobnich-udaju']
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const listings = await prisma.listing.findMany({
     where: { status: { in: PUBLIC_STATUSES } },
     select: { slug: true, updatedAt: true, status: true },
   })
+  const agents = await prisma.user.findMany({ select: { slug: true } })
   return [
+    ...agents.map((a) => ({ url: `${SITE_URL}/makleri/${a.slug}`, changeFrequency: 'monthly' as const, priority: 0.9 })),
     ...PAGES.map((p) => ({ url: `${SITE_URL}${p}`, changeFrequency: 'weekly' as const, priority: p === '' ? 1 : 0.7 })),
     ...listings.map((l) => ({
       url: `${SITE_URL}/nabidka/${l.slug}`,

@@ -10,20 +10,61 @@ datasource db {
 
 /// Makléř = zároveň účet do administrace. Veřejné údaje (telefon, e-mail, fotka) jsou na webu.
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique /// přihlašovací e-mail
+  id           String        @id @default(cuid())
+  email        String        @unique /// přihlašovací e-mail
   passwordHash String
   name         String
-  slug         String    @unique
-  role         String    @default("realitní makléř")
-  phone        String    @default("")
-  publicEmail  String    @default("")
-  bio          String    @default("")
+  slug         String        @unique
+  role         String        @default("realitní makléř")
+  phone        String        @default("")
+  publicEmail  String        @default("")
+  bio          String        @default("") /// krátké představení (1–2 věty)
+  /// Osobní příběh na osobní stránce (odstavce oddělené prázdným řádkem)
+  story        String        @default("")
+  /// Specializace — štítky (např. „rodinné domy“, „investiční byty“)
+  specialties  String[]      @default([])
+  yearsInField Int?
+  soldCount    Int?
+  avgSaleDays  Int?
+  /// Video představení (YouTube / Vimeo, adresa pro vložení). Prázdné = na webu skryté.
+  videoUrl     String?
   photo        String? /// URL fotky (/img/... ze složky public, nebo /media/... nahraná)
-  sort         Int       @default(0)
-  createdAt    DateTime  @default(now())
+  sort         Int           @default(0)
+  createdAt    DateTime      @default(now())
   sessions     Session[]
   listings     Listing[]
+  testimonials Testimonial[]
+}
+
+/// Společné údaje týmu na úvodní stránce (jediný řádek, id = 1).
+model TeamSettings {
+  id           Int    @id @default(1)
+  yearsInField Int?
+  soldCount    Int?
+  avgSaleDays  Int?
+  /// Společný příběh na stránce O nás
+  story        String @default("")
+}
+
+/// Reference klienta. Na web jde jen se souhlasem klienta a když je zveřejněná.
+model Testimonial {
+  id            String   @id @default(cuid())
+  quote         String
+  clientName    String /// „Jana K.“
+  clientPlace   String   @default("") /// „Zlín“
+  propertyLabel String   @default("") /// „Prodej rodinného domu“
+  agentId       String?
+  agent         User?    @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  /// Fotka z prodané nemovitosti (první fotka)
+  listingId     String?
+  listing       Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  consent       Boolean  @default(false)
+  published     Boolean  @default(false)
+  sort          Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([published, sort])
 }
 
 model Session {
@@ -107,6 +148,7 @@ model Listing {
   updatedAt       DateTime       @updatedAt
   images          ListingImage[]
   leads           Lead[]
+  testimonials    Testimonial[]
 
   @@index([status, publishedAt])
 }

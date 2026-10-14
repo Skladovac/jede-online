@@ -136,10 +136,22 @@ async function submitContactInner(fd: FormData): Promise<FormState> {
   if ('error' in c) return c
   const message = str(fd, 'message', 3000)
   if (message.length < 5) return { error: 'Napište nám prosím, s čím vám můžeme pomoci.', fields: { message: 'Napište prosím zprávu.' } }
-  const lead = await save({ type: 'CONTACT', ...c, message, source: str(fd, 'source', 120) || '/kontakt' })
+  // Dotaz z osobní stránky makléře jde jemu jako prvnímu.
+  const agent = str(fd, 'agent', 40)
+    ? await prisma.user.findUnique({ where: { slug: str(fd, 'agent', 40) }, select: { id: true, name: true } })
+    : null
+  const lead = await save({
+    type: 'CONTACT',
+    ...c,
+    message,
+    source: str(fd, 'source', 120) || '/kontakt',
+    ...(agent && { data: { makler: agent.name } }),
+  })
   await notifyLead({
-    subject: `Dotaz z webu: ${c.name}`,
+    subject: `Dotaz z webu${agent ? ` pro ${agent.name}` : ''}: ${c.name}`,
+    agentId: agent?.id,
     rows: [
+      ['Pro', agent?.name ?? ''],
       ['Jméno', c.name],
       ['Telefon', c.phone],
       ['E-mail', c.email],

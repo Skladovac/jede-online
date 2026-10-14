@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Menu, Phone, X } from 'lucide-react'
 import { LogoMark } from '@/components/Logo'
-import { NAV, SITE, telHref } from '@/lib/site'
+import { SITE, telHref, type NavItem } from '@/lib/site'
 
-export function Header() {
+export function Header({ nav }: { nav: NavItem[] }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -50,7 +50,7 @@ export function Header() {
 
           <nav aria-label="Hlavní" className="hidden lg:block">
             <ul className="flex items-center gap-8">
-              {NAV.map((item) => (
+              {nav.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
@@ -98,7 +98,7 @@ export function Header() {
         <div className="module-grid absolute inset-0 opacity-40" aria-hidden />
         <nav aria-label="Mobilní" className="wrap relative flex min-h-full flex-col justify-between py-10">
           <ul className="space-y-1">
-            {[{ href: '/', label: 'Úvod' }, ...NAV, { href: '/odhad-nemovitosti-zdarma', label: 'Odhad ceny zdarma' }].map((item, i) => (
+            {[{ href: '/', label: 'Úvod' }, ...nav, { href: '/odhad-nemovitosti-zdarma', label: 'Odhad ceny zdarma' }].map((item, i) => (
               <li key={item.href}>
                 <Link
                   href={item.href}

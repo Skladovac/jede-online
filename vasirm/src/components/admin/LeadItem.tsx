@@ -22,6 +22,7 @@ type Lead = {
 }
 
 const DATA_LABEL: Record<string, string> = {
+  makler: 'Pro makléře',
   typ: 'Typ',
   lokalita: 'Lokalita',
   plocha: 'Plocha (m²)',

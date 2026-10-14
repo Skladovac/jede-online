@@ -17,6 +17,15 @@ Next.js 15 · Prisma + PostgreSQL · Tailwind · GSAP · sharp. Docker na Hetzne
 - **SEO:** strukturovaná data (RealEstateAgent, RealEstateListing, drobečky), sitemap, OG obrázky,
   301 ze starých adres WordPressu `/nemovitost/<slug>/`. Pracovní verze má `noindex` (ALLOW_INDEXING=0).
 
+## Prezentace makléřů
+
+Web stojí na Markétě a Ondřejovi: úvod s jejich společnou fotkou, osobní stránky `/makleri/<slug>`
+(příběh, specializace, čísla, vlastní nabídka a prodané, reference, přímý kontakt), stránka `/reference`.
+- Každý makléř si v administraci (Můj profil) upravuje představení, příběh, specializaci, čísla a video (YouTube/Vimeo, prázdné = skryté).
+- Společná čísla a příběh týmu: administrace → Tým. Pás s čísly na úvodu se ukáže od dvou vyplněných čísel.
+- Reference: administrace → Reference; na web jen se souhlasem klienta a zaškrtnutým „Zveřejnit“. Položka „Reference“ v menu se ukáže, až nějaká bude.
+- Dokud makléř nedoplní příběh, web ukazuje jen ověřená fakta (žádná vymyšlená čísla ani recenze).
+
 ## Napojení na Realman
 
 Zakázky se zadávají v Realmanu; tlačítko „Exportovat na web“ je pošle sem (dokumentace Realmanu

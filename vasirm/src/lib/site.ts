@@ -25,12 +25,18 @@ export const SITE_URL = (process.env.SITE_URL ?? 'http://localhost:3500').replac
 /** Indexovat jen finální doménu — pracovní verze na jede.online nesmí do Googlu jako duplikát. */
 export const ALLOW_INDEXING = process.env.ALLOW_INDEXING === '1'
 
-export const NAV = [
+export type NavItem = { href: string; label: string }
+
+export const NAV: NavItem[] = [
+  { href: '/o-nas', label: 'O nás' },
   { href: '/nabidka', label: 'Nabídka' },
   { href: '/prodej-nemovitosti', label: 'Prodávám' },
   { href: '/koupe-nemovitosti', label: 'Kupuji' },
-  { href: '/o-nas', label: 'O nás' },
   { href: '/kontakt', label: 'Kontakt' },
-] as const
+]
+
+/** Menu webu; „Reference“ jen když nějaké zveřejněné jsou (prázdná stránka v menu nepůsobí dobře). */
+export const navItems = (hasReferences: boolean): NavItem[] =>
+  hasReferences ? [...NAV.slice(0, 2), { href: '/reference', label: 'Reference' }, ...NAV.slice(2)] : NAV
 
 export const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`

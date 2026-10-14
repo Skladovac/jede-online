@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { LogoFull } from '@/components/Logo'
-import { NAV, SITE, telHref } from '@/lib/site'
+import { SITE, telHref, type NavItem } from '@/lib/site'
 import type { User } from '@prisma/client'
 
-export function Footer({ agents }: { agents: Pick<User, 'id' | 'name' | 'role' | 'phone' | 'publicEmail'>[] }) {
+export function Footer({ agents, nav }: { agents: Pick<User, 'id' | 'name' | 'slug' | 'role' | 'phone' | 'publicEmail'>[]; nav: NavItem[] }) {
   const year = new Date().getFullYear()
   return (
     <footer className="relative overflow-hidden bg-ink text-paper/75">
@@ -20,7 +20,9 @@ export function Footer({ agents }: { agents: Pick<User, 'id' | 'name' | 'role' |
           <ul className="mt-5 grid gap-6 sm:grid-cols-2">
             {agents.map((a) => (
               <li key={a.id}>
-                <p className="font-semibold text-paper">{a.name}</p>
+                <Link href={`/makleri/${a.slug}`} className="font-semibold text-paper hover:text-gold-light">
+                  {a.name}
+                </Link>
                 <p className="text-sm text-paper/55">{a.role}</p>
                 {a.phone && (
                   <a href={telHref(a.phone)} className="mt-2 block hover:text-gold-light">
@@ -40,7 +42,7 @@ export function Footer({ agents }: { agents: Pick<User, 'id' | 'name' | 'role' |
         <nav aria-label="Patička" className="md:col-span-3">
           <p className="label text-gold">Web</p>
           <ul className="mt-5 space-y-2">
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <li key={n.href}>
                 <Link href={n.href} className="hover:text-gold-light">
                   {n.label}

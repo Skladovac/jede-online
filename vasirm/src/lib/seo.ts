@@ -22,6 +22,8 @@ export function organizationLd(agents: Agent[]) {
     areaServed: SITE.areaServed.map((name) => ({ '@type': 'City', name })),
     employee: agents.map((a) => ({
       '@type': 'Person',
+      '@id': `${SITE_URL}/makleri/${a.slug}#person`,
+      url: `${SITE_URL}/makleri/${a.slug}`,
       name: a.name,
       jobTitle: a.role,
       telephone: a.phone || undefined,

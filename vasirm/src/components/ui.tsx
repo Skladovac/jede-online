@@ -118,9 +118,16 @@ export function AgentPhoto({ agent, className = '', sizes = '320px' }: { agent: 
 export function AgentCard({ agent, dark = false }: { agent: Agent; dark?: boolean }) {
   return (
     <div className="flex items-center gap-5">
-      <AgentPhoto agent={agent} className="h-24 w-20 shrink-0" sizes="80px" />
+      <Link href={`/makleri/${agent.slug}`} className="shrink-0" tabIndex={-1} aria-hidden>
+        <AgentPhoto agent={agent} className="h-24 w-20" sizes="80px" />
+      </Link>
       <div className="min-w-0">
-        <p className={`font-serif text-2xl leading-tight ${dark ? 'text-paper' : 'text-ink'}`}>{agent.name}</p>
+        <Link
+          href={`/makleri/${agent.slug}`}
+          className={`font-serif text-2xl leading-tight underline-offset-4 hover:underline ${dark ? 'text-paper decoration-gold' : 'text-ink decoration-gold'}`}
+        >
+          {agent.name}
+        </Link>
         <p className={`text-sm ${dark ? 'text-paper/60' : 'text-stone'}`}>{agent.role}</p>
         <div className={`mt-2 space-y-1 text-[0.95rem] ${dark ? 'text-paper/85' : 'text-ink'}`}>
           {agent.phone && (

@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
-import { Mail, Phone } from 'lucide-react'
+import { AgentFeature, StatRow, TestimonialCard } from '@/components/agents'
 import { StaticPhoto } from '@/components/Photo'
-import { AgentPhoto, PageHero, SectionLabel, ValuationCta } from '@/components/ui'
-import { getAgents } from '@/lib/agents'
+import { ArrowLink, PageHero, SectionLabel, ValuationCta } from '@/components/ui'
+import { getAgents, getTeam, statsOf } from '@/lib/agents'
 import { WHY_US } from '@/lib/content'
-import { telHref } from '@/lib/site'
+import { nbsp, paragraphs } from '@/lib/format'
+import { SITE } from '@/lib/site'
+import { getTestimonials } from '@/lib/testimonials'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,11 +23,11 @@ const VALUES = [
   ['Právní jistota', 'Smlouvy a převod hlídáme do posledního detailu. S námi přesně víte, na čem jste.'],
 ]
 
-// Celé portréty (na výšku) podle makléře; nahraná fotka má přednost.
-const FULL: Record<string, string> = { marketa: 'team/marketa-cela', ondrej: 'team/ondrej-cely' }
-
 export default async function AboutPage() {
-  const agents = await getAgents()
+  const [agents, team, testimonials] = await Promise.all([getAgents(), getTeam(), getTestimonials(undefined, 2)])
+  const story = team.story.trim() ? paragraphs(team.story) : WHY_US
+  const stats = statsOf(team)
+
   return (
     <>
       <PageHero
@@ -35,95 +37,87 @@ export default async function AboutPage() {
             Od sousedů <em className="text-gold-light">pro sousedy.</em>
           </>
         }
-        lead="Nejsme velká korporace s anonymním call centrem. Jsme manželé, kteří milují reality a Zlín znají jako své boty."
+        lead={`${SITE.team}. ${team.yearsInField ? `Více než ${team.yearsInField} let v realitách. ` : ''}Manželé, kteří milují reality a Zlín znají jako své boty.`}
       />
 
+      {/* ───────── NÁŠ PŘÍBĚH ───────── */}
       <section className="bg-paper py-20 md:py-28">
-        <div className="wrap grid gap-14 lg:grid-cols-12">
-          <div className="lg:col-span-5">
-            <SectionLabel n="01">Kdo jsme</SectionLabel>
-            <div data-reveal className="prose-vrm mt-8">
-              {WHY_US.map((p) => (
-                <p key={p.slice(0, 20)}>{p}</p>
-              ))}
-            </div>
-            <blockquote data-reveal className="mt-10 border-l-2 border-gold pl-6">
-              <p className="font-serif text-[2.1rem] leading-tight">„Ke každému prodeji přistupujeme, jako bychom řešili vlastní bydlení.“</p>
-            </blockquote>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:col-span-7">
-            {agents.map((a, i) => (
-              <figure key={a.id} data-reveal className={i % 2 ? 'sm:mt-16' : ''}>
-                <div className="relative aspect-[3/4] overflow-hidden bg-ink-3">
-                  {FULL[a.slug] && !a.photo?.startsWith('/media/') ? (
-                    <StaticPhoto
-                      name={FULL[a.slug]}
-                      widths={[700, 1100]}
-                      sizes="(min-width: 1024px) 28vw, (min-width: 640px) 50vw, 100vw"
-                      width={1100}
-                      height={1650}
-                      alt={a.name}
-                      className="h-full w-full object-cover object-[60%_30%]"
-                    />
-                  ) : (
-                    <AgentPhoto agent={a} className="h-full w-full" />
-                  )}
-                </div>
-                <figcaption className="mt-5">
-                  <p className="font-serif text-[1.9rem] leading-tight">{a.name}</p>
-                  <p className="text-stone">{a.role}</p>
-                  {a.bio && <p className="mt-3 leading-relaxed text-ink/80">{a.bio}</p>}
-                  <div className="mt-3 space-y-1">
-                    {a.phone && (
-                      <a href={telHref(a.phone)} className="flex items-center gap-2 hover:text-gold-deep">
-                        <Phone className="h-4 w-4 text-gold" aria-hidden /> {a.phone}
-                      </a>
-                    )}
-                    {a.publicEmail && (
-                      <a href={`mailto:${a.publicEmail}`} className="flex items-center gap-2 hover:text-gold-deep">
-                        <Mail className="h-4 w-4 text-gold" aria-hidden /> {a.publicEmail}
-                      </a>
-                    )}
-                  </div>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="grain relative overflow-hidden bg-ink py-20 text-paper md:py-28">
-        <div className="wrap relative">
-          <SectionLabel n="02" dark>
-            Na čem si zakládáme
-          </SectionLabel>
-          <ol className="mt-12 grid gap-px bg-white/10 md:grid-cols-3">
-            {VALUES.map(([t, d], i) => (
-              <li key={t} data-reveal className="bg-ink p-8 md:p-10">
-                <span className="font-serif text-4xl text-gold/80">{['I.', 'II.', 'III.'][i]}</span>
-                <h2 className="mt-8 font-serif text-[2.2rem] leading-tight">{t}</h2>
-                <p className="mt-3 leading-relaxed text-paper/60">{d}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      <section className="bg-paper py-20 md:py-24">
-        <div className="wrap">
-          <div data-reveal className="relative">
+        <div className="wrap grid items-center gap-14 lg:grid-cols-12">
+          <div data-reveal className="relative lg:col-span-6">
+            <div className="absolute -right-4 -top-4 bottom-4 left-4 border border-gold" aria-hidden />
             <StaticPhoto
               name="team/par"
               widths={[960, 1600]}
-              sizes="100vw"
+              sizes="(min-width: 1024px) 45vw, 100vw"
               width={1600}
               height={1067}
-              alt="Markéta a Ondřej Nedbálkovi"
-              className="mx-auto w-full max-w-4xl"
+              alt={`${SITE.team}, realitní makléři ze Zlína`}
+              className="relative w-full"
             />
+          </div>
+          <div className="lg:col-span-6">
+            <SectionLabel n="01">Náš příběh</SectionLabel>
+            <div data-reveal className="prose-vrm mt-8 [&>p:first-child]:font-serif [&>p:first-child]:text-[1.6rem] [&>p:first-child]:leading-snug [&>p:first-child]:text-ink">
+              {story.map((p, i) => (
+                <p key={i}>{nbsp(p)}</p>
+              ))}
+            </div>
+            {stats.length > 0 && (
+              <div data-reveal className="mt-8 border-t border-ink/10 pt-8">
+                <StatRow stats={stats} />
+              </div>
+            )}
           </div>
         </div>
       </section>
+
+      {/* ───────── MAKLÉŘI ───────── */}
+      <section className="border-t border-ink/10 bg-paper-2 py-20 md:py-28">
+        <div className="wrap">
+          <SectionLabel n="02">Kdo jsme</SectionLabel>
+          <h2 data-reveal className="display mt-5 max-w-3xl text-[clamp(2.2rem,4.4vw,3.6rem)]">
+            Dva makléři, <em className="text-gold-deep">jeden přístup.</em>
+          </h2>
+          <div className="mt-16 grid gap-20 lg:grid-cols-2 lg:gap-16">
+            {agents.map((a, i) => (
+              <AgentFeature key={a.id} agent={a} index={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────── HODNOTY ───────── */}
+      <section className="grain relative overflow-hidden bg-ink py-20 text-paper md:py-28">
+        <div className="wrap relative">
+          <SectionLabel n="03" dark>
+            Na čem si zakládáme
+          </SectionLabel>
+          <ul className="mt-12 grid gap-px bg-white/10 md:grid-cols-3">
+            {VALUES.map(([t, d]) => (
+              <li key={t} data-reveal className="bg-ink p-8 md:p-10">
+                <h2 className="font-serif text-[2.2rem] leading-tight">{t}</h2>
+                <p className="mt-3 leading-relaxed text-paper/60">{d}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {testimonials.length > 0 && (
+        <section className="bg-paper py-20 md:py-28">
+          <div className="wrap">
+            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+              <SectionLabel n="04">Co říkají klienti</SectionLabel>
+              <ArrowLink href="/reference">Všechny reference</ArrowLink>
+            </div>
+            <div className={`mt-10 grid gap-6 ${testimonials.length > 1 ? 'md:grid-cols-2' : 'max-w-3xl'}`}>
+              {testimonials.map((t) => (
+                <TestimonialCard key={t.id} t={t} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <ValuationCta />
     </>
