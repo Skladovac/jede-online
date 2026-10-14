@@ -41,80 +41,59 @@ export default async function HomePage() {
     <>
       <HeroIntro />
 
-      {/* ───────── HERO: makléři ───────── */}
-      <section className="grain relative overflow-hidden bg-ink text-paper">
-        <div className="module-grid pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_25%_40%,black,transparent_75%)]" aria-hidden />
-        <div className="wrap relative grid items-center gap-14 pb-20 pt-12 md:pt-16 lg:grid-cols-12 lg:gap-12 lg:pb-24 lg:pt-20">
-          <div className="lg:col-span-6">
-            <p data-hero className="label flex items-center gap-3 text-gold-light">
-              <span className="h-px w-10 bg-gold/70" aria-hidden />
-              {SITE.name} · {SITE.region}
-            </p>
-            <h1 className="display mt-7 text-[clamp(3.2rem,7.6vw,6.4rem)]">
-              <span className="hero-line">
-                <span>{first} a</span>
-              </span>
-              <span className="hero-line">
-                <span className="italic text-gold-light">{second}</span>
-              </span>
-            </h1>
-            <p data-hero className="mt-6 font-serif text-[clamp(1.5rem,2.6vw,2rem)] leading-tight text-paper/90">
-              Změna bydlení bez stresu. {SITE.claim}
-            </p>
-            <p data-hero className="mt-6 max-w-xl text-[1.08rem] leading-relaxed text-paper/65">
-              {team.yearsInField ? `Více než ${team.yearsInField} let pomáháme lidem ve Zlíně a okolí prodat i najít domov. ` : ''}
-              Nejsme korporace s anonymním call centrem. Jsme manželé, kteří Zlín znají jako své boty, a ke každé zakázce přistupujeme, jako
-              bychom řešili vlastní bydlení.
-            </p>
-            <div data-hero className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Link href="#makleri" className="btn-gold">
-                Poznejte nás <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-              <Link href="/odhad-nemovitosti-zdarma" className="btn-ghost-light">
-                Odhad ceny zdarma
-              </Link>
-            </div>
-          </div>
-
-          <div className="relative lg:col-span-6">
-            <div data-hero-frame className="absolute -bottom-4 -left-4 right-4 top-4 border border-gold/50" aria-hidden />
-            <div className="relative aspect-[5/4] overflow-hidden bg-[#dfe3e8]">
-              <div data-hero-photo className="h-full w-full">
-                <StaticPhoto
-                  name="team/par"
-                  widths={[960, 1600]}
-                  sizes="(min-width: 1024px) 46vw, 100vw"
-                  width={1600}
-                  height={1067}
-                  alt={`${SITE.team}, realitní makléři ze Zlína`}
-                  priority
-                  className="h-full w-full object-cover object-[45%_30%]"
-                />
-              </div>
-            </div>
-            {team.yearsInField && (
-              <div
-                data-hero
-                className="absolute -bottom-8 right-6 grid h-32 w-32 place-items-center rounded-full bg-gold text-center text-ink shadow-[0_20px_50px_-15px_rgba(0,0,0,0.55)] sm:h-36 sm:w-36"
-              >
-                <div>
-                  <p className="font-serif text-[2.6rem] leading-none">{team.yearsInField}+</p>
-                  <p className="mt-1 text-[0.68rem] font-semibold uppercase leading-tight tracking-[0.14em]">
-                    let
-                    <br />v realitách
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+      {/* ───────── HERO: fotka přes celou obrazovku s modrým nádechem (jako na původním webu) ───────── */}
+      <section className="relative isolate flex min-h-[calc(100svh-4.5rem)] flex-col overflow-hidden bg-ink text-paper md:min-h-[max(calc(100svh-4.5rem),46rem)]">
+        <div data-hero-photo className="absolute inset-0 -z-10">
+          <StaticPhoto
+            name="team/par"
+            widths={[960, 1600, 2400]}
+            sizes="100vw"
+            width={2400}
+            height={1600}
+            alt={`${SITE.team}, realitní makléři ze Zlína`}
+            priority
+            className="h-full w-full object-cover object-[47%_8%]"
+          />
         </div>
-        {stats.length > 1 && (
-          <div className="relative border-t border-white/10">
-            <div className="wrap py-10">
-              <StatRow stats={stats} dark />
-            </div>
+        {/* Modrý závoj přes fotku + ztmavení dole kvůli čitelnosti textu */}
+        <div className="absolute inset-0 -z-10 bg-ink/55 mix-blend-multiply" aria-hidden />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/45 to-ink/10" aria-hidden />
+
+        <div className="wrap relative mt-auto pb-12 pt-[45vh] text-center md:pb-16 md:pt-[42vh]">
+          <p data-hero className="label flex items-center justify-center gap-3 text-gold-light">
+            <span className="h-px w-10 bg-gold/70" aria-hidden />
+            Realitní služby pro {SITE.region}
+            <span className="h-px w-10 bg-gold/70" aria-hidden />
+          </p>
+          <h1 className="display mx-auto mt-5 max-w-5xl text-[clamp(2.8rem,6vw,5.4rem)]">
+            <span className="hero-line">
+              <span>Změna bydlení</span>
+            </span>
+            <span className="hero-line">
+              <span className="italic text-gold-light">bez stresu.</span>
+            </span>
+          </h1>
+          <p data-hero className="mt-5 font-serif text-[clamp(1.5rem,2.6vw,2.1rem)] leading-tight text-paper/95">
+            {SITE.claim} {first} a {second}.
+          </p>
+          <p data-hero className="mx-auto mt-4 hidden max-w-2xl text-[1.05rem] leading-relaxed text-paper/75 sm:block">
+            {team.yearsInField ? `Více než ${team.yearsInField} let pomáháme lidem ve Zlíně a okolí prodat i najít domov. ` : ''}
+            Provedeme vás celým procesem s klidem, transparentností a osobním přístupem, který u korporátů nenajdete.
+          </p>
+          <div data-hero className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/odhad-nemovitosti-zdarma" className="btn-gold">
+              Chci probrat své možnosti <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+            <Link href="#makleri" className="btn-ghost-light backdrop-blur-sm">
+              Poznejte nás
+            </Link>
           </div>
-        )}
+          {stats.length > 1 && (
+            <div data-hero className="mx-auto mt-10 max-w-3xl border-t border-white/15 pt-8">
+              <StatRow stats={stats} dark className="text-center [&_dd]:mx-auto" />
+            </div>
+          )}
+        </div>
       </section>
 
       {/* ───────── MAKLÉŘI ───────── */}

@@ -10,8 +10,7 @@ export function HeroIntro() {
     const tl = gsap.timeline({ defaults: { ease: 'expo.out' } })
     tl.to('.hero-line > span', { y: 0, duration: 1.3, stagger: 0.12 })
       .to('[data-hero]', { opacity: 1, y: 0, duration: 1.1, stagger: 0.08 }, '-=0.9')
-      .to('[data-hero-photo]', { opacity: 1, scale: 1, duration: 1.6 }, 0.1)
-      .to('[data-hero-frame]', { opacity: 1, x: 0, y: 0, duration: 1.4 }, 0.5)
+      .to('[data-hero-photo]', { opacity: 1, scale: 1, duration: 1.8 }, 0)
     // Pojistka: když prohlížeč nekreslí snímky (okno v pozadí), dojet na konec, ať obsah nezůstane skrytý.
     const safety = window.setTimeout(() => tl.progress(1), 3000)
     return () => {

@@ -128,11 +128,9 @@ export default async function AgentPage({ params }: Props) {
                   <Phone className="h-4 w-4" aria-hidden /> {a.phone}
                 </a>
               )}
-              {a.publicEmail && (
-                <a href={`mailto:${a.publicEmail}`} className="btn-ghost-light">
-                  <Mail className="h-4 w-4" aria-hidden /> Napsat e-mail
-                </a>
-              )}
+              <a href="#kontakt" className="btn-ghost-light">
+                <Mail className="h-4 w-4" aria-hidden /> Napsat e-mail
+              </a>
             </div>
           </div>
         </div>
@@ -227,8 +225,8 @@ export default async function AgentPage({ params }: Props) {
         </section>
       )}
 
-      {/* ───────── KONTAKT ───────── */}
-      <section className="border-t border-ink/10 bg-paper-2 py-20 md:py-28">
+      {/* ───────── KONTAKT (sem vede tlačítko „Napsat e-mail“ nahoře) ───────── */}
+      <section id="kontakt" className="scroll-mt-20 border-t border-ink/10 bg-paper-2 py-20 md:py-28">
         <div className="wrap grid gap-12 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <SectionLabel>Kontakt</SectionLabel>

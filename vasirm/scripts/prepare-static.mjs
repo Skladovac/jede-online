@@ -30,7 +30,7 @@ await sizes('muz.jpg-scaled.jpg', 'team/ondrej', [480, 800], { left: 650, top: 4
 await sizes('zena.jpg-scaled.jpg', 'team/marketa', [480, 800], { left: 400, top: 430, width: 1080, height: 1350 })
 await sizes('muz.jpg-scaled.jpg', 'team/ondrej-cely', [700, 1100])
 await sizes('zena.jpg-scaled.jpg', 'team/marketa-cela', [700, 1100])
-await sizes('DSC04438opr-rovna-scaled.jpg', 'team/par', [960, 1600])
+await sizes('DSC04438opr-rovna-scaled.jpg', 'team/par', [960, 1600, 2400])
 
 // Logo: monogram „vrm“ zvlášť (řádky 0–182) a celé logo. Bílé na průhledném — na webu se barví přes CSS masku.
 await sharp(src('LOGO.png')).extract({ left: 0, top: 0, width: 670, height: 183 }).png().toFile(path.join(OUT, 'logo-mark.png'))
