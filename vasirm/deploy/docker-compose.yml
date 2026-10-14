@@ -47,6 +47,10 @@ services:
       DATABASE_URL: ${VASIRM_DATABASE_URL}
       MEDIA_DIR: /app/media
       CREDENTIALS_FILE: /creds/ucty.txt
+      # Pro scripts/email-test.ts (zkušební e-mail o poptávce).
+      SITE_URL: ${SITE_URL}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      LEAD_EMAILS: ${LEAD_EMAILS:-}
     volumes:
       - /opt/jede/vasirm-media:/app/media
       - /opt/jede/vasirm-creds:/creds

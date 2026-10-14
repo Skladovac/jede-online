@@ -173,3 +173,31 @@ model Lead {
 
   @@index([status, createdAt])
 }
+
+// ───────────── návštěvnost (vlastní počítadlo bez cookies) ─────────────
+
+/// Zobrazení stránky za den (cesta bez parametrů).
+model PageStat {
+  day   DateTime @db.Date
+  path  String
+  views Int      @default(0)
+
+  @@id([day, path])
+}
+
+/// Unikátní návštěvník za den = anonymní otisk (sha256 dne, IP, prohlížeče a tajné soli).
+model VisitorDay {
+  day  DateTime @db.Date
+  hash String   @db.Char(64)
+
+  @@id([day, hash])
+}
+
+/// Odkud lidé přišli (první stránka návštěvy): Google, Seznam, Sreality, Facebook, přímo…
+model SourceStat {
+  day    DateTime @db.Date
+  source String
+  visits Int      @default(0)
+
+  @@id([day, source])
+}

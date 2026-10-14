@@ -58,10 +58,15 @@ export default function PrivacyPage() {
               <li>Sendinblue SAS / Brevo (Francie) — odeslání upozornění na novou poptávku do naší e-mailové schránky.</li>
             </ul>
 
-            <h2>Cookies a mapy</h2>
+            <h2>Cookies, měření návštěvnosti a mapy</h2>
             <p>
               Web nepoužívá analytické ani reklamní cookies. Jediná cookie slouží k přihlášení makléřů do administrace. Mapa u nemovitosti
               se načítá ze služby Google až poté, co na ni kliknete — teprve tehdy se váš prohlížeč spojí se servery Googlu.
+            </p>
+            <p>
+              Návštěvnost měříme vlastním jednoduchým počítadlem na našem serveru, bez cookies a bez služeb třetích stran. Ukládáme jen
+              denní počty zobrazení stránek, odkud návštěvníci přišli (např. z vyhledávače) a anonymní denní otisk prohlížeče, ze kterého
+              nelze zjistit, kdo jste. Činíme tak na základě oprávněného zájmu zlepšovat web.
             </p>
 
             <h2>Vaše práva</h2>

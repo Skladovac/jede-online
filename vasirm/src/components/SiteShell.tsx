@@ -1,6 +1,7 @@
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { Reveal } from '@/components/Reveal'
+import { Analytics } from '@/components/Analytics'
 import { JsonLd } from '@/components/JsonLd'
 import { getAgents } from '@/lib/agents'
 import { organizationLd } from '@/lib/seo'
@@ -14,6 +15,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       <main id="obsah">{children}</main>
       <Footer agents={agents} />
       <Reveal />
+      <Analytics />
       <JsonLd data={organizationLd(agents)} />
     </>
   )

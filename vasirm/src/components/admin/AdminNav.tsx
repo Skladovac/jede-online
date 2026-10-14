@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ArrowDownToLine, ExternalLink, Home, Inbox, LayoutDashboard, LogOut, UserRound } from 'lucide-react'
+import { ArrowDownToLine, BarChart3, ExternalLink, Home, Inbox, LayoutDashboard, LogOut, UserRound } from 'lucide-react'
 import { logout } from '@/app/actions/admin'
 import { LogoMark } from '@/components/Logo'
 
@@ -12,6 +12,7 @@ export function AdminNav({ name, newLeads }: { name: string; newLeads: number })
     { href: '/admin', label: 'Přehled', icon: LayoutDashboard, exact: true },
     { href: '/admin/nemovitosti', label: 'Nemovitosti', icon: Home },
     { href: '/admin/poptavky', label: 'Poptávky', icon: Inbox, badge: newLeads },
+    { href: '/admin/navstevnost', label: 'Návštěvnost', icon: BarChart3 },
     { href: '/admin/realman', label: 'Realman', icon: ArrowDownToLine },
     { href: '/admin/profil', label: 'Můj profil', icon: UserRound },
   ]
