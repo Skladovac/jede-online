@@ -187,30 +187,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ───────── NABÍDKA ───────── */}
-      {listings.length > 0 && (
-        <section className="bg-paper py-20 md:py-28">
-          <div className="wrap">
-            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-              <div>
-                <SectionLabel n={testimonials.length ? '04' : '03'}>Z naší nabídky</SectionLabel>
-                <h2 data-reveal className="display mt-5 text-[clamp(2.4rem,5vw,4rem)]">
-                  Na čem právě <em>pracujeme</em>
-                </h2>
-              </div>
-              <div data-reveal>
-                <ArrowLink href="/nabidka">Celá nabídka</ArrowLink>
-              </div>
-            </div>
-            <div className={`mt-12 grid gap-x-8 gap-y-12 sm:grid-cols-2 ${gridCols(listings.length)}`}>
-              {listings.map((l, i) => (
-                <ListingCard key={l.id} l={l} index={i} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* ───────── POSTUP PRODEJE ───────── */}
       <section className="grain relative overflow-hidden bg-ink py-20 text-paper md:py-28">
         <div className="wrap relative">
@@ -248,6 +224,30 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ───────── NABÍDKA ───────── */}
+      {listings.length > 0 && (
+        <section className="bg-paper py-20 md:py-28">
+          <div className="wrap">
+            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+              <div>
+                <SectionLabel n={testimonials.length ? '04' : '03'}>Z naší nabídky</SectionLabel>
+                <h2 data-reveal className="display mt-5 text-[clamp(2.4rem,5vw,4rem)]">
+                  Na čem právě <em>pracujeme</em>
+                </h2>
+              </div>
+              <div data-reveal>
+                <ArrowLink href="/nabidka">Celá nabídka</ArrowLink>
+              </div>
+            </div>
+            <div className={`mt-12 grid gap-x-8 gap-y-12 sm:grid-cols-2 ${gridCols(listings.length)}`}>
+              {listings.map((l, i) => (
+                <ListingCard key={l.id} l={l} index={i} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <ValuationCta />
     </>
