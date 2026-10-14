@@ -1,0 +1,8 @@
+node_modules
+.next
+.env
+.env*.local
+.credentials.local
+.pg-data
+media
+deploy
