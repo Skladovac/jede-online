@@ -60,12 +60,12 @@ export default async function HomePage() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/45 to-ink/10" aria-hidden />
 
         <div className="wrap relative mt-auto pb-12 pt-[45vh] text-center md:pb-16 md:pt-[42vh]">
-          <p data-hero className="label flex items-center justify-center gap-3 text-gold-light">
+          <p data-hero className="label text-shade flex items-center justify-center gap-3 text-gold-light">
             <span className="h-px w-10 bg-gold/70" aria-hidden />
             Realitní služby pro {SITE.region}
             <span className="h-px w-10 bg-gold/70" aria-hidden />
           </p>
-          <h1 className="display mx-auto mt-5 max-w-5xl text-[clamp(2.8rem,6vw,5.4rem)]">
+          <h1 className="display hero-shadow mx-auto mt-5 max-w-5xl text-[clamp(2.8rem,6vw,5.4rem)]">
             <span className="hero-line">
               <span>Změna bydlení</span>
             </span>
@@ -73,10 +73,10 @@ export default async function HomePage() {
               <span className="italic text-gold-light">bez stresu.</span>
             </span>
           </h1>
-          <p data-hero className="mt-5 font-serif text-[clamp(1.5rem,2.6vw,2.1rem)] leading-tight text-paper/95">
+          <p data-hero className="text-shade mt-5 font-serif text-[clamp(1.5rem,2.6vw,2.1rem)] leading-tight text-paper/95">
             {SITE.claim} {first} a {second}.
           </p>
-          <p data-hero className="mx-auto mt-4 hidden max-w-2xl text-[1.05rem] leading-relaxed text-paper/75 sm:block">
+          <p data-hero className="text-shade mx-auto mt-4 hidden max-w-2xl text-[1.05rem] leading-relaxed text-paper/80 sm:block">
             {team.yearsInField ? `Více než ${team.yearsInField} let pomáháme lidem ve Zlíně a okolí prodat i najít domov. ` : ''}
             Provedeme vás celým procesem s klidem, transparentností a osobním přístupem, který u korporátů nenajdete.
           </p>

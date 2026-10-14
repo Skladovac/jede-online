@@ -131,3 +131,14 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Stín pod textem přes fotku (úvod). Nadpis má řádky s overflow:hidden (animace),
+   proto u něj drop-shadow na celém h1 — text-shadow by se na okrajích řádků usekl. */
+.hero-shadow {
+  filter: drop-shadow(0 3px 3px rgb(0 10 30 / 0.55)) drop-shadow(0 10px 30px rgb(0 10 30 / 0.6));
+}
+.text-shade {
+  text-shadow:
+    0 1px 2px rgb(0 10 30 / 0.6),
+    0 2px 16px rgb(0 10 30 / 0.5);
+}
