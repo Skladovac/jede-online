@@ -30,8 +30,10 @@ export async function notifyLead(opts: {
   replyTo?: { email: string; name: string }
   agentId?: string | null
   adminPath: string
+  /** pevní příjemci místo makléřů / LEAD_EMAILS */
+  to?: string[]
 }) {
-  const to = await recipients(opts.agentId)
+  const to = opts.to?.length ? opts.to : await recipients(opts.agentId)
   if (!to.length) return
   const html = `<!doctype html><html lang="cs"><body style="margin:0;background:#f9f9f9;font-family:-apple-system,Segoe UI,sans-serif;color:#001a3b">
 <table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr><td align="center" style="padding:32px 16px">
@@ -75,4 +77,10 @@ ${opts.rows
     // Poptávka je uložená v DB i bez e-mailu — chyba odeslání nesmí shodit formulář.
     console.error('[email] odeslání selhalo', err)
   }
+}
+
+/** Zpráva správci webu (vyplněný dotazník apod.): ADMIN_EMAIL, jinak příjemci poptávek. */
+export async function notifyAdmin(opts: { subject: string; rows: [string, string][]; adminPath: string }) {
+  const admin = (process.env.ADMIN_EMAIL ?? '').split(',').map((s) => s.trim()).filter(Boolean)
+  return notifyLead({ ...opts, to: admin.length ? admin : undefined })
 }

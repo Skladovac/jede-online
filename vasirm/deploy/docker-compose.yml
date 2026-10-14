@@ -24,6 +24,8 @@ services:
       ALLOW_INDEXING: ${ALLOW_INDEXING:-0}
       BREVO_API_KEY: ${BREVO_API_KEY:-}
       LEAD_EMAILS: ${LEAD_EMAILS:-}
+      # Správce webu (vyplněný dotazník makléřů apod.)
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       # Export z Realmanu (/import/estate/{ID}); požadavky jen z IP Realmanu 88.86.117.161–173.
       REALMAN_API_KEY: ${REALMAN_API_KEY:-}
       GIT_COMMIT: ${GIT_COMMIT:-unknown}

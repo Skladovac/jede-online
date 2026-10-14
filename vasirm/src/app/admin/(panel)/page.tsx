@@ -10,6 +10,7 @@ export const metadata = { title: 'Přehled' }
 
 export default async function Dashboard() {
   const user = await requireUser()
+  const questionnaire = await prisma.questionnaire.findUnique({ where: { userId: user.id }, select: { submittedAt: true } })
   const [active, reserved, sold, drafts, newLeads, leads, missingEnergy] = await Promise.all([
     prisma.listing.count({ where: { status: 'ACTIVE' } }),
     prisma.listing.count({ where: { status: 'RESERVED' } }),
@@ -49,6 +50,18 @@ export default async function Dashboard() {
         ))}
       </div>
       {drafts > 0 && <p className="mt-3 text-sm text-stone">Rozpracované koncepty: {drafts}</p>}
+
+      {!questionnaire?.submittedAt && (
+        <Link href="/admin/dotaznik" className="mt-6 flex flex-wrap items-center justify-between gap-4 border border-gold bg-gold/10 px-5 py-4 transition hover:bg-gold/20">
+          <span>
+            <span className="block font-semibold">Vyplňte prosím dotazník pro texty na web</span>
+            <span className="text-sm text-stone">Pár otázek o vás a vaší práci. Odpovědi se ukládají průběžně.</span>
+          </span>
+          <span className="inline-flex items-center gap-1 text-sm font-semibold">
+            Otevřít dotazník <ArrowRight className="h-4 w-4" aria-hidden />
+          </span>
+        </Link>
+      )}
 
       {missingEnergy.length > 0 && (
         <div className="mt-6 border-l-2 border-amber-500 bg-amber-50 px-5 py-4 text-sm">

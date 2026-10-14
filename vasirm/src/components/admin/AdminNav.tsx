@@ -2,16 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ArrowDownToLine, BarChart3, ExternalLink, Home, Inbox, LayoutDashboard, LogOut, MessageSquareQuote, UserRound, Users } from 'lucide-react'
+import { ArrowDownToLine, BarChart3, ClipboardList, ExternalLink, Home, Inbox, LayoutDashboard, LogOut, MessageSquareQuote, UserRound, Users } from 'lucide-react'
 import { logout } from '@/app/actions/admin'
 import { LogoMark } from '@/components/Logo'
 
-export function AdminNav({ name, newLeads }: { name: string; newLeads: number }) {
+export function AdminNav({ name, newLeads, questionnaireOpen }: { name: string; newLeads: number; questionnaireOpen: boolean }) {
   const pathname = usePathname()
   const items = [
     { href: '/admin', label: 'Přehled', icon: LayoutDashboard, exact: true },
     { href: '/admin/nemovitosti', label: 'Nemovitosti', icon: Home },
     { href: '/admin/poptavky', label: 'Poptávky', icon: Inbox, badge: newLeads },
+    { href: '/admin/dotaznik', label: 'Dotazník', icon: ClipboardList, badge: questionnaireOpen ? 1 : 0 },
     { href: '/admin/reference', label: 'Reference', icon: MessageSquareQuote },
     { href: '/admin/tym', label: 'Tým', icon: Users },
     { href: '/admin/navstevnost', label: 'Návštěvnost', icon: BarChart3 },

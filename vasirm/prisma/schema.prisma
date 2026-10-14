@@ -10,30 +10,40 @@ datasource db {
 
 /// Makléř = zároveň účet do administrace. Veřejné údaje (telefon, e-mail, fotka) jsou na webu.
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique /// přihlašovací e-mail
-  passwordHash String
-  name         String
-  slug         String        @unique
-  role         String        @default("realitní makléř")
-  phone        String        @default("")
-  publicEmail  String        @default("")
-  bio          String        @default("") /// krátké představení (1–2 věty)
+  id            String         @id @default(cuid())
+  email         String         @unique /// přihlašovací e-mail
+  passwordHash  String
+  name          String
+  slug          String         @unique
+  role          String         @default("realitní makléř")
+  phone         String         @default("")
+  publicEmail   String         @default("")
+  bio           String         @default("") /// krátké představení (1–2 věty)
   /// Osobní příběh na osobní stránce (odstavce oddělené prázdným řádkem)
-  story        String        @default("")
+  story         String         @default("")
   /// Specializace — štítky (např. „rodinné domy“, „investiční byty“)
-  specialties  String[]      @default([])
-  yearsInField Int?
-  soldCount    Int?
-  avgSaleDays  Int?
+  specialties   String[]       @default([])
+  yearsInField  Int?
+  soldCount     Int?
+  avgSaleDays   Int?
   /// Video představení (YouTube / Vimeo, adresa pro vložení). Prázdné = na webu skryté.
-  videoUrl     String?
-  photo        String? /// URL fotky (/img/... ze složky public, nebo /media/... nahraná)
-  sort         Int           @default(0)
-  createdAt    DateTime      @default(now())
-  sessions     Session[]
-  listings     Listing[]
-  testimonials Testimonial[]
+  videoUrl      String?
+  photo         String? /// URL fotky (/img/... ze složky public, nebo /media/... nahraná)
+  sort          Int            @default(0)
+  createdAt     DateTime       @default(now())
+  sessions      Session[]
+  listings      Listing[]
+  testimonials  Testimonial[]
+  questionnaire Questionnaire?
+}
+
+/// Dotazník pro texty na web (příběh, specializace, čísla…). Jeden na makléře, ukládá se průběžně.
+model Questionnaire {
+  userId      String    @id
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers     Json      @default("{}")
+  submittedAt DateTime?
+  updatedAt   DateTime  @updatedAt
 }
 
 /// Společné údaje týmu na úvodní stránce (jediný řádek, id = 1).

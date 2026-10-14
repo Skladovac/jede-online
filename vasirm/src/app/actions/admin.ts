@@ -10,6 +10,8 @@ import { deleteListingImageFiles, deleteListingMedia, mediaPath } from '@/lib/me
 import { ENERGY_CLASSES, slugify } from '@/lib/format'
 import { rm } from 'fs/promises'
 import { enqueueSync } from '@/lib/realman-sync'
+import { notifyAdmin } from '@/lib/email'
+import { QUESTIONS, QUESTION_KEYS, readAnswers } from '@/lib/questionnaire'
 
 export type AdminState = { ok?: boolean; error?: string; message?: string }
 
@@ -208,6 +210,39 @@ export async function retrySync(id: string) {
   await prisma.listing.update({ where: { id }, data: { syncState: 'pending', syncAttempts: 0, syncError: '' } })
   enqueueSync(id)
   revalidatePath('/admin', 'layout')
+}
+
+// ───────────── dotazník ─────────────
+
+/** Uloží jednu odpověď (průběžně, při opuštění pole). */
+export async function saveAnswer(key: string, value: string) {
+  const user = await requireUser()
+  if (!QUESTION_KEYS.has(key)) return { error: 'Neznámá otázka.' }
+  const q = await prisma.questionnaire.findUnique({ where: { userId: user.id } })
+  const answers = { ...readAnswers(q?.answers), [key]: String(value ?? '').slice(0, 6000) }
+  await prisma.questionnaire.upsert({ where: { userId: user.id }, create: { userId: user.id, answers }, update: { answers } })
+  return { ok: true }
+}
+
+/** Odeslání: označí dotazník jako hotový a pošle odpovědi e-mailem správci webu. */
+export async function submitQuestionnaire(answersFromForm: Record<string, string>) {
+  const user = await requireUser()
+  const clean: Record<string, string> = {}
+  for (const [k, v] of Object.entries(answersFromForm ?? {})) if (QUESTION_KEYS.has(k) && typeof v === 'string') clean[k] = v.slice(0, 6000)
+  const q = await prisma.questionnaire.findUnique({ where: { userId: user.id } })
+  const answers = { ...readAnswers(q?.answers), ...clean }
+  await prisma.questionnaire.upsert({
+    where: { userId: user.id },
+    create: { userId: user.id, answers, submittedAt: new Date() },
+    update: { answers, submittedAt: new Date() },
+  })
+  await notifyAdmin({
+    subject: `Dotazník vyplněn: ${user.name}`,
+    rows: QUESTIONS.filter((x) => (answers[x.key] ?? '').trim()).map((x) => [x.label, answers[x.key]] as [string, string]),
+    adminPath: '/admin/dotaznik',
+  })
+  revalidatePath('/admin', 'layout')
+  return { ok: true }
 }
 
 // ───────────── poptávky ─────────────
