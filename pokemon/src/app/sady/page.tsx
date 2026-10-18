@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { UpcomingBanner } from '@/components/UpcomingBanner'
 import { prisma } from '@/lib/prisma'
 import { SetTile } from '@/components/SetTile'
 import { getT } from '@/lib/i18n/server'
@@ -29,6 +30,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
     <main className="mx-auto max-w-6xl px-4 py-10">
       <p className="eyebrow">{t('Katalog')}</p>
       <h1 className="mt-2 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Všechny sady')}</h1>
+      <UpcomingBanner className="mt-6" />
       <nav className="mt-6 flex gap-6 border-b border-line">
         {(
           [

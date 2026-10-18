@@ -30,7 +30,7 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
         take: 10000,
       }),
     ])
-    const pages = ['', '/sady', '/sady?jazyk=ja', '/produkty', '/trziste', '/trziste?tab=koupim', '/aukce', '/hodnoceni', '/bezpecny-obchod', '/soukromi', '/registrace']
+    const pages = ['', '/sady', '/sady?jazyk=ja', '/sady/pripravovane', '/produkty', '/trziste', '/trziste?tab=koupim', '/aukce', '/hodnoceni', '/bezpecny-obchod', '/soukromi', '/registrace']
     return [
       ...pages.map((p) => ({ url: `${BASE}${p}`, changeFrequency: 'daily' as const, priority: p === '' ? 1 : 0.7 })),
       ...sets.map((s) => ({ url: `${BASE}/sady/${encodeURIComponent(s.id)}`, lastModified: s.syncedAt, changeFrequency: 'weekly' as const, priority: 0.8 })),
