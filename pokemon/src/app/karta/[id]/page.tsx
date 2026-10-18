@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { HoloCard } from '@/components/Motion'
 import { JsonLd, SITE, breadcrumbs } from '@/components/JsonLd'
 import { AuctionSection } from '@/components/AuctionCard'
 import { ChevronRight } from 'lucide-react'
@@ -116,10 +117,12 @@ export default async function CardPage({ params }: Props) {
           // Přirozený poměr stran: karty tištěné naležato (BREAK, LEGEND) se zobrazí celé, neořízlé.
           <div className="relative mx-auto w-full max-w-[400px] self-start">
             <div aria-hidden className="pointer-events-none absolute -inset-10 rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.28),transparent_72%)] dark:opacity-50" />
-            <div className="relative overflow-hidden rounded-[4.5%/3.2%] bg-surface shadow-[0_2px_2px_rgba(14,27,46,0.1),0_30px_50px_-18px_rgba(14,27,46,0.55)]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={img} alt={card.name} className="block h-auto w-full" />
-            </div>
+            <HoloCard className="relative">
+              <div className="relative overflow-hidden rounded-[4.5%/3.2%] bg-surface shadow-[0_2px_2px_rgba(14,27,46,0.1),0_30px_50px_-18px_rgba(14,27,46,0.55)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img} alt={card.name} className="block h-auto w-full" />
+              </div>
+            </HoloCard>
           </div>
         ) : (
           <div className="mx-auto aspect-[63/88] w-full max-w-[400px] overflow-hidden rounded-[4.5%/3.2%] bg-surface shadow-card" />

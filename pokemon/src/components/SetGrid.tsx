@@ -7,6 +7,7 @@ import { useT } from '@/lib/i18n/client'
 import { changeSpare, clearSetWanted, markByNumbers, markRestWanted, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
 import { CardImg } from '@/components/CardImg'
 import { POKEMON_TYPES } from '@/lib/pokemon-types'
+import { Celebration } from '@/components/Motion'
 import { ArrowLeft, ArrowRight, BookOpen, Check, LayoutGrid, Minus } from 'lucide-react'
 
 export type GridCard = { id: string; localId: string; name: string; image: string | null; price: string | null; types?: string[] }
@@ -77,6 +78,13 @@ export function SetGrid({
   const ownedCount = cards.filter((c) => (state[c.id]?.owned ?? 0) > 0).length
   const wantCount = cards.filter((c) => state[c.id]?.want).length
   const spareCount = cards.reduce((s, c) => s + (state[c.id]?.spare ?? 0), 0)
+  // Oslava: právě teď (klepnutím) jsem dokončil(a) sadu — ne při pouhém otevření už hotové sady.
+  const [celebrate, setCelebrate] = useState(0)
+  const prevOwned = useRef(ownedCount)
+  useEffect(() => {
+    if (prevOwned.current < officialCount && ownedCount >= officialCount && officialCount > 0) setCelebrate((n) => n + 1)
+    prevOwned.current = ownedCount
+  }, [ownedCount, officialCount])
 
   // Karty, u kterých se právě ukládá — další klepnutí se ignoruje (dvojklik by poslal dvě protichůdné změny).
   const inFlight = useRef(new Set<string>())
@@ -182,6 +190,7 @@ export function SetGrid({
 
   return (
     <div className="mt-6">
+      <Celebration show={celebrate} title={t('Sada kompletní!')} text={t('Máš všech {n} karet. Gratulujeme!', { n: officialCount })} />
       {loggedIn ? (
         <div className="sticky top-[119px] z-10 -mx-4 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_88%,transparent)] px-4 py-3.5 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-[67px] lg:top-[68px]">
           <div className="inline-flex flex-wrap gap-1 rounded-xl bg-surface p-1 ring-1 ring-inset ring-line" role="group" aria-label={t('Režim')}>

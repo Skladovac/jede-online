@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CountUp, FanIntro } from '@/components/Motion'
 import { UpcomingBanner } from '@/components/UpcomingBanner'
 import { Onboarding } from '@/components/Onboarding'
 import { JsonLd, SITE } from '@/components/JsonLd'
@@ -199,10 +200,10 @@ async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; s
           </div>
           <ul className="mt-10 flex flex-wrap gap-x-7 gap-y-2 font-mono text-[13px] text-muted">
             <li>
-              <b className="text-[15px] font-bold text-fg">{num(setCount)}</b>&nbsp; {t('sad')}
+              <CountUp value={setCount} className="text-[15px] font-bold text-fg" />&nbsp; {t('sad')}
             </li>
             <li>
-              <b className="text-[15px] font-bold text-fg">{num(cardCount)}</b>&nbsp; {t('karet')}
+              <CountUp value={cardCount} className="text-[15px] font-bold text-fg" />&nbsp; {t('karet')}
             </li>
             <li className="flex items-center gap-2">
               <span aria-hidden className="h-[7px] w-[7px] rounded-full bg-positive shadow-[0_0_0_4px_color-mix(in_srgb,var(--positive)_18%,transparent)]" />
@@ -212,17 +213,17 @@ async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; s
         </div>
 
         {fan.length >= 3 && (
-          <div className="relative mx-auto aspect-[10/9] w-full max-w-[420px] sm:max-w-[560px]" aria-hidden>
+          <FanIntro className="relative mx-auto aspect-[10/9] w-full max-w-[420px] sm:max-w-[560px]">
             {fan.map(({ card, cls }) => (
-              <div
-                key={card!.id}
-                className={`absolute aspect-[63/88] w-[42%] overflow-hidden rounded-[4.5%/3.2%] bg-surface shadow-[0_2px_2px_rgba(14,27,46,0.1),0_30px_50px_-18px_rgba(14,27,46,0.55)] transition-transform duration-300 hover:-translate-y-2 ${cls}`}
-              >
-                <CardImg src={cardImage(card!.imageUrl, 'high')} alt={card!.name} eager />
+              // Vnější prvek drží polohu a natočení ve vějíři, vnitřní (data-fan-card) animuje GSAP při načtení.
+              <div key={card!.id} className={`absolute aspect-[63/88] w-[42%] transition-transform duration-300 hover:-translate-y-2 ${cls}`}>
+                <div data-fan-card className="h-full w-full overflow-hidden rounded-[4.5%/3.2%] bg-surface shadow-[0_2px_2px_rgba(14,27,46,0.1),0_30px_50px_-18px_rgba(14,27,46,0.55)]">
+                  <CardImg src={cardImage(card!.imageUrl, 'high')} alt={card!.name} eager />
+                </div>
               </div>
             ))}
             {top && topPrice && (
-              <div className="absolute -bottom-2 left-0 z-50 hidden max-w-[260px] rounded-xl bg-[color-mix(in_srgb,var(--bg-card)_92%,transparent)] px-3.5 py-2.5 shadow-[0_2px_4px_rgba(14,27,46,0.05),0_8px_24px_-6px_rgba(14,27,46,0.18)] ring-1 ring-line backdrop-blur sm:block">
+              <div data-fan-placard className="absolute -bottom-2 left-0 z-50 hidden max-w-[260px] rounded-xl bg-[color-mix(in_srgb,var(--bg-card)_92%,transparent)] px-3.5 py-2.5 shadow-[0_2px_4px_rgba(14,27,46,0.05),0_8px_24px_-6px_rgba(14,27,46,0.18)] ring-1 ring-line backdrop-blur sm:block">
                 <p className="eyebrow truncate !text-[10px]">{t('Nejdražší v sadě {set}', { set: previewSet?.name ?? '' })}</p>
                 <p className="mt-0.5 text-sm font-bold text-fg">
                   {top.name} <span className="font-mono text-xs font-medium text-subtle">{top.localId}</span>
@@ -230,7 +231,7 @@ async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; s
                 <p className="font-display text-xl font-extrabold tabular-nums text-fg">≈ {topPrice}</p>
               </div>
             )}
-          </div>
+          </FanIntro>
         )}
       </div>
     </section>
