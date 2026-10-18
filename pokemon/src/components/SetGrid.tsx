@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { useT } from '@/lib/i18n/client'
 import { changeSpare, clearSetWanted, markByNumbers, markRestWanted, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
 import { CardImg } from '@/components/CardImg'
@@ -50,6 +51,27 @@ export function SetGrid({
   const [typeFilter, setTypeFilter] = useState<string | null>(null)
   const setTypes = [...new Set(cards.flatMap((c) => c.types ?? []))].filter((ty) => POKEMON_TYPES[ty])
   const [, startTransition] = useTransition()
+  // Po změnách sbírky obnovit uloženou kopii stránky v prohlížeči (jinak tlačítko Zpět ukáže starý stav
+  // „chybí“). Jednou po sérii klepnutí, ne po každém — obnova stránky sady je dražší.
+  const router = useRouter()
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const dirty = useRef(false)
+  const scheduleRefresh = () => {
+    dirty.current = true
+    clearTimeout(refreshTimer.current)
+    refreshTimer.current = setTimeout(() => {
+      dirty.current = false
+      router.refresh()
+    }, 1500)
+  }
+  // Odchod ze stránky dřív, než časovač doběhne: obnovit hned, ať se po návratu ukáže aktuální stav.
+  useEffect(
+    () => () => {
+      clearTimeout(refreshTimer.current)
+      if (dirty.current) router.refresh()
+    },
+    [router],
+  )
   const [error, setError] = useState<string | null>(null)
 
   const ownedCount = cards.filter((c) => (state[c.id]?.owned ?? 0) > 0).length
@@ -73,6 +95,7 @@ export function SetGrid({
         } else {
           setState((s) => ({ ...s, [cardId]: real }))
           setError(null)
+          scheduleRefresh()
         }
       } catch {
         setState((s) => ({ ...s, [cardId]: prev }))
@@ -112,6 +135,7 @@ export function SetGrid({
       )
       setNumbers('')
       setError(null)
+      scheduleRefresh()
     } catch {
       setError(t('Uložení se nepovedlo. Jsi přihlášený?'))
     } finally {
@@ -135,6 +159,7 @@ export function SetGrid({
         return next
       })
       setError(null)
+      scheduleRefresh()
     } catch {
       setError(t('Uložení se nepovedlo. Jsi přihlášený?'))
     } finally {
