@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { UpcomingBanner } from '@/components/UpcomingBanner'
 import { Onboarding } from '@/components/Onboarding'
 import { JsonLd, SITE } from '@/components/JsonLd'
 import { prisma } from '@/lib/prisma'
@@ -113,6 +114,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
 
       <section className="border-t border-line bg-surface py-16 sm:py-24">
         <div className={container}>
+          <UpcomingBanner className="mb-8" />
           <SectionHeader title={t('Nejnovější sady')} href="/sady" linkLabel={t('Všechny sady')} />
           {latest.length ? (
             <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:gap-4 lg:grid-cols-4">

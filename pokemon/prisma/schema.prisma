@@ -154,6 +154,7 @@ model User {
   photoScans     PhotoScan[]
   pushSubs       PushSubscription[]
   auctions       Auction[]
+  upcomingSubs   UpcomingSubscription[]
   pushNightOk    Boolean   @default(false) // true = dospělý si vypnul noční klid push notifikací
   tradeMessages  TradeMessage[]
   following      Follow[]       @relation("Follower")
@@ -591,6 +592,37 @@ model Follow {
 }
 
 // Dny, kdy byl uživatel na webu (statistika „aktivní uživatelé po dnech“ v administraci).
+// Připravované (ještě nevydané) anglické sady — stahuje se každou noc z TCG Watchtower (název, kód, datum, japonská předloha).
+// Ukázka karet a ceny jsou z japonské předlohy v našem katalogu. Po vydání (sada dorazí do katalogu) se zájemcům pošle upozornění.
+model UpcomingSet {
+  id          String                 @id @default(cuid())
+  slug        String                 @unique // „mega-evolution/delta-reign“
+  name        String
+  code        String? // „ME6“
+  releaseDate DateTime
+  cardCount   Int?
+  jaName      String? // „Storm Emeralda“
+  jaSetId     String? // spárovaná japonská sada v katalogu
+  sourceUrl   String
+  arrivedSetId String? // anglická sada v katalogu, když už vyšla
+  arrivedAt   DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  subs        UpcomingSubscription[]
+
+  @@index([releaseDate])
+}
+
+model UpcomingSubscription {
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  upcomingId String
+  upcoming   UpcomingSet @relation(fields: [upcomingId], references: [id], onDelete: Cascade)
+  createdAt  DateTime    @default(now())
+
+  @@id([userId, upcomingId])
+}
+
 // Aukce na jiném webu (Facebook, Aukro, Vinted, Bazoš, eBay) — u nás jen odkaz, položky a čas konce.
 // Po konci zůstává jako archiv („jak aukce dopadla“ se dá dohledat přes odkaz).
 model Auction {
