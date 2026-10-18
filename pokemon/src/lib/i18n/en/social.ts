@@ -337,5 +337,8 @@ const dict: Record<string, string> = {
   'Nová aukce na kartu, kterou hledáš': 'New auction for a card you are looking for',
   '{name}: {title}': '{name}: {title}',
   'Popiš prosím, co se stalo (10–400 znaků).': 'Please describe what happened (10–400 characters).',
+  'Nabídky': 'Offers',
+  'Karty a produkty na prodej, na výměnu i zdarma za poštovné.': 'Cards and products for sale, for trade or free for postage.',
+  'Druh nabídky': 'Offer type',
 }
 export default dict

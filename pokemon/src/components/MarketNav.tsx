@@ -1,15 +1,14 @@
 import Link from 'next/link'
-import { ArrowLeftRight, Coins, Gavel, Tag, type LucideIcon } from 'lucide-react'
+import { Coins, Gavel, Tag, type LucideIcon } from 'lucide-react'
 import { getT } from '@/lib/i18n/server'
 
 const ITEMS: { id: string; href: string; label: string; icon: LucideIcon }[] = [
-  { id: 'prodej', href: '/trziste', label: 'Prodej', icon: Tag },
+  { id: 'nabidky', href: '/trziste', label: 'Nabídky', icon: Tag },
   { id: 'koupim', href: '/trziste?tab=koupim', label: 'Koupím', icon: Coins },
-  { id: 'vymena', href: '/trziste?tab=vymena', label: 'Výměna', icon: ArrowLeftRight },
   { id: 'aukce', href: '/aukce', label: 'Aukce', icon: Gavel },
 ]
 
-/** Záložky tržiště (Prodej / Koupím / Výměna / Aukce). `hrefs` = vlastní odkazy (tržiště si přidává filtry). */
+/** Záložky tržiště (Nabídky / Koupím / Aukce). `hrefs` = vlastní odkazy (tržiště si přidává filtry). */
 export async function MarketNav({ active, hrefs = {} }: { active: string; hrefs?: Record<string, string> }) {
   const t = await getT()
   return (
