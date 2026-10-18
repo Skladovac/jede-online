@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { parsePlace } from '@/lib/matches'
-import { marketEntries, type MarketTab } from '@/lib/market'
+import { marketEntries, type MarketTab, type OfferFilter } from '@/lib/market'
 import { COUNTRY_LABEL, REGIONS } from '@/lib/regions'
 import { cardImage, productImage } from '@/lib/format'
 import { getT } from '@/lib/i18n/server'
@@ -20,25 +20,40 @@ export async function generateMetadata() {
 }
 export const dynamic = 'force-dynamic'
 
-const TABS: { id: MarketTab; label: string; icon: LucideIcon; hint: string; color: string }[] = [
-  { id: 'prodej', label: 'Prodej', icon: Tag, hint: 'Karty a produkty na prodej nebo zdarma za poštovné.', color: 'text-positive' },
-  { id: 'koupim', label: 'Koupím', icon: Coins, hint: 'Co sběratelé chtějí koupit a kolik za to dají. Máš to? Ozvi se jim.', color: 'text-[#7a5600] dark:text-[#ffd95c]' },
-  { id: 'vymena', label: 'Výměna', icon: ArrowLeftRight, hint: 'Karty a produkty, které sběratelé nabízejí na výměnu.', color: 'text-accent' },
+const TABS: { id: MarketTab; label: string; icon: LucideIcon; hint: string }[] = [
+  { id: 'nabidky', label: 'Nabídky', icon: Tag, hint: 'Karty a produkty na prodej, na výměnu i zdarma za poštovné.' },
+  { id: 'koupim', label: 'Koupím', icon: Coins, hint: 'Co sběratelé chtějí koupit a kolik za to dají. Máš to? Ozvi se jim.' },
 ]
+// Rychlý filtr nabídek.
+const FILTERS: { id: OfferFilter; label: string; icon?: LucideIcon }[] = [
+  { id: 'vse', label: 'Vše' },
+  { id: 'prodej', label: 'Prodej', icon: Tag },
+  { id: 'vymena', label: 'Výměna', icon: ArrowLeftRight },
+]
+// Barva štítku podle druhu nabídky.
+const KIND_COLOR = {
+  sell: 'text-positive',
+  gift: 'text-[#7a5600] dark:text-[#ffd95c]',
+  trade: 'text-accent',
+  buy: 'text-[#7a5600] dark:text-[#ffd95c]',
+} as const
 
-type Search = { tab?: string; kde?: string; sada?: string; strana?: string }
+type Search = { tab?: string; druh?: string; kde?: string; sada?: string; strana?: string }
 
 export default async function MarketPage({ searchParams }: { searchParams: Promise<Search> }) {
   const t = await getT()
   const sp = await searchParams
+  // Staré odkazy ?tab=prodej / ?tab=vymena vedou na sloučené Nabídky s odpovídajícím filtrem.
   const tab = TABS.find((x) => x.id === sp.tab) ?? TABS[0]
+  const druh: OfferFilter =
+    sp.druh === 'prodej' || sp.druh === 'vymena' ? sp.druh : sp.tab === 'vymena' ? 'vymena' : sp.tab === 'prodej' ? 'prodej' : 'vse'
   const { key: kde, place } = parsePlace(sp.kde, null)
   const setId = sp.sada || null
   // Stránku omezíme (velké číslo by načetlo celou databázi).
   const page = Math.min(50, Math.max(1, Math.floor(Number(sp.strana)) || 1))
   const following = await followingNicknames()
   const [{ entries, hasMore }, sets] = await Promise.all([
-    marketEntries(tab.id, place, setId, page),
+    marketEntries(tab.id, place, setId, page, druh),
     prisma.cardSet.findMany({
       where: { game: 'pokemon' },
       select: { id: true, name: true },
@@ -47,8 +62,9 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
   ])
   const url = (over: Partial<Search>) => {
     const q = new URLSearchParams()
-    const v = { tab: tab.id, kde, sada: setId ?? '', ...over }
-    if (v.tab && v.tab !== 'prodej') q.set('tab', v.tab)
+    const v = { tab: tab.id, druh, kde, sada: setId ?? '', ...over }
+    if (v.tab && v.tab !== 'nabidky') q.set('tab', v.tab)
+    if (v.tab !== 'koupim' && v.druh && v.druh !== 'vse') q.set('druh', v.druh)
     if (v.kde && v.kde !== 'vse') q.set('kde', v.kde)
     if (v.sada) q.set('sada', v.sada)
     if (v.strana && v.strana !== '1') q.set('strana', v.strana)
@@ -74,9 +90,27 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
 
       <MarketNav active={tab.id} hrefs={Object.fromEntries(TABS.map((x) => [x.id, url({ tab: x.id, strana: '1' })]))} />
       <p className="mt-3 text-sm text-muted">{t(tab.hint)}</p>
+      {tab.id === 'nabidky' && (
+        <div className="mt-4 inline-flex gap-1 rounded-xl bg-surface p-1 ring-1 ring-inset ring-line" role="group" aria-label={t('Druh nabídky')}>
+          {FILTERS.map((f) => (
+            <Link
+              key={f.id}
+              href={url({ druh: f.id, strana: '1' })}
+              aria-current={druh === f.id ? 'true' : undefined}
+              className={`inline-flex min-h-9 items-center gap-1.5 rounded-[9px] px-3.5 text-sm font-semibold transition ${
+                druh === f.id ? 'bg-card text-fg shadow-soft ring-1 ring-inset ring-line' : 'text-muted hover:text-fg'
+              }`}
+            >
+              {f.icon && <f.icon className="h-4 w-4" strokeWidth={1.75} aria-hidden />}
+              {t(f.label)}
+            </Link>
+          ))}
+        </div>
+      )}
 
       <form className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-        {tab.id !== 'prodej' && <input type="hidden" name="tab" value={tab.id} />}
+        {tab.id !== 'nabidky' && <input type="hidden" name="tab" value={tab.id} />}
+        {tab.id === 'nabidky' && druh !== 'vse' && <input type="hidden" name="druh" value={druh} />}
         <select
           name="kde"
           defaultValue={kde}
@@ -131,7 +165,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
                   </div>
                   <p className="mt-3 truncate text-[14.5px] font-semibold text-fg">{e.name}</p>
                   <p className="truncate text-xs text-muted">{e.sub}</p>
-                  <p className={`mt-1 truncate text-sm font-semibold tabular-nums ${tab.color}`}>{e.label}</p>
+                  <p className={`mt-1 truncate text-sm font-semibold tabular-nums ${KIND_COLOR[e.kind]}`}>{e.label}</p>
                   <p className="mt-1 flex items-center gap-1 text-xs text-subtle">
                     <span className="truncate">
                       {e.user.nickname} · {e.user.city ?? e.user.region ?? t('neuvedeno')}

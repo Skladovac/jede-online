@@ -5,9 +5,11 @@ import type { Place } from '@/lib/matches'
 import { getT } from '@/lib/i18n/server'
 import type { TFunc } from '@/lib/i18n/config'
 
-/** Tržiště: všechny nabídky (prodej / výměna) a poptávky „chci koupit“ na jednom místě. */
+/** Tržiště: nabídky (prodej, výměna, darování dohromady) a poptávky „chci koupit“. */
 
-export type MarketTab = 'prodej' | 'koupim' | 'vymena'
+export type MarketTab = 'nabidky' | 'koupim'
+/** Filtr nabídek: vše / jen prodej (vč. darování za poštovné) / jen výměna. */
+export type OfferFilter = 'vse' | 'prodej' | 'vymena'
 export const PAGE_SIZE = 48
 
 export type MarketEntry = {
@@ -17,6 +19,7 @@ export type MarketEntry = {
   sub: string
   image: { kind: 'card' | 'product'; url: string | null }
   label: string // „120 Kč“, „vyměním“, „koupí do 150 Kč“…
+  kind: 'sell' | 'trade' | 'gift' | 'buy' // barva štítku
   user: { nickname: string; city: string | null; region: string | null }
   at: Date
 }
@@ -31,10 +34,11 @@ const userSelect = { nickname: true, city: true, region: true } as const
 
 const offerLabel = (t: TFunc, type: OfferType, price: number | null) =>
   type === 'SELL' ? (price ? `${price.toLocaleString('cs-CZ')} Kč` : t('prodám')) : type === 'GIFT' ? t('daruji za poštovné') : t('vyměním')
+const offerKind = (type: OfferType) => (type === 'SELL' ? 'sell' : type === 'GIFT' ? 'gift' : 'trade') as 'sell' | 'trade' | 'gift'
 const buyLabel = (t: TFunc, price: number | null) =>
   price ? t('koupí do {price} Kč', { price: price.toLocaleString('cs-CZ') }) : t('koupí (dohodou)')
 
-export async function marketEntries(tab: MarketTab, place: Place, setId: string | null, page: number) {
+export async function marketEntries(tab: MarketTab, place: Place, setId: string | null, page: number, filter: OfferFilter = 'vse') {
   const t = await getT()
   const users = userWhere(place)
   // Bereme víc z obou zdrojů (karty + produkty), slijeme podle času a ořízneme na stránku.
@@ -64,6 +68,7 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         sub: `${w.card.set.name} · ${w.card.localId}`,
         image: { kind: 'card' as const, url: w.card.imageUrl },
         label: buyLabel(t, w.maxPriceCzk),
+        kind: 'buy' as const,
         user: w.user,
         at: w.buyAt ?? w.updatedAt,
       })),
@@ -74,12 +79,13 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         sub: t('zapečetěný produkt'),
         image: { kind: 'product' as const, url: w.product.imageUrl },
         label: buyLabel(t, w.maxPriceCzk),
+        kind: 'buy' as const,
         user: w.user,
         at: w.buyAt ?? w.updatedAt,
       })),
     ]
   } else {
-    const types: OfferType[] = tab === 'prodej' ? ['SELL', 'GIFT'] : ['TRADE']
+    const types: OfferType[] = filter === 'prodej' ? ['SELL', 'GIFT'] : filter === 'vymena' ? ['TRADE'] : ['SELL', 'TRADE', 'GIFT']
     const offered = { spareQty: { gt: 0 }, offerType: { in: types }, hiddenAt: null }
     const [cards, products] = await Promise.all([
       prisma.collectionItem.findMany({
@@ -103,6 +109,7 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         sub: `${i.card.set.name} · ${i.card.localId}`,
         image: { kind: 'card' as const, url: i.card.imageUrl },
         label: (i.spareQty > 1 ? `${i.spareQty}× · ` : '') + offerLabel(t, i.offerType!, i.priceCzk),
+        kind: offerKind(i.offerType!),
         user: i.user,
         at: i.offeredAt ?? i.updatedAt,
       })),
@@ -113,6 +120,7 @@ export async function marketEntries(tab: MarketTab, place: Place, setId: string 
         sub: `${t('zapečetěný produkt')} · ${i.language.toUpperCase()}`,
         image: { kind: 'product' as const, url: i.product.imageUrl },
         label: (i.spareQty > 1 ? `${i.spareQty}× · ` : '') + offerLabel(t, i.offerType!, i.priceCzk),
+        kind: offerKind(i.offerType!),
         user: i.user,
         at: i.offeredAt ?? i.updatedAt,
       })),
