@@ -5,6 +5,7 @@ import { quickAdd, quickAddPhoto, type QuickAddState, type QuickHit } from '@/ap
 import { CardImg } from '@/components/CardImg'
 import { cardImage } from '@/lib/format'
 import { useT } from '@/lib/i18n/client'
+import { Pop } from '@/components/Motion'
 import { btnBlue, btnPrimary, btnSecondary, panel } from '@/components/design'
 import { Camera, Check, Plus, Zap } from 'lucide-react'
 
@@ -176,17 +177,19 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
         )}
         {state.error && <p className="mt-3 text-sm text-danger">{state.error}</p>}
         {state.added && (
-          <div className="mt-3 flex items-center gap-3 rounded-panel bg-[color-mix(in_srgb,var(--positive)_12%,transparent)] p-2.5">
-            <Thumb hit={state.added} />
+          <Pop trigger={state.added} className="mt-3 flex items-center gap-3 rounded-panel bg-[color-mix(in_srgb,var(--positive)_12%,transparent)] p-2.5">
+            <span data-pop-thumb className="shrink-0">
+              <Thumb hit={state.added} />
+            </span>
             <p className="min-w-0 text-sm text-fg">
               <span className="inline-flex items-center gap-1 font-semibold text-positive"><Check className="h-4 w-4" strokeWidth={2.6} aria-hidden />{t('Přidáno')}:</span> {state.added.name}{' '}
               <span className="text-muted">({state.added.number})</span>
               <span className="block text-xs text-muted">{t('Teď máš {n} ks', { n: state.added.owned })}</span>
             </p>
-          </div>
+          </Pop>
         )}
         {state.batch && (
-          <div className="mt-3 space-y-3 text-sm">
+          <Pop trigger={state.batch} className="mt-3 space-y-3 text-sm">
             {state.batch.added.length > 0 && (
               <div className="rounded-panel bg-[color-mix(in_srgb,var(--positive)_12%,transparent)] p-3">
                 <p className="flex items-center gap-1 font-semibold text-positive">
@@ -232,7 +235,7 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
                 </ul>
               </div>
             ))}
-          </div>
+          </Pop>
         )}
         {state.hits && (
           <div className="mt-3">

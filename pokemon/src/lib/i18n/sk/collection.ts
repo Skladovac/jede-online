@@ -156,5 +156,7 @@ const dict: Record<string, string> = {
   'Název': 'Názov',
   'Cena': 'Cena',
   'Vytisknout seznam chybějících': 'Vytlačiť zoznam chýbajúcich',
+  'Sada kompletní!': 'Sada kompletná!',
+  'Máš všech {n} karet. Gratulujeme!': 'Máš všetkých {n} kariet. Gratulujeme!',
 }
 export default dict
