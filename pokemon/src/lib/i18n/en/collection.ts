@@ -158,5 +158,6 @@ const dict: Record<string, string> = {
   'Vytisknout seznam chybějících': 'Print missing list',
   'Sada kompletní!': 'Set complete!',
   'Máš všech {n} karet. Gratulujeme!': 'You have all {n} cards. Congratulations!',
+  'Ukazujeme jen karty, které nemáš. Klepni na ty, které sháníš.': 'Showing only cards you don’t have. Tap the ones you’re looking for.',
 }
 export default dict
