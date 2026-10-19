@@ -16,7 +16,7 @@ type Mode = 'view' | 'owned' | 'want' | 'spare'
 const MODES: { id: Mode; label: string; hint: string }[] = [
   { id: 'view', label: 'Prohlížet', hint: 'Klepnutím otevřeš detail karty.' },
   { id: 'owned', label: 'Mám', hint: 'Klepni na karty, které máš. Dalším klepnutím zrušíš.' },
-  { id: 'want', label: 'Chybí', hint: 'Klepni na karty, které sháníš.' },
+  { id: 'want', label: 'Chybí', hint: 'Ukazujeme jen karty, které nemáš. Klepni na ty, které sháníš.' },
   { id: 'spare', label: 'Navíc', hint: 'Každé klepnutí přidá kus navíc k výměně. Tlačítkem − ubereš.' },
 ]
 
@@ -409,7 +409,10 @@ export function SetGrid({
       )}
 
       <ul className={`mt-7 grid grid-cols-2 gap-x-4 gap-y-8 min-[480px]:grid-cols-3 sm:gap-x-6 sm:gap-y-9 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 ${layout === 'album' ? 'hidden' : ''}`}>
-        {cards.filter((c) => !typeFilter || c.types?.includes(typeFilter)).map((c) => {
+        {cards
+          // Režim „Chybí“: jen karty, které nemám (ty, co mám, by tu jen překážely).
+          .filter((c) => (!typeFilter || c.types?.includes(typeFilter)) && (mode !== 'want' || !(state[c.id]?.owned ?? 0)))
+          .map((c) => {
           const s = state[c.id] ?? { owned: 0, spare: 0, want: false }
           // Galerie: karta, kterou nemám, je vybledlá (jen když už v sadě něco mám — nováček vidí vše barevně).
           // V režimu úprav ztlumené vše neoznačené; po najetí se karta vždy ukáže v barvě.
