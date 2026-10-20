@@ -155,6 +155,7 @@ model User {
   pushSubs       PushSubscription[]
   auctions       Auction[]
   upcomingSubs   UpcomingSubscription[]
+  apiTokens      ApiToken[]
   pushNightOk    Boolean   @default(false) // true = dospělý si vypnul noční klid push notifikací
   tradeMessages  TradeMessage[]
   following      Follow[]       @relation("Follower")
@@ -592,6 +593,21 @@ model Follow {
 }
 
 // Dny, kdy byl uživatel na webu (statistika „aktivní uživatelé po dnech“ v administraci).
+// Osobní klíč pro AI asistenty (ChatGPT, Claude…) — jen čtení sbírky. V DB je jen otisk (jako u hesla).
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String    @db.VarChar(40)
+  tokenHash  String    @unique
+  last4      String    @db.VarChar(4) // konec klíče pro rozpoznání v seznamu
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+
+  @@index([userId])
+}
+
 // Připravované (ještě nevydané) anglické sady — stahuje se každou noc z TCG Watchtower (název, kód, datum, japonská předloha).
 // Ukázka karet a ceny jsou z japonské předlohy v našem katalogu. Po vydání (sada dorazí do katalogu) se zájemcům pošle upozornění.
 model UpcomingSet {
