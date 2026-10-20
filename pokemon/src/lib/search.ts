@@ -33,8 +33,15 @@ const newestFirst = { set: { releaseDate: { sort: 'desc', nulls: 'last' } } } as
 
 // "45" najde i "045" a "0045" — na kartách jsou čísla s nulami různě dlouhá.
 function localIdVariants(n: string) {
-  const bare = n.replace(/^0+(?=\d)/, '')
-  return [...new Set([n, bare, bare.padStart(2, '0'), bare.padStart(3, '0')])]
+  // „CC025“ → prefix „CC“ + číslo „025“ (varianty 25, 025, CC25, CC025…)
+  const m = /^([A-Za-z]*)(\d+)([A-Za-z]?)$/.exec(n)
+  if (!m) return [n]
+  const [, pfx, num, sfx] = m
+  const bare = num.replace(/^0+(?=\d)/, '')
+  const nums = [...new Set([num, bare, bare.padStart(2, '0'), bare.padStart(3, '0')])]
+  const out = new Set<string>()
+  for (const p of [pfx, pfx.toUpperCase()]) for (const x of nums) out.add(`${p}${x}${sfx}`)
+  return [...out]
 }
 
 /**
@@ -58,18 +65,27 @@ export async function searchCards(raw: string, limit = 12): Promise<SearchHit[]>
   }
 
   // Kód může začínat i číslicí ("30C 071") — pak je mezera povinná, ať se neplete s holým číslem.
-  const code = q.match(/^([A-Za-z][A-Za-z0-9]{1,5}?|\d[A-Za-z0-9]{1,5}(?=\s))\s?(\d{1,3}[A-Za-z]?)$/)
+  // Číslo může mít písmenný prefix ("CEL CC025", "SIT TG05", "CRZ GG01").
+  const code = q.match(/^([A-Za-z][A-Za-z0-9]{1,5}?|\d[A-Za-z0-9]{1,5}(?=\s))\s?((?:[A-Za-z]{1,4})?\d{1,3}[A-Za-z]?)$/)
   if (code) {
     const hits = await prisma.card.findMany({
       where: {
         localId: { in: localIdVariants(code[2]) },
-        set: { code: { equals: code[1], mode: 'insensitive' } },
+        // Podsady mají kód „CEL:CC“, „SIT:TG“ — stačí zadat hlavní část („CEL CC025“).
+        set: { OR: [{ code: { equals: code[1], mode: 'insensitive' } }, { code: { startsWith: `${code[1]}:`, mode: 'insensitive' } }] },
       },
       select,
       orderBy: newestFirst,
       take: limit,
     })
     if (hits.length) return hits // jinak to byl třeba "Mew 2" — zkusíme jméno
+  }
+
+  // Samotné číslo s písmeny ("CC025", "TG05", "SV94") bez kódu sady — hledáme napříč sadami.
+  const alnum = q.match(/^([A-Za-z]{1,4})(\d{1,3})$/)
+  if (alnum) {
+    const hits = await prisma.card.findMany({ where: { localId: { in: localIdVariants(q) } }, select, orderBy: newestFirst, take: limit })
+    if (hits.length) return hits
   }
 
   // Nejdřív jména, která dotazem začínají, pak ta, která ho obsahují.

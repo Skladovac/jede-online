@@ -241,5 +241,6 @@ const dict: Record<string, string> = {
   'Odklikej si, co máš a co ti chybí.': 'Odklikaj si, čo máš a čo ti chýba.',
   'Ahoj {name}, sada {set}, na kterou jsi čekal(a), je v katalogu.': 'Ahoj {name}, sada {set}, na ktorú si čakal(a), je v katalógu.',
   'Otevřít sadu': 'Otvoriť sadu',
+  'Tahle sada má další část:': 'Táto sada má ďalšiu časť:',
 }
 export default dict
