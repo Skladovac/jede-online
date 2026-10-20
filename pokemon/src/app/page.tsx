@@ -16,7 +16,7 @@ import { setProgress } from '@/lib/progress'
 import { portfolio } from '@/lib/portfolio'
 import { cardImage, formatCzk, setLogo, subsetLabels } from '@/lib/format'
 import { ensureEurCzk } from '@/lib/fx'
-import { ArrowLeftRight, ArrowRight, Camera, Check, Layers, Trophy } from 'lucide-react'
+import { ArrowLeftRight, ArrowRight, Bot, Camera, Check, Layers, Trophy } from 'lucide-react'
 import { Badge, ProgressMeter, SectionHeader, StatCard, btnPrimary, btnSecondary, container, panel, panelInteractive } from '@/components/design'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO, type TFunc } from '@/lib/i18n/config'
@@ -423,6 +423,24 @@ function WhyUse({ t }: { t: TFunc }) {
           </li>
         ))}
       </ol>
+
+      {/* Napojení na vlastní AI: pro návštěvníky, kteří už ChatGPT/Claude používají. */}
+      <div className={`${panel} mt-5 flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:p-7`}>
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[14px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
+          <Bot className="h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="eyebrow">{t('Novinka')}</p>
+          <h3 className="mt-1 text-[19px] font-semibold text-fg">{t('Napoj si svou AI — přidávej karty fotkou z mobilu')}</h3>
+          <p className="mt-1 leading-relaxed text-muted">
+            {t('ChatGPT nebo Claude propojíš se svým účtem osobním klíčem. Vyfotíš kartu, napíšeš „přidej do sbírky“ a tvoje AI ji pozná a uloží k nám. Zeptáš se jí i „které karty ze sady 151 mi chybí a za kolik je někdo nabízí“.')}
+          </p>
+        </div>
+        <Link href="/registrace" className={`${btnPrimary} shrink-0`}>
+          {t('Vyzkoušet zdarma')}
+          <ArrowRight aria-hidden />
+        </Link>
+      </div>
     </section>
   )
 }
