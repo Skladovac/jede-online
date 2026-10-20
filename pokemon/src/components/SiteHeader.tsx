@@ -35,7 +35,7 @@ export async function SiteHeader() {
           <Link href="/" className="flex shrink-0 items-center gap-2.5 font-display font-extrabold tracking-tight text-[var(--ink)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.svg" alt="" width={34} height={34} className="h-9 w-9 rounded-[10px] shadow-[0_1px_0_rgba(14,27,46,0.25),0_4px_10px_-4px_rgba(14,27,46,0.5)]" />
-            <span className="hidden text-[18px] sm:inline">
+            <span className="text-[15px] sm:text-[18px]">
               pokemon<span className="text-brand-blue-dark">.jede.online</span>
             </span>
           </Link>
