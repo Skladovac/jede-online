@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { AiTokens } from '@/components/AiTokens'
+import { MAX_TOKENS } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { getCurrentUser, isLimited } from '@/lib/auth'
@@ -15,7 +17,7 @@ import { getT } from '@/lib/i18n/server'
 import { FollowingList, InviteBox } from '@/components/Social'
 import { PushSettings } from '@/components/Push'
 import { pushPublicKey } from '@/lib/push'
-import { ArrowRight, Bell, Check } from 'lucide-react'
+import { ArrowRight, Bell, Bot, Check } from 'lucide-react'
 import { linkAccent, panel } from '@/components/design'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,7 +29,10 @@ export const dynamic = 'force-dynamic'
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ vitej?: string; heslo?: string; next?: string }> }) {
   const user = await getCurrentUser()
   if (!user) redirect('/prihlaseni?next=/ucet')
-  const oauth = await prisma.oAuthAccount.findMany({ where: { userId: user.id }, select: { provider: true } })
+  const [oauth, apiTokens] = await Promise.all([
+    prisma.oAuthAccount.findMany({ where: { userId: user.id }, select: { provider: true } }),
+    prisma.apiToken.findMany({ where: { userId: user.id, revokedAt: null }, select: { id: true, name: true, last4: true, createdAt: true, lastUsedAt: true }, orderBy: { createdAt: 'desc' } }),
+  ])
   const { vitej, heslo } = await searchParams
   const next = safeNext((await searchParams).next)
   const limited = isLimited(user)
@@ -165,6 +170,14 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <PushSettings publicKey={pushPublicKey()!} isMinor={user.isMinor} nightQuiet={!user.pushNightOk} />
         </section>
       )}
+
+      <section id="ai" className={`scroll-mt-24 ${panel} p-5 sm:p-6`}>
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-fg">
+          <Bot className="h-5 w-5 text-accent" strokeWidth={1.75} aria-hidden />
+          {t('Napojení na AI (ChatGPT, Claude)')}
+        </h2>
+        <AiTokens tokens={apiTokens.map((k) => ({ ...k, createdAt: k.createdAt.toISOString(), lastUsedAt: k.lastUsedAt?.toISOString() ?? null }))} max={MAX_TOKENS} />
+      </section>
 
       <section className={`${panel} p-5 sm:p-6`}>
         <h2 className="mb-1 text-xl font-bold text-fg">{t('Přihlášení')}</h2>

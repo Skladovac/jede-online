@@ -3,6 +3,7 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /mcp
 Disallow: /ucet
 Disallow: /sbirka
 Disallow: /kosik
@@ -30,6 +31,7 @@ User-agent: Applebot-Extended
 User-agent: Bingbot
 Allow: /
 Disallow: /api/
+Disallow: /mcp
 Disallow: /ucet
 Disallow: /sbirka
 Disallow: /kosik
