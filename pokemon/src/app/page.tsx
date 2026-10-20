@@ -15,8 +15,8 @@ import { setProgress } from '@/lib/progress'
 import { portfolio } from '@/lib/portfolio'
 import { cardImage, formatCzk, setLogo, subsetLabels } from '@/lib/format'
 import { ensureEurCzk } from '@/lib/fx'
-import { ArrowLeftRight, ArrowRight, Camera, Layers } from 'lucide-react'
-import { ProgressMeter, SectionHeader, StatCard, btnPrimary, btnSecondary, container, panel, panelInteractive } from '@/components/design'
+import { ArrowLeftRight, ArrowRight, Camera, Check, Layers, Trophy } from 'lucide-react'
+import { Badge, ProgressMeter, SectionHeader, StatCard, btnPrimary, btnSecondary, container, panel, panelInteractive } from '@/components/design'
 import { getT, getLocale } from '@/lib/i18n/server'
 import { LOCALE_INFO, type TFunc } from '@/lib/i18n/config'
 
@@ -265,15 +265,19 @@ async function UserDashboard({
     setProgress(user.id, candidates),
     prisma.cardSet.findMany({ where: { id: { in: candidates } }, select: { id: true, name: true, logoUrl: true } }),
   ])
-  const collecting = sets
-    .map((s) => {
-      const p = progress.get(s.id)!
-      const pick = p.base ?? p.complete
-      return { ...s, owned: pick.owned, total: pick.total }
-    })
+  const ranked = sets.map((s) => {
+    const p = progress.get(s.id)!
+    const pick = p.base ?? p.complete
+    // Po dokončení základu je dalším cílem celá sada včetně secret karet, pak master set.
+    const next = p.complete.owned < p.complete.total ? p.complete : p.master.owned < p.master.total ? p.master : null
+    return { ...s, owned: pick.owned, total: pick.total, next }
+  })
+  const collecting = ranked
     .filter((s) => s.total > 0 && s.owned < s.total)
     .sort((a, b) => b.owned / b.total - a.owned / a.total)
     .slice(0, 4)
+  // Hotové sady nemizí — zůstávají s odznakem a dalším cílem.
+  const done = ranked.filter((s) => s.total > 0 && s.owned >= s.total).slice(0, 4)
 
   return (
     <section className="relative overflow-hidden border-b border-line">
@@ -321,6 +325,43 @@ async function UserDashboard({
                       )}
                     </div>
                     <ProgressMeter owned={s.owned} total={s.total} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {done.length > 0 && (
+          <div className="mt-10">
+            <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-fg">
+              <Trophy className="h-5 w-5 text-accent" strokeWidth={1.75} aria-hidden />
+              {t('Hotové sady')}
+            </h2>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {done.map((s) => (
+                <li key={s.id}>
+                  <Link href={`/sady/${encodeURIComponent(s.id)}`} className={`${panelInteractive} block p-4`}>
+                    <div className="mb-3 grid h-14 place-items-center" title={s.name}>
+                      {setLogo(s.logoUrl) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={setLogo(s.logoUrl)!} alt={s.name} loading="lazy" className="max-h-14 w-auto max-w-full object-contain" />
+                      ) : (
+                        <p className="truncate font-semibold text-fg">{s.name}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <Badge tone="positive">
+                        <Check aria-hidden />
+                        {t('Kompletní {n}/{total}', { n: s.owned, total: s.total })}
+                      </Badge>
+                      {s.next && (
+                        <span className="text-xs text-muted tabular-nums">
+                          {s.next.total > s.total && s.next.owned < s.next.total
+                            ? t('se secret {n}/{total}', { n: s.next.owned, total: s.next.total })
+                            : t('master set {n}/{total}', { n: s.next.owned, total: s.next.total })}
+                        </span>
+                      )}
+                    </div>
                   </Link>
                 </li>
               ))}
