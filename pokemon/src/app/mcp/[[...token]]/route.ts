@@ -24,6 +24,14 @@ async function run(req: Request, ctx: { params: Promise<{ token?: string[] }> })
   const user = await userFromToken(tokenFromRequest(req, token?.[0]))
   if (!user) return NextResponse.json({ error: 'Neplatný nebo zrušený klíč. Nový vytvoříš v Můj účet → Napojení na AI.' }, { status: 401 })
   if ('error' in user) return NextResponse.json({ error: user.error }, { status: user.status })
+  // Specifikace chce Accept s application/json i text/event-stream; někteří klienti pošlou „*/*“ nebo nic.
+  // Místo 406 hlavičku doplníme — odpovídáme stejně (JSON), nic se tím nemění.
+  const accept = req.headers.get('accept') ?? ''
+  if (req.method === 'POST' && !(accept.includes('application/json') && accept.includes('text/event-stream'))) {
+    const h = new Headers(req.headers)
+    h.set('accept', 'application/json, text/event-stream')
+    req = new Request(req, { headers: h })
+  }
   return handleMcp(req, user)
 }
 

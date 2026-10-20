@@ -14,6 +14,12 @@ const json = (data: unknown) => ({ content: [{ type: 'text' as const, text: JSON
 export function buildMcpServer(user: ApiUser) {
   const server = new McpServer({ name: 'pokemon.jede.online', version: '1.0.0' }, { instructions: `Sbírka Pokémon karet uživatele ${user.nickname} na pokemon.jede.online. Všechny nástroje jsou jen pro čtení. Ceny jsou orientační (Cardmarket, EUR + přepočet na Kč).` })
 
+  server.registerTool(
+    'ping',
+    { title: 'Test spojení', description: 'Ověří, že spojení s pokemon.jede.online funguje. Vrátí ok, verzi serveru a přezdívku uživatele (bez citlivých údajů).', inputSchema: {} },
+    async () => json({ ok: true, server: 'pokemon.jede.online', version: '1.0.0', user: user.nickname, time: new Date().toISOString() }),
+  )
+
   server.registerTool('my_overview', { title: 'Přehled sbírky', description: 'Souhrn: počet karet, hodnota sbírky, kolik chybí, postup po sadách (base / complete / master).', inputSchema: {} }, async () => json(await aiOverview(user.id, user.nickname)))
 
   server.registerTool(
