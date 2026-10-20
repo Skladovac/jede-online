@@ -5,7 +5,7 @@ import { sha256 } from '@/lib/auth'
 import { rateLimit } from '@/lib/rate-limit'
 
 /**
- * Osobní klíče pro AI asistenty (jen čtení). Klíč „pk_…“ se ukáže jen jednou; v DB je jen otisk sha256.
+ * Osobní klíče pro AI asistenty (čtení i zápis do vlastní sbírky). Klíč „pk_…“ se ukáže jen jednou; v DB je jen otisk sha256.
  * Posílá se buď v hlavičce `Authorization: Bearer pk_…`, nebo (ChatGPT/Claude konektory neumí vlastní hlavičku)
  * v adrese `/mcp/pk_…`. Limit 120 požadavků za minutu na klíč.
  */
@@ -15,7 +15,7 @@ export const TOKEN_PREFIX = 'pk_'
 export const newToken = () => `${TOKEN_PREFIX}${randomBytes(32).toString('base64url')}`
 export const looksLikeToken = (s: string) => /^pk_[A-Za-z0-9_-]{40,50}$/.test(s)
 
-export type ApiUser = { id: string; nickname: string; locale: string; isMinor: boolean; bannedAt: Date | null; tokenId: string }
+export type ApiUser = { id: string; nickname: string; locale: string; isMinor: boolean; bannedAt: Date | null; emailVerifiedAt: Date | null; parentConsentAt: Date | null; tokenId: string }
 
 /** Uživatel podle klíče (null = neplatný / zrušený / zablokovaný / překročený limit). Aktualizuje „naposledy použito“ (max. 1× za minutu). */
 export async function userFromToken(raw: string | null | undefined): Promise<ApiUser | { error: string; status: number } | null> {
@@ -24,7 +24,7 @@ export async function userFromToken(raw: string | null | undefined): Promise<Api
   if (!rateLimit(`api:${hash.slice(0, 16)}`, 120, 60_000)) return { error: 'Too many requests', status: 429 }
   const tok = await prisma.apiToken.findUnique({
     where: { tokenHash: hash },
-    include: { user: { select: { id: true, nickname: true, locale: true, isMinor: true, bannedAt: true } } },
+    include: { user: { select: { id: true, nickname: true, locale: true, isMinor: true, bannedAt: true, emailVerifiedAt: true, parentConsentAt: true } } },
   })
   if (!tok || tok.revokedAt || tok.user.bannedAt) return null
   if (!tok.lastUsedAt || Date.now() - tok.lastUsedAt.getTime() > 60_000)

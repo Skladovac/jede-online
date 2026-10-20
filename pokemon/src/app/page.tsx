@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { CountUp, FanIntro } from '@/components/Motion'
 import { UpcomingBanner } from '@/components/UpcomingBanner'
 import { Onboarding } from '@/components/Onboarding'
+import { AiPromo } from '@/components/AiPromo'
 import { JsonLd, SITE } from '@/components/JsonLd'
 import { prisma } from '@/lib/prisma'
 import { SetTile } from '@/components/SetTile'
@@ -43,6 +44,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
 
   // Postup přihlášeného v nejnovějších sadách (jen sady, ve kterých něco má).
   const latestProgress = user ? await setProgress(user.id, latest.map((s) => s.id)) : null
+  const hasNoAiKey = user ? (await prisma.apiToken.count({ where: { userId: user.id, revokedAt: null } })) === 0 : false
   const progressOf = (id: string) => {
     const p = latestProgress?.get(id)
     if (!p) return null
@@ -89,6 +91,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
         ]}
       />
       {user && vitej && <Onboarding nickname={user.nickname} />}
+      {user && !vitej && hasNoAiKey && <AiPromo />}
       {user ? (
         <UserDashboard user={user} vitej={!!vitej} t={t} />
       ) : (
