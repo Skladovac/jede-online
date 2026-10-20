@@ -34,7 +34,7 @@ export function AiTokens({ tokens, max }: { tokens: Row[]; max: number }) {
   return (
     <div className="space-y-5">
       <p className="text-sm text-muted">
-        {t('Osobní klíč dá ChatGPT nebo Claude přístup jen ke čtení tvé sbírky: co máš, co ti chybí, ceny, výměny. Nic nezmění. Klíč kdykoli zrušíš.')}
+        {t('Osobní klíč propojí ChatGPT nebo Claude s tvou sbírkou: AI vidí, co máš a co ti chybí, a umí ti karty i přidat — vyfotíš kartu v mobilu, řekneš „přidej do sbírky“ a je v albu. Před každým uložením se AI zeptá na variantu (normální / holo / reverse) a nechá si zápis potvrdit. Klíč kdykoli zrušíš.')}
       </p>
 
       {state.token && (
@@ -99,9 +99,9 @@ export function AiTokens({ tokens, max }: { tokens: Row[]; max: number }) {
           <div>
             <p className="font-semibold text-fg">ChatGPT</p>
             <ol className="mt-1 list-decimal space-y-1 pl-5">
-              <li>{t('Nastavení → Aplikace a konektory (Connectors) → Pokročilé → zapni Režim pro vývojáře (Developer mode).')}</li>
-              <li>{t('Vytvořit → název „Pokémon sbírka“, adresa MCP serveru = adresa s klíčem výše, ověření: Bez ověření.')}</li>
-              <li>{t('V novém chatu zapni konektor (ikona + / Nástroje) a zeptej se třeba: „Které karty ze sady 151 mi chybí a kolik by stály?“')}</li>
+              <li>{t('Otevři chatgpt.com v prohlížeči (v aplikaci to nejde) → vlevo Pluginy / Aplikace → + → Přidat vlastní server MCP. Ve starším rozhraní: Nastavení → Aplikace a konektory → Pokročilé → Režim pro vývojáře → Vytvořit.')}</li>
+              <li>{t('Název „Pokémon sbírka“, adresa URL serveru = adresa s klíčem výše, Ověřování: Žádné, potvrď „Rozumím a chci pokračovat“. Potřebuješ ChatGPT Plus nebo vyšší.')}</li>
+              <li>{t('Pak i v mobilní aplikaci: nový chat → + → Nástroje → zapni „Pokémon sbírka“, vyfoť kartu a napiš „přidej do sbírky“. Nebo se zeptej: „Které karty ze sady 151 mi chybí?“')}</li>
             </ol>
           </div>
           <div>
@@ -119,7 +119,7 @@ export function AiTokens({ tokens, max }: { tokens: Row[]; max: number }) {
               <li>{t('Ověření: API key → Bearer → vlož klíč.')}</li>
             </ol>
           </div>
-          <p className="text-xs text-subtle">{t('Klíč je jako heslo ke čtení sbírky — nikomu ho neposílej. Když ho prozradíš, zruš ho a vytvoř nový.')}</p>
+          <p className="text-xs text-subtle">{t('Klíč je jako heslo ke tvé sbírce — nikomu ho neposílej a nevkládej ho do chatu. Když ho prozradíš, zruš ho a vytvoř nový. Co AI změní, uvidíš v upozorněních.')}</p>
         </div>
       </details>
     </div>

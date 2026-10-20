@@ -3,16 +3,36 @@ import { z } from 'zod'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { aiAuctions, aiCard, aiCollection, aiMissing, aiOverview, aiRequests, aiSearch, aiSets } from '@/lib/ai-data'
+import { aiAddCards, aiClearOffer, aiMarkMissing, aiSetOffer, aiSetQuantity, aiUnmarkMissing, MAX_BATCH, WriteFail } from '@/lib/ai-write'
 import type { ApiUser } from '@/lib/api-auth'
 
 /**
- * MCP server pro AI asistenty (ChatGPT, Claude…): jen čtení sbírky přihlášeného podle osobního klíče.
+ * MCP server pro AI asistenty (ChatGPT, Claude…): čtení i zápis do sbírky přihlášeného podle osobního klíče.
  * Bezstavový (každý požadavek nový server + transport) — běží v Next.js route bez session.
  */
 const json = (data: unknown) => ({ content: [{ type: 'text' as const, text: JSON.stringify(data, null, 1) }] })
+/** Zápis: chyby pravidel (limit, neověřený e-mail…) vrátí jako výsledek s isError, ať je asistent umí přečíst uživateli. */
+async function write(fn: () => Promise<unknown>) {
+  try {
+    return json(await fn())
+  } catch (err) {
+    if (err instanceof WriteFail) return { ...json({ error: err.message }), isError: true }
+    throw err
+  }
+}
+const cardPick = { cardId: z.string().optional().describe('id karty z katalogu, např. "sv03.5-199" (přednostně)'), query: z.string().min(2).max(60).optional().describe('místo cardId: kód sady a číslo z karty, např. "SVI 045", "CEL CC025", nebo "Charizard 199/165"') }
+const variantArg = z.enum(['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']).optional().describe('varianta; když ji neznáš a karta má víc variant, server vrátí needs_variant — zeptej se uživatele')
+const conditionArg = z.enum(['MINT', 'LIGHT_PLAYED', 'DAMAGED']).optional().describe('stav, výchozí MINT')
+const languageArg = z.enum(['en', 'de', 'fr', 'it', 'es', 'ja', 'ko', 'zh', 'other']).optional().describe('jazyk karty, výchozí en')
 
 export function buildMcpServer(user: ApiUser) {
-  const server = new McpServer({ name: 'pokemon.jede.online', version: '1.0.0' }, { instructions: `Sbírka Pokémon karet uživatele ${user.nickname} na pokemon.jede.online. Všechny nástroje jsou jen pro čtení. Ceny jsou orientační (Cardmarket, EUR + přepočet na Kč).` })
+  const server = new McpServer({ name: 'pokemon.jede.online', version: '1.0.0' }, { instructions: [
+      `Sbírka Pokémon karet uživatele ${user.nickname} na pokemon.jede.online. Ceny jsou orientační (Cardmarket, EUR + přepočet na Kč).`,
+      'Nástroje add_cards, set_quantity, mark_missing, unmark_missing, set_offer a clear_offer ZAPISUJÍ do sbírky uživatele.',
+      'Před zápisem uživateli stručně zopakuj, co uložíš (název, číslo a sada, varianta, počet), a ulož až po jeho potvrzení.',
+      'Když nástroj vrátí status needs_variant, zeptej se uživatele na variantu (normální / holo / reverse holo…) a zavolej znovu s variant. Při ambiguous se zeptej, kterou kartu myslí.',
+      'Kartu z fotky poznáš podle jména, čísla v levém dolním rohu (např. 045/198) a kódu sady; nejdřív ji ověř přes search_cards, pak přidej přes add_cards s cardId.',
+    ].join(' ') })
 
   server.registerTool(
     'ping',
@@ -54,6 +74,44 @@ export function buildMcpServer(user: ApiUser) {
 
   server.registerTool('my_trades', { title: 'Moje výměny', description: 'Žádosti o výměnu (odeslané i přijaté) a jejich stav.', inputSchema: {} }, async () => json(await aiRequests(user.id)))
   server.registerTool('my_auctions', { title: 'Moje aukce', description: 'Aukce, které uživatel založil (odkazy na Facebook, Aukro…).', inputSchema: {} }, async () => json(await aiAuctions(user.id)))
+
+  // ── Zápis ──
+  server.registerTool(
+    'add_cards',
+    {
+      title: 'Přidat karty do sbírky',
+      description: `Přidá karty do sbírky uživatele (až ${MAX_BATCH} najednou, např. celá stránka alba). Každá položka: cardId nebo query, quantity (výchozí 1), variant, condition, language, note. Bez variant u karty s více variantami vrátí needs_variant — zeptej se uživatele. Karta tím přestane být „chybí“.`,
+      inputSchema: {
+        items: z.array(z.object({ ...cardPick, quantity: z.number().int().min(1).max(99).optional(), variant: variantArg, condition: conditionArg, language: languageArg, note: z.string().max(30).optional() })).min(1).max(MAX_BATCH),
+      },
+    },
+    async ({ items }) => write(() => aiAddCards(user, items)),
+  )
+  server.registerTool(
+    'set_quantity',
+    { title: 'Změnit počet kusů', description: 'Nastaví počet kusů karty ve sbírce (0 = odebrat ze sbírky). Volitelně upřesni variant / condition / language, když má uživatel kartu ve více řádcích.', inputSchema: { ...cardPick, quantity: z.number().int().min(0).max(999), variant: variantArg, condition: conditionArg, language: languageArg } },
+    async (a) => write(() => aiSetQuantity(user, a)),
+  )
+  server.registerTool(
+    'mark_missing',
+    { title: 'Označit „chybí“', description: `Označí karty jako chybějící (až ${MAX_BATCH}). S buy=true vznikne veřejná poptávka „koupím“ (volitelně maxPriceCzk) — vyžaduje potvrzený e-mail.`, inputSchema: { items: z.array(z.object(cardPick)).min(1).max(MAX_BATCH), buy: z.boolean().optional(), maxPriceCzk: z.number().int().min(1).max(1_000_000).optional() } },
+    async ({ items, buy, maxPriceCzk }) => write(() => aiMarkMissing(user, items, { buy, maxPriceCzk })),
+  )
+  server.registerTool(
+    'unmark_missing',
+    { title: 'Zrušit „chybí“', description: `Odebere karty ze seznamu chybějících (až ${MAX_BATCH}).`, inputSchema: { items: z.array(z.object(cardPick)).min(1).max(MAX_BATCH) } },
+    async ({ items }) => write(() => aiUnmarkMissing(user, items)),
+  )
+  server.registerTool(
+    'set_offer',
+    { title: 'Nabídnout kusy navíc', description: 'Nabídne kusy navíc karty, kterou uživatel má: spare = kolik kusů, offerType TRADE (vyměním) / SELL (prodám, nutná priceCzk) / GIFT (daruji za poštovné). Jen s potvrzeným e-mailem; dětský účet po souhlasu rodiče.', inputSchema: { ...cardPick, spare: z.number().int().min(1).max(999), offerType: z.enum(['TRADE', 'SELL', 'GIFT']), priceCzk: z.number().int().min(1).max(1_000_000).optional(), variant: variantArg, condition: conditionArg, language: languageArg } },
+    async (a) => write(() => aiSetOffer(user, a)),
+  )
+  server.registerTool(
+    'clear_offer',
+    { title: 'Zrušit nabídku', description: 'Zruší nabídku kusů navíc u karty (karta ve sbírce zůstává).', inputSchema: cardPick },
+    async (a) => write(() => aiClearOffer(user, a)),
+  )
 
   // „search“ a „fetch“ podle konvence ChatGPT konektorů (vyžaduje je pro některé režimy).
   server.registerTool(
