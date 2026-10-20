@@ -151,7 +151,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
       </form>
 
       {entries.length ? (
-        <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        <ul className="mt-8 grid grid-cols-3 gap-x-2.5 gap-y-6 sm:gap-x-5 sm:gap-y-8 md:grid-cols-4 lg:grid-cols-6">
           {entries.map((e) => {
             const img = e.image.kind === 'card' ? cardImage(e.image.url) : productImage(e.image.url)
             return (
@@ -163,7 +163,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
                       <img src={img} alt={e.name} loading="lazy" className={`h-full w-full ${e.image.kind === 'card' ? 'object-cover' : 'object-contain'}`} />
                     )}
                   </div>
-                  <p className="mt-3 truncate text-[14.5px] font-semibold text-fg">{e.name}</p>
+                  <p className="mt-2 truncate text-[12.5px] font-semibold text-fg sm:mt-3 sm:text-[14.5px]">{e.name}</p>
                   <p className="truncate text-xs text-muted">{e.sub}</p>
                   <p className={`mt-1 truncate text-sm font-semibold tabular-nums ${KIND_COLOR[e.kind]}`}>{e.label}</p>
                   <p className="mt-1 flex items-center gap-1 text-xs text-subtle">

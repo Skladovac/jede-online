@@ -408,7 +408,7 @@ export function SetGrid({
         </div>
       )}
 
-      <ul className={`mt-7 grid grid-cols-2 gap-x-4 gap-y-8 min-[480px]:grid-cols-3 sm:gap-x-6 sm:gap-y-9 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 ${layout === 'album' ? 'hidden' : ''}`}>
+      <ul className={`mt-7 grid grid-cols-3 gap-x-2.5 gap-y-5 sm:gap-x-6 sm:gap-y-9 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 ${layout === 'album' ? 'hidden' : ''}`}>
         {cards
           // Režim „Chybí“: jen karty, které nemám (ty, co mám, by tu jen překážely).
           .filter((c) => (!typeFilter || c.types?.includes(typeFilter)) && (mode !== 'want' || !(state[c.id]?.owned ?? 0)))
@@ -442,11 +442,11 @@ export function SetGrid({
                   <span className="rounded-full bg-brand-yellow px-2 py-0.5 text-[10.5px] font-bold text-[var(--ink)] shadow-[0_0_0_2px_#fff,0_4px_10px_-2px_rgba(0,0,0,0.35)]">{t('chybí')}</span>
                 )}
               </div>
-              <div className="mt-3 flex items-baseline justify-between gap-2">
-                <p className={`truncate text-[14.5px] font-semibold ${faded ? 'text-muted' : 'text-fg'}`}>{c.name}</p>
-                <span className="shrink-0 font-mono text-[11.5px] text-subtle">{c.localId}</span>
+              <div className="mt-2 flex items-baseline justify-between gap-1.5 sm:mt-3 sm:gap-2">
+                <p className={`truncate text-[12.5px] font-semibold sm:text-[14.5px] ${faded ? 'text-muted' : 'text-fg'}`}>{c.name}</p>
+                <span className="shrink-0 font-mono text-[10.5px] text-subtle sm:text-[11.5px]">{c.localId}</span>
               </div>
-              {c.price && <p className="mt-0.5 truncate text-[13px] tabular-nums text-muted">≈ {c.price}</p>}
+              {c.price && <p className="mt-0.5 truncate text-[11.5px] tabular-nums text-muted sm:text-[13px]">≈ {c.price}</p>}
             </>
           )
           return (
