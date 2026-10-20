@@ -58,11 +58,22 @@ export default async function SetPage({ params, searchParams }: Props) {
     orderBy: [{ imageUrl: { sort: 'asc', nulls: 'last' } }, { name: 'asc' }],
   })
   const cards = [...set.cards].sort(byLocalId)
-  const logo = setLogo(set.logoUrl)
-  // Sady se stejným logem = části jedné sady (Celebrations + Classic Collection, Crown Zenith + Galarian Gallery…).
-  const siblings = set.logoUrl
-    ? await prisma.cardSet.findMany({ where: { logoUrl: set.logoUrl, id: { not: set.id }, language: set.language }, select: { id: true, name: true, cardCount: true } })
+  // Části jedné sady se poznají podle kódu: podsada má „CEL:CC“, hlavní sada „CEL“
+  // (Celebrations + Classic Collection, Silver Tempest + Trainer Gallery, Crown Zenith + Galarian Gallery…).
+  const mainCode = set.code?.split(':')[0]
+  const siblings = mainCode
+    ? await prisma.cardSet.findMany({
+        where: {
+          id: { not: set.id },
+          language: set.language,
+          OR: [{ code: { equals: mainCode, mode: 'insensitive' } }, { code: { startsWith: `${mainCode}:`, mode: 'insensitive' } }],
+        },
+        select: { id: true, name: true, cardCount: true, logoUrl: true },
+        orderBy: { id: 'asc' },
+      })
     : []
+  // Podsada nemá vlastní logo — půjčí si ho od hlavní sady.
+  const logo = setLogo(set.logoUrl ?? siblings.find((s) => s.logoUrl)?.logoUrl ?? null)
   const meta = [set.series, set.code, set.releaseDate?.toLocaleDateString(LOCALE_INFO[locale].intl, { month: 'long', year: 'numeric' })]
   const countLabel = set.officialCount
     ? t('{n} karet ({total} včetně secret)', { n: set.officialCount, total: set.cardCount })
