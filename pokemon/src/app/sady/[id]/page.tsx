@@ -8,7 +8,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { setProgress } from '@/lib/progress'
 import { ProgressBars } from '@/components/ProgressBars'
 import { byLocalId, cardImage, formatCzk, formatEur, setLogo } from '@/lib/format'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Layers } from 'lucide-react'
 import { panel } from '@/components/design'
 import { PriceNote } from '@/components/PriceNote'
 import { SetGrid } from '@/components/SetGrid'
@@ -59,6 +59,10 @@ export default async function SetPage({ params, searchParams }: Props) {
   })
   const cards = [...set.cards].sort(byLocalId)
   const logo = setLogo(set.logoUrl)
+  // Sady se stejným logem = části jedné sady (Celebrations + Classic Collection, Crown Zenith + Galarian Gallery…).
+  const siblings = set.logoUrl
+    ? await prisma.cardSet.findMany({ where: { logoUrl: set.logoUrl, id: { not: set.id }, language: set.language }, select: { id: true, name: true, cardCount: true } })
+    : []
   const meta = [set.series, set.code, set.releaseDate?.toLocaleDateString(LOCALE_INFO[locale].intl, { month: 'long', year: 'numeric' })]
   const countLabel = set.officialCount
     ? t('{n} karet ({total} včetně secret)', { n: set.officialCount, total: set.cardCount })
@@ -129,6 +133,17 @@ export default async function SetPage({ params, searchParams }: Props) {
               )}
             </h1>
             {set.nameOriginal && <p className="mt-1 text-sm text-subtle">{set.nameOriginal}</p>}
+            {siblings.length > 0 && (
+              <p className="mt-3 inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-surface px-3 py-2 text-sm text-muted ring-1 ring-inset ring-line">
+                <Layers className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
+                {t('Tahle sada má další část:')}
+                {siblings.map((s) => (
+                  <Link key={s.id} href={`/sady/${encodeURIComponent(s.id)}`} className="font-semibold text-accent hover:underline">
+                    {setDisplayName(s)} ({t('{n} karet', { n: s.cardCount })})
+                  </Link>
+                ))}
+              </p>
+            )}
             {user ? (
               <dl className="mt-5 flex flex-wrap gap-y-3">
                 {[
