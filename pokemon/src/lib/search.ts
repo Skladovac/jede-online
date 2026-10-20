@@ -56,12 +56,20 @@ export async function searchCards(raw: string, limit = 12): Promise<SearchHit[]>
 
   const slash = q.match(/^([A-Za-z]*\d+[A-Za-z]*)\s*\/\s*(\d+)$/)
   if (slash) {
-    return prisma.card.findMany({
-      where: { localId: { in: localIdVariants(slash[1]) }, set: { officialCount: Math.min(Number(slash[2]), 100_000) } },
+    const total = Math.min(Number(slash[2]), 100_000)
+    const hits = await prisma.card.findMany({
+      where: { localId: { in: localIdVariants(slash[1]) }, set: { officialCount: total } },
       select,
       orderBy: newestFirst,
       take: limit,
     })
+    // Reprinty v Celebrations Classic Collection mají na kartě původní číslo (66/64), v katalogu CC010.
+    const classic = CLASSIC_REPRINT[`${slash[1].replace(/^0+(?=\d)/, '')}/${total}`]
+    if (classic) {
+      const cc = await prisma.card.findMany({ where: { id: `cel25cc-${classic}` }, select })
+      return [...cc, ...hits.filter((h) => !cc.some((c) => c.id === h.id))].slice(0, limit)
+    }
+    return hits
   }
 
   // Kód může začínat i číslicí ("30C 071") — pak je mezera povinná, ať se neplete s holým číslem.
@@ -102,7 +110,46 @@ export async function searchCards(raw: string, limit = 12): Promise<SearchHit[]>
     orderBy: newestFirst,
     take: limit - starts.length,
   })
-  return [...starts, ...contains]
+  const found = [...starts, ...contains]
+  if (found.length) return found
+  // Bez apostrofu a teček („Rockets Zapdos“, „Rockets Admin“ → „Rocket's Zapdos“, „Rocket's Admin.“).
+  const loose = q.replace(/['’.]/g, '').toLowerCase()
+  if (loose.length < 2) return []
+  const ids = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT c.id FROM "Card" c JOIN "CardSet" s ON s.id = c."setId"
+    WHERE lower(regexp_replace(c.name, '[''’.]', '', 'g')) LIKE ${`%${loose}%`}
+    ORDER BY s."releaseDate" DESC NULLS LAST LIMIT ${limit}`
+  if (!ids.length) return []
+  const rows = await prisma.card.findMany({ where: { id: { in: ids.map((r) => r.id) } }, select })
+  return ids.map((r) => rows.find((c) => c.id === r.id)!).filter(Boolean)
+}
+
+/** Celebrations Classic Collection: původní číslo na kartě → číslo v katalogu (cel25cc-CC0xx). */
+const CLASSIC_REPRINT: Record<string, string> = {
+  '2/102': 'CC001', // Blastoise
+  '4/102': 'CC002', // Charizard
+  '15/102': 'CC003', // Venusaur
+  '73/102': 'CC004', // Imposter Professor Oak
+  '8/82': 'CC005', // Dark Gyarados
+  '15/82': 'CC006', // Here Comes Team Rocket!
+  '15/132': 'CC007', // Rocket's Zapdos
+  '20/111': 'CC009', // Cleffa
+  '66/64': 'CC010', // Shining Magikarp
+  '9/95': 'CC011', // Team Magma's Groudon
+  '86/109': 'CC012', // Rocket's Admin.
+  '88/92': 'CC013', // Mew ex
+  '93/101': 'CC014', // Gardevoir ex δ
+  '17/17': 'CC015', // Umbreon ★
+  '15/106': 'CC016', // Claydol
+  '109/111': 'CC017', // Luxray GL LV.X
+  '145/147': 'CC018', // Garchomp C LV.X
+  '107/123': 'CC019', // Donphan
+  '113/114': 'CC020', // Reshiram
+  '114/114': 'CC021', // Zekrom
+  '54/99': 'CC022', // Mewtwo EX
+  '97/146': 'CC023', // Xerneas EX
+  '76/108': 'CC024', // M Rayquaza EX
+  '60/145': 'CC025', // Tapu Lele GX
 }
 
 /** Jedna karta ve stejném tvaru jako výsledky hledání. */
