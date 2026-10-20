@@ -38,6 +38,13 @@ Aktuálně: ${sets} sad, ${cards} karet (anglické i japonské sady), ${products
 - Veřejný profil sběratele: ${BASE}/@{přezdívka} — co nabízí a co hledá (jen u profilů, které to povolily)
 - [Bezpečný obchod](${BASE}/bezpecny-obchod): rady, jak bezpečně měnit a prodávat karty
 
+## Napojení na AI asistenty (MCP)
+
+- Přihlášený uživatel si v Můj účet → Napojení na AI vytvoří osobní klíč a připojí ChatGPT, Claude nebo jiného MCP klienta: ${BASE}/ucet#ai
+- MCP server (Streamable HTTP): ${BASE}/mcp/{klíč} — nástroje pro čtení (přehled, moje karty, chybějící, sady, hledání, detail karty, výměny, aukce) i zápis do vlastní sbírky (přidat karty, počet kusů, označit „chybí“, nabídky). Typický scénář: uživatel vyfotí kartu v mobilu, AI ji pozná, ověří přes search_cards a přidá přes add_cards.
+- REST (jen s klíčem v hlavičce Authorization: Bearer): ${BASE}/api/v1/…, popis ${BASE}/api/v1/openapi.json
+- Bez klíče je přístupný jen veřejný katalog (stránky výše). Klíč je osobní; AI vidí a mění jen sbírku svého majitele.
+
 ## Poznámky
 
 - Ceny jsou orientační (Cardmarket, aktualizace jednou denně); skutečná cena závisí na stavu karty a nabídce.

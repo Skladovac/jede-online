@@ -256,5 +256,8 @@ const dict: Record<string, string> = {
   'Kompletní {n}/{total}': 'Complete {n}/{total}',
   'se secret {n}/{total}': 'with secrets {n}/{total}',
   'master set {n}/{total}': 'master set {n}/{total}',
+  'Napoj si svou AI — přidávej karty fotkou z mobilu': 'Connect your own AI — add cards by phone photo',
+  'ChatGPT nebo Claude propojíš se svým účtem osobním klíčem. Vyfotíš kartu, napíšeš „přidej do sbírky“ a tvoje AI ji pozná a uloží k nám. Zeptáš se jí i „které karty ze sady 151 mi chybí a za kolik je někdo nabízí“.': 'Link ChatGPT or Claude to your account with a personal key. Photograph a card, type “add to my collection” and your AI recognises it and saves it here. Ask it “which cards from set 151 am I missing and what are they offered for”.',
+  'Vyzkoušet zdarma': 'Try for free',
 }
 export default dict

@@ -256,5 +256,8 @@ const dict: Record<string, string> = {
   'Kompletní {n}/{total}': 'Kompletná {n}/{total}',
   'se secret {n}/{total}': 'so secret {n}/{total}',
   'master set {n}/{total}': 'master set {n}/{total}',
+  'Napoj si svou AI — přidávej karty fotkou z mobilu': 'Napoj si svoju AI — pridávaj karty fotkou z mobilu',
+  'ChatGPT nebo Claude propojíš se svým účtem osobním klíčem. Vyfotíš kartu, napíšeš „přidej do sbírky“ a tvoje AI ji pozná a uloží k nám. Zeptáš se jí i „které karty ze sady 151 mi chybí a za kolik je někdo nabízí“.': 'ChatGPT alebo Claude prepojíš so svojím účtom osobným kľúčom. Odfotíš kartu, napíšeš „pridaj do zbierky“ a tvoja AI ju spozná a uloží k nám. Opýtaš sa jej aj „ktoré karty zo sady 151 mi chýbajú a za koľko ich niekto ponúka“.',
+  'Vyzkoušet zdarma': 'Vyskúšať zadarmo',
 }
 export default dict
