@@ -5,7 +5,7 @@ import { aiAuctions, aiCard, aiCollection, aiMissing, aiOverview, aiRequests, ai
 export const dynamic = 'force-dynamic'
 
 /**
- * REST pro AI asistenty a „vlastní GPT“ (jen čtení). Klíč: Authorization: Bearer pk_… (nebo ?key=pk_…).
+ * REST pro AI asistenty a „vlastní GPT“ (jen čtení). Klíč jen v hlavičce Authorization: Bearer pk_….
  *   GET /api/v1/me · /collection?set=sv01 · /missing?set=sv01&all=1 · /sets · /sets/{id} · /cards/{id} · /search?q=… · /trades · /auctions
  * Popis pro nástroje: GET /api/v1/openapi.json (bez klíče).
  */
@@ -14,7 +14,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ path: strin
   const [a, b] = path
   if (a === 'openapi.json') return NextResponse.json(openapi(), { headers: { 'Cache-Control': 'public, max-age=3600' } })
 
-  const user = await userFromToken(tokenFromRequest(req, req.nextUrl.searchParams.get('key')))
+  // Klíč jen v hlavičce (v adrese by zůstal v logách a historii prohlížeče).
+  const user = await userFromToken(tokenFromRequest(req, null))
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   if ('error' in user) return NextResponse.json({ error: user.error }, { status: user.status })
   const q = req.nextUrl.searchParams
