@@ -3,7 +3,9 @@ import Link from 'next/link'
 import { HoloCard } from '@/components/Motion'
 import { JsonLd, SITE, breadcrumbs } from '@/components/JsonLd'
 import { AuctionSection } from '@/components/AuctionCard'
-import { Check, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
+import type { Variant } from '@prisma/client'
+import { VariantToggles } from '@/components/VariantToggles'
 import { getCurrentUser } from '@/lib/auth'
 import { panel } from '@/components/design'
 import { notFound } from 'next/navigation'
@@ -178,23 +180,7 @@ export default async function CardPage({ params }: Props) {
               <>
                 <dt className="text-subtle">{t('Varianty')}</dt>
                 <dd className="flex flex-wrap gap-1.5">
-                  {variants.map((v) =>
-                    v.owned > 0 ? (
-                      <span
-                        key={v.key}
-                        title={t('mám')}
-                        className="inline-flex items-center gap-1 rounded-[7px] bg-[color-mix(in_srgb,var(--positive)_12%,transparent)] px-2 py-0.5 text-xs font-semibold text-positive ring-1 ring-inset ring-[color-mix(in_srgb,var(--positive)_30%,transparent)]"
-                      >
-                        <Check className="h-3.5 w-3.5" strokeWidth={2.6} aria-hidden />
-                        {v.label}
-                        {v.owned > 1 && <span className="tabular-nums">{v.owned}×</span>}
-                      </span>
-                    ) : (
-                      <span key={v.key} className="rounded-[7px] bg-surface px-2 py-0.5 text-xs font-semibold text-muted ring-1 ring-inset ring-line">
-                        {v.label}
-                      </span>
-                    ),
-                  )}
+                  <VariantToggles cardId={card.id} loggedIn={!!user} variants={variants as { key: Variant; label: string; owned: number }[]} />
                 </dd>
               </>
             )}
