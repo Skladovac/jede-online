@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { HoloCard } from '@/components/Motion'
 import { JsonLd, SITE, breadcrumbs } from '@/components/JsonLd'
 import { AuctionSection } from '@/components/AuctionCard'
-import { ChevronRight } from 'lucide-react'
+import { Check, ChevronRight } from 'lucide-react'
+import { getCurrentUser } from '@/lib/auth'
 import { panel } from '@/components/design'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
@@ -68,14 +69,22 @@ export default async function CardPage({ params }: Props) {
   if (!card) notFound()
 
   const img = cardImage(card.imageUrl, 'high')
-  const variants = [
-    card.hasNormal && t('Normální'),
-    card.hasHolo && 'Holo',
-    card.hasReverse && 'Reverse holo',
-    card.hasFirstEd && '1st edition',
-    card.hasPokeball && 'Poké Ball reverse',
-    card.hasMasterball && 'Master Ball reverse',
-  ].filter(Boolean) as string[]
+  // Kolik kusů které varianty má přihlášený — u štítků variant se ukáže fajfka a počet.
+  const user = await getCurrentUser()
+  const mine = user
+    ? await prisma.collectionItem.groupBy({ by: ['variant'], where: { userId: user.id, cardId: card.id, quantity: { gt: 0 } }, _sum: { quantity: true } })
+    : []
+  const ownedOf = (v: string) => mine.find((m) => m.variant === v)?._sum.quantity ?? 0
+  const variants = (
+    [
+      card.hasNormal && { key: 'NORMAL', label: t('Normální') },
+      card.hasHolo && { key: 'HOLO', label: 'Holo' },
+      card.hasReverse && { key: 'REVERSE', label: 'Reverse holo' },
+      card.hasFirstEd && { key: 'FIRST_EDITION', label: '1st edition' },
+      card.hasPokeball && { key: 'POKEBALL', label: 'Poké Ball reverse' },
+      card.hasMasterball && { key: 'MASTERBALL', label: 'Master Ball reverse' },
+    ].filter(Boolean) as { key: string; label: string }[]
+  ).map((v) => ({ ...v, owned: ownedOf(v.key) }))
   const price = formatEur(card.priceEur)
   const priceReverse = formatEur(card.priceReverseEur)
   const setHref = `/sady/${encodeURIComponent(card.setId)}`
@@ -169,11 +178,23 @@ export default async function CardPage({ params }: Props) {
               <>
                 <dt className="text-subtle">{t('Varianty')}</dt>
                 <dd className="flex flex-wrap gap-1.5">
-                  {variants.map((v) => (
-                    <span key={v} className="rounded-[7px] bg-surface px-2 py-0.5 text-xs font-semibold text-muted ring-1 ring-inset ring-line">
-                      {v}
-                    </span>
-                  ))}
+                  {variants.map((v) =>
+                    v.owned > 0 ? (
+                      <span
+                        key={v.key}
+                        title={t('mám')}
+                        className="inline-flex items-center gap-1 rounded-[7px] bg-[color-mix(in_srgb,var(--positive)_12%,transparent)] px-2 py-0.5 text-xs font-semibold text-positive ring-1 ring-inset ring-[color-mix(in_srgb,var(--positive)_30%,transparent)]"
+                      >
+                        <Check className="h-3.5 w-3.5" strokeWidth={2.6} aria-hidden />
+                        {v.label}
+                        {v.owned > 1 && <span className="tabular-nums">{v.owned}×</span>}
+                      </span>
+                    ) : (
+                      <span key={v.key} className="rounded-[7px] bg-surface px-2 py-0.5 text-xs font-semibold text-muted ring-1 ring-inset ring-line">
+                        {v.label}
+                      </span>
+                    ),
+                  )}
                 </dd>
               </>
             )}
