@@ -182,8 +182,8 @@ export default async function HomePage() {
                 <Link href="/odhad-nemovitosti-zdarma" className="btn-gold">
                   Začít odhadem ceny <ArrowRight className="h-4 w-4" aria-hidden />
                 </Link>
-                <Link href="/prodej-nemovitosti" className="btn-ghost-light">
-                  Jak prodáváme
+                <Link href="/co-dela-makler" className="btn-ghost-light">
+                  Co všechno uděláme
                 </Link>
               </div>
             </div>

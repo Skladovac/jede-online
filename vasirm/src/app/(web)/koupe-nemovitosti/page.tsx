@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { ArrowRight, FileSearch, Home, KeyRound, Landmark } from 'lucide-react'
 import Link from 'next/link'
 import { ContactForm } from '@/components/ContactForm'
-import { PageHero, SectionLabel } from '@/components/ui'
+import { ArrowLink, PageHero, SectionLabel } from '@/components/ui'
 
 export const metadata: Metadata = {
   title: 'Koupě nemovitosti ve Zlíně a okolí',
@@ -49,6 +49,9 @@ export default function BuyPage() {
               </li>
             ))}
           </ul>
+          <div data-reveal className="mt-12">
+            <ArrowLink href="/co-dela-makler#koupe">Podrobný checklist všech kroků</ArrowLink>
+          </div>
         </div>
       </section>
 

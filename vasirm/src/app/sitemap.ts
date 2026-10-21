@@ -5,7 +5,7 @@ import { SITE_URL } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
 
-const PAGES = ['', '/o-nas', '/nabidka', '/reference', '/prodej-nemovitosti', '/koupe-nemovitosti', '/odhad-nemovitosti-zdarma', '/kontakt', '/ochrana-osobnich-udaju']
+const PAGES = ['', '/o-nas', '/nabidka', '/reference', '/prodej-nemovitosti', '/koupe-nemovitosti', '/co-dela-makler', '/odhad-nemovitosti-zdarma', '/kontakt', '/ochrana-osobnich-udaju']
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const listings = await prisma.listing.findMany({

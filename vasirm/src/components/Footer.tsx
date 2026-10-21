@@ -55,6 +55,11 @@ export function Footer({ agents, nav }: { agents: Pick<User, 'id' | 'name' | 'sl
               </Link>
             </li>
             <li>
+              <Link href="/co-dela-makler" className="hover:text-gold-light">
+                Co dělá makléř
+              </Link>
+            </li>
+            <li>
               <Link href="/ochrana-osobnich-udaju" className="hover:text-gold-light">
                 Ochrana osobních údajů
               </Link>

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Camera, Clapperboard, Handshake, Map, Plane, Scale, ShieldCheck, Users } from 'lucide-react'
 import { StaticPhoto } from '@/components/Photo'
-import { PageHero, SectionLabel, ValuationCta } from '@/components/ui'
+import { ArrowLink, PageHero, SectionLabel, ValuationCta } from '@/components/ui'
 import { SALE_STEPS } from '@/lib/content'
 
 export const metadata: Metadata = {
@@ -92,6 +92,11 @@ export default function SalePage() {
             <h2 data-reveal className="display mt-6 text-[clamp(2.4rem,5vw,4rem)]">
               Od první schůzky až po <em className="text-gold-light">předání klíčů.</em>
             </h2>
+            <div data-reveal className="mt-8">
+              <ArrowLink href="/co-dela-makler#prodej" dark>
+                Podrobný checklist všech kroků
+              </ArrowLink>
+            </div>
           </div>
           <ol className="lg:col-span-7">
             {SALE_STEPS.map(([title, text], i) => (
