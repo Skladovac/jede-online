@@ -59,6 +59,24 @@ export async function toggleOwned(cardId: string): Promise<QuickState> {
   return quickState(user.id, cardId)
 }
 
+/** Detail karty, zaškrtávátka variant: přepne „mám“ pro jednu variantu (1 kus MINT/en ↔ nic). Vrací počty kusů po variantách. */
+export async function toggleVariant(cardId: string, variant: Variant): Promise<Record<string, number>> {
+  const user = await requireUser()
+  if (!VARIANTS.includes(variant)) throw new Error('Neplatná varianta')
+  const rows = await prisma.collectionItem.findMany({ where: { userId: user.id, cardId, variant } })
+  if (rows.length) {
+    // Odškrtnutí: nic se nemaže, když jsou kusy v rozpracované výměně — jen když je to čistý řádek.
+    await prisma.tradeRequestItem.deleteMany({ where: { collectionItemId: { in: rows.map((r) => r.id) }, request: { status: 'DRAFT' } } })
+    await prisma.collectionItem.deleteMany({ where: { id: { in: rows.map((r) => r.id) }, userId: user.id } })
+  } else {
+    await prisma.collectionItem.create({ data: { userId: user.id, cardId, variant } })
+    await prisma.wantItem.deleteMany({ where: { userId: user.id, cardId, OR: [{ variant: null }, { variant }] } })
+  }
+  revalidatePath(`/karta/${cardId}`)
+  const all = await prisma.collectionItem.groupBy({ by: ['variant'], where: { userId: user.id, cardId, quantity: { gt: 0 } }, _sum: { quantity: true } })
+  return Object.fromEntries(all.map((a) => [a.variant, a._sum.quantity ?? 0]))
+}
+
 /** Režim "Chybí": přepne kartu na seznamu chybějících. */
 export async function toggleWant(cardId: string): Promise<QuickState> {
   const user = await requireUser()

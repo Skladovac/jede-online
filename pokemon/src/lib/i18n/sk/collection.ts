@@ -159,5 +159,7 @@ const dict: Record<string, string> = {
   'Sada kompletní!': 'Sada kompletná!',
   'Máš všech {n} karet. Gratulujeme!': 'Máš všetkých {n} kariet. Gratulujeme!',
   'Ukazujeme jen karty, které nemáš. Klepni na ty, které sháníš.': 'Ukazujeme len karty, ktoré nemáš. Ťukni na tie, ktoré zháňaš.',
+  'Mám — kliknutím odebereš': 'Mám — kliknutím odoberieš',
+  'Nemám — kliknutím přidáš 1 kus': 'Nemám — kliknutím pridáš 1 kus',
 }
 export default dict
