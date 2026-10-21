@@ -22,6 +22,8 @@ services:
       DATABASE_URL: ${VASIRM_DATABASE_URL}
       SITE_URL: ${SITE_URL}
       ALLOW_INDEXING: ${ALLOW_INDEXING:-0}
+      # Nabídka nemovitostí na webu (menu, úvod, stránky makléřů). Zapnout až po napojení Realmanu.
+      SHOW_LISTINGS: ${SHOW_LISTINGS:-0}
       BREVO_API_KEY: ${BREVO_API_KEY:-}
       LEAD_EMAILS: ${LEAD_EMAILS:-}
       # Správce webu (vyplněný dotazník makléřů apod.)

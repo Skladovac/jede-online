@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { TestimonialCard } from '@/components/agents'
 import { PageHero, ValuationCta } from '@/components/ui'
+import { SHOW_LISTINGS } from '@/lib/site'
 import { getTestimonials } from '@/lib/testimonials'
 
 export const dynamic = 'force-dynamic'
@@ -37,10 +38,10 @@ export default async function ReferencesPage() {
             <div className="py-12 text-center">
               <p className="font-serif text-3xl">Reference právě sbíráme</p>
               <p className="mx-auto mt-3 max-w-md text-stone">
-                Mezitím se podívejte, co jsme už prodali, nebo nám rovnou zavolejte.
+                {SHOW_LISTINGS ? 'Mezitím se podívejte, co jsme už prodali, nebo nám rovnou zavolejte.' : 'Mezitím nám klidně rovnou zavolejte nebo napište.'}
               </p>
-              <Link href="/nabidka?stav=prodano" className="btn-ink mt-6">
-                Prodané nemovitosti
+              <Link href={SHOW_LISTINGS ? '/nabidka?stav=prodano' : '/kontakt'} className="btn-ink mt-6">
+                {SHOW_LISTINGS ? 'Prodané nemovitosti' : 'Kontakt'}
               </Link>
             </div>
           )}

@@ -25,6 +25,10 @@ export const SITE_URL = (process.env.SITE_URL ?? 'http://localhost:3500').replac
 /** Indexovat jen finální doménu — pracovní verze na jede.online nesmí do Googlu jako duplikát. */
 export const ALLOW_INDEXING = process.env.ALLOW_INDEXING === '1'
 
+/** Nabídka nemovitostí na webu. Do napojení Realmanu skrytá (bez odkazů v menu a na stránkách, mimo sitemap);
+ *  přímé adresy /nabidka fungují dál kvůli náhledům z administrace. Zapnout: SHOW_LISTINGS=1. */
+export const SHOW_LISTINGS = process.env.SHOW_LISTINGS === '1'
+
 export type NavItem = { href: string; label: string }
 
 export const NAV: NavItem[] = [
@@ -36,7 +40,9 @@ export const NAV: NavItem[] = [
 ]
 
 /** Menu webu; „Reference“ jen když nějaké zveřejněné jsou (prázdná stránka v menu nepůsobí dobře). */
-export const navItems = (hasReferences: boolean): NavItem[] =>
-  hasReferences ? [...NAV.slice(0, 2), { href: '/reference', label: 'Reference' }, ...NAV.slice(2)] : NAV
+export const navItems = (hasReferences: boolean): NavItem[] => {
+  const nav = hasReferences ? [...NAV.slice(0, 2), { href: '/reference', label: 'Reference' }, ...NAV.slice(2)] : NAV
+  return SHOW_LISTINGS ? nav : nav.filter((n) => n.href !== '/nabidka')
+}
 
 export const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`

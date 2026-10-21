@@ -11,7 +11,7 @@ import { agentIntro, firstName, getAgentBySlug, isFemale, statsOf } from '@/lib/
 import { gridCols, nbsp, paragraphs } from '@/lib/format'
 import { getListingCards } from '@/lib/listings'
 import { abs, breadcrumbLd } from '@/lib/seo'
-import { SITE, SITE_URL, telHref } from '@/lib/site'
+import { SHOW_LISTINGS, SITE, SITE_URL, telHref } from '@/lib/site'
 import { getTestimonials } from '@/lib/testimonials'
 
 export const dynamic = 'force-dynamic'
@@ -34,8 +34,8 @@ export default async function AgentPage({ params }: Props) {
   const a = await getAgentBySlug((await params).slug)
   if (!a) notFound()
   const [active, sold, testimonials] = await Promise.all([
-    getListingCards({ agentId: a.id }),
-    getListingCards({ agentId: a.id, sold: true, take: 6 }),
+    SHOW_LISTINGS ? getListingCards({ agentId: a.id }) : [],
+    SHOW_LISTINGS ? getListingCards({ agentId: a.id, sold: true, take: 6 }) : [],
     getTestimonials(a.id),
   ])
   const stats = statsOf(a)

@@ -9,7 +9,7 @@ import { getAgents, getTeam, statsOf } from '@/lib/agents'
 import { SALE_STEPS } from '@/lib/content'
 import { gridCols } from '@/lib/format'
 import { getListingCards } from '@/lib/listings'
-import { SITE } from '@/lib/site'
+import { SHOW_LISTINGS, SITE } from '@/lib/site'
 import { getTestimonials } from '@/lib/testimonials'
 
 export const dynamic = 'force-dynamic'
@@ -33,7 +33,7 @@ const SERVICES = [
 ]
 
 export default async function HomePage() {
-  const [agents, team, testimonials, listings] = await Promise.all([getAgents(), getTeam(), getTestimonials(undefined, 3), getListingCards({ take: 6 })])
+  const [agents, team, testimonials, listings] = await Promise.all([getAgents(), getTeam(), getTestimonials(undefined, 3), SHOW_LISTINGS ? getListingCards({ take: 6 }) : []])
   const stats = statsOf(team)
   const [first, second] = SITE.team.split(' a ')
 

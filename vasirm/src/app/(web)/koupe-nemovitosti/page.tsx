@@ -3,6 +3,7 @@ import { ArrowRight, FileSearch, Home, KeyRound, Landmark } from 'lucide-react'
 import Link from 'next/link'
 import { ContactForm } from '@/components/ContactForm'
 import { ArrowLink, PageHero, SectionLabel } from '@/components/ui'
+import { SHOW_LISTINGS } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'Koupě nemovitosti ve Zlíně a okolí',
@@ -31,9 +32,15 @@ export default function BuyPage() {
         lead="Aktivně pro vás vyhledáme nabídky a pohlídáme, aby transakce proběhla hladce, bezpečně a bez právních rizik."
       >
         <div data-reveal className="mt-9">
-          <Link href="/nabidka" className="btn-gold">
-            Prohlédnout aktuální nabídku <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          {SHOW_LISTINGS ? (
+            <Link href="/nabidka" className="btn-gold">
+              Prohlédnout aktuální nabídku <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          ) : (
+            <a href="#poptavka" className="btn-gold">
+              Napište, co hledáte <ArrowRight className="h-4 w-4" aria-hidden />
+            </a>
+          )}
         </div>
       </PageHero>
 
@@ -55,7 +62,7 @@ export default function BuyPage() {
         </div>
       </section>
 
-      <section className="border-t border-ink/10 bg-paper-2 py-20 md:py-28">
+      <section id="poptavka" className="scroll-mt-20 border-t border-ink/10 bg-paper-2 py-20 md:py-28">
         <div className="wrap grid gap-12 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <SectionLabel n="02">Co hledáte?</SectionLabel>

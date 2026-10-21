@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SHOW_LISTINGS } from '@/lib/site'
 
 export function NotFoundContent() {
   return (
@@ -11,10 +12,12 @@ export function NotFoundContent() {
         </h1>
         <p className="mt-6 max-w-lg text-lg text-paper/65">Nemovitost už možná není v nabídce, nebo se adresa změnila.</p>
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-          <Link href="/nabidka" className="btn-gold">
-            Aktuální nabídka
-          </Link>
-          <Link href="/" className="btn-ghost-light">
+          {SHOW_LISTINGS && (
+            <Link href="/nabidka" className="btn-gold">
+              Aktuální nabídka
+            </Link>
+          )}
+          <Link href="/" className={SHOW_LISTINGS ? 'btn-ghost-light' : 'btn-gold'}>
             Na úvod
           </Link>
         </div>
