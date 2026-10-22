@@ -242,5 +242,7 @@ const dict: Record<string, string> = {
   'Ahoj {name}, sada {set}, na kterou jsi čekal(a), je v katalogu.': 'Ahoj {name}, sada {set}, na ktorú si čakal(a), je v katalógu.',
   'Otevřít sadu': 'Otvoriť sadu',
   'Tahle sada má další část:': 'Táto sada má ďalšiu časť:',
+  'Nejnižší nabídka (všechny jazyky a stavy)': 'Najnižšia ponuka (všetky jazyky a stavy)',
+  'Jde o souhrn celého Cardmarketu bez filtru jazyka, země a stavu — „nejnižší nabídka“ bývá cizojazyčná nebo hraná karta ze vzdálené země; pro ČR a SK se řiď trendem a průměry.': 'Ide o súhrn celého Cardmarketu bez filtra jazyka, krajiny a stavu — „najnižšia ponuka“ býva cudzojazyčná alebo hraná karta zo vzdialenej krajiny; pre ČR a SR sa riaď trendom a priemermi.',
 }
 export default dict
