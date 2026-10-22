@@ -2,7 +2,7 @@ import type { PriceStats } from '@/lib/price-stats'
 import { formatEur } from '@/lib/format'
 import { getT } from '@/lib/i18n/server'
 const ROWS: [keyof PriceStats, string, string?][] = [
-  ['low', 'Nejlevnější nabídka', 'od'],
+  ['low', 'Nejnižší nabídka (všechny jazyky a stavy)', 'od'],
   ['trend', 'Cenový trend'],
   ['avg30', 'Průměr za 30 dní'],
   ['avg7', 'Průměr za 7 dní'],
