@@ -134,10 +134,12 @@ const nameKey = (s: string) =>
       .replace(/\bLV\.?X\b/gi, ''),
   )
 
-async function urlOk(url: string) {
+// Obrázek prokazatelně chybí jen při 404/410. Výpadek, limit (429) nebo 5xx CDN
+// neznamená špatný obrázek — jinak bychom při náporu HEAD požadavků přepsali dobré obrázky.
+async function urlGone(url: string) {
   try {
     const r = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(15_000) })
-    return r.ok && !!r.headers.get('content-type')?.startsWith('image/')
+    return r.status === 404 || r.status === 410
   } catch {
     return false
   }
@@ -149,7 +151,7 @@ async function badImage(url: string | null) {
   if (url.includes('scrydex.com/pokemon/me55c-')) return true
   if (url.startsWith(TCGP_CDN)) return false
   const test = url.startsWith('https://assets.tcgdex.net/') ? `${url}/low.webp` : url
-  return !(await urlOk(test))
+  return urlGone(test)
 }
 
 async function fillFromTcgplayer(log: (m: string) => void) {
