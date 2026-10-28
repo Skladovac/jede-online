@@ -55,6 +55,7 @@ export function productImage(url: string | null, size: 'low' | 'high' = 'low') {
 
 export function setLogo(url: string | null) {
   if (url?.startsWith('/')) return url // vlastní soubor v public/set-logos
+  if (url && /\.(png|jpg|webp)$/.test(url)) return viaProxy(url) // pokemontcg.io dává celou adresu
   return url ? viaProxy(`${url}.webp`) : null
 }
 

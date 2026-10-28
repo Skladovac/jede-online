@@ -4,7 +4,7 @@ import { UpcomingBanner } from '@/components/UpcomingBanner'
 import { prisma } from '@/lib/prisma'
 import { SetTile } from '@/components/SetTile'
 import { getT } from '@/lib/i18n/server'
-import { subsetLabels } from '@/lib/format'
+import { setLogo, subsetLabels } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 export async function generateMetadata(): Promise<Metadata> {
@@ -70,9 +70,18 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
 
       {[...groups.entries()].map(([series, list]) => {
         const labels = subsetLabels(list)
+        // Logo éry = logo její první hlavní sady (stejně to dělá TCGdex).
+        const first = [...list].reverse().find((s) => s.logoUrl && !s.code?.includes(':'))
+        const seriesLogo = setLogo(first?.logoUrl ?? null)
         return (
         <section key={series} id={encodeURIComponent(series)} className="scroll-mt-24 pt-10">
-          <h2 className="mb-5 text-2xl font-bold text-fg">{series}</h2>
+          <h2 className="mb-5 flex items-center gap-3 text-2xl font-bold text-fg">
+            {seriesLogo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={seriesLogo} alt="" loading="lazy" width={96} height={40} className="h-10 w-auto max-w-[96px] object-contain" />
+            )}
+            {series}
+          </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
             {list.map((s) => (
               <SetTile key={s.id} {...s} subLabel={labels.get(s.id)} />

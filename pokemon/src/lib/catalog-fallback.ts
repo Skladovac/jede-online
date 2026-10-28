@@ -18,9 +18,44 @@ const MANUAL: Record<string, { ptcg: string; prefix?: string }> = {
   cel25cc: { ptcg: 'cel25c' },
   hgssp: { ptcg: 'hsp' },
   bog: { ptcg: 'bp' },
+  exu: { ptcg: 'ex10' }, // Unown A–Z, ! a ? jsou v pokemontcg součástí Unseen Forces se stejnými „čísly“
 }
 
-type PtcgSet = { id: string; name: string }
+// Loga sad, která TCGdex nemá — z pokemontcg.io. Klíč = naše sada, hodnota = sada v pokemontcg.
+// Podsady (Trainer Gallery, energie, promo) mají vlastní logo, nebo logo hlavní sady.
+const LOGO_MAP: Record<string, string> = {
+  'sm3.5': 'sm35',
+  'sm7.5': 'sm75',
+  sv05: 'sv5',
+  sma: 'sma',
+  svp: 'svp',
+  sve: 'sve',
+  swshp: 'swshp',
+  swsh9tg: 'swsh9tg',
+  swsh10tg: 'swsh10tg',
+  swsh11tg: 'swsh11tg',
+  swsh12tg: 'swsh12tg',
+  'swsh12.5gg': 'swsh12pt5gg',
+  'swsh4.5sv': 'swsh45sv',
+  cel25cc: 'cel25c',
+  bog: 'bp',
+  exu: 'ex10',
+  rc: 'bw11', // Radiant Collection = podsada Legendary Treasures
+  mee: 'me1',
+  mep: 'me1',
+  '2011bw': 'mcd11',
+  '2012bw': 'mcd12',
+  '2014xy': 'mcd14',
+  '2015xy': 'mcd15',
+  '2016xy': 'mcd16',
+  '2017sm': 'mcd17',
+  '2018sm': 'mcd18',
+  '2019sm': 'mcd19',
+  '2021swsh': 'mcd21',
+  '2022swsh': 'mcd22',
+}
+
+type PtcgSet = { id: string; name: string; images?: { logo?: string; symbol?: string } }
 type PtcgCard = { number: string; name: string; rarity?: string; images: { small: string } }
 
 const norm = (s: string) => s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '')
@@ -61,6 +96,10 @@ const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' | 'kit
   '30th': { group: 24722, match: 'number' },
   '30th-c': { group: 24837, match: 'name' },
   mep: { group: 24451, match: 'number' }, // MEP Black Star Promos (nové promo karty TCGdex dlouho nemá s obrázkem)
+  mee: { group: 24461, match: 'number' }, // Mega Evolution Energies
+  svp: { group: 22872, match: 'number' }, // SV promo karty nad 207 (pokemontcg.io končí u 207)
+  sve: { group: 24382, match: 'number' }, // SV energie 017–024
+  swshp: { group: 2545, match: 'number' }, // SWSH299–301
   cel25cc: { group: 2931, match: 'name' },
   '2023sv': { group: 23306, match: 'number' },
   '2024sv': { group: 24163, match: 'number' },
@@ -170,8 +209,30 @@ async function fillFromTcgplayer(log: (m: string) => void) {
   log(`[catalog] obrázky z TCGplayeru: ${fixed}`)
 }
 
+// Loga a symboly sad, které TCGdex nemá (podsady, promo, energie, McDonald's).
+async function fillSetLogos(ptcgSets: PtcgSet[], log: (m: string) => void) {
+  const byId = new Map(ptcgSets.map((s) => [s.id, s]))
+  const byName = new Map(ptcgSets.map((s) => [norm(s.name), s]))
+  const sets = await prisma.cardSet.findMany({
+    where: { game: 'pokemon', language: 'en', OR: [{ logoUrl: null }, { symbolUrl: null }] },
+    select: { id: true, name: true, logoUrl: true, symbolUrl: true },
+  })
+  let fixed = 0
+  for (const s of sets) {
+    const src = byId.get(LOGO_MAP[s.id] ?? '') ?? byName.get(norm(s.name))
+    const logo = s.logoUrl ?? src?.images?.logo ?? null
+    const symbol = s.symbolUrl ?? src?.images?.symbol ?? null
+    if (logo === s.logoUrl && symbol === s.symbolUrl) continue
+    await prisma.cardSet.update({ where: { id: s.id }, data: { logoUrl: logo, symbolUrl: symbol } })
+    fixed++
+  }
+  log(`[catalog] loga sad z pokemontcg.io: ${fixed}`)
+}
+
 export async function fillCatalogGaps(log: (m: string) => void = console.log) {
   await fillFromTcgplayer(log)
+  const ptcgSets = (await get<{ data: PtcgSet[] }>('/sets?pageSize=250&select=id,name,images')).data
+  await fillSetLogos(ptcgSets, log).catch((err) => log(`[catalog] loga sad selhala: ${(err as Error).message}`))
   const gaps = await prisma.cardSet.findMany({
     // Jen anglické sady (pokemontcg.io japonské nezná).
     where: { game: 'pokemon', language: 'en' },
@@ -179,8 +240,6 @@ export async function fillCatalogGaps(log: (m: string) => void = console.log) {
   })
   const todo = gaps.filter((s) => s.cards.length < s.cardCount || s.cards.some((c) => !c.imageUrl))
   if (!todo.length) return
-
-  const ptcgSets = (await get<{ data: PtcgSet[] }>('/sets?pageSize=250&select=id,name')).data
   const byName = new Map(ptcgSets.map((s) => [norm(s.name), s.id]))
 
   let images = 0
