@@ -3,6 +3,7 @@ import { syncCatalog, type SyncStats } from '@/lib/catalog-sync'
 import { syncProducts } from '@/lib/product-sync'
 import { snapshotAll } from '@/lib/portfolio'
 import { syncJapanese } from '@/lib/catalog-sync-ja'
+import { fillCatalogGaps } from '@/lib/catalog-fallback'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,6 +35,16 @@ export async function POST(req: NextRequest) {
         running = null
       })
     return NextResponse.json({ status: 'started', only: 'japonske' }, { status: 202 })
+  }
+
+  // Jen doplnění chybějících obrázků a log z náhradních zdrojů (pokemontcg.io, TCGplayer).
+  if (req.nextUrl.searchParams.get('only') === 'mezery') {
+    running = fillCatalogGaps()
+      .catch((err) => console.error('[mezery] doplnění selhalo:', err))
+      .finally(() => {
+        running = null
+      })
+    return NextResponse.json({ status: 'started', only: 'mezery' }, { status: 202 })
   }
 
   if (req.nextUrl.searchParams.get('only') === 'produkty') {
