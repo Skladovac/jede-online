@@ -93,7 +93,7 @@ export async function register(_: FormState, fd: FormData): Promise<FormState> {
   await applyInvite(user.id)
   await createSession(user.id)
   // Nový uživatel na hlavní stránku s průvodcem „Jak začít“ (nebo zpět tam, odkud přišel).
-  redirect(next ? `/ucet?vitej=1&next=${encodeURIComponent(next)}` : '/?vitej=1')
+  redirect(next ? `/ucet?vitej=1&next=${encodeURIComponent(next)}` : '/zacatek?vitej=1')
 }
 
 // bcrypt otisk náhodného hesla — porovnání s ním trvá stejně dlouho jako se skutečným účtem.
@@ -254,5 +254,5 @@ export async function completeSocialSignup(_: FormState, fd: FormData): Promise<
   await applyInvite(user.id)
   await createSession(user.id)
   const next = safeNext(pending.next)
-  redirect(next && next !== '/' ? next : '/?vitej=1')
+  redirect(next && next !== '/' ? next : '/zacatek?vitej=1')
 }

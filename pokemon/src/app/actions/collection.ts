@@ -30,18 +30,49 @@ async function defaultVariant(cardId: string): Promise<Variant> {
   return c.hasNormal ? 'NORMAL' : c.hasHolo ? 'HOLO' : c.hasReverse ? 'REVERSE' : c.hasFirstEd ? 'FIRST_EDITION' : 'NORMAL'
 }
 
-export type QuickState = { owned: number; spare: number; want: boolean; error?: string }
+/** Stav karty v mřížce sady. `variants` = kusy po variantách (NORMAL: 1, REVERSE: 2…). */
+export type QuickState = { owned: number; spare: number; want: boolean; variants?: Record<string, number>; error?: string }
 
 async function quickState(userId: string, cardId: string): Promise<QuickState> {
   const [items, want] = await Promise.all([
-    prisma.collectionItem.findMany({ where: { userId, cardId }, select: { quantity: true, spareQty: true } }),
+    prisma.collectionItem.findMany({ where: { userId, cardId }, select: { quantity: true, spareQty: true, variant: true } }),
     prisma.wantItem.findFirst({ where: { userId, cardId } }),
   ])
+  const variants: Record<string, number> = {}
+  for (const i of items) if (i.quantity > 0) variants[i.variant] = (variants[i.variant] ?? 0) + i.quantity
   return {
     owned: items.reduce((s, i) => s + i.quantity, 0),
     spare: items.reduce((s, i) => s + i.spareQty, 0),
     want: !!want,
+    variants,
   }
+}
+
+/**
+ * Mřížka sady, výběr varianty: +1 / −1 kus dané varianty (MINT, en, bez nabídky).
+ * Ubírání bere kusy z „čistého“ řádku; při nule se řádek smaže (rozpracovaná výměna se zruší).
+ */
+export async function changeVariantQty(cardId: string, variant: Variant, delta: 1 | -1): Promise<QuickState> {
+  const user = await requireUser()
+  if (!VARIANTS.includes(variant)) throw new Error('Neplatná varianta')
+  const rows = await prisma.collectionItem.findMany({ where: { userId: user.id, cardId, variant }, orderBy: { createdAt: 'asc' } })
+  // Základní řádek: bez nabídky, MINT, anglicky — ten se při odklikávání mění.
+  const plain = rows.find((r) => !r.offerType && r.condition === 'MINT' && r.language === 'en') ?? rows[0]
+  if (delta > 0) {
+    if (plain) await prisma.collectionItem.update({ where: { id: plain.id }, data: { quantity: plain.quantity + 1 } })
+    else await prisma.collectionItem.create({ data: { userId: user.id, cardId, variant } })
+    await prisma.wantItem.deleteMany({ where: { userId: user.id, cardId, OR: [{ variant: null }, { variant }] } })
+  } else if (plain) {
+    if (plain.quantity <= 1) {
+      await prisma.tradeRequestItem.deleteMany({ where: { collectionItemId: plain.id, request: { status: 'DRAFT' } } })
+      await prisma.collectionItem.delete({ where: { id: plain.id } })
+    } else {
+      const quantity = plain.quantity - 1
+      await prisma.collectionItem.update({ where: { id: plain.id }, data: { quantity, spareQty: Math.min(plain.spareQty, quantity) } })
+    }
+  }
+  revalidatePath(`/karta/${cardId}`)
+  return quickState(user.id, cardId)
 }
 
 /** Mřížka sady, režim "Mám": přepne mám / nemám (1 kus ve výchozí variantě). */
