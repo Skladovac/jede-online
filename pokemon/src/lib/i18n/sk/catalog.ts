@@ -260,5 +260,7 @@ const dict: Record<string, string> = {
   'Nejnovější sady': 'Najnovšie sady',
   'Nic nenalezeno.': 'Nič sa nenašlo.',
   'Ještě nevím, podívám se nejdřív kolem': 'Ešte neviem, najprv sa pozriem okolo',
+  'Čekáme na oficiální obrázky karet.': 'Čakáme na oficiálne obrázky kariet.',
+  'Seznam karet už je kompletní, obrázky doplníme automaticky, jakmile je vydavatel zveřejní (obvykle pár dní po vydání). Odklikávat si, co máš, můžeš už teď.': 'Zoznam kariet je už kompletný, obrázky doplníme automaticky, len čo ich vydavateľ zverejní (zvyčajne pár dní po vydaní). Odklikávať si, čo máš, môžeš už teraz.',
 }
 export default dict

@@ -18,6 +18,7 @@ const CONCURRENCY = 6
 const MANUAL_LOGOS: Record<string, string> = {
   '30th': '/set-logos/30th.png',
   '30th-c': '/set-logos/30th.png',
+  me06: '/set-logos/delta-reign.png', // Delta Reign — sada založena ručně ze seznamu TCGplayeru před zveřejněním v TCGdex
 }
 // Pokémon TCG Pocket je mobilní hra — její karty fyzicky neexistují, nesbírají se ani nevyměňují.
 const EXCLUDED_SERIES = ['tcgp']
