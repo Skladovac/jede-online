@@ -260,5 +260,7 @@ const dict: Record<string, string> = {
   'Nejnovější sady': 'Latest sets',
   'Nic nenalezeno.': 'Nothing found.',
   'Ještě nevím, podívám se nejdřív kolem': 'Not sure yet, let me look around first',
+  'Čekáme na oficiální obrázky karet.': 'Waiting for the official card images.',
+  'Seznam karet už je kompletní, obrázky doplníme automaticky, jakmile je vydavatel zveřejní (obvykle pár dní po vydání). Odklikávat si, co máš, můžeš už teď.': 'The card list is complete; images will be added automatically once the publisher releases them (usually a few days after launch). You can already tick off what you own.',
 }
 export default dict

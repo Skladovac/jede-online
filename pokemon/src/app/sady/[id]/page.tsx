@@ -8,7 +8,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { setProgress } from '@/lib/progress'
 import { ProgressBars } from '@/components/ProgressBars'
 import { byLocalId, cardImage, formatCzk, formatEur, setLogo } from '@/lib/format'
-import { ChevronRight, Layers } from 'lucide-react'
+import { ChevronRight, ImageOff, Layers } from 'lucide-react'
 import { panel } from '@/components/design'
 import { PriceNote } from '@/components/PriceNote'
 import { SetGrid } from '@/components/SetGrid'
@@ -214,6 +214,16 @@ export default async function SetPage({ params, searchParams }: Props) {
           </div>
         )}
       </header>
+
+      {cards.length > 0 && cards.every((c) => !c.imageUrl) && (
+        <p className="mt-6 flex items-start gap-3 rounded-panel border border-line bg-[color-mix(in_srgb,var(--brand-yellow)_14%,transparent)] p-4 text-sm text-fg">
+          <ImageOff className="mt-0.5 h-4.5 w-4.5 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
+          <span>
+            <strong>{t('Čekáme na oficiální obrázky karet.')}</strong>{' '}
+            {t('Seznam karet už je kompletní, obrázky doplníme automaticky, jakmile je vydavatel zveřejní (obvykle pár dní po vydání). Odklikávat si, co máš, můžeš už teď.')}
+          </span>
+        </p>
+      )}
 
       <nav className="mt-7 flex gap-6 border-b border-line">
         {[
