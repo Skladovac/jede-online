@@ -4,18 +4,28 @@ import Link from 'next/link'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useT } from '@/lib/i18n/client'
-import { changeSpare, clearSetWanted, markByNumbers, markRestWanted, toggleOwned, toggleWant, type QuickState } from '@/app/actions/collection'
+import type { Variant } from '@prisma/client'
+import { changeSpare, changeVariantQty, clearSetWanted, markByNumbers, markRestWanted, toggleWant, type QuickState } from '@/app/actions/collection'
 import { CardImg } from '@/components/CardImg'
 import { POKEMON_TYPES } from '@/lib/pokemon-types'
 import { Celebration } from '@/components/Motion'
-import { ArrowLeft, ArrowRight, BookOpen, Check, LayoutGrid, Minus } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, Check, LayoutGrid, Minus, Plus, X } from 'lucide-react'
 
-export type GridCard = { id: string; localId: string; name: string; image: string | null; price: string | null; types?: string[] }
+export type GridCard = {
+  id: string
+  localId: string
+  name: string
+  image: string | null
+  price: string | null
+  types?: string[]
+  /** Varianty, ve kterých karta vyšla (normal / holo / reverse…). */
+  variants: { key: Variant; label: string }[]
+}
 type Mode = 'view' | 'owned' | 'want' | 'spare'
 
 const MODES: { id: Mode; label: string; hint: string }[] = [
   { id: 'view', label: 'Prohlížet', hint: 'Klepnutím otevřeš detail karty.' },
-  { id: 'owned', label: 'Mám', hint: 'Klepni na karty, které máš. Dalším klepnutím zrušíš.' },
+  { id: 'owned', label: 'Mám', hint: 'Klepni na karty, které máš. U karty s víc verzemi si vybereš variantu; dalším klepnutím přidáš nebo ubereš kus.' },
   { id: 'want', label: 'Chybí', hint: 'Ukazujeme jen karty, které nemáš. Klepni na ty, které sháníš.' },
   { id: 'spare', label: 'Navíc', hint: 'Každé klepnutí přidá kus navíc k výměně. Tlačítkem − ubereš.' },
 ]
@@ -31,6 +41,8 @@ export function SetGrid({
   officialCount,
   setId,
   baseCount,
+  initialMode = 'view',
+  showTip = false,
 }: {
   cards: GridCard[]
   initial: Record<string, QuickState>
@@ -39,9 +51,16 @@ export function SetGrid({
   setId: string
   // Počet karet základní sady (bez secret rare); 0 = sada ho nemá (promo).
   baseCount: number
+  /** Výchozí režim (z průvodce „Jakou sadu sbíráš?“ se otevírá rovnou „Mám“). */
+  initialMode?: 'view' | 'owned'
+  /** Jednorázový tip pro nováčka nad mřížkou. */
+  showTip?: boolean
 }) {
   const t = useT()
-  const [mode, setMode] = useState<Mode>('view')
+  const [mode, setMode] = useState<Mode>(loggedIn ? initialMode : 'view')
+  const [tip, setTip] = useState(showTip && loggedIn)
+  // Karta, u které je otevřený výběr varianty (režim Mám).
+  const [picker, setPicker] = useState<string | null>(null)
   // Zobrazení: mřížka, nebo album po 9 kartách (stránky jako v pořadači, prázdné kapsy = karty, které nemám).
   const [layout, setLayout] = useState<'grid' | 'album'>('grid')
   const [page, setPage] = useState(0)
@@ -175,12 +194,29 @@ export function SetGrid({
     }
   }
 
+  /** +1 / −1 kus jedné varianty (optimisticky). */
+  function changeVariant(cardId: string, variant: Variant, delta: 1 | -1) {
+    const cur = state[cardId] ?? { owned: 0, spare: 0, want: false }
+    const vars = { ...(cur.variants ?? {}) }
+    const next = Math.max(0, (vars[variant] ?? 0) + delta)
+    if (next) vars[variant] = next
+    else delete vars[variant]
+    const owned = Object.values(vars).reduce((s, n) => s + n, 0)
+    apply(cardId, { owned, spare: Math.min(cur.spare, owned), want: owned ? false : cur.want, variants: vars }, () =>
+      changeVariantQty(cardId, variant, delta),
+    )
+  }
+
   function onCard(cardId: string) {
     const cur = state[cardId] ?? { owned: 0, spare: 0, want: false }
-    if (mode === 'owned')
-      apply(cardId, cur.owned ? { owned: 0, spare: 0, want: cur.want } : { ...cur, owned: 1, want: false }, () =>
-        toggleOwned(cardId),
-      )
+    if (mode === 'owned') {
+      const card = cards.find((c) => c.id === cardId)
+      const variants = card?.variants ?? []
+      // Karta s jedinou verzí, kterou ještě nemám: první klepnutí rovnou uloží 1 kus.
+      if (!cur.owned && variants.length === 1) changeVariant(cardId, variants[0].key, 1)
+      // Jinak (víc verzí, nebo už ji mám): výběr varianty s možností přidat / ubrat kus.
+      else setPicker(cardId)
+    }
     if (mode === 'want') apply(cardId, { ...cur, want: !cur.want }, () => toggleWant(cardId))
     if (mode === 'spare')
       apply(cardId, { owned: Math.max(cur.owned, cur.spare + 2), spare: cur.spare + 1, want: false }, () =>
@@ -188,9 +224,83 @@ export function SetGrid({
       )
   }
 
+  const pickerCard = picker ? cards.find((c) => c.id === picker) : null
+  const pickerState = picker ? (state[picker] ?? { owned: 0, spare: 0, want: false }) : null
+
   return (
     <div className="mt-6">
       <Celebration show={celebrate} title={t('Sada kompletní!')} text={t('Máš všech {n} karet. Gratulujeme!', { n: officialCount })} />
+      {tip && loggedIn && (
+        <div className="mb-4 flex items-start gap-3 rounded-panel border border-line bg-[color-mix(in_srgb,var(--brand-yellow)_14%,transparent)] p-4 text-sm text-fg">
+          <p className="flex-1">
+            <strong>{t('Tip:')}</strong> {t('Klepni na karty, které máš v ruce. Postup a hodnotu sbírky uvidíš nahoře. Až budeš hotový, přepni na „Chybí“ a označ, co sháníš.')}
+          </p>
+          <button type="button" onClick={() => setTip(false)} aria-label={t('Zavřít')} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted hover:bg-card hover:text-fg">
+            <X className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
+      )}
+      {pickerCard && pickerState && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(14,27,46,0.45)] p-0 sm:items-center sm:p-4" onClick={() => setPicker(null)}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="variant-picker-title"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-t-[22px] bg-card p-5 shadow-[0_30px_80px_-20px_rgba(14,27,46,0.6)] ring-1 ring-line sm:rounded-[22px]"
+          >
+            <div className="flex items-start gap-3">
+              {pickerCard.image && (
+                <div className="card-frame w-14 shrink-0 aspect-[63/88]">
+                  <CardImg src={pickerCard.image} alt="" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p id="variant-picker-title" className="truncate font-semibold text-fg">
+                  {pickerCard.name} <span className="font-mono text-xs text-subtle">{pickerCard.localId}</span>
+                </p>
+                <p className="mt-0.5 text-xs text-subtle">{t('Kterou verzi máš? Každé + je jeden kus.')}</p>
+              </div>
+              <button type="button" onClick={() => setPicker(null)} aria-label={t('Zavřít')} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted hover:bg-surface hover:text-fg">
+                <X className="h-5 w-5" aria-hidden />
+              </button>
+            </div>
+            <ul className="mt-4 divide-y divide-line">
+              {pickerCard.variants.map((v) => {
+                const n = pickerState.variants?.[v.key] ?? 0
+                return (
+                  <li key={v.key} className="flex items-center gap-3 py-2.5">
+                    <span className={`flex-1 text-[15px] ${n ? 'font-semibold text-fg' : 'text-muted'}`}>
+                      {v.label === 'Normal' ? t('Normální') : v.label}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={!n}
+                      onClick={() => changeVariant(pickerCard.id, v.key, -1)}
+                      aria-label={t('Ubrat kus')}
+                      className="grid h-11 w-11 place-items-center rounded-xl bg-surface text-fg ring-1 ring-inset ring-line disabled:opacity-30"
+                    >
+                      <Minus className="h-5 w-5" strokeWidth={2.2} aria-hidden />
+                    </button>
+                    <span className={`w-7 text-center font-mono text-lg tabular-nums ${n ? 'text-fg' : 'text-subtle'}`}>{n}</span>
+                    <button
+                      type="button"
+                      onClick={() => changeVariant(pickerCard.id, v.key, 1)}
+                      aria-label={t('Přidat kus')}
+                      className="grid h-11 w-11 place-items-center rounded-xl bg-accent-strong text-on-accent shadow-[inset_0_-2px_0_rgba(0,0,0,0.12)]"
+                    >
+                      <Plus className="h-5 w-5" strokeWidth={2.2} aria-hidden />
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+            <button type="button" onClick={() => setPicker(null)} className="mt-4 min-h-11 w-full rounded-xl bg-[var(--ink)] text-sm font-semibold text-white hover:bg-[#1b2c45] dark:bg-white dark:text-[var(--ink)]">
+              {t('Hotovo')}
+            </button>
+          </div>
+        </div>
+      )}
       {loggedIn ? (
         <div className="sticky top-[119px] z-10 -mx-4 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_88%,transparent)] px-4 py-3.5 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-[67px] lg:top-[68px]">
           <div className="inline-flex flex-wrap gap-1 rounded-xl bg-surface p-1 ring-1 ring-inset ring-line" role="group" aria-label={t('Režim')}>

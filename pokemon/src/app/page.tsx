@@ -1,3 +1,5 @@
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { CountUp, FanIntro } from '@/components/Motion'
 import { UpcomingBanner } from '@/components/UpcomingBanner'
@@ -31,6 +33,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
   const t = await getT()
   const intl = LOCALE_INFO[await getLocale()].intl
   const user = await getCurrentUser()
+  // Kdo ještě nemá ani jednu kartu, dostane průvodce „Jakou sadu sbíráš?“ (odložit jde na den).
+  if (user) {
+    const [pieces, jar] = await Promise.all([prisma.collectionItem.count({ where: { userId: user.id, quantity: { gt: 0 } } }), cookies()])
+    if (!pieces && !jar.get('zacatek')) redirect(vitej ? '/zacatek?vitej=1' : '/zacatek')
+  }
   const [latest, setCount, cardCount, priceAgg] = await Promise.all([
     prisma.cardSet.findMany({
       where: { game: 'pokemon', language: 'en' },

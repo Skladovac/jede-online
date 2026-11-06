@@ -12,6 +12,7 @@ import { ChevronRight, Layers } from 'lucide-react'
 import { panel } from '@/components/design'
 import { PriceNote } from '@/components/PriceNote'
 import { SetGrid } from '@/components/SetGrid'
+import { cardVariants } from '@/lib/variants'
 import { ProductTile } from '@/components/ProductTile'
 import { CardBack } from '@/components/CardBack'
 import type { QuickState } from '@/app/actions/collection'
@@ -22,12 +23,29 @@ import { setDisplayName } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
-type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ tab?: string }> }
+type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ tab?: string; rezim?: string; start?: string }> }
 
 async function getSet(id: string) {
   return prisma.cardSet.findUnique({
     where: { id: (safeDecode(id) ?? '') },
-    include: { cards: { select: { id: true, localId: true, name: true, imageUrl: true, priceEur: true, types: true } } },
+    include: {
+      cards: {
+        select: {
+          id: true,
+          localId: true,
+          name: true,
+          imageUrl: true,
+          priceEur: true,
+          types: true,
+          hasNormal: true,
+          hasHolo: true,
+          hasReverse: true,
+          hasFirstEd: true,
+          hasPokeball: true,
+          hasMasterball: true,
+        },
+      },
+    },
   })
 }
 
@@ -51,7 +69,11 @@ export default async function SetPage({ params, searchParams }: Props) {
   if (!set) notFound()
   // Postup přihlášeného (base / complete / master); po změně v mřížce se obnoví při dalším načtení stránky.
   const progress = user ? (await setProgress(user.id, [set.id])).get(set.id) : null
-  const tab = (await searchParams)?.tab === 'produkty' ? 'produkty' : 'karty'
+  const sp = await searchParams
+  const tab = sp?.tab === 'produkty' ? 'produkty' : 'karty'
+  // Z průvodce „Jakou sadu sbíráš?“: rovnou režim Mám a jednorázový tip.
+  const initialMode = user && sp?.rezim === 'mam' ? 'owned' : 'view'
+  const showTip = !!user && sp?.start === '1'
   const products = await prisma.product.findMany({
     where: { setId: set.id },
     include: { set: { select: { logoUrl: true } } },
@@ -88,9 +110,10 @@ export default async function SetPage({ params, searchParams }: Props) {
       prisma.wantItem.findMany({ where: { userId: user.id, cardId: { in: ids } }, select: { cardId: true } }),
     ])
     for (const i of items) {
-      const s = (initial[i.cardId] ??= { owned: 0, spare: 0, want: false })
+      const s = (initial[i.cardId] ??= { owned: 0, spare: 0, want: false, variants: {} })
       s.owned += i.quantity
       s.spare += i.spareQty
+      if (i.quantity > 0) s.variants![i.variant] = (s.variants![i.variant] ?? 0) + i.quantity
     }
     for (const w of wants) (initial[w.cardId] ??= { owned: 0, spare: 0, want: false }).want = true
   }
@@ -144,6 +167,11 @@ export default async function SetPage({ params, searchParams }: Props) {
               )}
             </h1>
             {set.nameOriginal && <p className="mt-1 text-sm text-subtle">{set.nameOriginal}</p>}
+            {user && tab === 'karty' && (
+              <p className="mt-3 text-sm text-muted">
+                {t('Přepni dole na „Mám“ a klepáním označ karty, které máš. U karty s víc verzemi (normal, holo, reverse) si vybereš, kterou máš.')}
+              </p>
+            )}
             {siblings.length > 0 && (
               <p className="mt-3 inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-surface px-3 py-2 text-sm text-muted ring-1 ring-inset ring-line">
                 <Layers className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
@@ -218,6 +246,8 @@ export default async function SetPage({ params, searchParams }: Props) {
       ) : (
       <SetGrid
         loggedIn={!!user}
+        initialMode={initialMode}
+        showTip={showTip}
         officialCount={set.officialCount || set.cardCount}
         setId={set.id}
         baseCount={set.officialCount}
@@ -229,6 +259,7 @@ export default async function SetPage({ params, searchParams }: Props) {
           image: cardImage(c.imageUrl),
           price: formatEur(c.priceEur),
           types: c.types,
+          variants: cardVariants(c),
         }))}
       />
       )}
