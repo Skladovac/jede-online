@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { usdToEurRate } from '@/lib/fx'
 
 /**
  * Doplnění z Pokémon TCG API (pokemontcg.io) tam, kde TCGdex nemá obrázky nebo karty
@@ -125,6 +126,27 @@ const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' | 'kit
 const TCGP_CDN = 'https://tcgplayer-cdn.tcgplayer.com/product/'
 
 type TcgpProduct = { productId: number; name: string; extendedData?: { name: string; value: string }[] }
+// Ceník TCGplayeru: jeden řádek na produkt a verzi („Normal“, „Holofoil“, „Reverse Holofoil“) — z toho plynou varianty karty.
+type TcgpPrice = { productId: number; subTypeName: string; marketPrice: number | null; midPrice: number | null }
+type TcgpVariants = { normal: number | null; holo: number | null; reverse: number | null; any: boolean }
+
+async function tcgpVariants(group: number): Promise<Map<number, TcgpVariants>> {
+  const res = await fetch(`https://tcgcsv.com/tcgplayer/3/${group}/prices`, {
+    headers: { 'User-Agent': 'pokemon.jede.online catalog sync' },
+    signal: AbortSignal.timeout(60_000),
+  })
+  if (!res.ok) throw new Error(`tcgcsv prices ${res.status}`)
+  const out = new Map<number, TcgpVariants>()
+  for (const p of ((await res.json()) as { results: TcgpPrice[] }).results) {
+    const v = out.get(p.productId) ?? { normal: null, holo: null, reverse: null, any: false }
+    const price = p.marketPrice ?? p.midPrice ?? null
+    if (p.subTypeName === 'Normal') (v.normal = price), (v.any = true)
+    else if (p.subTypeName === 'Holofoil') (v.holo = price), (v.any = true)
+    else if (p.subTypeName === 'Reverse Holofoil') (v.reverse = price), (v.any = true)
+    out.set(p.productId, v)
+  }
+  return out
+}
 
 // Název pro párování: bez doplňků TCGplayeru („(Delta Species)“, „LV.X“, „ - 158/128“).
 const nameKey = (s: string) =>
@@ -157,6 +179,9 @@ async function badImage(url: string | null) {
 
 async function fillFromTcgplayer(log: (m: string) => void) {
   let fixed = 0
+  let enriched = 0
+  const usdEur = await usdToEurRate()
+  const toEur = (usd: number | null) => (usd != null && usdEur ? Math.round(usd * usdEur * 100) / 100 : null)
   for (const [setId, cfg] of Object.entries(TCGPLAYER)) {
     try {
       const res = await fetch(`https://tcgcsv.com/tcgplayer/3/${cfg.group}/products`, {
@@ -169,7 +194,13 @@ async function fillFromTcgplayer(log: (m: string) => void) {
       const products = ((await res.json()) as { results: TcgpProduct[] }).results.filter((p) =>
         cfg.match === 'name' ? !/\[.*&.*\]/.test(p.name) : p.extendedData?.some((e) => e.name === 'Number'),
       )
-      const cards = await prisma.card.findMany({ where: { setId }, select: { id: true, localId: true, name: true, imageUrl: true } })
+      const cards = await prisma.card.findMany({
+        where: { setId },
+        select: { id: true, localId: true, name: true, imageUrl: true, priceUpdatedAt: true, cmProductId: true },
+      })
+      // Varianty a orientační ceny jen pro karty, které TCGdex ještě nezná (nemají Cardmarket) — jeho data mají přednost.
+      const unknown = cards.filter((c) => !c.priceUpdatedAt && !c.cmProductId)
+      const variants = unknown.length ? await tcgpVariants(cfg.group).catch(() => new Map<number, TcgpVariants>()) : new Map<number, TcgpVariants>()
       const byNum = new Map<string, TcgpProduct>()
       const allByNum = new Map<string, TcgpProduct[]>()
       const byName = new Map<string, TcgpProduct[]>()
@@ -201,7 +232,22 @@ async function fillFromTcgplayer(log: (m: string) => void) {
             p = sorted[same.findIndex((x) => x.id === c.id)]
           } else p = list[0]
         }
-        if (!p || !(await badImage(c.imageUrl))) continue
+        if (!p) continue
+        const v = !c.priceUpdatedAt && !c.cmProductId ? variants.get(p.productId) : undefined
+        if (v?.any) {
+          await prisma.card.update({
+            where: { id: c.id },
+            data: {
+              hasNormal: v.normal != null,
+              hasHolo: v.holo != null,
+              hasReverse: v.reverse != null,
+              priceEur: toEur(v.normal ?? v.holo),
+              priceReverseEur: toEur(v.reverse),
+            },
+          })
+          enriched++
+        }
+        if (!(await badImage(c.imageUrl))) continue
         await prisma.card.update({ where: { id: c.id }, data: { imageUrl: `${TCGP_CDN}${p.productId}` } })
         fixed++
       }
@@ -209,7 +255,7 @@ async function fillFromTcgplayer(log: (m: string) => void) {
       log(`[catalog] obrázky z TCGplayeru pro ${setId} selhaly: ${(err as Error).message}`)
     }
   }
-  log(`[catalog] obrázky z TCGplayeru: ${fixed}`)
+  log(`[catalog] obrázky z TCGplayeru: ${fixed}, varianty/ceny: ${enriched}`)
 }
 
 // Loga a symboly sad, které TCGdex nemá (podsady, promo, energie, McDonald's).

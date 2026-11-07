@@ -30,5 +30,20 @@ export async function ensureEurCzk() {
   return cache
 }
 
+/** Kolik EUR je 1 USD (z kurzovního lístku ČNB: USD/CZK ÷ EUR/CZK). Null, když ČNB neodpoví. */
+export async function usdToEurRate(): Promise<number | null> {
+  try {
+    const txt = await (await fetch(CNB_URL, { cache: 'no-store', signal: AbortSignal.timeout(5000) })).text()
+    const czk = (code: string) => {
+      const [, , amount, , rate] = txt.split('\n').find((l) => l.includes(`|${code}|`))?.split('|') ?? []
+      return Number(rate?.replace(',', '.')) / Number(amount)
+    }
+    const r = czk('USD') / czk('EUR')
+    return r > 0 && Number.isFinite(r) ? r : null
+  } catch {
+    return null
+  }
+}
+
 export const eurCzkRate = () => cache?.rate ?? null
 export const eurCzkDate = () => cache?.date ?? null
