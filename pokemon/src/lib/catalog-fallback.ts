@@ -97,6 +97,7 @@ const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' | 'kit
   '30th-c': { group: 24837, match: 'name' },
   mep: { group: 24451, match: 'number' }, // MEP Black Star Promos (nové promo karty TCGdex dlouho nemá s obrázkem)
   mee: { group: 24461, match: 'number' }, // Mega Evolution Energies
+  me06: { group: 24831, match: 'number' }, // Delta Reign — do zveřejnění v TCGdex jediný zdroj obrázků
   svp: { group: 22872, match: 'number' }, // SV promo karty nad 207 (pokemontcg.io končí u 207)
   sve: { group: 24382, match: 'number' }, // SV energie 017–024
   swshp: { group: 2545, match: 'number' }, // SWSH299–301
