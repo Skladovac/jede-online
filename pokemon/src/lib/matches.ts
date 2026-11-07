@@ -61,7 +61,10 @@ export type Collector = {
   preview: { id: string; name: string; imageUrl: string | null; offered: boolean }[]
 }
 
-export async function findCollectors(viewerId: string, place: Place, limit = 50) {
+/** Zúžení výsledku: 'offered' = jen lidé, kteří něco z mých chybějících NABÍZEJÍ; 'ownedOnly' = jen ti, kdo to mají pouze ve sbírce. */
+export type CollectorFilter = 'all' | 'offered' | 'ownedOnly'
+
+export async function findCollectors(viewerId: string, place: Place, limit = 50, filter: CollectorFilter = 'all') {
   const [mine, follows] = await Promise.all([
     myLists(viewerId),
     prisma.follow.findMany({ where: { followerId: viewerId }, select: { followingId: true } }),
@@ -127,7 +130,7 @@ export async function findCollectors(viewerId: string, place: Place, limit = 50)
         score: offered * W_OFFERED + owned * W_OWNED + (trade ? theyWant * W_TRADE : 0),
       }
     })
-    .filter((r) => r.offered + r.owned > 0)
+    .filter((r) => (filter === 'offered' ? r.offered > 0 : filter === 'ownedOnly' ? r.offered === 0 && r.owned > 0 : r.offered + r.owned > 0))
     .sort((x, y) => Number(y.followed) - Number(x.followed) || Number(y.trade) - Number(x.trade) || y.score - x.score)
   const total = ranked.length
   const top = ranked.slice(0, limit)
@@ -207,8 +210,10 @@ export async function pairMatches(viewerId: string, otherId: string) {
  * Hlavní stránka: stejný výpočet, ale s krátkou keší (2 min), ať se při každém načtení
  * nepočítají shody přes celou databázi. Stránka /sberatele počítá vždy čerstvě.
  */
-export function findCollectorsCached(viewerId: string, place: Place, limit: number) {
-  return unstable_cache(() => findCollectors(viewerId, place, limit), ['collectors', viewerId, JSON.stringify(place), String(limit)], {
-    revalidate: 120,
-  })()
+export function findCollectorsCached(viewerId: string, place: Place, limit: number, filter: CollectorFilter = 'all') {
+  return unstable_cache(
+    () => findCollectors(viewerId, place, limit, filter),
+    ['collectors', viewerId, JSON.stringify(place), String(limit), filter],
+    { revalidate: 120 },
+  )()
 }

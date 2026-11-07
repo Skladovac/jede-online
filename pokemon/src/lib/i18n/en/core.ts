@@ -259,5 +259,9 @@ const dict: Record<string, string> = {
   'Napoj si svou AI — přidávej karty fotkou z mobilu': 'Connect your own AI — add cards by phone photo',
   'ChatGPT nebo Claude propojíš se svým účtem osobním klíčem. Vyfotíš kartu, napíšeš „přidej do sbírky“ a tvoje AI ji pozná a uloží k nám. Zeptáš se jí i „které karty ze sady 151 mi chybí a za kolik je někdo nabízí“.': 'Link ChatGPT or Claude to your account with a personal key. Photograph a card, type “add to my collection” and your AI recognises it and saves it here. Ask it “which cards from set 151 am I missing and what are they offered for”.',
   'Vyzkoušet zdarma': 'Try for free',
+  'Označ si v sadě karty, které ti chybí. Jakmile je někdo nabídne k výměně nebo prodeji, uvidíš to tady jako první.': 'Mark the cards you are missing in a set. As soon as someone offers them for trade or sale, you will see it here first.',
+  '{n} lidí nabízí karty z tvého seznamu.': '{n} people are offering cards from your list.',
+  'Všichni sběratelé': 'All collectors',
+  'Zatím nikdo další nemá nic z toho, co ti chybí. Mrkni sem později.': 'Nobody else has any of your missing cards yet. Check back later.',
 }
 export default dict

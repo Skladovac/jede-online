@@ -9,7 +9,7 @@ import { JsonLd, SITE } from '@/components/JsonLd'
 import { prisma } from '@/lib/prisma'
 import { SetTile } from '@/components/SetTile'
 import { getCurrentUser } from '@/lib/auth'
-import { findCollectorsCached, parsePlace } from '@/lib/matches'
+import { findCollectorsCached, parsePlace, type CollectorFilter } from '@/lib/matches'
 import { CollectorList } from '@/components/CollectorList'
 import { LatestOffers } from '@/components/LatestOffers'
 import { GettingStarted } from '@/components/GettingStarted'
@@ -254,7 +254,7 @@ async function UserDashboard({
   vitej,
   t,
 }: {
-  user: { id: string; nickname: string; emailVerifiedAt: Date | null }
+  user: { id: string; nickname: string; emailVerifiedAt: Date | null; region: string | null }
   vitej: boolean
   t: TFunc
 }) {
@@ -317,6 +317,8 @@ async function UserDashboard({
           <StatCard label={t('Chybí')} value={num(wantCount)} sub={t('karet na seznamu')} tone="warning" />
           <StatCard label={t('Navíc')} value={num(spare)} sub={t('kusů k výměně')} />
         </div>
+
+        <Offers userId={user.id} region={user.region} wantCount={wantCount} t={t} />
 
         {collecting.length > 0 && (
           <div className="mt-10">
@@ -383,10 +385,46 @@ async function UserDashboard({
   )
 }
 
-/** Přihlášený: kdo má, co mu chybí (napřed jeho kraj, když tam nikdo není, celé ČR/SK). */
+/** Shody napřed z kraje uživatele; když tam nikdo není, celé ČR/SK. */
+async function nearbyCollectors(userId: string, region: string | null, filter: CollectorFilter) {
+  let matches = await findCollectorsCached(userId, parsePlace(undefined, region).place, 3, filter)
+  if (!matches.collectors.length && region) matches = await findCollectorsCached(userId, {}, 3, filter)
+  return matches
+}
+
+/**
+ * Hned pod statistikami: lidé, kteří NABÍZEJÍ něco z toho, co mi chybí — to je důvod, proč se na web vracet.
+ * Bez seznamu chybějících karet ukáže tip, jak ho vytvořit; když nikdo nic nenabízí, blok se neukáže (dole jsou aspoň ti, kdo to mají).
+ */
+async function Offers({ userId, region, wantCount, t }: { userId: string; region: string | null; wantCount: number; t: TFunc }) {
+  if (!wantCount)
+    return (
+      <p className={`${panel} mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 p-4 text-sm text-muted`}>
+        <span className="flex-1">{t('Označ si v sadě karty, které ti chybí. Jakmile je někdo nabídne k výměně nebo prodeji, uvidíš to tady jako první.')}</span>
+        <Link href="/sady" className="inline-flex min-h-11 items-center gap-1 font-semibold text-accent">
+          {t('Vybrat sadu')}
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
+      </p>
+    )
+  const { collectors, total } = await nearbyCollectors(userId, region, 'offered')
+  if (!collectors.length) return null
+  return (
+    <div className="mt-10">
+      <SectionHeader
+        title={t('Někdo nabízí, co ti chybí')}
+        sub={total > collectors.length ? t('{n} lidí nabízí karty z tvého seznamu.', { n: total }) : undefined}
+        href="/sberatele"
+        linkLabel={t('Všichni sběratelé')}
+      />
+      <CollectorList collectors={collectors} />
+    </div>
+  )
+}
+
+/** Níž na stránce: kdo má mé chybějící karty jen ve sbírce (dá se zeptat), nabízející jsou už nahoře. */
 async function Matches({ userId, region, t }: { userId: string; region: string | null; t: TFunc }) {
-  let matches = await findCollectorsCached(userId, parsePlace(undefined, region).place, 3)
-  if (!matches.collectors.length && region) matches = await findCollectorsCached(userId, {}, 3)
+  const matches = await nearbyCollectors(userId, region, 'ownedOnly')
   return (
     <section>
       <SectionHeader title={t('Kdo má, co ti chybí')} href="/sberatele" linkLabel={t('Najdi sběratele')} />
@@ -395,7 +433,7 @@ async function Matches({ userId, region, t }: { userId: string; region: string |
       ) : (
         <p className={`${panel} p-5 text-sm text-muted`}>
           {matches.mine.wantCards.length || matches.mine.wantProducts.length
-            ? t('Zatím nikdo nemá nic z toho, co ti chybí. Mrkni sem později.')
+            ? t('Zatím nikdo další nemá nic z toho, co ti chybí. Mrkni sem později.')
             : t('Označ si v sadě karty, které ti chybí, a tady uvidíš, kdo je má.')}
         </p>
       )}

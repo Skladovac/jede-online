@@ -12,6 +12,7 @@ import { ChevronRight, ImageOff, Layers } from 'lucide-react'
 import { panel } from '@/components/design'
 import { PriceNote } from '@/components/PriceNote'
 import { SetGrid } from '@/components/SetGrid'
+import { ShareSet } from '@/components/ShareSet'
 import { cardVariants } from '@/lib/variants'
 import { ProductTile } from '@/components/ProductTile'
 import { CardBack } from '@/components/CardBack'
@@ -211,6 +212,7 @@ export default async function SetPage({ params, searchParams }: Props) {
         {progress && (
           <div className="relative mt-7 border-t border-line pt-6">
             <ProgressBars p={progress} />
+            <ShareSet setId={set.id} setName={setDisplayName(set)} missing={Math.max(0, total - ownedIds.length)} />
           </div>
         )}
       </header>

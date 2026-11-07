@@ -259,5 +259,9 @@ const dict: Record<string, string> = {
   'Napoj si svou AI — přidávej karty fotkou z mobilu': 'Napoj si svoju AI — pridávaj karty fotkou z mobilu',
   'ChatGPT nebo Claude propojíš se svým účtem osobním klíčem. Vyfotíš kartu, napíšeš „přidej do sbírky“ a tvoje AI ji pozná a uloží k nám. Zeptáš se jí i „které karty ze sady 151 mi chybí a za kolik je někdo nabízí“.': 'ChatGPT alebo Claude prepojíš so svojím účtom osobným kľúčom. Odfotíš kartu, napíšeš „pridaj do zbierky“ a tvoja AI ju spozná a uloží k nám. Opýtaš sa jej aj „ktoré karty zo sady 151 mi chýbajú a za koľko ich niekto ponúka“.',
   'Vyzkoušet zdarma': 'Vyskúšať zadarmo',
+  'Označ si v sadě karty, které ti chybí. Jakmile je někdo nabídne k výměně nebo prodeji, uvidíš to tady jako první.': 'Označ si v sade karty, ktoré ti chýbajú. Len čo ich niekto ponúkne na výmenu alebo predaj, uvidíš to tu ako prvý.',
+  '{n} lidí nabízí karty z tvého seznamu.': '{n} ľudí ponúka karty z tvojho zoznamu.',
+  'Všichni sběratelé': 'Všetci zberatelia',
+  'Zatím nikdo další nemá nic z toho, co ti chybí. Mrkni sem později.': 'Zatiaľ nikto ďalší nemá nič z toho, čo ti chýba. Pozri sa sem neskôr.',
 }
 export default dict
