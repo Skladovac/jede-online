@@ -262,5 +262,18 @@ const dict: Record<string, string> = {
   'Ještě nevím, podívám se nejdřív kolem': 'Ešte neviem, najprv sa pozriem okolo',
   'Čekáme na oficiální obrázky karet.': 'Čakáme na oficiálne obrázky kariet.',
   'Seznam karet už je kompletní, obrázky doplníme automaticky, jakmile je vydavatel zveřejní (obvykle pár dní po vydání). Odklikávat si, co máš, můžeš už teď.': 'Zoznam kariet je už kompletný, obrázky doplníme automaticky, len čo ich vydavateľ zverejní (zvyčajne pár dní po vydaní). Odklikávať si, čo máš, môžeš už teraz.',
+  'Sdílet postup': 'Zdieľať postup',
+  'Seznam chybějících': 'Zoznam chýbajúcich',
+  'Vytvářím obrázek…': 'Vytváram obrázok…',
+  'Obrázek se nepodařilo vytvořit. Zkus to za chvíli.': 'Obrázok sa nepodarilo vytvoriť. Skús to o chvíľu.',
+  'Obrázek na Instagram, WhatsApp nebo Facebook.': 'Obrázok na Instagram, WhatsApp alebo Facebook.',
+  'Můj postup: {name}': 'Môj postup: {name}',
+  'Chybí mi: {name}': 'Chýba mi: {name}',
+  'Mám {n} z {total} karet': 'Mám {n} z {total} kariet',
+  'hotovo': 'hotovo',
+  'Veď si sbírku a najdi, s kým měnit — zdarma.': 'Veď si zbierku a nájdi, s kým meniť — zadarmo.',
+  'Chybí mi {n} karet': 'Chýba mi {n} kariet',
+  '+ dalších {n}': '+ ďalších {n}',
+  'Máš něco z toho? Napiš mi.': 'Máš niečo z toho? Napíš mi.',
 }
 export default dict

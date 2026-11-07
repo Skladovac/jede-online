@@ -262,5 +262,18 @@ const dict: Record<string, string> = {
   'Ještě nevím, podívám se nejdřív kolem': 'Not sure yet, let me look around first',
   'Čekáme na oficiální obrázky karet.': 'Waiting for the official card images.',
   'Seznam karet už je kompletní, obrázky doplníme automaticky, jakmile je vydavatel zveřejní (obvykle pár dní po vydání). Odklikávat si, co máš, můžeš už teď.': 'The card list is complete; images will be added automatically once the publisher releases them (usually a few days after launch). You can already tick off what you own.',
+  'Sdílet postup': 'Share progress',
+  'Seznam chybějících': 'Missing list',
+  'Vytvářím obrázek…': 'Creating image…',
+  'Obrázek se nepodařilo vytvořit. Zkus to za chvíli.': 'Could not create the image. Try again in a moment.',
+  'Obrázek na Instagram, WhatsApp nebo Facebook.': 'An image for Instagram, WhatsApp or Facebook.',
+  'Můj postup: {name}': 'My progress: {name}',
+  'Chybí mi: {name}': 'I am missing: {name}',
+  'Mám {n} z {total} karet': 'I have {n} of {total} cards',
+  'hotovo': 'done',
+  'Veď si sbírku a najdi, s kým měnit — zdarma.': 'Track your collection and find people to trade with — free.',
+  'Chybí mi {n} karet': 'I am missing {n} cards',
+  '+ dalších {n}': '+ {n} more',
+  'Máš něco z toho? Napiš mi.': 'Got any of these? Message me.',
 }
 export default dict
