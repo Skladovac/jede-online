@@ -2,6 +2,7 @@
 // Žádné `server-only` a žádná databáze — testy tenhle modul importují přímo v Node.
 
 import { z } from 'zod'
+import { parseDayKey } from '@/lib/date'
 
 // Hodnoty musí odpovídat enumu EntryKind v Prisma schématu.
 export const ENTRY_KINDS = ['WORK', 'VACATION', 'SICK', 'DAYOFF'] as const
@@ -86,6 +87,12 @@ export function validateEntry(input: unknown): EntryValidation {
 
   const day = text(r.day)
   if (!DAY_SHAPE.test(day)) return fail('Neplatné datum.')
+  // Tvar nestačí: parseDayKey neplatné datum (2026-02-31) tiše přetočí na jiný den,
+  // proto ověříme, že převod vyjde zpět na stejný řetězec.
+  const dayDate = parseDayKey(day)
+  if (Number.isNaN(dayDate.getTime()) || dayDate.toISOString().slice(0, 10) !== day) {
+    return fail('Neplatné datum.')
+  }
 
   const hoursRaw = text(r.hours)
   const hours = hoursRaw === '' ? null : parseHours(hoursRaw)

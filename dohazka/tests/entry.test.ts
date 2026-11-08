@@ -26,7 +26,7 @@ describe('parseTime', () => {
     expect(parseTime('23:59')).toBe('23:59')
   })
   it('odmítne neplatný čas', () => {
-    for (const bad of ['', '24:00', '7:60', '-1:00', 'ráno']) expect(parseTime(bad), bad).toBeNull()
+    for (const bad of ['', '24:00', '7:60', '-1:00', 'ráno', '7:0']) expect(parseTime(bad), bad).toBeNull()
   })
 })
 
@@ -39,6 +39,10 @@ describe('hoursFromRange', () => {
   })
   it('stejný čas je nula', () => {
     expect(hoursFromRange('07:00', '07:00')).toBe(0)
+  })
+  it('půlnoční hranice nezlobí', () => {
+    expect(hoursFromRange('23:30', '00:30')).toBe(1)
+    expect(hoursFromRange('00:00', '00:00')).toBe(0)
   })
 })
 
@@ -61,5 +65,16 @@ describe('validateEntry', () => {
   })
   it('neznámý typ dne neprojde', () => {
     expect(validateEntry({ ...base, kind: 'DOVOLENA', hours: '8', place: 'Zlín' }).ok).toBe(false)
+  })
+  it('poznámka se trimuje a prázdná je null', () => {
+    const r = validateEntry({ ...base, hours: '8', place: 'Zlín', note: '  ahoj  ' })
+    expect(r.ok && r.value.note).toBe('ahoj')
+    const prazdna = validateEntry({ ...base, hours: '8', place: 'Zlín', note: '   ' })
+    expect(prazdna.ok && prazdna.value.note).toBeNull()
+  })
+  it('neexistující datum neprojde', () => {
+    expect(validateEntry({ ...base, day: '2026-02-31', hours: '8', place: 'Zlín' }).ok).toBe(false)
+    expect(validateEntry({ ...base, day: '2026-13-45', hours: '8', place: 'Zlín' }).ok).toBe(false)
+    expect(validateEntry({ ...base, day: '0000-00-00', hours: '8', place: 'Zlín' }).ok).toBe(false)
   })
 })
