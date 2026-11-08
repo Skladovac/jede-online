@@ -12,9 +12,13 @@ const radek = 'flex items-start justify-between gap-3 rounded-panel border px-3 
 /** Seznam dnů období. Nevypisují se dny před začátkem zapisování ani prázdné dny po dnešku; prázdné dny do dneška jsou jen tiše šedé. */
 export function MonthList({ rows }: { rows: MonthRow[] }) {
   const dnes = pragueDayKey(new Date())
+  const videt = visibleRows(rows, dnes)
+  if (videt.length === 0) {
+    return <p className="mt-5 text-sm text-muted">V tomto období zatím nejsou žádné dny k zapsání.</p>
+  }
   return (
     <ul className="mt-5 space-y-2">
-      {visibleRows(rows, dnes)
+      {videt
         .map((r) => (
           <li key={r.dayKey}>
             <Link

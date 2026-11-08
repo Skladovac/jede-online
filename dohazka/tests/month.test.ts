@@ -73,4 +73,9 @@ describe('visibleRows', () => {
     expect(keys).not.toContain('2026-11-09')
     expect(keys).not.toContain('2026-11-02')
   })
+  it('prázdný dnešek zůstane vidět (hranice je dayKey > dnes, ne >=)', () => {
+    const keys = visibleRows(m.rows, '2026-11-09').map((r) => r.dayKey)
+    expect(keys).toContain('2026-11-09')
+    expect(keys).not.toContain('2026-11-10')
+  })
 })
