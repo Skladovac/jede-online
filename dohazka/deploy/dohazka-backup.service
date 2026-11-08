@@ -1,0 +1,9 @@
+[Unit]
+Description=Dohazka daily verified DB backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/jede/dohazka-src/dohazka/deploy/backup-dohazka.sh
+User=root

@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Dohazka daily backup at 03:25 Prague time
+
+[Timer]
+OnCalendar=*-*-* 03:25:00 Europe/Prague
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target
