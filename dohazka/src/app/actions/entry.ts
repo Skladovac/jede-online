@@ -23,7 +23,14 @@ export async function saveEntry(formData: FormData): Promise<{ error: string } |
   // „Nepracoval“ má vlastní akci, která smaže ostatní záznamy dne; jinak by vznikl den s DAYOFF i hodinami.
   if (v.value.kind === 'DAYOFF') return { error: 'Pro volný den použij tlačítko Nepracoval.' }
   const { day, ...zbytek } = v.value
-  await prisma.entry.create({ data: { ...zbytek, day: parseDayKey(day), userId: user.id } })
+  const den = parseDayKey(day)
+  // Místo patří jen k práci; u dovolené a nemoci by zůstalo „z minula“ a šlo by do výkazu.
+  const data = { ...zbytek, place: zbytek.kind === 'WORK' ? zbytek.place : null, day: den, userId: user.id }
+  // Zápis dne přebije „Nepracoval“: DAYOFF toho dne se smaže ve stejné transakci, ať den neříká obojí.
+  await prisma.$transaction([
+    prisma.entry.deleteMany({ where: { userId: user.id, day: den, kind: 'DAYOFF' } }),
+    prisma.entry.create({ data }),
+  ])
   obnovStranky(day)
   return { ok: true }
 }

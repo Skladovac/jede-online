@@ -74,7 +74,7 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
         </ul>
       )}
 
-      <DayForm key={day} day={day} places={mista} hasEntries={zapsane.length > 0} />
+      <DayForm key={day} day={day} places={mista} hasEntries={zapsane.length > 0} hasWork={zapsane.some((e) => e.kind !== 'DAYOFF')} />
     </main>
   )
 }

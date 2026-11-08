@@ -9,7 +9,7 @@ const pole = 'mt-1 w-full rounded-panel border border-line bg-card px-3 py-2 tex
 
 type Stav = { error: string } | { ok: true } | null
 
-export function DayForm({ day, places, hasEntries }: { day: string; places: string[]; hasEntries: boolean }) {
+export function DayForm({ day, places, hasEntries, hasWork }: { day: string; places: string[]; hasEntries: boolean; hasWork: boolean }) {
   const formRef = useRef<HTMLFormElement>(null)
   const hoursRef = useRef<HTMLInputElement>(null)
   const fromRef = useRef<HTMLInputElement>(null)
@@ -111,7 +111,7 @@ export function DayForm({ day, places, hasEntries }: { day: string; places: stri
               <option value="WORK">Práce</option>
               <option value="VACATION">Dovolená</option>
               <option value="SICK">Nemoc</option>
-                          </select>
+            </select>
           </label>
           <label className="block text-sm">
             Poznámka
@@ -143,7 +143,7 @@ export function DayForm({ day, places, hasEntries }: { day: string; places: stri
           Nepracoval
         </button>
       </div>
-      {hasEntries && <p className="text-xs text-muted">Další záznam téhož dne (např. jiné místo) přidáš dalším uložením.</p>}
+      {hasWork && <p className="text-xs text-muted">Další záznam téhož dne (např. jiné místo) přidáš dalším uložením.</p>}
     </form>
   )
 }
