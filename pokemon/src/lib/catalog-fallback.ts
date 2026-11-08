@@ -93,14 +93,15 @@ async function ptcgCards(setId: string) {
 // match: 'number' = podle čísla karty (R/RGB → R, 065/128 → 065), 'name' = podle názvu (sady s původním číslováním).
 // match 'kit' = trenérské balíčky: TCGplayer má dva balíčky v jedné skupině, karta se páruje číslem + jménem
 // a při shodě podle názvu balíčku v názvu produktu („Psychic Energy (#8 - Latias)“).
-const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' | 'kit'; deck?: string }> = {
+// create: karty, které má TCGplayer a my ne, se založí (promo a energie přibývají průběžně a TCGdex je doplňuje se zpožděním).
+const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' | 'kit'; deck?: string; create?: boolean }> = {
   '30th': { group: 24722, match: 'number' },
   '30th-c': { group: 24837, match: 'name' },
-  mep: { group: 24451, match: 'number' }, // MEP Black Star Promos (nové promo karty TCGdex dlouho nemá s obrázkem)
-  mee: { group: 24461, match: 'number' }, // Mega Evolution Energies
-  me06: { group: 24831, match: 'number' }, // Delta Reign — do zveřejnění v TCGdex jediný zdroj obrázků
-  svp: { group: 22872, match: 'number' }, // SV promo karty nad 207 (pokemontcg.io končí u 207)
-  sve: { group: 24382, match: 'number' }, // SV energie 017–024
+  mep: { group: 24451, match: 'number', create: true }, // MEP Black Star Promos (nové promo karty TCGdex dlouho nemá)
+  mee: { group: 24461, match: 'number', create: true }, // Mega Evolution Energies
+  me06: { group: 24831, match: 'number', create: true }, // Delta Reign — do zveřejnění v TCGdex jediný zdroj obrázků
+  svp: { group: 22872, match: 'number', create: true }, // SV promo karty nad 207 (pokemontcg.io končí u 207)
+  sve: { group: 24382, match: 'number', create: true }, // SV energie 017–024
   swshp: { group: 2545, match: 'number' }, // SWSH299–301
   cel25cc: { group: 2931, match: 'name' },
   '2023sv': { group: 23306, match: 'number' },
@@ -126,6 +127,18 @@ const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' | 'kit
 const TCGP_CDN = 'https://tcgplayer-cdn.tcgplayer.com/product/'
 
 type TcgpProduct = { productId: number; name: string; extendedData?: { name: string; value: string }[] }
+const tcgpField = (p: TcgpProduct, name: string) => p.extendedData?.find((e) => e.name === name)?.value
+// Název karty z názvu produktu: „Umbreon ex - 110 (30th Celebration)“ → „Umbreon ex“.
+const tcgpCardName = (s: string) => s.replace(/\s+-\s+[\w/]+.*$/, '').replace(/\s*\[[^\]]*\]/g, '').trim()
+// „Card Type“ TCGplayeru: typ Pokémona (Grass, Fire…), nebo Trainer/Item/Supporter/Stadium/Tool, nebo Energy.
+const TRAINER_TYPES = new Set(['trainer', 'item', 'supporter', 'stadium', 'tool', 'pokémon tool', 'pokemon tool'])
+function tcgpCategory(type: string | undefined): { category: string; types: string[] } {
+  const t = (type ?? '').trim()
+  if (!t) return { category: 'Pokemon', types: [] }
+  if (TRAINER_TYPES.has(t.toLowerCase())) return { category: 'Trainer', types: [] }
+  if (/energy/i.test(t)) return { category: 'Energy', types: [] }
+  return { category: 'Pokemon', types: [t] }
+}
 // Ceník TCGplayeru: jeden řádek na produkt a verzi („Normal“, „Holofoil“, „Reverse Holofoil“) — z toho plynou varianty karty.
 type TcgpPrice = { productId: number; subTypeName: string; marketPrice: number | null; midPrice: number | null }
 type TcgpVariants = { normal: number | null; holo: number | null; reverse: number | null; any: boolean }
@@ -180,6 +193,7 @@ async function badImage(url: string | null) {
 async function fillFromTcgplayer(log: (m: string) => void) {
   let fixed = 0
   let enriched = 0
+  let created = 0
   const usdEur = await usdToEurRate()
   const toEur = (usd: number | null) => (usd != null && usdEur ? Math.round(usd * usdEur * 100) / 100 : null)
   for (const [setId, cfg] of Object.entries(TCGPLAYER)) {
@@ -200,7 +214,8 @@ async function fillFromTcgplayer(log: (m: string) => void) {
       })
       // Varianty a orientační ceny jen pro karty, které TCGdex ještě nezná (nemají Cardmarket) — jeho data mají přednost.
       const unknown = cards.filter((c) => !c.priceUpdatedAt && !c.cmProductId)
-      const variants = unknown.length ? await tcgpVariants(cfg.group).catch(() => new Map<number, TcgpVariants>()) : new Map<number, TcgpVariants>()
+      const variants =
+        unknown.length || cfg.create ? await tcgpVariants(cfg.group).catch(() => new Map<number, TcgpVariants>()) : new Map<number, TcgpVariants>()
       const byNum = new Map<string, TcgpProduct>()
       const allByNum = new Map<string, TcgpProduct[]>()
       const byName = new Map<string, TcgpProduct[]>()
@@ -251,11 +266,57 @@ async function fillFromTcgplayer(log: (m: string) => void) {
         await prisma.card.update({ where: { id: c.id }, data: { imageUrl: `${TCGP_CDN}${p.productId}` } })
         fixed++
       }
+      // Karty, které TCGplayer v sadě má a my ne (nové promo karty, energie): založit s obrázkem, variantami a cenou.
+      if (cfg.create && cfg.match === 'number') {
+        const ours = new Set(cards.map((c) => numKey(c.localId)))
+        // Číslování jako u ostatních karet sady: „011“ vs. „11“.
+        const padded = cards.filter((c) => /^\d+$/.test(c.localId)).some((c) => c.localId.startsWith('0'))
+        // V promo sadě je každá karta promo, i když TCGplayer píše „Uncommon“.
+        const promoSet = /promo/i.test((await prisma.cardSet.findUnique({ where: { id: setId }, select: { name: true } }))?.name ?? '')
+        let added = 0
+        for (const [key, p] of byNum) {
+          if (ours.has(key)) continue
+          const raw = tcgpField(p, 'Number')?.split('/')[0].trim() ?? ''
+          // Jen skutečná čísla karet (111, SWSH302, TG05) — ne kódy produktů.
+          if (!/^[A-Z]{0,5}\d{1,4}[a-z]?$/i.test(raw) || !tcgpField(p, 'Rarity')) continue
+          const digits = raw.match(/\d+/)![0]
+          const localId = /^\d+$/.test(raw) ? (padded ? digits.padStart(3, '0') : String(Number(digits))) : raw.toUpperCase()
+          const v = variants.get(p.productId)
+          const { category, types } = tcgpCategory(tcgpField(p, 'Card Type'))
+          await prisma.card
+            .create({
+              data: {
+                id: `${setId}-${localId}`,
+                setId,
+                localId,
+                name: tcgpCardName(p.name),
+                category,
+                types,
+                rarity: promoSet ? 'Promo' : (tcgpField(p, 'Rarity') ?? null),
+                imageUrl: `${TCGP_CDN}${p.productId}`,
+                hasNormal: v?.any ? v.normal != null : true,
+                hasHolo: v?.any ? v.holo != null : false,
+                hasReverse: v?.any ? v.reverse != null : false,
+                priceEur: toEur(v?.normal ?? v?.holo ?? null),
+                priceReverseEur: toEur(v?.reverse ?? null),
+              },
+            })
+            .then(() => added++)
+            .catch(() => {}) // kolize id — přeskočit
+        }
+        if (added) {
+          created += added
+          // Počet karet sady z TCGdex už nesedí — ať stránka sady ukazuje skutečný počet.
+          const n = await prisma.card.count({ where: { setId } })
+          await prisma.cardSet.updateMany({ where: { id: setId, cardCount: { lt: n } }, data: { cardCount: n } })
+          log(`[catalog] ${setId}: z TCGplayeru založeno ${added} karet`)
+        }
+      }
     } catch (err) {
       log(`[catalog] obrázky z TCGplayeru pro ${setId} selhaly: ${(err as Error).message}`)
     }
   }
-  log(`[catalog] obrázky z TCGplayeru: ${fixed}, varianty/ceny: ${enriched}`)
+  log(`[catalog] obrázky z TCGplayeru: ${fixed}, varianty/ceny: ${enriched}, nové karty: ${created}`)
 }
 
 // Loga a symboly sad, které TCGdex nemá (podsady, promo, energie, McDonald's).

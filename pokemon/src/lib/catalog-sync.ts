@@ -132,7 +132,7 @@ export async function syncCatalog(
         series: s.serie.name,
         code: s.abbreviation?.official ?? null,
         releaseDate: s.releaseDate ? new Date(s.releaseDate) : null,
-        cardCount: s.cardCount.total,
+        cardCount: Math.max(s.cardCount.total, await prisma.card.count({ where: { setId: s.id } })),
         officialCount: s.cardCount.official,
         logoUrl: s.logo ?? MANUAL_LOGOS[s.id] ?? undefined,
         symbolUrl: s.symbol ?? undefined,
