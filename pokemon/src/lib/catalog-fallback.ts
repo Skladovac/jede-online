@@ -94,7 +94,8 @@ async function ptcgCards(setId: string) {
 // match 'kit' = trenérské balíčky: TCGplayer má dva balíčky v jedné skupině, karta se páruje číslem + jménem
 // a při shodě podle názvu balíčku v názvu produktu („Psychic Energy (#8 - Latias)“).
 // create: karty, které má TCGplayer a my ne, se založí (promo a energie přibývají průběžně a TCGdex je doplňuje se zpožděním).
-const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' | 'kit'; deck?: string; create?: boolean }> = {
+// category: kategorie TCGplayeru (3 = Pokémon anglicky, 85 = Pokémon japonsky).
+const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' | 'kit'; deck?: string; create?: boolean; category?: number }> = {
   '30th': { group: 24722, match: 'number' },
   '30th-c': { group: 24837, match: 'name' },
   mep: { group: 24451, match: 'number', create: true }, // MEP Black Star Promos (nové promo karty TCGdex dlouho nemá)
@@ -102,6 +103,8 @@ const TCGPLAYER: Record<string, { group: number; match: 'number' | 'name' | 'kit
   me06: { group: 24831, match: 'number', create: true }, // Delta Reign — do zveřejnění v TCGdex jediný zdroj obrázků
   svp: { group: 22872, match: 'number', create: true }, // SV promo karty nad 207 (pokemontcg.io končí u 207)
   sve: { group: 24382, match: 'number', create: true }, // SV energie 017–024
+  'ja-M-P': { group: 24423, match: 'number', create: true, category: 85 }, // japonské promo M-P
+  'ja-SV-P': { group: 23779, match: 'number', create: true, category: 85 }, // japonské promo SV-P
   swshp: { group: 2545, match: 'number' }, // SWSH299–301
   cel25cc: { group: 2931, match: 'name' },
   '2023sv': { group: 23306, match: 'number' },
@@ -143,8 +146,8 @@ function tcgpCategory(type: string | undefined): { category: string; types: stri
 type TcgpPrice = { productId: number; subTypeName: string; marketPrice: number | null; midPrice: number | null }
 type TcgpVariants = { normal: number | null; holo: number | null; reverse: number | null; any: boolean }
 
-async function tcgpVariants(group: number): Promise<Map<number, TcgpVariants>> {
-  const res = await fetch(`https://tcgcsv.com/tcgplayer/3/${group}/prices`, {
+async function tcgpVariants(group: number, category = 3): Promise<Map<number, TcgpVariants>> {
+  const res = await fetch(`https://tcgcsv.com/tcgplayer/${category}/${group}/prices`, {
     headers: { 'User-Agent': 'pokemon.jede.online catalog sync' },
     signal: AbortSignal.timeout(60_000),
   })
@@ -198,7 +201,7 @@ async function fillFromTcgplayer(log: (m: string) => void) {
   const toEur = (usd: number | null) => (usd != null && usdEur ? Math.round(usd * usdEur * 100) / 100 : null)
   for (const [setId, cfg] of Object.entries(TCGPLAYER)) {
     try {
-      const res = await fetch(`https://tcgcsv.com/tcgplayer/3/${cfg.group}/products`, {
+      const res = await fetch(`https://tcgcsv.com/tcgplayer/${cfg.category ?? 3}/${cfg.group}/products`, {
         headers: { 'User-Agent': 'pokemon.jede.online catalog sync' },
         signal: AbortSignal.timeout(60_000),
       })
@@ -215,7 +218,7 @@ async function fillFromTcgplayer(log: (m: string) => void) {
       // Varianty a orientační ceny jen pro karty, které TCGdex ještě nezná (nemají Cardmarket) — jeho data mají přednost.
       const unknown = cards.filter((c) => !c.priceUpdatedAt && !c.cmProductId)
       const variants =
-        unknown.length || cfg.create ? await tcgpVariants(cfg.group).catch(() => new Map<number, TcgpVariants>()) : new Map<number, TcgpVariants>()
+        unknown.length || cfg.create ? await tcgpVariants(cfg.group, cfg.category).catch(() => new Map<number, TcgpVariants>()) : new Map<number, TcgpVariants>()
       const byNum = new Map<string, TcgpProduct>()
       const allByNum = new Map<string, TcgpProduct[]>()
       const byName = new Map<string, TcgpProduct[]>()
