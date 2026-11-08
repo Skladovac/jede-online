@@ -24,9 +24,9 @@ describe('periodRange', () => {
   })
   it('období dlaždicují kalendář: žádný den dvakrát, žádný nevynechaný', () => {
     const den = 86_400_000
-    for (const startDay of [1, 16, 28, 31]) {
+    for (const startDay of [1, 16, 28, 29, 30, 31]) {
       let predchozi: { fromKey: string; toKey: string } | null = null
-      for (let i = 0; i < 18; i++) { // leden 2026 až červen 2027
+      for (let i = 0; i < 48; i++) { // leden 2026 až prosinec 2029, vč. přestupného února 2028
         const rok = 2026 + Math.floor(i / 12)
         const r = periodRange(startDay, rok, (i % 12) + 1)
         expect(r.fromKey <= r.toKey, `${startDay} ${rok}-${i % 12 + 1}`).toBe(true)
