@@ -1,5 +1,5 @@
 // Založí účet, nebo existujícímu přepíše heslo (náhrada „zapomenutého hesla“).
-// Použití: npm run user:add -- --email a@b.cz --name "Jméno" --tracks-from 2026-11-01
+// Použití: npm run user:add -- --email a@b.cz --name "Jméno" --tracks-from 2026-11-01 [--period-start 16]
 // Heslo se z argumentu nebere (zůstalo by v historii shellu) — vygeneruje se a vypíše jednou na konci.
 import { randomBytes } from 'node:crypto'
 import { parseArgs } from 'node:util'
@@ -24,7 +24,7 @@ function generujHeslo(delka = 16) {
 
 async function main() {
   const { values } = parseArgs({
-    options: { email: { type: 'string' }, name: { type: 'string' }, 'tracks-from': { type: 'string' } },
+    options: { email: { type: 'string' }, name: { type: 'string' }, 'tracks-from': { type: 'string' }, 'period-start': { type: 'string' } },
   })
   const jmeno = values.name?.trim()
   const od = values['tracks-from']
@@ -36,6 +36,13 @@ async function main() {
   if (Number.isNaN(tracksFrom.getTime()) || tracksFrom.toISOString().slice(0, 10) !== od) {
     throw new Error('--tracks-from není platné datum (RRRR-MM-DD).')
   }
+  // Volitelné: den, kterým začíná výkazové období (1 = kalendářní měsíc, 16 = od 16. do 15.). 1–28, aby existoval v každém měsíci.
+  let periodStartDay: number | undefined
+  if (values['period-start'] !== undefined) {
+    if (!/^\d{1,2}$/.test(values['period-start'])) throw new Error('--period-start musí být celé číslo 1–28.')
+    periodStartDay = Number(values['period-start'])
+    if (periodStartDay < 1 || periodStartDay > 28) throw new Error('--period-start musí být celé číslo 1–28.')
+  }
   const email = loginSchema.shape.email.parse(values.email)
 
   const heslo = generujHeslo()
@@ -44,12 +51,12 @@ async function main() {
   try {
     const existuje = await prisma.user.findUnique({ where: { email }, select: { id: true } })
     if (existuje) {
-      await prisma.user.update({ where: { email }, data: { passwordHash, name: jmeno, tracksFrom } })
+      await prisma.user.update({ where: { email }, data: { passwordHash, name: jmeno, tracksFrom, ...(periodStartDay !== undefined && { periodStartDay }) } })
       // Staré přihlášení přestane platit — po změně hesla se musí přihlásit znovu.
       await prisma.session.deleteMany({ where: { userId: existuje.id } })
       console.log(`Účet ${email} už existoval — přepsáno heslo (jméno a datum začátku nastaveny podle zadání).`)
     } else {
-      await prisma.user.create({ data: { email, name: jmeno, tracksFrom, passwordHash } })
+      await prisma.user.create({ data: { email, name: jmeno, tracksFrom, passwordHash, ...(periodStartDay !== undefined && { periodStartDay }) } })
       console.log(`Účet ${email} založen.`)
     }
   } finally {

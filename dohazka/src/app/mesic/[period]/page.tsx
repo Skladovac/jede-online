@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth'
-import { formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
+import { dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
 import { buildMonth } from '@/lib/month'
 import { MonthList } from '../MonthList'
 import { SettingsLink } from '@/components/SettingsLink'
@@ -47,10 +47,10 @@ export default async function MesicPage({ params }: { params: Promise<{ period: 
     fromKey,
     toKey,
     // @db.Date přichází jako UTC půlnoc, proto UTC a ne pražský čas.
-    tracksFromKey: user.tracksFrom.toISOString().slice(0, 10),
+    tracksFromKey: dateColumnToKey(user.tracksFrom),
     entries: zapsane.map((e) => ({
       id: e.id,
-      dayKey: e.day.toISOString().slice(0, 10),
+      dayKey: dateColumnToKey(e.day),
       kind: e.kind,
       hours: e.hours === null ? null : Number(e.hours),
       fromTime: e.fromTime,

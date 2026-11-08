@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth'
-import { formatHours, parseDayKey, pragueDayKey } from '@/lib/date'
+import { dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, pragueDayKey } from '@/lib/date'
 import { KIND_LABEL } from '@/lib/entry'
 import { recentPlaces } from '@/lib/places'
 import { DayForm, DeleteEntryButton } from '../DayForm'
@@ -34,13 +34,21 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
       select: { place: true, day: true },
     }),
   ])
-  const mista = recentPlaces(posledni.map((e) => ({ place: e.place, day: e.day.toISOString().slice(0, 10) })))
+  const mista = recentPlaces(posledni.map((e) => ({ place: e.place, day: dateColumnToKey(e.day) })))
   const dnes = pragueDayKey(new Date())
   const odkaz = 'rounded-panel border border-line px-3 py-2 text-sm text-muted hover:border-line-strong'
 
   return (
     <main className="mx-auto max-w-md px-4 py-6">
-      <SettingsLink />
+      <div className="mb-2 flex items-center justify-between">
+        <Link
+          href={`/mesic/${periodKeyForDay(user.periodStartDay, day)}`}
+          className="flex min-h-11 items-center px-1 text-sm text-accent-strong underline"
+        >
+          Měsíc a export
+        </Link>
+        <SettingsLink />
+      </div>
       <nav className="flex items-center justify-between gap-2" aria-label="Přechod mezi dny">
         <Link href={`/den/${posun(day, -1)}`} className={odkaz} aria-label="Předchozí den">
           ←
@@ -76,7 +84,7 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
         </ul>
       )}
 
-      <DayForm key={day} day={day} places={mista} hasEntries={zapsane.length > 0} hasWork={zapsane.some((e) => e.kind !== 'DAYOFF')} />
+      <DayForm key={day} day={day} places={mista} hasEntries={zapsane.length > 0} hasWorkOrLeave={zapsane.some((e) => e.kind !== 'DAYOFF')} />
     </main>
   )
 }

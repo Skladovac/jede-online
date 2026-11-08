@@ -1,7 +1,7 @@
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { sendPush } from '@/lib/push'
-import { parseDayKey, pragueDayKey, pragueHour } from '@/lib/date'
+import { dateColumnToKey, parseDayKey, pragueDayKey, pragueHour } from '@/lib/date'
 
 /** Připomínka platí od nastavené hodiny po dvě hodiny, nikdy přes půlnoc (ve dvě ráno telefon nepípá). */
 export function shouldRemind(args: {
@@ -45,7 +45,7 @@ export async function runReminder(opts: { now?: Date; force?: boolean } = {}): P
       // force = ruční test mimo čas: chová se, jako by bylo právě uživatelova hodina
       nowHour: opts.force ? u.remindHour : realHour,
       todayKey,
-      user: { remindEnabled: u.remindEnabled, remindHour: u.remindHour, tracksFromKey: pragueDayKey(u.tracksFrom) },
+      user: { remindEnabled: u.remindEnabled, remindHour: u.remindHour, tracksFromKey: dateColumnToKey(u.tracksFrom) },
       hasEntryToday,
       // force je zkouška, která nesmí zabrat skutečnou večerní připomínku
       alreadyRemindedToday: opts.force ? false : alreadyRemindedToday,
@@ -63,7 +63,7 @@ export async function runReminder(opts: { now?: Date; force?: boolean } = {}): P
       }
     }
 
-    const r = await sendPush(u.id, { title: 'Zapiš si dnešní hodiny', body: 'Ať na to večer nezapomeneš.', url: '/' })
+    const r = await sendPush(u.id, { title: 'Zapiš si dnešní hodiny', body: 'Ať na to večer nezapomeneš.', url: `/den/${todayKey}` })
     if (r.sent > 0) {
       sent++
     } else if (!opts.force) {

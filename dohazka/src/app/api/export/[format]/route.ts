@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth'
-import { parseDayKey, periodRange } from '@/lib/date'
+import { dateColumnToKey, parseDayKey, periodRange } from '@/lib/date'
 import { buildMonth } from '@/lib/month'
 import { buildReport } from '@/lib/export/rows'
 import { toCsv } from '@/lib/export/csv'
@@ -39,10 +39,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ format: 
     fromKey,
     toKey,
     // @db.Date přichází jako UTC půlnoc, proto UTC.
-    tracksFromKey: user.tracksFrom.toISOString().slice(0, 10),
+    tracksFromKey: dateColumnToKey(user.tracksFrom),
     entries: zapsane.map((e) => ({
       id: e.id,
-      dayKey: e.day.toISOString().slice(0, 10),
+      dayKey: dateColumnToKey(e.day),
       kind: e.kind,
       hours: e.hours === null ? null : Number(e.hours),
       fromTime: e.fromTime,

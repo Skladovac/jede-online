@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { resolvePdfFont, toPdf } from '@/lib/export/pdf'
 import type { Report } from '@/lib/export/rows'
 
-const empty: Report = { title: 'Výkaz odpracovaných hodin', personName: 'Jan Novák', periodLabel: 'listopad 2026', rows: [], totalHours: '0', daysWorked: 0 }
+const empty: Report = { title: 'Výkaz odpracovaných hodin', personName: 'Jan Novák', periodLabel: 'listopad 2026', rows: [], totalHours: '0', totalHoursValue: 0, daysWorked: 0 }
 
 // Vytáhne z PDF textovou vrstvu i se souřadnicemi: rozbalí streamy, přečte ToUnicode mapu vloženého fontu
 // a každý kus textu (operátor Tm + TJ) vrátí jako { x, y, text }. Bez externích závislostí.
@@ -42,7 +42,7 @@ describe('resolvePdfFont', () => {
 
 describe('toPdf', () => {
   it('vyrobí PDF s českou diakritikou', async () => {
-    const buf = await toPdf({ ...empty, rows: [{ dayKey: '2026-11-02', weekday: 'pondělí', fromTime: '', toTime: '', hours: '8,5', place: 'Zlín', kind: '', note: '' }], totalHours: '8,5', daysWorked: 1 })
+    const buf = await toPdf({ ...empty, rows: [{ dayKey: '2026-11-02', weekday: 'pondělí', fromTime: '', toTime: '', hours: '8,5', hoursValue: 8.5, place: 'Zlín', kind: '', note: '' }], totalHours: '8,5', totalHoursValue: 8.5, daysWorked: 1 })
     expect(buf.subarray(0, 5).toString('latin1')).toBe('%PDF-')
     expect(buf.length).toBeGreaterThan(1000)
     // Vestavěná Helvetica nemá češtinu; kdyby se použila, diakritika by se tiše rozsypala.
@@ -58,7 +58,7 @@ describe('toPdf', () => {
   it('hodnoty jednoho dne jsou na jednom řádku (datum, hodiny i typ patří k sobě)', async () => {
     // Každá buňka nese číslo svého řádku; dovolená je jen na řádku 2, řádek 3 má dlouhou poznámku (zalomí se).
     const rows = [1, 2, 3, 4].map((i) => ({
-      dayKey: `D${i}`, weekday: `W${i}`, fromTime: `F${i}`, toTime: `T${i}`, hours: `H${i}`, place: `P${i}`,
+      dayKey: `D${i}`, weekday: `W${i}`, fromTime: `F${i}`, toTime: `T${i}`, hours: `H${i}`, hoursValue: i, place: `P${i}`,
       kind: i === 2 ? 'Dovolená' : '', note: i === 3 ? `N${i} ` + 'dlouhá poznámka '.repeat(12) : `N${i}`,
     }))
     const kusy = textovaVrstva(await toPdf({ ...empty, rows, totalHours: '1', daysWorked: 4 }))

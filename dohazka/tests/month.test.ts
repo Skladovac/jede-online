@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildMonth } from '@/lib/month'
+import { buildMonth, visibleRows } from '@/lib/month'
 
 const e = (dayKey: string, hours: number | null, place: string | null, kind = 'WORK') =>
   ({ id: dayKey + kind + place, dayKey, kind, hours, fromTime: null, toTime: null, place, note: null }) as never
@@ -55,5 +55,22 @@ describe('buildMonth', () => {
       entries: [e('2026-11-01', 0.1, 'Zlín'), e('2026-11-02', 0.2, 'Zlín'), e('2026-11-03', 0.3, 'Zlín')],
     })
     expect(r.totalHours).toBe(0.6)
+  })
+})
+
+describe('visibleRows', () => {
+  const m = buildMonth({
+    fromKey: '2026-11-01',
+    toKey: '2026-11-30',
+    tracksFromKey: '2026-11-03',
+    entries: [e('2026-11-08', 8, 'Zlín'), e('2026-11-20', null, null, 'VACATION')],
+  })
+  it('skryje prázdné dny po dnešku a dny před začátkem, vyplněné budoucí nechá', () => {
+    const keys = visibleRows(m.rows, '2026-11-08').map((r) => r.dayKey)
+    expect(keys[0]).toBe('2026-11-20') // dovolená napřed zapsaná zůstane
+    expect(keys).toContain('2026-11-08')
+    expect(keys).toContain('2026-11-03')
+    expect(keys).not.toContain('2026-11-09')
+    expect(keys).not.toContain('2026-11-02')
   })
 })

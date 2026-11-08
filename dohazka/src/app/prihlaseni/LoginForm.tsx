@@ -18,7 +18,7 @@ export function LoginForm() {
         <input name="password" type="password" required autoComplete="current-password" className={pole} />
       </label>
       {stav?.error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-danger">
           {stav.error}
         </p>
       )}

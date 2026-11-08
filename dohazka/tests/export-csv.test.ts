@@ -8,11 +8,12 @@ const report = (rows: Report['rows']): Report => ({
   periodLabel: 'listopad 2026',
   rows,
   totalHours: rows.length ? '16,5' : '0',
+  totalHoursValue: rows.length ? 16.5 : 0,
   daysWorked: rows.length,
 })
 
 describe('toCsv', () => {
-  const row = { dayKey: '2026-11-02', weekday: 'pondělí', fromTime: '07:00', toTime: '15:30', hours: '8,5', place: 'Zlín', kind: '', note: '' }
+  const row = { dayKey: '2026-11-02', weekday: 'pondělí', fromTime: '07:00', toTime: '15:30', hours: '8,5', hoursValue: 8.5, place: 'Zlín', kind: '', note: '' }
   it('má BOM, středníky a CRLF', () => {
     const csv = toCsv(report([row]))
     expect(csv.startsWith('﻿')).toBe(true)

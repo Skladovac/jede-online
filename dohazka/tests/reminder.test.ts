@@ -66,9 +66,9 @@ describe('runReminder', () => {
     push.sendPush.mockResolvedValue({ sent: 1 })
   })
 
-  it('pošle push na "/" a zapíše log pražského dne', async () => {
+  it('pošle push na /den/<dnes> a zapíše log pražského dne', async () => {
     expect(await runReminder({ now: at1930 })).toEqual({ checked: 1, sent: 1 })
-    expect(push.sendPush).toHaveBeenCalledWith('u1', expect.objectContaining({ title: 'Zapiš si dnešní hodiny', url: '/' }))
+    expect(push.sendPush).toHaveBeenCalledWith('u1', expect.objectContaining({ title: 'Zapiš si dnešní hodiny', url: '/den/2026-11-08' }))
     expect(db.reminderLog.create).toHaveBeenCalledWith({ data: { userId: 'u1', day: new Date(Date.UTC(2026, 10, 8)) } })
   })
 

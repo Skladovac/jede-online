@@ -5,6 +5,7 @@ import ExcelJS from 'exceljs'
 import type { Report } from './rows'
 
 const HLAVICKA = ['Datum', 'Den', 'Od', 'Do', 'Hodiny', 'Místo', 'Typ', 'Poznámka']
+const HODINY_FORMAT = '0.00'
 const SIRKY = [12, 12, 8, 8, 9, 22, 12, 40]
 
 export async function toXlsx(report: Report): Promise<Buffer> {
@@ -19,12 +20,17 @@ export async function toXlsx(report: Report): Promise<Buffer> {
   hlavicka.font = { bold: true }
 
   for (const r of report.rows) {
-    ws.addRow([r.dayKey, r.weekday, r.fromTime, r.toTime, r.hours, r.place, r.kind, r.note])
+    // Hodiny jako číslo (ne český text), ať v Excelu jde sloupec sečíst.
+    const radek = ws.addRow([r.dayKey, r.weekday, r.fromTime, r.toTime, r.hoursValue, r.place, r.kind, r.note])
+    radek.getCell(5).numFmt = HODINY_FORMAT
   }
   // Mezi řádky dat a součtem žádná mezera; addRow na prázdném listu s řádkem 3 pokračuje od 4.
-  const soucet = ws.addRow(['Celkem', '', '', '', report.totalHours, '', '', ''])
+  const soucet = ws.addRow(['Celkem', '', '', '', report.totalHoursValue, '', '', ''])
   soucet.font = { bold: true }
-  ws.addRow(['Odpracovaných dnů', '', '', '', String(report.daysWorked), '', '', '']).font = { bold: true }
+  soucet.getCell(5).numFmt = HODINY_FORMAT
+  const dny = ws.addRow(['Odpracovaných dnů', '', '', '', report.daysWorked, '', '', ''])
+  dny.font = { bold: true }
+  dny.getCell(5).numFmt = '0'
 
   SIRKY.forEach((w, i) => (ws.getColumn(i + 1).width = w))
   return Buffer.from(await wb.xlsx.writeBuffer())

@@ -146,6 +146,8 @@ docker compose -f docker-compose.yml --env-file /opt/jede/dohazka.env --profile 
 
 Heslo se vygeneruje a vypíše jednou na konci. Předej ho bezpečnou cestou.
 
+Volitelně `--period-start 16` nastaví, že výkazové období začíná 16. a končí 15. (1–28, výchozí 1 = kalendářní měsíc); funguje i při přepsání existujícího účtu.
+
 ## 8. Na iPhonu
 
 1. Otevři `https://dohazka.jede.online` v Safari a přihlas se.

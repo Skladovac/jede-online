@@ -207,9 +207,9 @@ export function PushSettings({ publicKey, remindHour, remindEnabled }: { publicK
         </label>
       </div>
 
-      {msg?.ok && <p className="text-sm text-green-700 dark:text-green-400">{msg.ok}</p>}
+      {msg?.ok && <p className="text-sm text-positive">{msg.ok}</p>}
       {msg?.error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-danger">
           {msg.error}
         </p>
       )}

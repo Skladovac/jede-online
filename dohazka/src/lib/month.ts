@@ -59,3 +59,8 @@ export function buildMonth(args: {
     daysWorked: rows.filter((r) => r.entries.some((x) => x.kind === 'WORK')).length,
   }
 }
+
+/** Řádky k zobrazení: bez dnů před začátkem zapisování a bez prázdných dnů po dnešku (vyplněné budoucí dny, např. dovolená, zůstanou). */
+export function visibleRows(rows: MonthRow[], todayKey: string): MonthRow[] {
+  return rows.filter((r) => r.state !== 'before-start' && !(r.state === 'empty' && r.dayKey > todayKey))
+}

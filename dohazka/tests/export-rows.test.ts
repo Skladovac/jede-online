@@ -24,9 +24,11 @@ describe('buildReport', () => {
   })
   it('kind je prázdný u práce, jinak česky; null hodiny jsou prázdný text', () => {
     expect(r.rows[0].kind).toBe('')
-    expect(r.rows[1]).toMatchObject({ kind: 'Dovolená', hours: '', fromTime: '', place: '', note: '' })
+    expect(r.rows[1]).toMatchObject({ kind: 'Dovolená', hours: '', hoursValue: null, fromTime: '', place: '', note: '' })
   })
   it('součet a popisky', () => {
+    expect(r.rows[0].hoursValue).toBe(8.5)
+    expect(r.totalHoursValue).toBe(17)
     expect(r).toMatchObject({ totalHours: '17', daysWorked: 2, periodLabel: 'listopad 2026', personName: 'Jan Novák' })
   })
   it('nekalendářní období má v popisku rozsah', () => {

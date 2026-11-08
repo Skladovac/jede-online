@@ -22,7 +22,7 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1 }
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const theme = (await cookies()).get('theme')?.value
   return (
-    // Výchozí světlý vzhled, tmavý jen když si ho uživatel přepnul (cookie „theme“).
+    // Výchozí světlý vzhled, tmavý jen když je nastavená cookie „theme=dark“ (zatím ji nic v aplikaci nenastavuje, přepínač neexistuje).
     <html lang="cs" className={`${sans.variable}${theme === 'dark' ? ' dark' : ''}`}>
       <body className="flex min-h-dvh flex-col bg-base text-fg antialiased">
         <div className="flex-1">{children}</div>

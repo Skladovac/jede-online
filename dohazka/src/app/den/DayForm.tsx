@@ -9,7 +9,7 @@ const pole = 'mt-1 w-full rounded-panel border border-line bg-card px-3 py-2 tex
 
 type Stav = { error: string } | { ok: true } | null
 
-export function DayForm({ day, places, hasEntries, hasWork }: { day: string; places: string[]; hasEntries: boolean; hasWork: boolean }) {
+export function DayForm({ day, places, hasEntries, hasWorkOrLeave }: { day: string; places: string[]; hasEntries: boolean; hasWorkOrLeave: boolean }) {
   const formRef = useRef<HTMLFormElement>(null)
   const hoursRef = useRef<HTMLInputElement>(null)
   const fromRef = useRef<HTMLInputElement>(null)
@@ -84,7 +84,7 @@ export function DayForm({ day, places, hasEntries, hasWork }: { day: string; pla
 
       <label className="block text-sm font-medium">
         Místo
-        <input name="place" list="mista" defaultValue={places[0] ?? ''} autoComplete="off" maxLength={200} className={pole} />
+        <input name="place" list="mista" defaultValue={places.length === 1 ? places[0] : ''} autoComplete="off" maxLength={200} className={pole} />
         <datalist id="mista">
           {places.map((p) => (
             <option key={p} value={p} />
@@ -121,7 +121,7 @@ export function DayForm({ day, places, hasEntries, hasWork }: { day: string; pla
       </details>
 
       {stav && 'error' in stav && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-danger">
           {stav.error}
         </p>
       )}
@@ -143,7 +143,7 @@ export function DayForm({ day, places, hasEntries, hasWork }: { day: string; pla
           Nepracoval
         </button>
       </div>
-      {hasWork && <p className="text-xs text-muted">Další záznam téhož dne (např. jiné místo) přidáš dalším uložením.</p>}
+      {hasWorkOrLeave && <p className="text-xs text-muted">Další záznam téhož dne (např. jiné místo) přidáš dalším uložením.</p>}
     </form>
   )
 }
@@ -172,7 +172,7 @@ export function DeleteEntryButton({ id }: { id: string }) {
         Smazat
       </button>
       {chyba && (
-        <p role="alert" className="text-xs text-red-600">
+        <p role="alert" className="text-xs text-danger">
           Smazání se nepodařilo.
         </p>
       )}

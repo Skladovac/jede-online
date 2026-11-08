@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { formatHours, parseDayKey } from '@/lib/date'
+import { formatHours, parseDayKey, pragueDayKey } from '@/lib/date'
 import { KIND_LABEL } from '@/lib/entry'
-import type { MonthRow } from '@/lib/month'
+import { visibleRows, type MonthRow } from '@/lib/month'
 
 // Hodnota dne je UTC půlnoc (parseDayKey), proto i formátování v UTC.
 const popisDne = (key: string) =>
@@ -9,12 +9,12 @@ const popisDne = (key: string) =>
 
 const radek = 'flex items-start justify-between gap-3 rounded-panel border px-3 py-2 text-sm'
 
-/** Seznam dnů období. Dny před začátkem zapisování se nevypisují; prázdné dny jsou jen tiše šedé. */
+/** Seznam dnů období. Nevypisují se dny před začátkem zapisování ani prázdné dny po dnešku; prázdné dny do dneška jsou jen tiše šedé. */
 export function MonthList({ rows }: { rows: MonthRow[] }) {
+  const dnes = pragueDayKey(new Date())
   return (
     <ul className="mt-5 space-y-2">
-      {rows
-        .filter((r) => r.state !== 'before-start')
+      {visibleRows(rows, dnes)
         .map((r) => (
           <li key={r.dayKey}>
             <Link

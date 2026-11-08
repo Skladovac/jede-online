@@ -23,6 +23,11 @@ export function pragueHour(d: Date): number {
   return Number(hodinaFormat.format(d)) % 24
 }
 
+/** Sloupec @db.Date (UTC půlnoc) → "2026-11-08". Jediný převod pro všechna místa, ne pražský čas. */
+export function dateColumnToKey(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
 /** "2026-11-08" → Date v UTC půlnoci (pro sloupce @db.Date, aby den neujížděl o zónu). */
 export function parseDayKey(key: string): Date {
   const [y, m, d] = key.split('-').map(Number)

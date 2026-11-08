@@ -12,6 +12,8 @@ export type ReportRow = {
   fromTime: string
   toTime: string
   hours: string
+  /** Číselná hodnota pro XLSX (CSV a PDF ji ignorují); null = bez hodin. */
+  hoursValue: number | null
   place: string
   kind: string
   note: string
@@ -23,6 +25,8 @@ export type Report = {
   periodLabel: string
   rows: ReportRow[]
   totalHours: string
+  /** Číselný součet pro XLSX (CSV a PDF ho ignorují). */
+  totalHoursValue: number
   daysWorked: number
 }
 
@@ -53,6 +57,7 @@ export function buildReport(args: {
         fromTime: e.fromTime ?? '',
         toTime: e.toTime ?? '',
         hours: e.hours === null ? '' : formatHours(e.hours),
+        hoursValue: e.hours,
         place: e.place ?? '',
         kind: e.kind === 'WORK' ? '' : KIND_LABEL[e.kind],
         note: e.note ?? '',
@@ -69,6 +74,7 @@ export function buildReport(args: {
     periodLabel,
     rows,
     totalHours: formatHours(month.totalHours),
+    totalHoursValue: month.totalHours,
     daysWorked: month.daysWorked,
   }
 }

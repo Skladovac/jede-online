@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { randomToken, sha256 } from '@/lib/crypto'
 
 // Zbytek aplikace importuje z '@/lib/auth'; čisté funkce žijí v '@/lib/crypto'.
-export { hashPassword, randomToken, sha256, verifyPassword } from '@/lib/crypto'
+export { hashPassword, randomToken, verifyPassword } from '@/lib/crypto'
 
 const COOKIE = 'dh_session'
 const SESSION_DAYS = 30
