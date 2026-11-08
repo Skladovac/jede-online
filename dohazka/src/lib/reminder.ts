@@ -47,22 +47,26 @@ export async function runReminder(opts: { now?: Date; force?: boolean } = {}): P
       todayKey,
       user: { remindEnabled: u.remindEnabled, remindHour: u.remindHour, tracksFromKey: pragueDayKey(u.tracksFrom) },
       hasEntryToday,
-      alreadyRemindedToday,
+      // force je zkouška, která nesmí zabrat skutečnou večerní připomínku
+      alreadyRemindedToday: opts.force ? false : alreadyRemindedToday,
     })
     if (!due) continue
 
     // Nejdřív zapsat, pak poslat: unique [userId, day] zajistí, že dvě souběžná spuštění nepípnou dvakrát.
-    try {
-      await prisma.reminderLog.create({ data: { userId: u.id, day } })
-    } catch (e) {
-      if ((e as { code?: string }).code === 'P2002') continue
-      throw e
+    // Při force se nezapisuje nic — zkouška nesmí zabrat skutečnou připomínku.
+    if (!opts.force) {
+      try {
+        await prisma.reminderLog.create({ data: { userId: u.id, day } })
+      } catch (e) {
+        if ((e as { code?: string }).code === 'P2002') continue
+        throw e
+      }
     }
 
     const r = await sendPush(u.id, { title: 'Zapiš si dnešní hodiny', body: 'Ať na to večer nezapomeneš.', url: '/' })
     if (r.sent > 0) {
       sent++
-    } else {
+    } else if (!opts.force) {
       // Nic nedorazilo (výpadek push služby, mrtvé odběry) — uvolnit den, ať to příští hodinový běh zkusí znovu.
       await prisma.reminderLog.delete({ where: { userId_day: { userId: u.id, day } } }).catch(() => {})
     }

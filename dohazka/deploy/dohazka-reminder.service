@@ -1,6 +1,5 @@
 [Unit]
 Description=Dohazka - vecerni pripominka (push)
-After=network-online.target
 
 [Service]
 Type=oneshot

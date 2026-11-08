@@ -121,11 +121,54 @@ describe('runReminder', () => {
     expect(db.reminderLog.delete).toHaveBeenCalled()
   })
 
-  it('force pípne mimo okno, ale pořád ne vypnutým', async () => {
+  it('force pípne mimo okno a nezapíše log; vypnutým a odbytým pořád nepípne', async () => {
     const night = new Date('2026-11-08T10:00:00Z')
     expect((await runReminder({ now: night })).sent).toBe(0)
     expect((await runReminder({ now: night, force: true })).sent).toBe(1)
+    expect(db.reminderLog.create).not.toHaveBeenCalled()
+    db.entry.findFirst.mockResolvedValue({ id: 'e1' })
+    expect((await runReminder({ now: night, force: true })).sent).toBe(0)
+    db.entry.findFirst.mockResolvedValue(null)
     db.user.findMany.mockResolvedValue([{ ...dbUser, remindEnabled: false }])
     expect((await runReminder({ now: night, force: true })).sent).toBe(0)
+  })
+
+  it('force ignoruje dnešní log a nic nemaže, ani když nic nedorazí', async () => {
+    db.reminderLog.findUnique.mockResolvedValue({ id: 'l1' })
+    expect((await runReminder({ now: at1930, force: true })).sent).toBe(1)
+    push.sendPush.mockResolvedValue({ sent: 0 })
+    expect((await runReminder({ now: at1930, force: true })).sent).toBe(0)
+    expect(db.reminderLog.delete).not.toHaveBeenCalled()
+  })
+
+  it('kolize P2002 u jednoho uživatele nepřeruší běh pro další', async () => {
+    db.user.findMany.mockResolvedValue([dbUser, { ...dbUser, id: 'u2' }])
+    db.reminderLog.create
+      .mockRejectedValueOnce(Object.assign(new Error('unique'), { code: 'P2002' }))
+      .mockResolvedValueOnce({})
+    expect(await runReminder({ now: at1930 })).toEqual({ checked: 2, sent: 1 })
+    expect(push.sendPush).toHaveBeenCalledTimes(1)
+    expect(push.sendPush).toHaveBeenCalledWith('u2', expect.anything())
+  })
+
+  it('log nemaže, když push dorazil; když ne, maže právě ten den toho uživatele', async () => {
+    await runReminder({ now: at1930 })
+    expect(db.reminderLog.delete).not.toHaveBeenCalled()
+    push.sendPush.mockResolvedValue({ sent: 0 })
+    await runReminder({ now: at1930 })
+    expect(db.reminderLog.delete).toHaveBeenCalledWith({ where: { userId_day: { userId: 'u1', day: new Date(Date.UTC(2026, 10, 8)) } } })
+  })
+
+  it('v letním čase (CEST, UTC+2) čte hodinu i den pražsky', async () => {
+    // 17:30 UTC = 19:30 CEST -> pípá; kdyby se četlo UTC nebo +1, byla by to hodina 17 / 18
+    expect(await runReminder({ now: new Date('2027-07-10T17:30:00Z') })).toEqual({ checked: 1, sent: 1 })
+    expect(db.reminderLog.create).toHaveBeenCalledWith({ data: { userId: 'u1', day: new Date(Date.UTC(2027, 6, 10)) } })
+    vi.clearAllMocks()
+    db.user.findMany.mockResolvedValue([dbUser])
+    db.entry.findFirst.mockResolvedValue(null)
+    db.reminderLog.findUnique.mockResolvedValue(null)
+    // 22:30 UTC = 00:30 CEST dalšího dne -> nepípá, den je 11. 7.
+    expect(await runReminder({ now: new Date('2027-07-10T22:30:00Z') })).toEqual({ checked: 1, sent: 0 })
+    expect(db.entry.findFirst).toHaveBeenCalledWith({ where: { userId: 'u1', day: new Date(Date.UTC(2027, 6, 11)) }, select: { id: true } })
   })
 })
