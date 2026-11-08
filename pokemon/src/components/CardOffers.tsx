@@ -33,7 +33,7 @@ export async function CardOffers({ cardId }: { cardId: string }) {
 
   return (
     <section className="mt-10">
-      <h2 className="text-2xl font-bold text-fg">{t('Kdo ji nabízí')}</h2>
+      <h2 className="text-2xl font-semibold text-fg">{t('Kdo ji nabízí')}</h2>
       {offers.length === 0 ? (
         <EmptyState className="mt-4">
           {t('Zatím ji nikdo nenabízí. Až si ji někdo přidá do sbírky jako „navíc“, objeví se tady.')}

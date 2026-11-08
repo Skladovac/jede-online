@@ -21,7 +21,7 @@ export default async function CompleteSignupPage() {
   return (
     <main className="mx-auto max-w-md px-4 py-10 sm:py-14">
       <div className={`${panel} p-7 sm:p-9`}>
-        <h1 className="text-3xl font-extrabold text-fg">{t('Ještě pár údajů')}</h1>
+        <h1 className="text-3xl font-semibold text-fg">{t('Ještě pár údajů')}</h1>
         <p className="mb-8 mt-2 text-muted">
           {pending.name ? t('Ahoj {name}! ', { name: pending.name.split(' ')[0] }) : ''}
           {t('Vyber si přezdívku a doplň datum narození — podle něj poznáme, jestli je potřeba souhlas rodiče. Heslo nepotřebuješ.')}

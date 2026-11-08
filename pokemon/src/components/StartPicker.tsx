@@ -50,7 +50,7 @@ export function StartPicker({ sets }: { sets: S[] }) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={s.logo} alt="" loading="lazy" width={150} height={60} className="max-h-14 w-auto max-w-[85%] object-contain transition-transform duration-300 group-hover:scale-[1.04]" />
                   ) : (
-                    <span className="grid h-12 w-9 place-items-center rounded-md bg-[var(--ink)] font-mono text-[10px] font-bold text-brand-yellow">{s.code?.split(':')[0] ?? '?'}</span>
+                    <span className="grid h-12 w-9 place-items-center rounded-md bg-[var(--ink)] font-mono text-[10px] font-semibold text-brand-yellow">{s.code?.split(':')[0] ?? '?'}</span>
                   )}
                 </div>
                 <div>

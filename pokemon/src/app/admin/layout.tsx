@@ -32,7 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             className="inline-flex min-h-9 items-center rounded-full px-3 py-1.5 text-sm font-semibold text-fg hover:bg-card-hover"
           >
             {label}
-            {!!n && <span className="ml-1.5 rounded-full bg-brand-red px-1.5 text-xs font-bold text-white tabular-nums">{n}</span>}
+            {!!n && <span className="ml-1.5 rounded-full bg-brand-red px-1.5 text-xs font-semibold text-white tabular-nums">{n}</span>}
           </Link>
         ))}
       </div>

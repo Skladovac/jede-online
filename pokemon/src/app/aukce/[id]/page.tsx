@@ -62,7 +62,7 @@ export default async function AuctionPage({ params }: Props) {
           <p className="eyebrow">
             {t('Aukce')} · {site}
           </p>
-          <h1 className="mt-2 text-3xl font-extrabold text-fg sm:text-[40px] sm:leading-[1.08]">{a.title}</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-fg sm:text-[40px] sm:leading-[1.08]">{a.title}</h1>
           <p className="mt-2 text-sm text-muted">
             {t('Dražitel:')}{' '}
             <Link href={`/@${encodeURIComponent(a.user.nickname)}`} className="font-semibold text-accent hover:underline">
@@ -70,7 +70,7 @@ export default async function AuctionPage({ params }: Props) {
             </Link>
           </p>
 
-          <h2 className="mt-8 text-xl font-bold text-fg">{t('Co se draží ({n})', { n: a.items.length })}</h2>
+          <h2 className="mt-8 text-xl font-semibold text-fg">{t('Co se draží ({n})', { n: a.items.length })}</h2>
           <ul className="mt-4 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
             {a.items.map((i) => {
               const href = i.card ? `/karta/${encodeURIComponent(i.card.id)}` : `/produkt/${i.product!.id}`
@@ -82,7 +82,7 @@ export default async function AuctionPage({ params }: Props) {
                     <div className="card-frame aspect-[63/88]">
                       <CardImg src={img} alt={name} />
                     </div>
-                    <p className="mt-3 truncate text-[14.5px] font-semibold text-fg">{name}</p>
+                    <p className="mt-3 truncate text-sm font-semibold text-fg">{name}</p>
                     {i.card && (
                       <p className="truncate text-xs text-muted">
                         {i.card.set.name} ·{' '}
@@ -100,7 +100,7 @@ export default async function AuctionPage({ params }: Props) {
           </ul>
           {a.note && (
             <section className="mt-8">
-              <h2 className="text-xl font-bold text-fg">{t('Poznámka prodejce')}</h2>
+              <h2 className="text-xl font-semibold text-fg">{t('Poznámka prodejce')}</h2>
               <p className="mt-2 whitespace-pre-wrap text-muted">{a.note}</p>
             </section>
           )}
@@ -113,7 +113,7 @@ export default async function AuctionPage({ params }: Props) {
                 <Gavel className="h-5 w-5" strokeWidth={1.75} aria-hidden />
               </span>
               <div>
-                <p className={`font-display text-xl font-bold ${ended ? 'text-muted' : 'text-fg'}`}>
+                <p className={`font-display text-xl font-semibold ${ended ? 'text-muted' : 'text-fg'}`}>
                   <AuctionCountdown endsAt={a.endsAt.toISOString()} />
                 </p>
                 <p className="text-sm text-muted">
@@ -124,7 +124,7 @@ export default async function AuctionPage({ params }: Props) {
             {a.startPriceCzk != null && (
               <p className="mt-5 border-t border-line pt-4 text-sm text-muted">
                 {t('Vyvolávací cena')}
-                <span className="block font-display text-2xl font-bold tabular-nums text-fg">{a.startPriceCzk.toLocaleString('cs-CZ')} Kč</span>
+                <span className="block font-display text-2xl font-semibold tabular-nums text-fg">{a.startPriceCzk.toLocaleString('cs-CZ')} Kč</span>
               </p>
             )}
             <a href={a.url} target="_blank" rel="nofollow noopener noreferrer ugc" className={`${ended ? btnSecondary : btnPrimary} mt-5 w-full`}>

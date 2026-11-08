@@ -35,7 +35,7 @@ export function UserMenu({ nickname, isAdmin }: { nickname: string; isAdmin: boo
         className="flex min-h-10 max-w-[10rem] cursor-pointer list-none items-center gap-2 rounded-[10px] px-1.5 text-[var(--ink)] transition-colors hover:bg-[rgba(14,27,46,0.08)]"
       >
         {/* Avatar s počátečním písmenem; přezdívka jen na širokém displeji. */}
-        <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-[var(--ink)] text-[13px] font-extrabold text-brand-yellow">
+        <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-[var(--ink)] text-[13px] font-semibold text-brand-yellow">
           {nickname.slice(0, 1).toUpperCase()}
         </span>
         <span className="hidden truncate font-semibold lg:inline">{nickname}</span>

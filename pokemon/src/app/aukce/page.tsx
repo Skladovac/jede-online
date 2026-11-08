@@ -39,7 +39,7 @@ export default async function AuctionsPage() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Tržiště')}</h1>
+        <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">{t('Tržiště')}</h1>
         {user && (
           <Link href="/aukce/nova" className={btnPrimary}>
             <Plus aria-hidden />
@@ -78,7 +78,7 @@ export default async function AuctionsPage() {
 
       {ended.length > 0 && (
         <section className="mt-14">
-          <h2 className="text-2xl font-bold text-fg">{t('Nedávno skončené')}</h2>
+          <h2 className="text-2xl font-semibold text-fg">{t('Nedávno skončené')}</h2>
           <p className="mt-1 text-sm text-muted">{t('Odkaz zůstává — podívej se, jak aukce dopadla.')}</p>
           <div className="mt-6">
             <AuctionGrid>

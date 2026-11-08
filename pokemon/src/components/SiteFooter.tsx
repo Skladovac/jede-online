@@ -16,7 +16,7 @@ export async function SiteFooter() {
       <Pokeball className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 text-white opacity-[0.04]" />
       <div className={`${container} relative grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]`}>
         <div>
-          <p className="flex items-center gap-2.5 font-display text-[17px] font-extrabold tracking-tight text-white">
+          <p className="flex items-center gap-2.5 font-display text-[17px] font-semibold tracking-tight text-white">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.svg" alt="" width={28} height={28} className="h-8 w-8 rounded-[9px]" />
             <span>

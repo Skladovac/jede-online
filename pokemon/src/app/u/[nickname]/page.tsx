@@ -97,11 +97,11 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex items-center gap-4">
-        <span aria-hidden className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[var(--ink)] text-2xl font-extrabold text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
+        <span aria-hidden className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[var(--ink)] text-2xl font-semibold text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
           {user.nickname.slice(0, 1).toUpperCase()}
         </span>
         <div>
-          <h1 className="flex items-center gap-2 text-4xl font-extrabold text-fg sm:text-[44px]">
+          <h1 className="flex items-center gap-2 text-4xl font-semibold text-fg sm:text-[44px]">
             {user.nickname}
             <BadgeIcon nickname={user.nickname} />
           </h1>
@@ -182,16 +182,16 @@ export default async function ProfilePage({ params, searchParams }: Props) {
               href={`/@${encodeURIComponent(user.nickname)}?ukaz=${id}#karty`}
               scroll={false}
               aria-current={view === id ? 'page' : undefined}
-              className={`flex flex-1 items-center justify-center gap-2.5 rounded-[18px] px-4 py-4 text-center font-display text-lg font-bold transition duration-200 sm:text-xl ${
+              className={`flex flex-1 items-center justify-center gap-2.5 rounded-[18px] px-4 py-4 text-center font-display text-lg font-semibold transition duration-200 sm:text-xl ${
                 view === id
                   ? 'bg-[var(--ink)] text-white shadow-[0_10px_24px_-12px_rgba(14,27,46,0.7)] dark:bg-brand-yellow dark:text-[var(--ink)]'
-                  : 'border border-line-strong bg-card text-fg hover:-translate-y-0.5 hover:bg-card-hover'
+                  : 'border border-line-strong bg-card text-fg hover:bg-card-hover'
               }`}
             >
               <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
               {label}
               <span
-                className={`rounded-full px-2 py-0.5 font-sans text-sm font-bold tabular-nums ${
+                className={`rounded-full px-2 py-0.5 font-sans text-sm font-semibold tabular-nums ${
                   view === id ? 'bg-brand-yellow text-[var(--ink)] dark:bg-[var(--ink)] dark:text-brand-yellow' : 'bg-surface text-muted'
                 }`}
               >

@@ -20,7 +20,7 @@ async function BuyersList({ rows, kind }: { rows: Row[]; kind: 'card' | 'product
   const card = kind === 'card'
   return (
     <section className="mt-10">
-      <h2 className="flex items-center gap-2 text-2xl font-bold text-fg">
+      <h2 className="flex items-center gap-2 text-2xl font-semibold text-fg">
         <Coins className="h-5 w-5 text-positive" strokeWidth={1.75} aria-hidden />
         {t('Chtějí koupit ({n})', { n: rows.length })}
       </h2>

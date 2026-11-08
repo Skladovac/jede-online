@@ -29,7 +29,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <p className="eyebrow">{t('Katalog')}</p>
-      <h1 className="mt-2 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Všechny sady')}</h1>
+      <h1 className="mt-2 text-4xl font-semibold text-fg sm:text-[44px]">{t('Všechny sady')}</h1>
       <UpcomingBanner className="mt-6" />
       <nav className="mt-6 flex gap-6 border-b border-line">
         {(
@@ -75,7 +75,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
         const seriesLogo = setLogo(first?.logoUrl ?? null)
         return (
         <section key={series} id={encodeURIComponent(series)} className="scroll-mt-24 pt-10">
-          <h2 className="mb-5 flex items-center gap-3 text-2xl font-bold text-fg">
+          <h2 className="mb-5 flex items-center gap-3 text-2xl font-semibold text-fg">
             {seriesLogo && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={seriesLogo} alt="" loading="lazy" width={96} height={40} className="h-10 w-auto max-w-[96px] object-contain" />

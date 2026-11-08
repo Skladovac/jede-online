@@ -72,7 +72,7 @@ export default async function RatingsPage({ params }: Props) {
         <ArrowLeft className="h-4 w-4" aria-hidden />
         {t('Profil {name}', { name: nick })}
       </Link>
-      <h1 className="mt-3 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Hodnocení {name}', { name: nick })}</h1>
+      <h1 className="mt-3 text-4xl font-semibold text-fg sm:text-[44px]">{t('Hodnocení {name}', { name: nick })}</h1>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
@@ -85,8 +85,8 @@ export default async function RatingsPage({ params }: Props) {
           }
         />
         <div className={`${panel} px-4 py-3.5`}>
-          <p className="eyebrow !text-[10.5px]">{t('Záporná')}</p>
-          <p className="mt-1.5 inline-flex items-center gap-2 font-display text-[26px] font-bold leading-tight tabular-nums text-danger">
+          <p className="eyebrow !text-[11px]">{t('Záporná')}</p>
+          <p className="mt-1.5 inline-flex items-center gap-2 font-display text-[26px] font-semibold leading-tight tabular-nums text-danger">
             <ThumbsDown className="h-5 w-5" strokeWidth={1.75} aria-hidden /> {summary.neg}
           </p>
         </div>
@@ -108,7 +108,7 @@ export default async function RatingsPage({ params }: Props) {
               <Link2 className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="mb-1 font-bold text-fg">{t('Požádej o hodnocení')}</p>
+              <p className="mb-1 font-semibold text-fg">{t('Požádej o hodnocení')}</p>
               <p className="mb-3 text-sm text-muted">
                 {t('Pošli tenhle odkaz lidem, se kterými jsi už obchodoval(a) — třeba přes Facebook. Po registraci tě můžou ohodnotit.')}
               </p>
@@ -120,7 +120,7 @@ export default async function RatingsPage({ params }: Props) {
 
       {!own && (
         <section className={`${panel} mt-8 p-5`}>
-          <h2 className="text-xl font-bold text-fg">{mine ? t('Tvoje hodnocení') : t('Obchodoval(a) jsi s {name}?', { name: nick })}</h2>
+          <h2 className="text-xl font-semibold text-fg">{mine ? t('Tvoje hodnocení') : t('Obchodoval(a) jsi s {name}?', { name: nick })}</h2>
           {!viewer ? (
             <p className="mt-2 text-sm">
               {t('Hodnotit mohou jen registrovaní uživatelé.')}{' '}
@@ -178,7 +178,7 @@ export default async function RatingsPage({ params }: Props) {
       )}
 
       <section className="mt-8">
-        <h2 className="mb-3 text-xl font-bold text-fg">
+        <h2 className="mb-3 text-xl font-semibold text-fg">
           {t('Všechna hodnocení')} <span className="tabular-nums text-muted">({ratings.length})</span>
         </h2>
         {ratings.length ? (
@@ -205,7 +205,7 @@ export default async function RatingsPage({ params }: Props) {
                     </Badge>
                   )}
                   {r.tag && <Badge>{t(TAG_LABEL[r.tag])}</Badge>}
-                  <span className="ml-auto font-mono text-[11.5px] tabular-nums text-subtle">{r.updatedAt.toLocaleDateString(intl)}</span>
+                  <span className="ml-auto font-mono text-xs tabular-nums text-subtle">{r.updatedAt.toLocaleDateString(intl)}</span>
                 </div>
                 {r.comment && <p className="mt-2 whitespace-pre-wrap text-fg">„{r.comment}“</p>}
                 {own && !r.from.bannedAt && (

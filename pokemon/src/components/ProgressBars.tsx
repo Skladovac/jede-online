@@ -2,7 +2,7 @@ import type { Goal, Progress } from '@/lib/goal'
 import { getT } from '@/lib/i18n/server'
 
 const ROWS = [
-  ['base', 'Base', 'základní karty 1–oficiální počet', 'bg-gradient-to-r from-brand-blue to-brand-blue-dark dark:from-accent dark:to-brand-blue'],
+  ['base', 'Base', 'základní karty 1–oficiální počet', 'bg-brand-blue dark:bg-accent'],
   ['complete', 'Complete', 'všechny karty sady včetně secret', 'bg-[var(--ink)] dark:bg-white'],
   ['master', 'Master', 'všechny karty ve všech variantách', 'bg-brand-yellow'],
 ] as const
@@ -37,16 +37,16 @@ export async function ProgressBars({ p, compact = false, active }: { p: Progress
             <div className="flex items-baseline justify-between text-sm">
               <span className="font-semibold text-fg">
                 {label}
-                {active === k && <span className="ml-1.5 rounded-full bg-[rgba(255,203,5,0.22)] px-1.5 py-0.5 text-[10.5px] font-semibold text-fg">{t('můj cíl')}</span>}
+                {active === k && <span className="ml-1.5 rounded-full bg-[rgba(255,203,5,0.22)] px-1.5 py-0.5 text-[11px] font-semibold text-fg">{t('můj cíl')}</span>}
               </span>
-              <span className={`font-mono text-[12.5px] ${pct >= 100 ? 'text-positive' : 'text-muted'}`}>
+              <span className={`font-mono text-[13px] ${pct >= 100 ? 'text-positive' : 'text-muted'}`}>
                 {v.owned} / {v.total} · {pct} %
               </span>
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line">
               <div className={`h-full rounded-full ${pct >= 100 ? 'bg-positive' : color}`} style={{ width: `${pct}%` }} />
             </div>
-            <p className="mt-1.5 text-[11.5px] text-subtle">{t(hint)}</p>
+            <p className="mt-1.5 text-xs text-subtle">{t(hint)}</p>
           </div>
         )
       })}

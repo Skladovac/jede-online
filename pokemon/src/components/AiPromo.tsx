@@ -53,7 +53,6 @@ export function AiPromo() {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(14,27,46,0.55)] p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="aip-title">
       <div className="relative w-full max-w-md overflow-hidden rounded-[22px] bg-card shadow-[0_30px_80px_-20px_rgba(14,27,46,0.6)] ring-1 ring-line">
-        <div aria-hidden className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.35),transparent_70%)]" />
         <button type="button" onClick={close} aria-label={t('Zavřít')} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-lg text-muted hover:bg-surface hover:text-fg">
           <X className="h-5 w-5" aria-hidden />
         </button>
@@ -62,7 +61,7 @@ export function AiPromo() {
           <span className="mt-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
             <Bot className="h-7 w-7" strokeWidth={1.75} aria-hidden />
           </span>
-          <h2 id="aip-title" className="mt-5 text-2xl font-bold text-fg">
+          <h2 id="aip-title" className="mt-5 text-2xl font-semibold text-fg">
             {t('Přidávej karty fotkou přes svou AI')}
           </h2>
           <p className="mt-2 leading-relaxed text-muted">{t('Napoj ChatGPT nebo Claude na svůj účet. Fotky pak rozpoznává tvoje AI bez našeho denního limitu — a karty se rovnou ukládají do tvé sbírky.')}</p>

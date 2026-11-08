@@ -70,9 +70,9 @@ export async function BadgeShelf({ userId, values }: { userId: string; values?: 
   return (
     <section id="odznaky" className="mt-10 scroll-mt-24">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-xl font-bold text-fg">{t('Odznaky')}</h2>
+        <h2 className="text-xl font-semibold text-fg">{t('Odznaky')}</h2>
         {values && (
-          <span className="font-mono text-[12.5px] text-muted">
+          <span className="font-mono text-[13px] text-muted">
             {earned} / {BADGES.length}
           </span>
         )}
@@ -100,19 +100,19 @@ export async function BadgeShelf({ userId, values }: { userId: string; values?: 
               </span>
               <div className="min-w-0 flex-1">
                 <p className={`truncate font-semibold leading-tight ${level ? 'text-fg' : 'text-muted'}`}>{t(b.name)}</p>
-                <p className={`mt-0.5 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] ${LEVEL_TAG[level ? (b.tiers ? level : 3) : 0]}`}>
+                <p className={`mt-0.5 font-mono text-[11px] font-medium tracking-[0.02em] ${LEVEL_TAG[level ? (b.tiers ? level : 3) : 0]}`}>
                   {level ? (b.tiers ? t(LEVEL_NAME[level]) : t('získáno')) : t('zatím nezískáno')}
                 </p>
-                <p className="mt-1.5 text-[12.5px] leading-snug text-muted">{t(b.desc)}</p>
+                <p className="mt-1.5 text-[13px] leading-snug text-muted">{t(b.desc)}</p>
                 {values && next && value !== undefined && (
                   <div className="mt-2.5">
                     <div className="h-1 overflow-hidden rounded-full bg-line">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-brand-blue to-brand-blue-dark dark:from-accent dark:to-brand-blue"
+                        className="h-full rounded-full bg-brand-blue dark:bg-accent"
                         style={{ width: `${Math.min(100, (Math.max(0, value) / next.min) * 100)}%` }}
                       />
                     </div>
-                    <p className="mt-1 text-[11.5px] text-subtle">
+                    <p className="mt-1 text-xs text-subtle">
                       {t('{value} / {min} do úrovně {level}', { value: Math.max(0, value), min: next.min, level: t(LEVEL_NAME[next.level]) })}
                     </p>
                   </div>

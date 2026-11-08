@@ -13,10 +13,10 @@ export function ImportExport() {
   const [state, action, pending] = useActionState(importCollection, undefined)
   return (
     <section className={`${panel} p-5 sm:p-6`}>
-      <h2 className="text-2xl font-bold text-fg">{t('Záloha a import')}</h2>
+      <h2 className="text-2xl font-semibold text-fg">{t('Záloha a import')}</h2>
       <div className="mt-4 grid gap-6 md:grid-cols-2">
         <div>
-          <h3 className="font-bold text-fg">{t('Stáhnout sbírku')}</h3>
+          <h3 className="font-semibold text-fg">{t('Stáhnout sbírku')}</h3>
           <p className="mt-1 text-sm text-muted">
             {t('Karty, produkty i seznam chybějících do souboru CSV — otevřeš ho v Excelu nebo Google Tabulkách.')}
           </p>
@@ -29,7 +29,7 @@ export function ImportExport() {
           </a>
         </div>
         <form action={action} className="space-y-2">
-          <h3 className="font-bold text-fg">{t('Nahrát ze souboru')}</h3>
+          <h3 className="font-semibold text-fg">{t('Nahrát ze souboru')}</h3>
           <p className="text-sm text-muted">
             {t('Soubor z exportu (i upravený), nebo jednoduchý seznam po řádcích:')} <code className="text-xs">{t('kód sady;číslo;kusů')}</code>,
             {t('např.')} <code className="text-xs">SVI;45;2</code>. {t('Stejné karty se přepíšou, nic se nemaže.')}

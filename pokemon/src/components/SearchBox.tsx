@@ -80,7 +80,7 @@ export function SearchBox() {
               setActive((a) => Math.max(a - 1, -1))
             } else if (e.key === 'Escape') setOpen(false)
           }}
-          placeholder={t('Hledat kartu, set nebo číslo…')}
+          placeholder={t('Hledat')}
           aria-label={t('Hledat kartu')}
           autoComplete="off"
           className="h-10 w-full rounded-[10px] border border-[rgba(22,58,102,0.18)] bg-card pl-10 pr-4 text-[15px] text-fg shadow-sm outline-none transition-colors duration-200 placeholder:text-subtle focus:border-brand-blue focus:ring-2 focus:ring-[rgba(42,117,187,0.35)]"

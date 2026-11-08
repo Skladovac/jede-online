@@ -27,7 +27,7 @@ export default async function SearchPage({ searchParams }: Props) {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl font-black tracking-tight">{q ? t('Výsledky pro „{q}“', { q }) : t('Hledání')}</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{q ? t('Výsledky pro „{q}“', { q }) : t('Hledání')}</h1>
       <p className="mt-1 text-sm text-subtle">
         {q.length < 2
           ? t('Napiš aspoň 2 znaky. Hledat jde podle jména (Charizard) nebo kódu z karty (SVI 045, 045/198).')
@@ -47,7 +47,7 @@ export default async function SearchPage({ searchParams }: Props) {
           return (
             <li key={c.id}>
               <Link href={`/karta/${encodeURIComponent(c.id)}`} className="group block">
-                <div className="aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm transition group-hover:-translate-y-0.5 group-hover:shadow-md">
+                <div className="aspect-[63/88] overflow-hidden rounded-lg bg-surface shadow-sm transition group-hover:shadow-md">
                   {img ? (
                     <CardImg src={img} alt={c.name} />
                   ) : (
@@ -66,7 +66,7 @@ export default async function SearchPage({ searchParams }: Props) {
       </ul>
       {products.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-4 text-xl font-bold">{t('Produkty')} ({products.length})</h2>
+          <h2 className="mb-4 text-xl font-semibold">{t('Produkty')} ({products.length})</h2>
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {products.map((p) => (
               <li key={p.id}>

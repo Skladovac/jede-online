@@ -103,7 +103,7 @@ export function PushAsk({ publicKey }: { publicKey: string }) {
       aria-labelledby="push-ask-title"
       className={`fixed inset-x-3 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md ${panel} p-4 text-fg !shadow-lift sm:bottom-6`}
     >
-      <p id="push-ask-title" className="flex items-center gap-2 font-extrabold">
+      <p id="push-ask-title" className="flex items-center gap-2 font-semibold">
         <Bell className="h-5 w-5 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
         {t('Chceš, aby ti telefon pípl?')}
       </p>

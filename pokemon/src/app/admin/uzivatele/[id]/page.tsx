@@ -37,7 +37,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
 
   const Box = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <section className={`${panel} p-5`}>
-      <h2 className="mb-3 text-xl font-bold text-fg">{title}</h2>
+      <h2 className="mb-3 text-xl font-semibold text-fg">{title}</h2>
       {children}
     </section>
   )
@@ -49,7 +49,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
         Uživatelé
       </Link>
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{u.nickname}</h1>
+        <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">{u.nickname}</h1>
         {u.bannedAt && <Badge tone="red">ZABLOKOVÁN</Badge>}
         {u.isAdmin && <Badge tone="yellow">admin</Badge>}
         <Link href={`/@${encodeURIComponent(u.nickname)}`} className="text-sm font-semibold text-accent underline-offset-4 hover:underline">

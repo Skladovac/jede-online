@@ -43,7 +43,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     <main className="mx-auto max-w-2xl space-y-8 px-4 py-10">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Ahoj, {name}!', { name: user.nickname })}</h1>
+          <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">{t('Můj účet')}</h1>
           {!limited && (
             <Link href={`/@${encodeURIComponent(user.nickname)}`} className={`mt-1 inline-block text-sm ${linkAccent}`}>
               {t('Zobrazit můj veřejný profil')}
@@ -101,7 +101,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       {!limited && <FollowingList userId={user.id} />}
 
       <section className={`${panel} p-5 sm:p-6`}>
-        <h2 className="mb-5 text-xl font-bold text-fg">{t('Profil')}</h2>
+        <h2 className="mb-5 text-xl font-semibold text-fg">{t('Profil')}</h2>
         <ActionForm action={updateProfile}>
           <Field label={t('Přezdívka')}>
             <input name="nickname" required defaultValue={user.nickname} className={inputCls} />
@@ -122,7 +122,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </div>
 
           <fieldset className="space-y-3">
-            <legend className="mb-2 text-[13.5px] font-semibold text-fg">{t('Odkazy (nepovinné)')}</legend>
+            <legend className="mb-2 text-sm font-semibold text-fg">{t('Odkazy (nepovinné)')}</legend>
             {user.isMinor && (
               <p className="text-xs text-muted">{t('Odkazy se ostatním zobrazí až po schválení rodičem.')}</p>
             )}
@@ -163,7 +163,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
       {pushPublicKey() && (
         <section id="notifikace" className={`scroll-mt-24 ${panel} p-5 sm:p-6`}>
-          <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-fg">
+          <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-fg">
             <Bell className="h-5 w-5 text-accent" strokeWidth={1.75} aria-hidden />
             {t('Notifikace na telefon')}
           </h2>
@@ -172,7 +172,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       )}
 
       <section id="ai" className={`scroll-mt-24 ${panel} p-5 sm:p-6`}>
-        <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-fg">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-fg">
           <Bot className="h-5 w-5 text-accent" strokeWidth={1.75} aria-hidden />
           {t('Napojení na AI (ChatGPT, Claude)')}
         </h2>
@@ -180,7 +180,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       </section>
 
       <section className={`${panel} p-5 sm:p-6`}>
-        <h2 className="mb-1 text-xl font-bold text-fg">{t('Přihlášení')}</h2>
+        <h2 className="mb-1 text-xl font-semibold text-fg">{t('Přihlášení')}</h2>
         <p className="mb-5 text-sm text-fg">
           {t('Přihlašuješ se e-mailem')} <strong className="break-all">{user.email}</strong>
           {user.emailVerifiedAt ? (
@@ -218,7 +218,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       </section>
 
       <section className="rounded-[18px] border border-[color-mix(in_srgb,var(--danger)_30%,transparent)] bg-card p-5 sm:p-6">
-        <h2 className="text-xl font-bold text-danger">{t('Smazat účet')}</h2>
+        <h2 className="text-xl font-semibold text-danger">{t('Smazat účet')}</h2>
         <p className="mb-4 mt-1 text-sm text-muted">{t('Smaže profil, sbírku i všechny údaje. Nejde vrátit.')}</p>
         <ActionForm action={deleteAccount} className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <Field

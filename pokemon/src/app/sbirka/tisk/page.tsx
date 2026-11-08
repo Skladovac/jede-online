@@ -80,26 +80,26 @@ export default async function PrintMissingPage({ searchParams }: { searchParams:
           <ChevronRight className="h-3.5 w-3.5" aria-hidden />
           <span className="text-fg">{t('Seznam k tisku')}</span>
         </nav>
-        <h1 className="mt-4 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Seznam chybějících karet k tisku')}</h1>
+        <h1 className="mt-4 text-4xl font-semibold text-fg sm:text-[44px]">{t('Seznam chybějících karet k tisku')}</h1>
         <p className="mt-2 text-muted">{t('Vytiskni si ho na burzu nebo do obchodu, případně ho v okně tisku ulož jako PDF.')}</p>
 
         <form className={`${panel} mt-6 space-y-5 p-5 sm:p-6`}>
           <fieldset>
-            <legend className="mb-2 text-[13.5px] font-semibold text-fg">{t('Které karty')}</legend>
+            <legend className="mb-2 text-sm font-semibold text-fg">{t('Které karty')}</legend>
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-fg">
               {radio('rezim', 'chybi', mode, t('Moje chybějící (označené „Chybí“)'))}
               {radio('rezim', 'nemam', mode, t('Vše, co ve vybraných sadách nemám'))}
             </div>
           </fieldset>
           <fieldset>
-            <legend className="mb-2 text-[13.5px] font-semibold text-fg">{t('Vzhled')}</legend>
+            <legend className="mb-2 text-sm font-semibold text-fg">{t('Vzhled')}</legend>
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-fg">
               {radio('vzhled', 'tabulka', look, t('Tabulka (víc karet na stránku)'))}
               {radio('vzhled', 'obrazky', look, t('Obrázky (snadnější hledání)'))}
             </div>
           </fieldset>
           <fieldset>
-            <legend className="mb-2 text-[13.5px] font-semibold text-fg">{t('Sady')}</legend>
+            <legend className="mb-2 text-sm font-semibold text-fg">{t('Sady')}</legend>
             {sets.length ? (
               <div className="grid max-h-56 gap-1.5 overflow-y-auto pr-1 text-sm text-fg sm:grid-cols-2">
                 {sets.map((s) => (
@@ -125,7 +125,7 @@ export default async function PrintMissingPage({ searchParams }: { searchParams:
       {/* Tisková část */}
       <section className="mt-8 print:mt-0">
         <div className="flex items-baseline justify-between border-b-2 border-fg pb-2 print:border-black">
-          <h2 className="text-xl font-bold text-fg print:text-black">
+          <h2 className="text-xl font-semibold text-fg print:text-black">
             {mode === 'chybi' ? t('Hledám') : t('Nemám')} · {user.nickname}
           </h2>
           <p className="font-mono text-xs text-muted print:text-black">
@@ -137,7 +137,7 @@ export default async function PrintMissingPage({ searchParams }: { searchParams:
 
         {bySet.map(({ set, cards: list }) => (
           <div key={set.id} className="mt-6 print:mt-4">
-            <h3 className="flex items-baseline gap-2 text-base font-bold text-fg [break-after:avoid] print:text-black">
+            <h3 className="flex items-baseline gap-2 text-base font-semibold text-fg [break-after:avoid] print:text-black">
               {setDisplayName(set)}
               <span className="font-mono text-xs font-normal text-subtle print:text-black">
                 {set.code} · {list.length}

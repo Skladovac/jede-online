@@ -11,10 +11,10 @@ export const container = 'mx-auto w-full max-w-page px-4 sm:px-6'
 
 /** Panel / karta: jednotné pozadí, rámeček a zaoblení. `interactive` = jemný hover (rámeček + posun o 2 px). */
 export const panel = 'rounded-[18px] border border-line bg-card shadow-soft'
-export const panelInteractive = `${panel} transition duration-200 hover:-translate-y-0.5 hover:border-line-hover`
+export const panelInteractive = `${panel} transition duration-200 hover:border-line-hover`
 
 const btnBase =
-  'inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 font-bold transition duration-200 active:translate-y-px [&_svg]:h-[18px] [&_svg]:w-[18px]'
+  'inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 font-semibold transition duration-200 active:translate-y-px [&_svg]:h-[18px] [&_svg]:w-[18px]'
 /** Hlavní akce: Pokémon žlutá s inkoustovým textem. */
 export const btnPrimary = `${btnBase} bg-accent-strong text-on-accent shadow-[inset_0_-2px_0_rgba(0,0,0,0.12),0_6px_16px_-8px_rgba(242,183,0,0.9)] hover:bg-accent-hover`
 /** Důležitá akce bez žluté: inkoust (ve tmavém režimu světlé). */
@@ -28,7 +28,7 @@ export function SectionHeader({ title, href, linkLabel, sub }: { title: string; 
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
       <div>
-        <h2 className="text-2xl font-bold text-fg sm:text-[28px]">{title}</h2>
+        <h2 className="text-2xl font-semibold text-fg sm:text-[28px]">{title}</h2>
         {sub && <p className="mt-1 text-sm text-muted">{sub}</p>}
       </div>
       {href && linkLabel && (
@@ -46,8 +46,8 @@ export function StatCard({ label, value, sub, tone }: { label: string; value: Re
   const color = tone === 'positive' ? 'text-positive' : tone === 'warning' ? 'text-warning' : 'text-fg'
   return (
     <div className={`${panel} px-4 py-3.5`}>
-      <p className="eyebrow !text-[10.5px]">{label}</p>
-      <p className={`mt-1.5 font-display text-[26px] font-bold leading-tight tabular-nums ${color}`}>{value}</p>
+      <p className="eyebrow !text-[11px]">{label}</p>
+      <p className={`mt-1.5 font-display text-[26px] font-semibold leading-tight tabular-nums ${color}`}>{value}</p>
       {sub && <p className="mt-0.5 text-xs text-muted tabular-nums">{sub}</p>}
     </div>
   )
@@ -88,7 +88,7 @@ export function ProgressMeter({ owned, total, label }: { owned: number; total: n
       </div>
       {/* Modrý postup na jemné lince; hotová sada zeleně (a s fajfkou, ne jen barvou). */}
       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={owned}>
-        <div className={`h-full rounded-full ${pct >= 100 ? 'bg-positive' : 'bg-gradient-to-r from-brand-blue to-brand-blue-dark dark:from-accent dark:to-brand-blue'}`} style={{ width: `${Math.min(100, pct)}%` }} />
+        <div className={`h-full rounded-full ${pct >= 100 ? 'bg-positive' : 'bg-brand-blue dark:bg-accent'}`} style={{ width: `${Math.min(100, pct)}%` }} />
       </div>
     </div>
   )

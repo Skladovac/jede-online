@@ -21,7 +21,7 @@ export async function ProductTile({ p, extra }: { p: TileProduct; extra?: React.
   const price = formatEur(p.priceEur)
   return (
     <Link href={`/produkt/${p.id}`} className="group block">
-      <div className="grid aspect-square place-items-center overflow-hidden rounded-xl border border-line bg-card p-2 transition group-hover:-translate-y-0.5 group-hover:shadow-md">
+      <div className="grid aspect-square place-items-center overflow-hidden rounded-xl border border-line bg-card p-2 transition group-hover:shadow-md">
         {img ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={img} alt={p.name} loading="lazy" className="max-h-full max-w-full object-contain" />

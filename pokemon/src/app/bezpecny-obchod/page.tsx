@@ -17,7 +17,7 @@ const box = `${panel} p-5 sm:p-6`
 /** Nadpis sekce s malou ikonou v inkoustovém čtverečku. */
 function H2({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
   return (
-    <h2 className="flex items-center gap-3 text-xl font-bold text-fg">
+    <h2 className="flex items-center gap-3 text-xl font-semibold text-fg">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
         <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
       </span>
@@ -30,7 +30,7 @@ export default async function SafeTradePage() {
   const t = await getT()
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Bezpečný obchod')}</h1>
+      <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">{t('Bezpečný obchod')}</h1>
       <p className="mt-2 text-muted">
         {t('Pár jednoduchých pravidel, aby výměna nebo prodej dopadly dobře. Děti: projděte si to s rodičem.')}
       </p>

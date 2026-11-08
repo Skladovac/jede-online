@@ -27,7 +27,7 @@ export default async function AdminBugs({ searchParams }: { searchParams: Promis
   })
   return (
     <div className="space-y-5">
-      <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">Nahlášené chyby</h1>
+      <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">Nahlášené chyby</h1>
       <div className="flex flex-wrap gap-2 text-sm">
         {[
           ['', 'Otevřené'],

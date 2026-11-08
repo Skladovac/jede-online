@@ -10,7 +10,7 @@ export function TypeBadge({ type, size = 'md' }: { type: string; size?: 'sm' | '
   if (!info) return null
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full font-bold ${size === 'sm' ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs'}`}
+      className={`inline-flex items-center gap-1.5 rounded-full font-semibold ${size === 'sm' ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs'}`}
       style={{ backgroundColor: info.color, color: info.text }}
     >
       <span aria-hidden className={`rounded-full border-2 border-current ${size === 'sm' ? 'h-2.5 w-2.5' : 'h-3 w-3'}`} />

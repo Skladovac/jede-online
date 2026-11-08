@@ -38,7 +38,7 @@ export async function InviteBox({ userId, nickname }: { userId: string; nickname
   ])
   return (
     <section id="pozvi" className={`${panel} scroll-mt-24 p-5`}>
-      <h2 className="flex items-center gap-3 text-xl font-bold text-fg">
+      <h2 className="flex items-center gap-3 text-xl font-semibold text-fg">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
           <Megaphone className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
         </span>
@@ -50,7 +50,7 @@ export async function InviteBox({ userId, nickname }: { userId: string; nickname
         })}
       </p>
       <div className="mt-3">
-        <CopyLink url={`${APP_URL}/pozvanka/${encodeURIComponent(nickname)}`} title={t('Pojď sbírat Pokémon karty se mnou!')} />
+        <CopyLink url={`${APP_URL}/pozvanka/${encodeURIComponent(nickname)}`} title={t('Pojď sbírat Pokémon karty se mnou')} />
       </div>
       <p className="mt-2 text-sm tabular-nums text-fg">
         {t('Započítaní: {counted}', { counted })}
@@ -71,7 +71,7 @@ export async function FollowingList({ userId }: { userId: string }) {
   const followers = await prisma.follow.count({ where: { followingId: userId } })
   return (
     <section className={`${panel} p-5`}>
-      <h2 className="flex items-center gap-2 text-xl font-bold text-fg">
+      <h2 className="flex items-center gap-2 text-xl font-semibold text-fg">
         <Eye className="h-5 w-5 text-accent" strokeWidth={1.75} aria-hidden />
         {t('Sleduji')}
       </h2>

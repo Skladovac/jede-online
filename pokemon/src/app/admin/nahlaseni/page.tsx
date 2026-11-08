@@ -18,7 +18,7 @@ export default async function AdminReports({ searchParams }: { searchParams: Pro
   return (
     <div className="space-y-5">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">Nahlášení</h1>
+        <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">Nahlášení</h1>
         <Link href={all ? '/admin/nahlaseni' : '/admin/nahlaseni?vse=1'} className={`text-sm ${linkAccent}`}>
           {all ? 'Jen otevřená' : 'Zobrazit i vyřízená'}
         </Link>
