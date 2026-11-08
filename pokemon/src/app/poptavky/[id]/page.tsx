@@ -60,7 +60,7 @@ export default async function RequestDetail({
         {t('Výměny')}
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-extrabold text-fg sm:text-4xl">
+        <h1 className="text-3xl font-semibold text-fg sm:text-4xl">
           {iAmBuyer ? t('Žádost o výměnu pro') : t('Žádost o výměnu od')}{' '}
           <Link href={`/@${encodeURIComponent(other.nickname)}`} className="hover:underline">
             {other.nickname}
@@ -91,11 +91,11 @@ export default async function RequestDetail({
       )}
 
       <section className={`${panel} p-5`}>
-        <h2 className="text-xl font-bold text-fg">{iAmBuyer ? t('Chci od něj/ní') : t('Chce ode mě')}</h2>
+        <h2 className="text-xl font-semibold text-fg">{iAmBuyer ? t('Chci od něj/ní') : t('Chce ode mě')}</h2>
         <RequestItems items={wanted} />
         {offered.length > 0 && (
           <>
-            <h2 className="mt-6 text-xl font-bold text-fg">{iAmBuyer ? t('Nabízím na výměnu') : t('Nabízí na výměnu')}</h2>
+            <h2 className="mt-6 text-xl font-semibold text-fg">{iAmBuyer ? t('Nabízím na výměnu') : t('Nabízí na výměnu')}</h2>
             <RequestItems items={offered} />
           </>
         )}
@@ -104,7 +104,7 @@ export default async function RequestDetail({
       {/* Kontakt až po přijetí. */}
       {(req.status === 'ACCEPTED' || req.status === 'COMPLETED') && !other.bannedAt && (
         <section className={`${panel} p-5`}>
-          <h2 className="flex items-center gap-3 text-xl font-bold text-fg">
+          <h2 className="flex items-center gap-3 text-xl font-semibold text-fg">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
               <Mail className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
             </span>
@@ -180,7 +180,7 @@ export default async function RequestDetail({
 
       {req.status === 'COMPLETED' && (
         <section className={`${panel} p-5`}>
-          <h2 className="text-xl font-bold text-fg">{t('Hodnocení')}</h2>
+          <h2 className="text-xl font-semibold text-fg">{t('Hodnocení')}</h2>
           <ActionForm action={rateRequest} className="mt-3 flex flex-wrap items-end gap-3">
             <input type="hidden" name="requestId" value={req.id} />
             <label className="space-y-1 text-sm">

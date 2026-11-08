@@ -34,7 +34,7 @@ export function TradeChat({ requestId, messages, canWrite, otherName }: { reques
 
   return (
     <section id="chat" className="scroll-mt-24 rounded-[18px] border border-line bg-card p-5 shadow-soft">
-      <h2 className="flex items-center gap-2 text-xl font-bold text-fg">
+      <h2 className="flex items-center gap-2 text-xl font-semibold text-fg">
         <MessageCircle className="h-5 w-5 text-accent" strokeWidth={1.75} aria-hidden />
         {t('Zprávy s {name}', { name: otherName })}
       </h2>
@@ -76,7 +76,7 @@ export function TradeChat({ requestId, messages, canWrite, otherName }: { reques
           />
           <button
             disabled={pending}
-            className="h-11 shrink-0 rounded-xl bg-accent-strong px-5 font-bold text-on-accent shadow-[inset_0_-2px_0_rgba(0,0,0,0.12)] transition-colors duration-200 hover:bg-accent-hover disabled:opacity-50"
+            className="h-11 shrink-0 rounded-xl bg-accent-strong px-5 font-semibold text-on-accent shadow-[inset_0_-2px_0_rgba(0,0,0,0.12)] transition-colors duration-200 hover:bg-accent-hover disabled:opacity-50"
           >
             {pending ? '…' : t('Odeslat')}
           </button>

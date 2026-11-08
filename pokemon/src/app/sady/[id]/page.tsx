@@ -155,7 +155,6 @@ export default async function SetPage({ params, searchParams }: Props) {
       </nav>
 
       <header className={`${panel} relative mt-4 overflow-hidden p-6 sm:p-8`}>
-        <div aria-hidden className="pointer-events-none absolute -right-32 -top-36 h-[420px] w-[420px] rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.22),transparent_70%)] dark:opacity-50" />
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:gap-9">
           <div className="grid h-[110px] w-full shrink-0 place-items-center rounded-2xl bg-surface ring-1 ring-inset ring-line md:w-[210px]">
             {logo ? (
@@ -167,7 +166,7 @@ export default async function SetPage({ params, searchParams }: Props) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="eyebrow">{meta.filter(Boolean).join(' · ')}</p>
-            <h1 className="mt-2 text-3xl font-extrabold text-fg sm:text-[44px] sm:leading-[1.05]">
+            <h1 className="mt-2 text-3xl font-semibold text-fg sm:text-[44px] sm:leading-[1.05]">
               {setDisplayName(set)}
               {set.language === 'ja' && (
                 <span className="ml-3 inline-flex items-center rounded-[7px] bg-[#fdecea] px-2 py-0.5 align-middle font-sans text-xs font-semibold tracking-normal text-[#b42318] ring-1 ring-inset ring-[#f6cfca] dark:bg-[rgba(216,52,26,0.16)] dark:text-[#ff9b8a] dark:ring-[rgba(216,52,26,0.35)]">
@@ -207,7 +206,7 @@ export default async function SetPage({ params, searchParams }: Props) {
                 ].map(([v, label], n) => (
                   <div key={n} className={n ? 'border-l border-line pl-6 pr-6' : 'pr-6'}>
                     <dt className="sr-only">{label}</dt>
-                    <dd className="font-display text-[28px] font-bold leading-tight tabular-nums text-fg">{v}</dd>
+                    <dd className="font-display text-[28px] font-semibold leading-tight tabular-nums text-fg">{v}</dd>
                     <dd className="text-sm text-muted">{label}</dd>
                   </div>
                 ))}

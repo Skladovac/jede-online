@@ -180,7 +180,6 @@ async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; s
   return (
     <section className="relative overflow-hidden border-b border-line">
       {/* Žlutá záře a tenké soustředné kruhy (náznak Pokéballu) vpravo nahoře. */}
-      <div aria-hidden className="pointer-events-none absolute -right-40 -top-48 h-[900px] w-[900px] rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.28),rgba(255,203,5,0.08)_45%,transparent_72%)] dark:opacity-50" />
       <div aria-hidden className="pointer-events-none absolute -right-20 -top-28 hidden h-[760px] w-[760px] rounded-full border-[1.5px] border-[rgba(14,27,46,0.07)] lg:block dark:border-[rgba(255,255,255,0.06)]" />
       <div aria-hidden className="pointer-events-none absolute right-10 -top-2 hidden h-[560px] w-[560px] rounded-full border-[1.5px] border-[rgba(14,27,46,0.07)] lg:block dark:border-[rgba(255,255,255,0.06)]" />
       <div className={`${container} relative grid items-center gap-8 pb-14 pt-10 sm:pb-20 sm:pt-16 lg:grid-cols-[1.02fr_1fr] lg:gap-10 lg:pb-24 lg:pt-20`}>
@@ -189,7 +188,7 @@ async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; s
             <span aria-hidden className="h-[1.5px] w-6 bg-fg" />
             {t('Komunita sběratelů · Česko a Slovensko')}
           </p>
-          <h1 className="mt-5 text-[44px] font-extrabold leading-[0.98] text-fg sm:text-[56px] xl:text-[64px]">
+          <h1 className="mt-5 text-[44px] font-semibold leading-[0.98] text-fg sm:text-[56px] xl:text-[64px]">
             {t('Tvoje sbírka.')}
             <br />
             <span className="relative inline-block lg:whitespace-nowrap">
@@ -213,10 +212,10 @@ async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; s
           </div>
           <ul className="mt-10 flex flex-wrap gap-x-7 gap-y-2 font-mono text-[13px] text-muted">
             <li>
-              <CountUp value={setCount} className="text-[15px] font-bold text-fg" />&nbsp; {t('sad')}
+              <CountUp value={setCount} className="text-[15px] font-semibold text-fg" />&nbsp; {t('sad')}
             </li>
             <li>
-              <CountUp value={cardCount} className="text-[15px] font-bold text-fg" />&nbsp; {t('karet')}
+              <CountUp value={cardCount} className="text-[15px] font-semibold text-fg" />&nbsp; {t('karet')}
             </li>
             <li className="flex items-center gap-2">
               <span aria-hidden className="h-[7px] w-[7px] rounded-full bg-positive shadow-[0_0_0_4px_color-mix(in_srgb,var(--positive)_18%,transparent)]" />
@@ -229,7 +228,7 @@ async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; s
           <FanIntro className="relative mx-auto aspect-[10/9] w-full max-w-[420px] sm:max-w-[560px]">
             {fan.map(({ card, cls }) => (
               // Vnější prvek drží polohu a natočení ve vějíři, vnitřní (data-fan-card) animuje GSAP při načtení.
-              <div key={card!.id} className={`absolute aspect-[63/88] w-[42%] transition-transform duration-300 hover:-translate-y-2 ${cls}`}>
+              <div key={card!.id} className={`absolute aspect-[63/88] w-[42%] ${cls}`}>
                 <div data-fan-card className="h-full w-full overflow-hidden rounded-[4.5%/3.2%] bg-surface shadow-[0_2px_2px_rgba(14,27,46,0.1),0_30px_50px_-18px_rgba(14,27,46,0.55)]">
                   <CardImg src={cardImage(card!.imageUrl, 'high')} alt={card!.name} eager />
                 </div>
@@ -238,10 +237,10 @@ async function GuestHero({ t, setCount, cardCount, previewSetId }: { t: TFunc; s
             {top && topPrice && (
               <div data-fan-placard className="absolute -bottom-2 left-0 z-50 hidden max-w-[260px] rounded-xl bg-[color-mix(in_srgb,var(--bg-card)_92%,transparent)] px-3.5 py-2.5 shadow-[0_2px_4px_rgba(14,27,46,0.05),0_8px_24px_-6px_rgba(14,27,46,0.18)] ring-1 ring-line backdrop-blur sm:block">
                 <p className="eyebrow truncate !text-[10px]">{t('Nejdražší v sadě {set}', { set: previewSet?.name ?? '' })}</p>
-                <p className="mt-0.5 text-sm font-bold text-fg">
+                <p className="mt-0.5 text-sm font-semibold text-fg">
                   {top.name} <span className="font-mono text-xs font-medium text-subtle">{top.localId}</span>
                 </p>
-                <p className="font-display text-xl font-extrabold tabular-nums text-fg">≈ {topPrice}</p>
+                <p className="font-display text-xl font-semibold tabular-nums text-fg">≈ {topPrice}</p>
               </div>
             )}
           </FanIntro>
@@ -295,7 +294,6 @@ async function UserDashboard({
 
   return (
     <section className="relative overflow-hidden border-b border-line">
-      <div aria-hidden className="pointer-events-none absolute -right-40 -top-56 h-[640px] w-[640px] rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.2),transparent_70%)] dark:opacity-50" />
       <div className={`${container} relative py-10 sm:py-14`}>
         {vitej && (
           <p className="mb-6 rounded-panel border border-line bg-[color-mix(in_srgb,var(--positive)_10%,transparent)] p-4 text-sm text-fg">
@@ -307,8 +305,8 @@ async function UserDashboard({
         <GettingStarted userId={user.id} nickname={user.nickname} emailVerified={!!user.emailVerifiedAt} />
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="eyebrow">{t('Tvoje sbírka')}</p>
-            <h1 className="mt-2 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Ahoj, {name}', { name: user.nickname })}</h1>
+            <p className="eyebrow">{user.nickname}</p>
+            <h1 className="mt-2 text-4xl font-semibold text-fg sm:text-[44px]">{t('Tvoje sbírka')}</h1>
           </div>
           <Link href="/sbirka" className="group inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-accent">
             {t('Moje sbírka')}
@@ -326,7 +324,7 @@ async function UserDashboard({
 
         {collecting.length > 0 && (
           <div className="mt-10">
-            <h2 className="mb-4 text-xl font-bold text-fg">{t('Rozpracované sady')}</h2>
+            <h2 className="mb-4 text-xl font-semibold text-fg">{t('Rozpracované sady')}</h2>
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {collecting.map((s) => (
                 <li key={s.id}>
@@ -349,7 +347,7 @@ async function UserDashboard({
         )}
         {done.length > 0 && (
           <div className="mt-10">
-            <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-fg">
+            <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-fg">
               <Trophy className="h-5 w-5 text-accent" strokeWidth={1.75} aria-hidden />
               {t('Hotové sady')}
             </h2>
@@ -455,7 +453,7 @@ function WhyUse({ t }: { t: TFunc }) {
   return (
     <section aria-labelledby="how-title">
       <p className="eyebrow">{t('Jak to funguje')}</p>
-      <h2 id="how-title" className="mt-3 max-w-[640px] text-3xl font-bold leading-[1.08] text-fg sm:text-[42px]">
+      <h2 id="how-title" className="mt-3 max-w-[640px] text-3xl font-semibold leading-[1.08] text-fg sm:text-[42px]">
         {t('Od hromádky na stole k přehledné sbírce za pár minut.')}
       </h2>
       <ol className="mt-10 grid gap-4 sm:grid-cols-3 sm:gap-5">

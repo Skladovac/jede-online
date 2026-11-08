@@ -75,16 +75,15 @@ export function Onboarding({ nickname }: { nickname: string }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(14,27,46,0.55)] p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="onb-title">
       <div className="relative w-full max-w-md overflow-hidden rounded-[22px] bg-card shadow-[0_30px_80px_-20px_rgba(14,27,46,0.6)] ring-1 ring-line">
-        <div aria-hidden className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.35),transparent_70%)]" />
         <button type="button" onClick={close} aria-label={t('Přeskočit průvodce')} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-lg text-muted hover:bg-surface hover:text-fg">
           <X className="h-5 w-5" aria-hidden />
         </button>
         <div className="relative p-7 sm:p-8">
-          <p className="eyebrow">{t('Vítej, {name}!', { name: nickname })} · {i + 1} / {steps.length}</p>
+          <p className="eyebrow">{nickname} · {i + 1} / {steps.length}</p>
           <span className="mt-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
             <s.icon className="h-7 w-7" strokeWidth={1.75} aria-hidden />
           </span>
-          <h2 id="onb-title" className="mt-5 text-2xl font-bold text-fg">
+          <h2 id="onb-title" className="mt-5 text-2xl font-semibold text-fg">
             {s.title}
           </h2>
           <p className="mt-2 leading-relaxed text-muted">{s.text}</p>
@@ -96,7 +95,7 @@ export function Onboarding({ nickname }: { nickname: string }) {
           <div className="mt-7 flex items-center justify-between gap-3">
             <div className="flex gap-1.5" aria-hidden>
               {steps.map((_, n) => (
-                <span key={n} className={`h-2 rounded-full transition-all ${n === i ? 'w-6 bg-brand-yellow' : 'w-2 bg-line-strong'}`} />
+                <span key={n} className={`h-2 rounded-full transition-colors ${n === i ? 'w-6 bg-brand-yellow' : 'w-2 bg-line-strong'}`} />
               ))}
             </div>
             <div className="flex gap-2">

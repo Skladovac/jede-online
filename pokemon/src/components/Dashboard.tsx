@@ -84,8 +84,8 @@ export async function Dashboard({ userId }: { userId: string }) {
     <section className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <div className={`${box} border-line-strong bg-accent-soft`}>
-          <p className="eyebrow !text-[10.5px]">{t('Hodnota sbírky')}</p>
-          <p className="mt-1.5 font-display text-3xl font-bold leading-tight tabular-nums text-fg">{kc(p.valueCzk)}</p>
+          <p className="eyebrow !text-[11px]">{t('Hodnota sbírky')}</p>
+          <p className="mt-1.5 font-display text-3xl font-semibold leading-tight tabular-nums text-fg">{kc(p.valueCzk)}</p>
           <p className="mt-0.5 text-xs tabular-nums text-subtle">
             ≈ {p.valueEur.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })} €
             {p.productsCzk > 0 && ` · ${t('z toho produkty {price}', { price: kc(p.productsCzk) })}`}
@@ -99,10 +99,10 @@ export async function Dashboard({ userId }: { userId: string }) {
           </p>
         </div>
         <div className={box}>
-          <p className="eyebrow !text-[10.5px]">{t('Investováno')}</p>
+          <p className="eyebrow !text-[11px]">{t('Investováno')}</p>
           {p.investedCzk ? (
             <>
-              <p className="mt-1.5 font-display text-3xl font-bold leading-tight tabular-nums text-fg">{kc(p.investedCzk)}</p>
+              <p className="mt-1.5 font-display text-3xl font-semibold leading-tight tabular-nums text-fg">{kc(p.investedCzk)}</p>
               <p className={`mt-0.5 text-xs font-semibold tabular-nums ${profit! >= 0 ? 'text-positive' : 'text-danger'}`}>
                 {profit! >= 0 ? t('Zisk') : t('Ztráta')} {profit! >= 0 ? '+' : ''}
                 {kc(profit!)} ({t('dnes mají hodnotu {price}', { price: kc(p.investedValueCzk) })})
@@ -115,8 +115,8 @@ export async function Dashboard({ userId }: { userId: string }) {
           )}
         </div>
         <div className={box}>
-          <p className="eyebrow !text-[10.5px]">{t('Výměny')}</p>
-          <p className="mt-1.5 font-display text-3xl font-bold leading-tight tabular-nums text-fg">{waiting}</p>
+          <p className="eyebrow !text-[11px]">{t('Výměny')}</p>
+          <p className="mt-1.5 font-display text-3xl font-semibold leading-tight tabular-nums text-fg">{waiting}</p>
           <p className="mt-0.5 text-xs text-subtle">
             {waiting ? (
               <Link href="/poptavky" className="inline-flex items-center gap-1 font-semibold text-danger underline-offset-4 hover:underline">
@@ -131,13 +131,13 @@ export async function Dashboard({ userId }: { userId: string }) {
       </div>
 
       <div className={box}>
-        <h2 className="mb-3 text-xl font-bold text-fg">{t('Vývoj hodnoty')}</h2>
+        <h2 className="mb-3 text-xl font-semibold text-fg">{t('Vývoj hodnoty')}</h2>
         <ValueChart points={history} t={t} intl={intl} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className={box}>
-          <h2 className="mb-3 text-xl font-bold text-fg">{t('Nejcennější karty')}</h2>
+          <h2 className="mb-3 text-xl font-semibold text-fg">{t('Nejcennější karty')}</h2>
           {p.topCards.length ? (
             <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6 lg:grid-cols-3">
               {p.topCards.map((c) => (
@@ -160,7 +160,7 @@ export async function Dashboard({ userId }: { userId: string }) {
           )}
         </div>
         <div className={box}>
-          <h2 className="mb-3 text-xl font-bold text-fg">{t('Hodnota po sadách')}</h2>
+          <h2 className="mb-3 text-xl font-semibold text-fg">{t('Hodnota po sadách')}</h2>
           {p.bySet.length ? (
             <ul className="space-y-2 text-sm">
               {p.bySet.map((s) => (
@@ -184,7 +184,7 @@ export async function Dashboard({ userId }: { userId: string }) {
       </div>
 
       <div className={box}>
-        <h2 className="mb-3 text-xl font-bold text-fg">{t('Poslední aktivita')}</h2>
+        <h2 className="mb-3 text-xl font-semibold text-fg">{t('Poslední aktivita')}</h2>
         <div className="grid gap-4 md:grid-cols-3">
           <div>
             <p className="eyebrow mb-2">{t('Naposledy přidané')}</p>

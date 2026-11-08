@@ -32,7 +32,7 @@ export async function SiteHeader() {
     <>
       <header className="sticky top-0 z-20 bg-brand-yellow text-[var(--ink)] shadow-[inset_0_-1px_0_rgba(14,27,46,0.14)]">
         <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6 lg:h-[68px]">
-          <Link href="/" className="flex min-w-0 items-center gap-2 font-display sm:gap-2.5 font-extrabold tracking-tight text-[var(--ink)]">
+          <Link href="/" className="flex min-w-0 items-center gap-2 font-display sm:gap-2.5 font-semibold tracking-tight text-[var(--ink)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.svg" alt="" width={34} height={34} className="h-9 w-9 shrink-0 rounded-[10px] shadow-[0_1px_0_rgba(14,27,46,0.25),0_4px_10px_-4px_rgba(14,27,46,0.5)]" />
             <span className="truncate text-[13px] sm:text-[18px]">
@@ -95,7 +95,7 @@ export async function SiteHeader() {
                 </Link>
                 <Link
                   href="/prihlaseni"
-                  className="ml-1 inline-flex min-h-10 items-center rounded-[10px] bg-[var(--ink)] px-4 font-bold text-white shadow-[0_6px_16px_-6px_rgba(14,27,46,0.55)] transition-colors duration-200 hover:bg-[#1b2c45]"
+                  className="ml-1 inline-flex min-h-10 items-center rounded-[10px] bg-[var(--ink)] px-4 font-semibold text-white shadow-[0_6px_16px_-6px_rgba(14,27,46,0.55)] transition-colors duration-200 hover:bg-[#1b2c45]"
                 >
                   {t('Přihlásit')}
                 </Link>
@@ -115,7 +115,7 @@ export async function SiteHeader() {
 
 function Dot({ n }: { n: number }) {
   return (
-    <span className="absolute -right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand-red px-1 text-[10px] font-bold text-white ring-2 ring-brand-yellow">
+    <span className="absolute -right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand-red px-1 text-[10px] font-semibold text-white ring-2 ring-brand-yellow">
       {n}
     </span>
   )

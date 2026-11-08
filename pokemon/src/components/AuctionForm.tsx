@@ -13,7 +13,7 @@ type Picked = Hit & { value: string }
 
 const input =
   'min-h-[46px] w-full rounded-xl border border-line-strong bg-card px-3.5 text-fg outline-none transition placeholder:text-subtle focus:border-brand-blue focus:ring-4 focus:ring-[rgba(42,117,187,0.15)]'
-const label = 'mb-1.5 block text-[13.5px] font-semibold text-fg'
+const label = 'mb-1.5 block text-sm font-semibold text-fg'
 
 /** Výchozí konec: zítra ve 20:00 (pražský čas ve formátu pro datetime-local). */
 function defaultEnd() {
@@ -76,7 +76,7 @@ export function AuctionForm({ sites, maxItems }: { sites: string[]; maxItems: nu
                   <CardImg src={p.image} alt={p.name} />
                 </div>
                 <p className="mt-1.5 truncate text-xs font-semibold text-fg">{p.name}</p>
-                <p className="truncate font-mono text-[10.5px] text-subtle">{p.number}</p>
+                <p className="truncate font-mono text-[11px] text-subtle">{p.number}</p>
                 <button
                   type="button"
                   onClick={() => setPicked((x) => x.filter((y) => y.value !== p.value))}

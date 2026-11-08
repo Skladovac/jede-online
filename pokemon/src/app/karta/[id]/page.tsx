@@ -127,7 +127,6 @@ export default async function CardPage({ params }: Props) {
         {img ? (
           // Přirozený poměr stran: karty tištěné naležato (BREAK, LEGEND) se zobrazí celé, neořízlé.
           <div className="relative mx-auto w-full max-w-[400px] self-start">
-            <div aria-hidden className="pointer-events-none absolute -inset-10 rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.28),transparent_72%)] dark:opacity-50" />
             <HoloCard className="relative">
               <div className="relative overflow-hidden rounded-[4.5%/3.2%] bg-surface shadow-[0_2px_2px_rgba(14,27,46,0.1),0_30px_50px_-18px_rgba(14,27,46,0.55)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -144,7 +143,7 @@ export default async function CardPage({ params }: Props) {
             {card.localId}
             {card.set.officialCount ? `/${card.set.officialCount}` : ''}
           </p>
-          <h1 className="mt-2 text-4xl font-extrabold text-fg sm:text-5xl">{card.name}</h1>
+          <h1 className="mt-2 text-4xl font-semibold text-fg sm:text-5xl">{card.name}</h1>
           {card.nameOriginal && card.nameOriginal !== card.name && <p className="text-sm text-subtle">{card.nameOriginal}</p>}
           <dl className="mt-7 grid grid-cols-[auto_1fr] gap-x-8 gap-y-3.5 border-t border-line pt-6 text-[15px]">
             <dt className="text-subtle">{t('Sada')}</dt>
@@ -192,13 +191,13 @@ export default async function CardPage({ params }: Props) {
               <div className="mt-3 flex flex-wrap gap-8">
                 {price && (
                   <div>
-                    <p className="font-display text-3xl font-bold tabular-nums text-fg">≈ {price}</p>
+                    <p className="font-display text-3xl font-semibold tabular-nums text-fg">≈ {price}</p>
                     <p className="text-xs text-subtle">{card.hasHolo && !card.hasNormal ? 'holo' : t('běžná verze')}</p>
                   </div>
                 )}
                 {priceReverse && (
                   <div>
-                    <p className="font-display text-3xl font-bold tabular-nums text-fg">≈ {priceReverse}</p>
+                    <p className="font-display text-3xl font-semibold tabular-nums text-fg">≈ {priceReverse}</p>
                     <p className="text-xs text-subtle">reverse holo</p>
                   </div>
                 )}

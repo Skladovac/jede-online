@@ -34,14 +34,14 @@ export async function SetTile({ id, name, code, logoUrl, officialCount, cardCoun
           <CardBack className="h-14" />
         )}
         {subLabel && (
-          <span className="absolute -bottom-1 right-0 max-w-[85%] truncate rounded-md bg-brand-yellow px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[var(--ink)] shadow-sm">
+          <span className="absolute -bottom-1 right-0 max-w-[85%] truncate rounded-md bg-brand-yellow px-2 py-0.5 text-[10px] font-semibold text-[var(--ink)] shadow-sm">
             {subLabel}
           </span>
         )}
       </div>
       <div className="flex flex-1 flex-col">
-        <p className="font-bold leading-snug text-fg">{setDisplayName({ id, name })}</p>
-        <p className="mt-1 font-mono text-[11.5px] text-subtle">
+        <p className="font-semibold leading-snug text-fg">{setDisplayName({ id, name })}</p>
+        <p className="mt-1 font-mono text-xs text-subtle">
           {[code, releaseDate?.getFullYear(), t('{n} karet', { n: count })].filter(Boolean).join(' · ')}
         </p>
         <div className="mt-auto pt-3">

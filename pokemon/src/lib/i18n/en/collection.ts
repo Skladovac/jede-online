@@ -164,5 +164,11 @@ const dict: Record<string, string> = {
   'Master set kompletní!': 'Master set complete!',
   'Máš všechny varianty — {n} kusů. Gratulujeme!': 'You have every variant — {n} pieces. Congratulations!',
   'Máš všech {n} karet včetně secret. Gratulujeme!': 'You have all {n} cards including secrets. Congratulations!',
+  'Jak začít': 'Getting started',
+  'Sada je kompletní': 'Set complete',
+  'Master set je kompletní': 'Master set complete',
+  'Máš všech {n} karet': 'You have all {n} cards',
+  'Máš všech {n} karet včetně secret': 'You have all {n} cards including secrets',
+  'Máš všechny varianty — {n} kusů': 'You have every variant — {n} pieces',
 }
 export default dict

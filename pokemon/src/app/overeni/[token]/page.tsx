@@ -36,7 +36,7 @@ export default async function VerifyPage({
     <main className="mx-auto max-w-md px-4 py-16">
       <div className={`${panel} p-7 text-center sm:p-9`}>
         {userId && <CircleCheck className="mx-auto mb-3 h-10 w-10 text-positive" strokeWidth={1.75} aria-hidden />}
-        <h1 className="text-3xl font-extrabold text-fg">{userId ? t('E-mail potvrzen') : t('Odkaz už neplatí')}</h1>
+        <h1 className="text-3xl font-semibold text-fg">{userId ? t('E-mail potvrzen') : t('Odkaz už neplatí')}</h1>
         <p className="mt-4 text-muted">
           {userId
             ? t('Díky! Teď ti můžeme posílat upozornění na nabídky.')

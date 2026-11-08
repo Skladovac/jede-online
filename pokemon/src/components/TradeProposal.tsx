@@ -32,7 +32,7 @@ export async function TradeProposal({ proposal, otherId, nickname }: { proposal:
   const diff = proposal.getCzk - proposal.giveCzk
   return (
     <div className="mt-5 rounded-[18px] border border-line bg-surface p-4 sm:p-5">
-      <h3 className="flex items-center gap-3 text-lg font-bold text-fg">
+      <h3 className="flex items-center gap-3 text-lg font-semibold text-fg">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
           <Scale className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
         </span>

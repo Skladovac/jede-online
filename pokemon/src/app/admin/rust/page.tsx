@@ -92,7 +92,7 @@ export default async function AdminGrowth() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">Růst webu</h1>
+        <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">Růst webu</h1>
         <p className="mt-1 text-sm text-muted">Posledních {DAYS} dní, po dnech (pražský čas). Porovnání: posledních 7 dní proti 7 dnům předtím.</p>
       </div>
 
@@ -116,7 +116,7 @@ export default async function AdminGrowth() {
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="font-semibold text-fg">{s.label}</h2>
                 <p className="text-sm tabular-nums text-fg">
-                  <span className="font-bold">{s.last7}</span> <span className="text-muted">za 7 dní</span>{' '}
+                  <span className="font-semibold">{s.last7}</span> <span className="text-muted">za 7 dní</span>{' '}
                   <span className={`font-semibold ${tr.cls}`}>{tr.text}</span>
                 </p>
               </div>

@@ -18,7 +18,7 @@ export default async function AdminWords() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">Zakázaná slova v přezdívkách</h1>
+      <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">Zakázaná slova v přezdívkách</h1>
       <p className="max-w-2xl text-sm text-muted">
         Kontroluje se bez diakritiky, s převodem čísel na písmena (k0k0t → kokot) a bez teček a podtržítek. Stačí, když
         přezdívka slovo obsahuje. Nezadávej moc krátká slova, zablokovala by i nevinné přezdívky.
@@ -48,7 +48,7 @@ export default async function AdminWords() {
       </ActionForm>
 
       <section>
-        <h2 className="mb-2 text-xl font-bold text-fg">Přidané správcem ({extra.length})</h2>
+        <h2 className="mb-2 text-xl font-semibold text-fg">Přidané správcem ({extra.length})</h2>
         <ul className="flex flex-wrap gap-2">
           {extra.map((w) => (
             <li key={w.word} className="flex items-center gap-1 rounded-full border border-line-strong bg-card px-3 py-1 text-sm text-fg">
@@ -65,7 +65,7 @@ export default async function AdminWords() {
         </ul>
       </section>
       <section>
-        <h2 className="mb-2 text-xl font-bold text-fg">Výchozí seznam ({DEFAULT_BANNED_WORDS.length})</h2>
+        <h2 className="mb-2 text-xl font-semibold text-fg">Výchozí seznam ({DEFAULT_BANNED_WORDS.length})</h2>
         <p className="text-sm text-muted">{DEFAULT_BANNED_WORDS.join(', ')}</p>
       </section>
     </div>

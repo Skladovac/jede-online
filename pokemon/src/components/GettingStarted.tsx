@@ -53,13 +53,13 @@ export async function GettingStarted({ userId, nickname, emailVerified }: { user
   return (
     <section className={`mb-10 ${panel} p-5 sm:p-6`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-2xl font-bold text-fg">{t('Vítej, {nickname}! Jak začít', { nickname })}</h2>
+        <h2 className="text-2xl font-semibold text-fg">{t('Jak začít')}</h2>
         <span className="font-mono text-xs tabular-nums text-subtle">
           {t('hotovo {done} ze {total}', { done: doneCount, total: steps.length })}
         </span>
       </div>
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line">
-        <div className="h-full rounded-full bg-gradient-to-r from-brand-blue to-brand-blue-dark dark:from-accent dark:to-brand-blue" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
+        <div className="h-full rounded-full bg-brand-blue dark:bg-accent" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
       </div>
       <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((s, i) => (
@@ -67,14 +67,14 @@ export async function GettingStarted({ userId, nickname, emailVerified }: { user
             key={s.title}
             className={`rounded-xl border p-4 text-sm ${
               s.done
-                ? 'border-[color-mix(in_srgb,var(--positive)_25%,transparent)] bg-[color-mix(in_srgb,var(--positive)_10%,transparent)] text-positive'
+                ? 'border-line bg-card text-fg'
                 : s === next
                   ? 'border-line-strong bg-surface'
                   : 'border-line bg-surface opacity-70'
             }`}
           >
             <p className="flex items-center gap-1.5 font-semibold">
-              {s.done ? <Check className="h-4 w-4 shrink-0" strokeWidth={2.6} aria-hidden /> : <span className="font-mono text-xs text-subtle">{i + 1}.</span>}
+              {s.done ? <Check className="h-4 w-4 shrink-0 text-positive" strokeWidth={2.2} aria-hidden /> : <span className="font-mono text-xs text-subtle">{i + 1}.</span>}
               <span className={s.done ? '' : 'text-fg'}>{s.title}</span>
             </p>
             {!s.done && (

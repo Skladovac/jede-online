@@ -24,7 +24,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   return (
     <main className="mx-auto max-w-md px-4 py-10 sm:py-14">
       <div className={`${panel} p-7 sm:p-9`}>
-        <h1 className="text-3xl font-extrabold text-fg">{t('Registrace')}</h1>
+        <h1 className="text-3xl font-semibold text-fg">{t('Registrace')}</h1>
         <p className="mb-8 mt-2 text-muted">
           {t('Už máš účet?')}{' '}
           <Link href={next ? `/prihlaseni?next=${encodeURIComponent(next)}` : '/prihlaseni'} className={linkAccent}>

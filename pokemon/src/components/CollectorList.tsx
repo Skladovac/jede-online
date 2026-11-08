@@ -20,10 +20,10 @@ export async function CollectorList({ collectors }: { collectors: Collector[] })
             className={`${panelInteractive} block p-4`}
           >
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--ink)] font-extrabold text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
+              <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--ink)] font-semibold text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
                 {c.user.nickname.slice(0, 1).toUpperCase()}
               </span>
-              <span className="font-bold text-fg">{c.user.nickname}</span>
+              <span className="font-semibold text-fg">{c.user.nickname}</span>
               <BadgeIcon nickname={c.user.nickname} />
               {c.followed && (
                 <Badge tone="yellow">

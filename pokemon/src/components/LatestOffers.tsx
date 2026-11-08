@@ -73,7 +73,7 @@ export async function LatestOffers({ take = 6, note }: { take?: number; note?: R
                   <CardImg src={cardImage(o.card.imageUrl)} alt={o.card.name} />
                 </div>
                 <div className="mt-3 flex items-baseline justify-between gap-2">
-                  <p className="truncate text-[14.5px] font-semibold text-fg" title={o.card.name}>
+                  <p className="truncate text-sm font-semibold text-fg" title={o.card.name}>
                     {o.card.name}
                   </p>
                   <span className="shrink-0 font-mono text-[11px] text-subtle">{number}</span>
@@ -88,7 +88,7 @@ export async function LatestOffers({ take = 6, note }: { take?: number; note?: R
                   </Badge>
                 </div>
                 <p className="mt-2 flex items-center gap-1.5 truncate text-xs text-subtle">
-                  <span aria-hidden className="grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full bg-[var(--ink)] text-[9px] font-extrabold text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
+                  <span aria-hidden className="grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full bg-[var(--ink)] text-[10px] font-semibold text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
                     {o.user.nickname.slice(0, 1).toUpperCase()}
                   </span>
                   <span className="truncate font-medium text-muted">{o.user.nickname}</span>

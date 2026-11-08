@@ -271,13 +271,13 @@ export function SetGrid({
     <div className="mt-6">
       <Celebration
         show={celebrate}
-        title={goal === 'master' ? t('Master set kompletní!') : t('Sada kompletní!')}
+        title={goal === 'master' ? t('Master set je kompletní') : t('Sada je kompletní')}
         text={
           goal === 'master'
-            ? t('Máš všechny varianty — {n} kusů. Gratulujeme!', { n: goalCounts.total })
+            ? t('Máš všechny varianty — {n} kusů', { n: goalCounts.total })
             : goal === 'complete'
-              ? t('Máš všech {n} karet včetně secret. Gratulujeme!', { n: goalCounts.total })
-              : t('Máš všech {n} karet. Gratulujeme!', { n: goalCounts.total })
+              ? t('Máš všech {n} karet včetně secret', { n: goalCounts.total })
+              : t('Máš všech {n} karet', { n: goalCounts.total })
         }
       />
       {tip && loggedIn && (
@@ -424,7 +424,7 @@ export function SetGrid({
           <div className="mt-2 flex items-center gap-3 text-xs">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-brand-blue to-brand-blue-dark transition-all dark:from-accent dark:to-brand-blue"
+                className="h-full rounded-full bg-brand-blue dark:bg-accent"
                 style={{ width: `${Math.min(100, (goalCounts.owned / Math.max(goalCounts.total, 1)) * 100)}%` }}
               />
             </div>
@@ -495,7 +495,7 @@ export function SetGrid({
                     </span>
                   )}
                   <div className="relative">
-                    <p className="font-mono text-lg font-bold text-[#c9d3e3] sm:text-2xl">{c.localId}</p>
+                    <p className="font-mono text-lg font-semibold text-[#c9d3e3] sm:text-2xl">{c.localId}</p>
                     <p className="line-clamp-2 text-[10px] text-subtle sm:text-xs">{c.name}</p>
                     {s.want && <p className="mt-1 text-[10px] font-semibold text-brand-yellow">{t('chybí')}</p>}
                   </div>
@@ -545,7 +545,7 @@ export function SetGrid({
           {/* Seznam: miniatura, číslo a jméno, vpravo sloupec na každou variantu, která se v sadě vyskytuje —
               políčka jsou pod sebou v pevných sloupcích, ať se dá sada odškrtat shora dolů bez hledání. */}
           <div
-            className="hidden items-center gap-3 border-b border-line bg-surface px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-subtle sm:grid"
+            className="hidden items-center gap-3 border-b border-line bg-surface px-3 py-2 text-[11px] font-semibold text-subtle sm:grid"
             style={{ gridTemplateColumns: `44px minmax(0,1fr) repeat(${listColumns.length}, 7rem)` }}
           >
             <span />
@@ -658,24 +658,24 @@ export function SetGrid({
               {/* Stav ve sbírce: zelená fajfka (mám), počet navíc, „hledám“. */}
               <div className="pointer-events-none absolute right-1.5 top-1.5 z-10 flex flex-col items-end gap-1">
                 {s.owned > 0 && (
-                  <span title={t('mám')} className="grid h-[26px] min-w-[26px] place-items-center rounded-full bg-[#1f8a5b] px-1 text-[11px] font-bold text-white shadow-[0_0_0_2px_#fff,0_4px_10px_-2px_rgba(0,0,0,0.35)]">
+                  <span title={t('mám')} className="grid h-[26px] min-w-[26px] place-items-center rounded-full bg-[#1f8a5b] px-1 text-[11px] font-semibold text-white ring-2 ring-white">
                     {s.owned > 1 ? `${s.owned}×` : <Check className="h-[15px] w-[15px]" strokeWidth={2.8} aria-label={t('mám')} />}
                   </span>
                 )}
                 {s.spare > 0 && (
-                  <span title={t('navíc')} className="rounded-full bg-[var(--ink)] px-2 py-0.5 font-mono text-[11px] font-bold text-brand-yellow shadow-[0_0_0_2px_#fff,0_4px_10px_-2px_rgba(0,0,0,0.35)]">
+                  <span title={t('navíc')} className="rounded-full bg-[var(--ink)] px-2 py-0.5 font-mono text-[11px] font-semibold text-brand-yellow ring-2 ring-white">
                     +{s.spare}
                   </span>
                 )}
                 {s.want && !s.owned && (
-                  <span className="rounded-full bg-brand-yellow px-2 py-0.5 text-[10.5px] font-bold text-[var(--ink)] shadow-[0_0_0_2px_#fff,0_4px_10px_-2px_rgba(0,0,0,0.35)]">{t('chybí')}</span>
+                  <span className="rounded-full bg-brand-yellow px-2 py-0.5 text-[11px] font-semibold text-[var(--ink)] ring-2 ring-white">{t('chybí')}</span>
                 )}
               </div>
               <div className="mt-2 flex items-baseline justify-between gap-1.5 sm:mt-3 sm:gap-2">
-                <p className={`truncate text-[12.5px] font-semibold sm:text-[14.5px] ${faded ? 'text-muted' : 'text-fg'}`}>{c.name}</p>
-                <span className="shrink-0 font-mono text-[10.5px] text-subtle sm:text-[11.5px]">{c.localId}</span>
+                <p className={`truncate text-[13px] font-semibold sm:text-sm ${faded ? 'text-muted' : 'text-fg'}`}>{c.name}</p>
+                <span className="shrink-0 font-mono text-[11px] text-subtle sm:text-xs">{c.localId}</span>
               </div>
-              {c.price && <p className="mt-0.5 truncate text-[11.5px] tabular-nums text-muted sm:text-[13px]">≈ {c.price}</p>}
+              {c.price && <p className="mt-0.5 truncate text-xs tabular-nums text-muted sm:text-[13px]">≈ {c.price}</p>}
             </>
           )
           return (

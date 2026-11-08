@@ -134,7 +134,7 @@ export function InstallPrompt() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/icons/icon-192.png" alt="" width={48} height={48} className="h-12 w-12 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
-          <p id="install-title" className="font-extrabold">
+          <p id="install-title" className="font-semibold">
             {t('Stáhni si aplikaci')}
           </p>
           <p className="mt-0.5 text-sm text-muted">{t('Sbírka, výměny a upozornění jedním klepnutím z plochy telefonu. Zdarma, bez obchodu s aplikacemi.')}</p>

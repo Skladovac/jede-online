@@ -21,7 +21,7 @@ export async function PriceStatsTable({ stats, title }: { stats: PriceStats | nu
         {rows.map(([k, label, prefix]) => (
           <div key={k} className="contents">
             <dt className="text-subtle">{t(label)}</dt>
-            <dd className={`text-right tabular-nums ${k === 'trend' ? 'font-bold' : ''}`}>
+            <dd className={`text-right tabular-nums ${k === 'trend' ? 'font-semibold' : ''}`}>
               {prefix ? `${t(prefix)} ` : ''}
               {formatEur(stats![k] as number)}
             </dd>

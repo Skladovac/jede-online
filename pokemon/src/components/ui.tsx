@@ -11,7 +11,7 @@ export const inputCls =
 export function Field({ label, hint, children }: { label: string; hint?: React.ReactNode; children: React.ReactNode }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-[13.5px] font-semibold text-fg">{label}</span>
+      <span className="text-sm font-semibold text-fg">{label}</span>
       {children}
       {hint && <span className="block text-xs text-muted">{hint}</span>}
     </label>
@@ -24,7 +24,7 @@ export function Submit({ children, variant = 'primary' }: { children: React.Reac
   const cls = {
     primary: btnPrimary,
     danger:
-      'inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-danger px-5 py-2.5 font-bold text-white transition duration-200 hover:opacity-90 active:translate-y-px',
+      'inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-danger px-5 py-2.5 font-semibold text-white transition duration-200 hover:opacity-90 active:translate-y-px',
     ghost: btnSecondary,
   }[variant]
   return (

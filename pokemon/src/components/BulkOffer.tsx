@@ -93,7 +93,7 @@ export function BulkOffer({ items }: { items: BulkItem[] }) {
           return (
             <section key={setId}>
               <div className="mb-3 flex items-center justify-between gap-3">
-                <h2 className="text-xl font-bold text-fg">
+                <h2 className="text-xl font-semibold text-fg">
                   {g.name} <span className="font-mono text-sm font-normal tabular-nums text-subtle">({g.items.length})</span>
                 </h2>
                 <button type="button" onClick={() => toggleGroup(g.items)} className="min-h-11 text-sm font-semibold text-accent underline-offset-4 hover:underline">
@@ -122,7 +122,7 @@ export function BulkOffer({ items }: { items: BulkItem[] }) {
                           <Check className="h-3.5 w-3.5" strokeWidth={2.6} />
                         </span>
                         <span className="mt-2 block truncate text-xs font-semibold text-fg">{i.cardName}</span>
-                        <span className="block truncate font-mono text-[11.5px] text-subtle tabular-nums">
+                        <span className="block truncate font-mono text-xs text-subtle tabular-nums">
                           {i.number} · {i.quantity}×{i.variant !== 'NORMAL' ? ` ${i.variant.toLowerCase()}` : ''}
                         </span>
                         {i.offerType && i.spareQty > 0 && (

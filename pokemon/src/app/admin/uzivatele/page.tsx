@@ -44,7 +44,7 @@ export default async function AdminUsers({
 
   return (
     <div className="space-y-5">
-      <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">Uživatelé</h1>
+      <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">Uživatelé</h1>
       {sp.smazano && <p role="status" className="rounded-xl bg-[color-mix(in_srgb,var(--positive)_10%,transparent)] px-4 py-2 text-sm text-positive">Účet byl smazán.</p>}
       <form className="flex gap-2">
         <input type="hidden" name="filtr" value={filtr} />
@@ -69,7 +69,7 @@ export default async function AdminUsers({
       </div>
       <div className={`overflow-x-auto ${panel}`}>
         <table className="w-full text-left text-sm">
-          <thead className="eyebrow !text-[10.5px]">
+          <thead className="eyebrow !text-[11px]">
             <tr>
               <th className="px-4 py-2">Přezdívka</th>
               <th className="px-4 py-2">E-mail</th>
@@ -121,7 +121,7 @@ export default async function AdminUsers({
                 </td>
                 <td className="px-4 py-2 tabular-nums text-fg">{u._count.items}</td>
                 <td className="px-4 py-2 tabular-nums text-fg">{u._count.sentRequests}</td>
-                <td className={`px-4 py-2 tabular-nums ${u._count.reportsAgainst ? 'font-bold text-danger' : 'text-fg'}`}>
+                <td className={`px-4 py-2 tabular-nums ${u._count.reportsAgainst ? 'font-semibold text-danger' : 'text-fg'}`}>
                   {u._count.reportsAgainst}
                 </td>
                 <td className="px-4 py-2 tabular-nums text-muted">{u.createdAt.toLocaleDateString('cs-CZ')}</td>

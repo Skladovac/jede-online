@@ -26,7 +26,7 @@ function Thumb({ c, children }: { c: MiniCard; children?: React.ReactNode }) {
         <p className="mt-2 truncate text-[13px] font-semibold text-fg">{c.name}</p>
         <p className="flex items-baseline gap-1 truncate text-xs text-muted">
           <span className="truncate">{c.set.name}</span>
-          <span className="shrink-0 font-mono text-[11.5px] text-subtle">{c.localId}</span>
+          <span className="shrink-0 font-mono text-xs text-subtle">{c.localId}</span>
         </p>
       </Link>
       {children}
@@ -46,7 +46,7 @@ export async function MatchSection({ data, nickname, proposal }: { data: Data; n
 
   return (
     <section id="shoda" className={`${panel} mt-10 scroll-mt-24 p-4 sm:p-6`}>
-      <h2 className="flex flex-wrap items-center gap-2 text-2xl font-bold text-fg">
+      <h2 className="flex flex-wrap items-center gap-2 text-2xl font-semibold text-fg">
         {t('Shoda s tebou')}
         {trade && (
           <Badge tone="positive">
@@ -60,7 +60,7 @@ export async function MatchSection({ data, nickname, proposal }: { data: Data; n
 
       {(offeredCards.length > 0 || offeredProducts.length > 0) && (
         <>
-          <h3 className="mb-3 mt-6 text-lg font-bold text-fg">{t('Nabízí, co ti chybí')}</h3>
+          <h3 className="mb-3 mt-6 text-lg font-semibold text-fg">{t('Nabízí, co ti chybí')}</h3>
           <ul className={grid}>
             {offeredCards.map((i) => (
               <Thumb key={i.id} c={i.card}>
@@ -89,7 +89,7 @@ export async function MatchSection({ data, nickname, proposal }: { data: Data; n
 
       {ownedCards.length > 0 && (
         <>
-          <h3 className="mb-1 mt-8 text-lg font-bold text-fg">{t('Má ve sbírce, ale nenabízí')}</h3>
+          <h3 className="mb-1 mt-8 text-lg font-semibold text-fg">{t('Má ve sbírce, ale nenabízí')}</h3>
           <p className="mb-3 text-xs text-muted">
             {t('Nejsou na výměnu, ale můžeš se {name} zeptat, jestli by je neuvolnil(a).', { name: nickname })}
           </p>
@@ -103,7 +103,7 @@ export async function MatchSection({ data, nickname, proposal }: { data: Data; n
 
       {(theyWantCards.length > 0 || theyWantProducts.length > 0) && (
         <>
-          <h3 className="mb-3 mt-8 text-lg font-bold text-fg">{t('Shání, co máš navíc ty')}</h3>
+          <h3 className="mb-3 mt-8 text-lg font-semibold text-fg">{t('Shání, co máš navíc ty')}</h3>
           <ul className={grid}>
             {theyWantCards.map((c) => (
               <Thumb key={c.id} c={c} />

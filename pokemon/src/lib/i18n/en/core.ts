@@ -264,5 +264,6 @@ const dict: Record<string, string> = {
   'Všichni sběratelé': 'All collectors',
   'Zatím nikdo další nemá nic z toho, co ti chybí. Mrkni sem později.': 'Nobody else has any of your missing cards yet. Check back later.',
   'Master set {n}/{total}': 'Master set {n}/{total}',
+  'Pojď sbírat Pokémon karty se mnou': 'Come collect Pokémon cards with me',
 }
 export default dict

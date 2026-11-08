@@ -75,7 +75,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Tržiště')}</h1>
+        <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">{t('Tržiště')}</h1>
         <div className="flex gap-4 text-sm">
           <Link href="/sberatele" className={`${linkAccent} inline-flex items-center gap-1`}>
             {t('Najdi sběratele')}
@@ -163,7 +163,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
                       <img src={img} alt={e.name} loading="lazy" className={`h-full w-full ${e.image.kind === 'card' ? 'object-cover' : 'object-contain'}`} />
                     )}
                   </div>
-                  <p className="mt-2 truncate text-[12.5px] font-semibold text-fg sm:mt-3 sm:text-[14.5px]">{e.name}</p>
+                  <p className="mt-2 truncate text-[13px] font-semibold text-fg sm:mt-3 sm:text-sm">{e.name}</p>
                   <p className="truncate text-xs text-muted">{e.sub}</p>
                   <p className={`mt-1 truncate text-sm font-semibold tabular-nums ${KIND_COLOR[e.kind]}`}>{e.label}</p>
                   <p className="mt-1 flex items-center gap-1 text-xs text-subtle">

@@ -186,7 +186,7 @@ export function Celebration({ show, title, text }: { show: number; title: string
           />
         ))}
         <div data-cel-box className="relative rounded-[22px] bg-[var(--ink)] px-7 py-5 text-center text-white shadow-[0_30px_80px_-20px_rgba(14,27,46,0.7)]">
-          <p className="font-display text-2xl font-extrabold text-brand-yellow">{title}</p>
+          <p className="font-display text-2xl font-semibold text-brand-yellow">{title}</p>
           <p className="mt-1 text-sm text-[#c9d3e3]">{text}</p>
         </div>
       </div>

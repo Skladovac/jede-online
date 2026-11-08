@@ -36,7 +36,7 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Najdi sběratele')}</h1>
+      <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">{t('Najdi sběratele')}</h1>
       <p className="mt-2 text-muted">
         {t('Lidé, kteří mají nejvíc z toho, co ti chybí. Napřed ti, se kterými jde udělat výměnu oběma směry.')}
       </p>
@@ -44,10 +44,10 @@ export default async function CollectorsPage({ searchParams }: { searchParams: P
       <section className={`${panel} mt-6 p-5`}>
         <p className="eyebrow mb-3">{t('Takhle tě vidí ostatní')}</p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--ink)] font-extrabold text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
+          <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--ink)] font-semibold text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
             {user.nickname.slice(0, 1).toUpperCase()}
           </span>
-          <span className="font-bold text-fg">{user.nickname}</span>
+          <span className="font-semibold text-fg">{user.nickname}</span>
           <BadgeIcon nickname={user.nickname} />
           <span className="inline-flex flex-wrap items-center gap-x-1 text-xs tabular-nums text-subtle">
             {[user.city, user.region, t(COUNTRY_LABEL[user.country])].filter(Boolean).join(', ')}

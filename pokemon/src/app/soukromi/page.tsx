@@ -14,8 +14,8 @@ export default async function PrivacyPage() {
       <p className="mb-6 rounded-xl bg-accent-soft px-4 py-3 text-sm text-fg">
         {t('Zkušební provoz. Pracovní verze pravidel, konečné znění doplníme před ostrým spuštěním.')}
       </p>
-      <article className="space-y-6 leading-relaxed [&_h2]:mt-8 [&_h2]:text-xl [&_h2]:font-bold [&_li]:ml-5 [&_li]:list-disc">
-        <h1 className="text-3xl font-black tracking-tight">{t('Pravidla a ochrana osobních údajů')}</h1>
+      <article className="space-y-6 leading-relaxed [&_h2]:mt-8 [&_h2]:text-xl [&_h2]:font-semibold [&_li]:ml-5 [&_li]:list-disc">
+        <h1 className="text-3xl font-semibold tracking-tight">{t('Pravidla a ochrana osobních údajů')}</h1>
 
         <h2>{t('Kdo web provozuje')}</h2>
         <p>

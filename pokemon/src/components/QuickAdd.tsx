@@ -60,7 +60,7 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
 
   return (
     <section className={`${panel} p-4 sm:p-5`} aria-labelledby="quick-add-title">
-      <h2 id="quick-add-title" className="flex items-center gap-2 text-xl font-bold text-fg">
+      <h2 id="quick-add-title" className="flex items-center gap-2 text-xl font-semibold text-fg">
         <Zap className="h-5 w-5 text-brand-yellow-dark dark:text-brand-yellow" strokeWidth={1.75} aria-hidden />
         {t('Přidej kartu číslem')}
       </h2>
@@ -148,10 +148,10 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
                 </span>
               </span>
               <div className="min-w-0 flex-1">
-                <p className="font-display text-lg font-bold text-fg">{state.suggest.name}</p>
+                <p className="font-display text-lg font-semibold text-fg">{state.suggest.name}</p>
                 <p className="text-sm text-muted">{state.suggest.set}</p>
-                <p className="font-mono text-[11.5px] tabular-nums text-subtle">{state.suggest.number}</p>
-                <p className="mt-2 font-display text-xl font-bold tabular-nums text-fg">
+                <p className="font-mono text-xs tabular-nums text-subtle">{state.suggest.number}</p>
+                <p className="mt-2 font-display text-xl font-semibold tabular-nums text-fg">
                   {state.suggest.price ? `≈ ${state.suggest.price}` : t('Cena zatím neznámá')}
                 </p>
                 {state.suggest.owned > 0 && <p className="text-xs text-positive">{t('Už máš {n} ks', { n: state.suggest.owned })}</p>}
@@ -224,7 +224,7 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold text-fg">{h.name}</span>
                             <span className="block truncate text-xs text-muted">
-                              {h.set} · <span className="font-mono text-[11.5px] text-subtle">{h.number}</span>
+                              {h.set} · <span className="font-mono text-xs text-subtle">{h.number}</span>
                             </span>
                           </span>
                           <span className="inline-flex shrink-0 items-center gap-0.5 text-sm font-semibold text-accent"><Plus className="h-4 w-4" strokeWidth={2} aria-hidden />{t('Přidat')}</span>
@@ -250,7 +250,7 @@ export function QuickAdd({ photo = false, quota, photoDaily = 5 }: { photo?: boo
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold text-fg">{h.name}</span>
                         <span className="block truncate text-xs text-muted">
-                          {h.set} · <span className="font-mono text-[11.5px] text-subtle">{h.number}</span>
+                          {h.set} · <span className="font-mono text-xs text-subtle">{h.number}</span>
                         </span>
                         {h.price && <span className="block text-xs tabular-nums text-muted">≈ {h.price}</span>}
                         {h.owned > 0 && <span className="block text-xs text-positive">{t('máš {n} ks', { n: h.owned })}</span>}

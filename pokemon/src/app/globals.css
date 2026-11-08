@@ -94,10 +94,9 @@ h1 {
 /* Štítek nad nadpisem sekce (katalogový dojem). */
 .eyebrow {
   font-family: var(--font-mono), monospace;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--text-secondary);
 }
 

@@ -24,7 +24,7 @@ export async function UpcomingBanner({ className = '' }: { className?: string })
         <CalendarClock className="h-5 w-5" strokeWidth={1.75} aria-hidden />
       </span>
       <span className="min-w-0 flex-1 text-sm">
-        <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-brand-yellow">{t('Brzy vychází')}</span>
+        <span className="font-mono text-[11px] tracking-[0.02em] text-brand-yellow">{t('Brzy vychází')}</span>
         <span className="block truncate font-semibold">
           {next.name}
           {next.code ? ` (${next.code})` : ''} · {when}

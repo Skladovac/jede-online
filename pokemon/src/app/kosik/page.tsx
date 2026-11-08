@@ -47,7 +47,7 @@ export default async function CartPage() {
   return (
     <main className="mx-auto max-w-3xl space-y-8 px-4 py-10">
       <div>
-        <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Košík')}</h1>
+        <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">{t('Košík')}</h1>
         <p className="mt-2 text-muted">
           {t('Každému sběrateli se posílá samostatná žádost o výměnu. Když ji přijme, uvidíte navzájem e-mail a domluvíte se na předání. Web neřeší platby ani dopravu.')}{' '}
           <Link href="/bezpecny-obchod" className="inline-flex items-center gap-1 font-medium text-accent underline-offset-4 hover:underline">
@@ -80,7 +80,7 @@ export default async function CartPage() {
         const hasTrade = wanted.some((i) => i.offerType === 'TRADE')
         return (
           <section key={d.id} className={`${panel} p-5`}>
-            <h2 className="text-xl font-bold text-fg">
+            <h2 className="text-xl font-semibold text-fg">
               {t('Od')}{' '}
               <Link href={`/@${encodeURIComponent(d.to.nickname)}`} className="hover:underline">
                 {d.to.nickname}

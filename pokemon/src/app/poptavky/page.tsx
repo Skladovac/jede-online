@@ -45,7 +45,7 @@ export default async function RequestsPage() {
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS[r.status].cls}`}>
                 {t(STATUS[r.status].label)}
               </span>
-              <span className="font-mono text-[11.5px] tabular-nums text-subtle">{(r.sentAt ?? r.createdAt).toLocaleDateString(intl)}</span>
+              <span className="font-mono text-xs tabular-nums text-subtle">{(r.sentAt ?? r.createdAt).toLocaleDateString(intl)}</span>
             </Link>
           </li>
         ))}
@@ -56,16 +56,16 @@ export default async function RequestsPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-10 px-4 py-10">
-      <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{t('Výměny')}</h1>
+      <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">{t('Výměny')}</h1>
       <p className="-mt-7 text-muted">{t('Žádosti o výměnu, koupi nebo dar mezi tebou a ostatními sběrateli.')}</p>
       <section>
-        <h2 className="mb-3 text-xl font-bold text-fg">
+        <h2 className="mb-3 text-xl font-semibold text-fg">
           {t('Chtějí ode mě')} <span className="tabular-nums text-muted">({incoming.length})</span>
         </h2>
         <List rows={incoming} mine={false} />
       </section>
       <section>
-        <h2 className="mb-3 text-xl font-bold text-fg">
+        <h2 className="mb-3 text-xl font-semibold text-fg">
           {t('Chci od ostatních')} <span className="tabular-nums text-muted">({outgoing.length})</span>
         </h2>
         <List rows={outgoing} mine />

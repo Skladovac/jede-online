@@ -20,7 +20,7 @@ export function CardBuyForm({ cardId, variants, want }: { cardId: string; varian
   return (
     <form action={action} className={`space-y-3 ${panel} p-5`}>
       <input type="hidden" name="cardId" value={cardId} />
-      <label className="flex items-center gap-3 font-bold text-fg">
+      <label className="flex items-center gap-3 font-semibold text-fg">
         <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
           <Coins className="h-[18px] w-[18px]" strokeWidth={1.75} />
         </span>
@@ -92,7 +92,7 @@ export function ProductBuyForm({ productId, want }: { productId: number; want: {
   return (
     <form action={action} className={`space-y-3 ${panel} p-5`}>
       <input type="hidden" name="productId" value={productId} />
-      <label className="flex items-center gap-3 font-bold text-fg">
+      <label className="flex items-center gap-3 font-semibold text-fg">
         <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
           <Coins className="h-[18px] w-[18px]" strokeWidth={1.75} />
         </span>

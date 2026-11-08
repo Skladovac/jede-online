@@ -53,7 +53,7 @@ export default async function UpcomingPage() {
         <span className="text-fg">{t('Připravované')}</span>
       </nav>
       <p className="eyebrow mt-6">{t('Katalog')}</p>
-      <h1 className="mt-2 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Připravované sady')}</h1>
+      <h1 className="mt-2 text-4xl font-semibold text-fg sm:text-[44px]">{t('Připravované sady')}</h1>
       <p className="mt-3 max-w-2xl text-muted">
         {t('Anglické sady, které brzy vyjdou. Ukázka karet a ceny jsou z japonské verze — anglická má obvykle stejné karty. Klikni na „Upozornit mě“ a dáme ti vědět, jakmile bude sada na webu.')}
       </p>
@@ -72,11 +72,10 @@ export default async function UpcomingPage() {
           const watching = !!(s.subs && s.subs.length)
           return (
             <section key={s.id} className={`${panel} relative overflow-hidden p-6 sm:p-8`}>
-              <div aria-hidden className="pointer-events-none absolute -right-32 -top-36 h-[420px] w-[420px] rounded-full bg-[radial-gradient(closest-side,rgba(255,203,5,0.25),transparent_70%)] dark:opacity-50" />
               <div className="relative flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
                 <div className="min-w-0">
                   <p className="eyebrow">{[s.code, s.cardCount && t('{n} karet', { n: s.cardCount })].filter(Boolean).join(' · ')}</p>
-                  <h2 className="mt-2 text-3xl font-extrabold text-fg sm:text-[40px] sm:leading-[1.05]">{s.name}</h2>
+                  <h2 className="mt-2 text-3xl font-semibold text-fg sm:text-[40px] sm:leading-[1.05]">{s.name}</h2>
                   <p className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#fff6d6] px-3 py-1.5 text-sm font-semibold text-[#7a5600] ring-1 ring-inset ring-[#f5e19a] dark:bg-[rgba(255,203,5,0.12)] dark:text-[#ffd95c] dark:ring-[rgba(255,203,5,0.3)]">
                     <CalendarClock className="h-4 w-4" strokeWidth={1.75} aria-hidden />
                     {days > 1 ? t('vychází za {n} dní · {date}', { n: days, date: fmt(s.releaseDate) }) : days === 1 ? t('vychází zítra · {date}', { date: fmt(s.releaseDate) }) : days === 0 ? t('vychází dnes') : t('vyšla {date} · brzy v katalogu', { date: fmt(s.releaseDate) })}
@@ -119,7 +118,7 @@ export default async function UpcomingPage() {
                           <div className="card-frame aspect-[63/88]">
                             <CardImg src={cardImage(c.imageUrl)} alt={c.name} />
                           </div>
-                          <p className="mt-2 truncate text-[13.5px] font-semibold text-fg">{c.name}</p>
+                          <p className="mt-2 truncate text-sm font-semibold text-fg">{c.name}</p>
                           {formatCzk(c.priceEur) && <p className="text-xs tabular-nums text-muted">≈ {formatCzk(c.priceEur)}</p>}
                         </Link>
                       </li>

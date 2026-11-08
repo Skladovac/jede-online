@@ -49,21 +49,21 @@ export default async function AdminTraffic() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">Návštěvnost</h1>
+        <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">Návštěvnost</h1>
         <p className="mt-1 text-sm text-muted">
           Vlastní počítadlo bez cookies. Unikátní návštěvník = jeden prohlížeč za den. Roboti a administrace se nepočítají.
         </p>
       </div>
 
       <section className={`${panel} p-5`}>
-        <h2 className="mb-3 text-xl font-bold text-fg">Posledních 30 dní</h2>
+        <h2 className="mb-3 text-xl font-semibold text-fg">Posledních 30 dní</h2>
         {daily.length ? (
           <table className="w-full text-sm">
             <thead className="text-left">
               <tr>
-                <th className="eyebrow py-1 !text-[10.5px] font-medium">Den</th>
-                <th className="eyebrow py-1 text-right !text-[10.5px] font-medium">Návštěvníci</th>
-                <th className="eyebrow py-1 text-right !text-[10.5px] font-medium">Zobrazení</th>
+                <th className="eyebrow py-1 !text-[11px] font-medium">Den</th>
+                <th className="eyebrow py-1 text-right !text-[11px] font-medium">Návštěvníci</th>
+                <th className="eyebrow py-1 text-right !text-[11px] font-medium">Zobrazení</th>
                 <th className="w-1/2 py-1" />
               </tr>
             </thead>
@@ -90,7 +90,7 @@ export default async function AdminTraffic() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <section className={`${panel} p-5`}>
-          <h2 className="mb-3 text-xl font-bold text-fg">Sekce webu (7 dní, {total7} zobrazení)</h2>
+          <h2 className="mb-3 text-xl font-semibold text-fg">Sekce webu (7 dní, {total7} zobrazení)</h2>
           <ul className="space-y-1 text-sm">
             {sectionRows.map(([k, v]) => (
               <li key={k} className="flex justify-between border-t border-line py-1 text-fg">
@@ -101,7 +101,7 @@ export default async function AdminTraffic() {
           </ul>
         </section>
         <section className={`${panel} p-5`}>
-          <h2 className="mb-3 text-xl font-bold text-fg">Nejčtenější stránky (7 dní)</h2>
+          <h2 className="mb-3 text-xl font-semibold text-fg">Nejčtenější stránky (7 dní)</h2>
           <ul className="space-y-1 text-sm">
             {topPaths.map((t) => (
               <li key={t.path} className="flex justify-between gap-3 border-t border-line py-1">

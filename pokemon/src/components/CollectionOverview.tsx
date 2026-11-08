@@ -29,7 +29,7 @@ function CardStrip({ cards, extra }: { cards: MiniCard[]; extra?: (c: MiniCard, 
               <p className="mt-2 truncate text-xs font-semibold text-fg">{c.name}</p>
               <p className="flex items-baseline gap-1 truncate text-xs text-muted">
                 <span className="truncate">{c.set.name}</span>
-                <span className="shrink-0 font-mono text-[11.5px] text-subtle">{c.localId}</span>
+                <span className="shrink-0 font-mono text-xs text-subtle">{c.localId}</span>
               </p>
               {extra?.(c, i)}
             </Link>
@@ -140,8 +140,8 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
           [t('Chybí'), totals.wanted],
         ].map(([k, v]) => (
           <div key={k} className={`${panel} px-4 py-3.5`}>
-            <dt className="eyebrow !text-[10.5px]">{k}</dt>
-            <dd className="mt-1.5 font-display text-[26px] font-bold leading-tight tabular-nums text-fg">{v}</dd>
+            <dt className="eyebrow !text-[11px]">{k}</dt>
+            <dd className="mt-1.5 font-display text-[26px] font-semibold leading-tight tabular-nums text-fg">{v}</dd>
           </div>
         ))}
       </dl>
@@ -153,7 +153,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
 
       {showOffers && (
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-fg">{t('Nabízí')} ({offers.length})</h2>
+        <h2 className="mb-4 text-2xl font-semibold text-fg">{t('Nabízí')} ({offers.length})</h2>
         {offers.length ? (
           <BySet
             t={t}
@@ -175,7 +175,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
 
       {showWanted && (
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-fg">{t('Chybí')} ({wanted.length})</h2>
+        <h2 className="mb-4 text-2xl font-semibold text-fg">{t('Chybí')} ({wanted.length})</h2>
         {wanted.length ? (
           <BySet
             t={t}
@@ -193,7 +193,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
 
       {(productItems.length > 0 || productWants.length > 0 || (own && !view)) && (
         <section>
-          <h2 className="mb-4 text-2xl font-bold text-fg">{t('Zapečetěné produkty')}</h2>
+          <h2 className="mb-4 text-2xl font-semibold text-fg">{t('Zapečetěné produkty')}</h2>
           {productItems.length ? (
             <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
               {productItems.map((i) => (
@@ -228,7 +228,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
           )}
           {productWants.length > 0 && (
             <>
-              <h3 className="mb-3 mt-6 text-lg font-bold text-fg">{t('Shání')} ({productWants.length})</h3>
+              <h3 className="mb-3 mt-6 text-lg font-semibold text-fg">{t('Shání')} ({productWants.length})</h3>
               <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
                 {productWants.map((p) => (
                   <li key={p.id}>
@@ -244,7 +244,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
       {view && stats}
 
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-fg">{t('Sady')}</h2>
+        <h2 className="mb-4 text-2xl font-semibold text-fg">{t('Sady')}</h2>
         {sets.length ? (
           <ul className="space-y-2">
             {sets.map(({ set, progress, goal }) => (

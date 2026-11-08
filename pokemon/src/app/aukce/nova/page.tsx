@@ -31,7 +31,7 @@ export default async function NewAuctionPage() {
         <ChevronRight className="h-3.5 w-3.5" aria-hidden />
         <span className="text-fg">{t('Nová aukce')}</span>
       </nav>
-      <h1 className="mt-4 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Nová aukce')}</h1>
+      <h1 className="mt-4 text-4xl font-semibold text-fg sm:text-[44px]">{t('Nová aukce')}</h1>
       <p className="mt-3 text-muted">
         {t('Aukce běží na Facebooku, Aukru nebo jinde — sem dáš jen odkaz, co dražíš a kdy aukce končí. Kdo kartu hledá, dostane upozornění.')}
       </p>

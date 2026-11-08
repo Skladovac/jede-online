@@ -48,8 +48,8 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
           )}
         </p>
       )}
-      <p className="eyebrow">{t('Ahoj, {name}', { name: user.nickname })}</p>
-      <h1 className="mt-2 text-3xl font-extrabold text-fg sm:text-[44px] sm:leading-[1.05]">{t('Jakou sadu sbíráš?')}</h1>
+      <p className="eyebrow">{user.nickname}</p>
+      <h1 className="mt-2 text-3xl font-semibold text-fg sm:text-[44px] sm:leading-[1.05]">{t('Jakou sadu sbíráš?')}</h1>
       <p className="mt-3 max-w-2xl text-[15px] text-muted">
         {t('Vyber sadu a otevře se seznam jejích karet. Klepnutím označíš, které máš. Za minutu uvidíš, kolik ti chybí a jakou má tvoje sbírka hodnotu.')}
       </p>

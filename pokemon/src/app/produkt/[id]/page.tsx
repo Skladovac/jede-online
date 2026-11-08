@@ -96,7 +96,7 @@ export default async function ProductPage({ params }: Props) {
           )}
         </div>
         <div>
-          <h1 className="text-4xl font-extrabold text-fg sm:text-[44px]">{p.name}</h1>
+          <h1 className="text-4xl font-semibold text-fg sm:text-[44px]">{p.name}</h1>
           <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
             <dt className="text-subtle">{t('Typ')}</dt>
             <dd>{t(KIND_LABEL[p.kind])}</dd>
@@ -121,7 +121,7 @@ export default async function ProductPage({ params }: Props) {
           </dl>
           <section className={`mt-8 ${panel} p-5`}>
             <h2 className="eyebrow">{t('Orientační cena')}</h2>
-            <p className="mt-3 font-display text-3xl font-bold tabular-nums text-fg">{price ? `≈ ${price}` : t('Cena zatím není k dispozici.')}</p>
+            <p className="mt-3 font-display text-3xl font-semibold tabular-nums text-fg">{price ? `≈ ${price}` : t('Cena zatím není k dispozici.')}</p>
             {p.priceStats && (
               <div className="mt-5 border-t border-line pt-4">
                 <PriceStatsTable stats={p.priceStats as PriceStats} title="Cardmarket" />
@@ -136,7 +136,7 @@ export default async function ProductPage({ params }: Props) {
       {viewer ? (
         <section className="mt-8 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-bold text-fg">{t('Moje sbírka')}</h2>
+            <h2 className="text-2xl font-semibold text-fg">{t('Moje sbírka')}</h2>
             {!mine.length && (
               <ActionForm action={toggleProductWant} className="flex items-center gap-2">
                 <input type="hidden" name="productId" value={p.id} />
@@ -182,7 +182,7 @@ export default async function ProductPage({ params }: Props) {
       <ProductBuyers productId={p.id} />
 
       <section className="mt-10">
-        <h2 className="text-2xl font-bold text-fg">{t('Kdo ho nabízí')}</h2>
+        <h2 className="text-2xl font-semibold text-fg">{t('Kdo ho nabízí')}</h2>
         {offers.length === 0 ? (
           <EmptyState className="mt-4">{t('Zatím ho nikdo nenabízí.')}</EmptyState>
         ) : (

@@ -51,7 +51,7 @@ export async function MyCardPanel({ card }: { card: CardVariants }) {
   return (
     <section className="mt-8 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold text-fg">{t('Moje sbírka')}</h2>
+        <h2 className="text-2xl font-semibold text-fg">{t('Moje sbírka')}</h2>
         {!items.length && (
           <ActionForm action={toggleWantForm} className="flex items-center gap-2">
             <input type="hidden" name="cardId" value={card.id} />

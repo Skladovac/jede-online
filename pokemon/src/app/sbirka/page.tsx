@@ -32,7 +32,7 @@ export default async function MyCollectionPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="mb-2 text-4xl font-extrabold text-fg sm:text-[44px]">{t('Moje sbírka')}</h1>
+      <h1 className="mb-2 text-4xl font-semibold text-fg sm:text-[44px]">{t('Moje sbírka')}</h1>
       {isLimited(user) && (
         <p className="mb-6 text-sm text-accent">
           {t('Dokud rodič nepotvrdí účet, tvoje nabídky ostatní neuvidí.')}
@@ -57,7 +57,7 @@ export default async function MyCollectionPage() {
       </div>
       {!isLimited(user) && data.totals.wanted > 0 && (
         <div className={`mt-6 ${panel} p-5`}>
-          <p className="mb-1 flex items-center gap-3 text-lg font-bold text-fg">
+          <p className="mb-1 flex items-center gap-3 text-lg font-semibold text-fg">
             <span aria-hidden className="grid h-9 w-9 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
               <Link2 className="h-[18px] w-[18px]" strokeWidth={1.75} />
             </span>
@@ -74,7 +74,7 @@ export default async function MyCollectionPage() {
       )}
       {interest.length > 0 && (
         <section className={`mt-6 ${panel} p-5`}>
-          <h2 className="mb-1 flex items-center gap-3 text-xl font-bold text-fg">
+          <h2 className="mb-1 flex items-center gap-3 text-xl font-semibold text-fg">
             <span aria-hidden className="grid h-9 w-9 place-items-center rounded-[11px] bg-[var(--ink)] text-brand-yellow dark:bg-brand-yellow dark:text-[var(--ink)]">
               <Coins className="h-[18px] w-[18px]" strokeWidth={1.75} />
             </span>
