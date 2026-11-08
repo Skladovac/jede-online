@@ -115,6 +115,7 @@ model User {
   // Týdenní souhrn e-mailem (neděle 17:00): nové nabídky, sledující, hodnocení, zájem o moje nabídky.
   weeklyEmails   Boolean   @default(true)
   weeklyDigestAt DateTime?
+  welcomeSentAt  DateTime? // uvítací e-mail s přehledem funkcí (po ověření e-mailu, jednou)
   linksApprovedAt DateTime? // u nezletilých schvaluje rodič
 
   acceptedTermsAt DateTime?

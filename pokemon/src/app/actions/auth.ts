@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { sendWelcomeIfNeeded } from '@/lib/welcome-email'
 import { prisma } from '@/lib/prisma'
 import { OAUTH_PENDING_COOKIE, verify, type OAuthProfile } from '@/lib/oauth'
 import {
@@ -248,6 +249,8 @@ export async function completeSocialSignup(_: FormState, fd: FormData): Promise<
       oauthAccounts: { create: { provider: pending.provider, providerId: pending.providerId } },
     },
   })
+  // Registrace přes Google/Facebook s ověřeným e-mailem: uvítací e-mail hned (jinak až po potvrzení odkazem).
+  if (emailVerified) await sendWelcomeIfNeeded(user.id).catch((err) => console.error('[welcome]', err))
   if (!emailVerified) await sendVerifyEmail(email, user.nickname, await createEmailToken(user.id, 'VERIFY', 72), null, user.locale)
   if (isMinor && parentRaw) await sendParentConsentEmail(parentEmail, user.nickname, parentRaw, user.locale)
   jar.delete(OAUTH_PENDING_COOKIE)

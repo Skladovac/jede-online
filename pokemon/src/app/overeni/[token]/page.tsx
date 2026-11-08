@@ -6,6 +6,7 @@ import { consumeEmailToken } from '@/lib/auth'
 import { safeNext } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
 import { refreshBadgesSafe } from '@/lib/badges'
+import { sendWelcomeIfNeeded } from '@/lib/welcome-email'
 import { ArrowRight, CircleCheck } from 'lucide-react'
 import { btnPrimary, panel } from '@/components/design'
 
@@ -26,6 +27,8 @@ export default async function VerifyPage({
   if (userId) {
     await prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } })
     await refreshBadgesSafe(userId)
+    // Uvítací e-mail s přehledem funkcí (jednou; chyba odeslání nesmí shodit potvrzení).
+    await sendWelcomeIfNeeded(userId).catch((err) => console.error('[welcome]', err))
   }
   // Přišel z odkazu (např. „ohodnoť mě“) → po potvrzení rovnou zpátky.
   const next = safeNext((await searchParams).next)

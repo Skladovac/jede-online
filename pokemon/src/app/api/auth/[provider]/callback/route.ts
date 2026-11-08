@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { sendWelcomeIfNeeded } from '@/lib/welcome-email'
 import { prisma } from '@/lib/prisma'
 import { createSession, hashPassword, randomToken } from '@/lib/auth'
 import { OAUTH_PENDING_COOKIE, OAUTH_STATE_COOKIE, fetchProfile, isProvider, sign, verify } from '@/lib/oauth'
@@ -48,6 +49,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ prov
           prisma.oAuthAccount.deleteMany({ where: { userId: user.id } }),
           prisma.user.update({ where: { id: user.id }, data: { emailVerifiedAt: new Date(), passwordHash: await hashPassword(randomToken()) } }),
         ])
+        await sendWelcomeIfNeeded(user.id).catch((err) => console.error('[welcome]', err))
       }
       await prisma.oAuthAccount.create({ data: { userId: user.id, provider, providerId: profile.providerId } })
     }
