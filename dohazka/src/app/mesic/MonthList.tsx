@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { formatHours, parseDayKey } from '@/lib/date'
+import { KIND_LABEL } from '@/lib/entry'
 import type { MonthRow } from '@/lib/month'
 
-const KIND_LABEL = { WORK: 'Práce', VACATION: 'Dovolená', SICK: 'Nemoc', DAYOFF: 'Nepracoval' } as const
 
 // Hodnota dne je UTC půlnoc (parseDayKey), proto i formátování v UTC.
 const popisDne = (key: string) =>

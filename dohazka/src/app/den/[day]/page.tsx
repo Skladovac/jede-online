@@ -4,13 +4,13 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth'
 import { formatHours, parseDayKey, pragueDayKey } from '@/lib/date'
+import { KIND_LABEL } from '@/lib/entry'
 import { recentPlaces } from '@/lib/places'
 import { DayForm, DeleteEntryButton } from '../DayForm'
 
 export const metadata: Metadata = { title: 'Zápis dne' }
 
 const DEN = 86_400_000
-const KIND_LABEL = { WORK: 'Práce', VACATION: 'Dovolená', SICK: 'Nemoc', DAYOFF: 'Nepracoval' } as const
 
 const posun = (key: string, dny: number) => new Date(parseDayKey(key).getTime() + dny * DEN).toISOString().slice(0, 10)
 const popisDne = (key: string) =>

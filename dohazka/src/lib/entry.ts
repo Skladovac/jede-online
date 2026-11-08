@@ -8,6 +8,14 @@ import { parseDayKey } from '@/lib/date'
 export const ENTRY_KINDS = ['WORK', 'VACATION', 'SICK', 'DAYOFF'] as const
 export type EntryKindValue = (typeof ENTRY_KINDS)[number]
 
+// České názvy typů dne — jediné místo pro obrazovky i exporty.
+export const KIND_LABEL: Record<EntryKindValue, string> = {
+  WORK: 'Práce',
+  VACATION: 'Dovolená',
+  SICK: 'Nemoc',
+  DAYOFF: 'Nepracoval',
+}
+
 // Tvar hodin: 1–2 cifry, volitelně čárka nebo tečka a 1–2 desetinná místa.
 const HOURS_SHAPE = /^\d{1,2}([.,]\d{1,2})?$/
 // Tvar času: "7:00", "07:00", "7.00", "7,00". Hodiny a minuty kontrolujeme až potom.
