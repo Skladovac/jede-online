@@ -1,0 +1,4 @@
+# Co kořenový .gitignore nepokrývá
+*.tsbuildinfo
+next-env.d.ts
+coverage/

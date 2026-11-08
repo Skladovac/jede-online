@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokeny — střídmá pracovní paleta. Tmavý vzhled podle třídy .dark na <html>. */
+:root {
+  --bg-primary: #f6f7f9;
+  --bg-secondary: #eceff3;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f3f6;
+  --border: #dfe3e9;
+  --border-strong: #c3c9d2;
+  --border-hover: #9aa3b0;
+  --text-primary: #1b2230;
+  --text-secondary: #4a5568;
+  --text-muted: #6b7686;
+  --accent: #2f5d8a;
+  --accent-strong: #244a70;
+  --accent-hover: #3a6d9f;
+  --accent-soft: #e3ecf5;
+  --on-accent: #ffffff;
+  --positive: #2f7d4f;
+  --warning: #a8660c;
+  --danger: #b3382c;
+  --shadow-soft: 0 1px 2px rgb(16 24 40 / 0.06);
+  --shadow-card: 0 1px 3px rgb(16 24 40 / 0.08), 0 1px 2px rgb(16 24 40 / 0.04);
+  color-scheme: light;
+}
+
+.dark {
+  --bg-primary: #11151c;
+  --bg-secondary: #171c25;
+  --bg-card: #1b212b;
+  --bg-card-hover: #222937;
+  --border: #2b3340;
+  --border-strong: #3a4455;
+  --border-hover: #566176;
+  --text-primary: #e8ecf2;
+  --text-secondary: #b3bccb;
+  --text-muted: #8893a4;
+  --accent: #6ea3d6;
+  --accent-strong: #8ab8e3;
+  --accent-hover: #86b5e2;
+  --accent-soft: #1f2d3e;
+  --on-accent: #0e1520;
+  --positive: #5cb985;
+  --warning: #e0a14a;
+  --danger: #ef7d70;
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.5);
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

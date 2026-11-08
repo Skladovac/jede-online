@@ -1,0 +1,30 @@
+import type { Metadata, Viewport } from 'next'
+import { cookies } from 'next/headers'
+import { Inter } from 'next/font/google'
+import { Footer } from '@/components/Footer'
+import './globals.css'
+
+const sans = Inter({ subsets: ['latin', 'latin-ext'], variable: '--font-sans', display: 'swap' })
+
+export const metadata: Metadata = {
+  metadataBase: new URL('https://dohazka.jede.online'),
+  title: { default: 'Docházka — evidence hodin', template: '%s · Docházka' },
+  description: 'Zapisujte odpracované hodiny a místo práce, na konci měsíce si vyexportujte výkaz pro zaměstnavatele.',
+  // Soukromá evidence, vyhledávačům nic nenabízíme.
+  robots: { index: false, follow: false },
+}
+
+export const viewport: Viewport = { width: 'device-width', initialScale: 1 }
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const theme = (await cookies()).get('theme')?.value
+  return (
+    // Výchozí světlý vzhled, tmavý jen když si ho uživatel přepnul (cookie „theme“).
+    <html lang="cs" className={`${sans.variable}${theme === 'dark' ? ' dark' : ''}`}>
+      <body className="flex min-h-dvh flex-col bg-base text-fg antialiased">
+        <div className="flex-1">{children}</div>
+        <Footer />
+      </body>
+    </html>
+  )
+}

@@ -1,0 +1,15 @@
+// Skutečné modely doplní Task 2 — ten tenhle zástupný model SMAZAT.
+// Prisma 5 odmítne `generate` nad schématem bez jediného modelu, a bez generate
+// padá postinstall, build i typecheck. Zástupný model se nikdy nemigruje.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Zastupce {
+  id Int @id
+}
