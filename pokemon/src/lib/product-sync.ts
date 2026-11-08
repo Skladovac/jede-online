@@ -1,6 +1,7 @@
 import { Prisma, type ProductKind } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { pickStats } from '@/lib/price-stats'
+import { byLocalId } from '@/lib/format'
 
 /**
  * Katalog zapečetěných produktů z veřejných souborů Cardmarketu (název, typ, rozšíření, ceny v EUR)
@@ -92,6 +93,67 @@ const cardEur = (trend?: number | null, avg7?: number | null, avg30?: number | n
 }
 
 /** Ceny karet podle idProduct z denního ceníku Cardmarketu: trend → avg7 → avg30 (nikdy `avg`), reverse = „-holo“. */
+// Jméno karty pro párování s Cardmarketem: bez „[útoky]“ a „(poznámka)“ za názvem.
+const cmNameKey = (s: string) => s.replace(/\s*[\[(].*$/, '').trim().toLowerCase()
+
+/**
+ * Oprava Cardmarket ID u stejnojmenných karet. TCGdex dá všem kartám téhož jména v sadě (základní + illustration /
+ * ultra / hyper rare) jeden produkt Cardmarketu, protože u nových rozšíření Cardmarket čísla karet neuvádí — secret
+ * rare pak ukazují cenu základní karty (Delta Reign: Mega Rayquaza ex 141 za 5 € místo 260 €). Stejnojmenné produkty
+ * zakládá Cardmarket v pořadí čísel karet, takže k-tou kartu jména spárujeme s k-tým produktem — jen když počty sedí.
+ * Jen u nových sad (do 2 let od vydání; starší rozšíření Cardmarket zakládal v jiném pořadí) a jen tam, kde víc karet
+ * jména opravdu sdílí jeden produkt — správně rozlišené mapování TCGdex se nemění.
+ */
+async function repairCardmarketIds(singles: CmProduct[], log: (m: string) => void) {
+  const expOf = new Map(singles.map((p) => [p.idProduct, p.idExpansion]))
+  const byExp = new Map<number, Map<string, CmProduct[]>>()
+  for (const p of singles) {
+    const m = byExp.get(p.idExpansion) ?? new Map<string, CmProduct[]>()
+    const k = cmNameKey(p.name)
+    m.set(k, [...(m.get(k) ?? []), p])
+    byExp.set(p.idExpansion, m)
+  }
+  const since = new Date(Date.now() - 2 * 365 * 24 * 3600 * 1000)
+  const cards = await prisma.card.findMany({
+    where: { set: { game: 'pokemon', language: 'en', releaseDate: { gte: since } } },
+    select: { id: true, setId: true, localId: true, name: true, cmProductId: true },
+  })
+  const bySet = new Map<string, typeof cards>()
+  for (const c of cards) bySet.set(c.setId, [...(bySet.get(c.setId) ?? []), c])
+
+  let fixed = 0
+  const touched: string[] = []
+  for (const [setId, list] of bySet) {
+    // Rozšíření Cardmarketu = to, kam ukazuje většina karet sady.
+    const votes = new Map<number, number>()
+    for (const c of list) {
+      const e = c.cmProductId ? expOf.get(c.cmProductId) : undefined
+      if (e) votes.set(e, (votes.get(e) ?? 0) + 1)
+    }
+    const exp = [...votes.entries()].sort((a, b) => b[1] - a[1])[0]
+    if (!exp || exp[1] < 3) continue
+    const names = byExp.get(exp[0])!
+    const groups = new Map<string, typeof cards>()
+    for (const c of list) groups.set(cmNameKey(c.name), [...(groups.get(cmNameKey(c.name)) ?? []), c])
+    for (const [key, ours] of groups) {
+      if (ours.length < 2) continue
+      // Každá karta má svůj produkt → TCGdex je rozlišil správně, nesahat.
+      if (new Set(ours.map((c) => c.cmProductId).filter(Boolean)).size === ours.length) continue
+      const cm = names.get(key)
+      if (!cm || cm.length !== ours.length) continue
+      const sortedOurs = [...ours].sort(byLocalId)
+      const sortedCm = [...cm].sort((a, b) => a.idProduct - b.idProduct)
+      for (let i = 0; i < sortedOurs.length; i++) {
+        if (sortedOurs[i].cmProductId === sortedCm[i].idProduct) continue
+        await prisma.card.update({ where: { id: sortedOurs[i].id }, data: { cmProductId: sortedCm[i].idProduct } })
+        fixed++
+        if (!touched.includes(setId)) touched.push(setId)
+      }
+    }
+  }
+  if (fixed) log(`[ceny] opraveno Cardmarket ID u ${fixed} stejnojmenných karet (${touched.join(', ')})`)
+}
+
 async function refreshCardPrices(prices: Map<number, CmPrice>, at: Date, log: (m: string) => void) {
   const cards = await prisma.card.findMany({
     where: { cmProductId: { not: null } },
@@ -133,12 +195,15 @@ async function refreshCardPrices(prices: Map<number, CmPrice>, at: Date, log: (m
 }
 
 export async function syncProducts(log: (m: string) => void = console.log) {
-  const [{ products }, { priceGuides, createdAt }, sets] = await Promise.all([
+  const [{ products }, { priceGuides, createdAt }, sets, singles] = await Promise.all([
     getJson<{ products: CmProduct[] }>(`${CM}/productList/products_nonsingles_6.json`),
     getJson<{ priceGuides: CmPrice[]; createdAt?: string }>(`${CM}/priceGuide/price_guide_6.json`),
     prisma.cardSet.findMany({ where: { game: 'pokemon' }, select: { id: true, name: true } }),
+    getJson<{ products: CmProduct[] }>(`${CM}/productList/products_singles_6.json`).then((r) => r.products).catch(() => null),
   ])
   const prices = new Map(priceGuides.map((p) => [p.idProduct, p]))
+  // Napřed správné produkty u secret rare se stejným jménem, pak teprve ceny.
+  if (singles) await repairCardmarketIds(singles, log).catch((err) => log(`[ceny] oprava Cardmarket ID selhala: ${(err as Error).message}`))
   // Ceny karet z téhož ceníku (TCGdex přebírá ceny se zpožděním, tenhle soubor Cardmarket vydává každou noc).
   await refreshCardPrices(prices, createdAt ? new Date(createdAt) : new Date(), log).catch((err) =>
     log(`[ceny] obnova cen karet selhala: ${(err as Error).message}`),
