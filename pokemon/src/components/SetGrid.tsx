@@ -102,6 +102,12 @@ export function SetGrid({
   const ownedCount = cards.filter((c) => (state[c.id]?.owned ?? 0) > 0).length
   const wantCount = cards.filter((c) => state[c.id]?.want).length
   const spareCount = cards.reduce((s, c) => s + (state[c.id]?.spare ?? 0), 0)
+  // Sloupce zobrazení „Seznam“: varianty, které se v sadě vyskytují, v ustáleném pořadí.
+  const VARIANT_ORDER: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']
+  const listColumns = VARIANT_ORDER.flatMap((k) => {
+    const v = cards.flatMap((c) => c.variants).find((x) => x.key === k)
+    return v ? [v] : []
+  })
   // Postup podle zvoleného cíle: base = karty 1–oficiální počet, complete = všechny karty, master = všechny varianty.
   const goalCounts = (() => {
     if (goal === 'master') {
@@ -535,47 +541,71 @@ export function SetGrid({
       )}
 
       {layout === 'list' && (
-        <ul className="mt-4 divide-y divide-line overflow-hidden rounded-panel border border-line bg-card">
-          {/* Seznam: miniatura, číslo a jméno, vpravo políčka variant — odškrtáš celou sadu bez otevírání karet. */}
-          {cards
-            .filter((c) => !typeFilter || c.types?.includes(typeFilter))
-            .map((c) => {
-              const s = state[c.id] ?? { owned: 0, spare: 0, want: false }
-              return (
-                <li key={c.id} className={`flex items-center gap-3 px-3 py-2 ${!s.owned && ownedCount > 0 ? 'bg-surface/60' : ''}`}>
-                  <Link href={`/karta/${encodeURIComponent(c.id)}`} className="card-frame w-11 shrink-0 aspect-[63/88]">
-                    {c.image && <CardImg src={c.image} alt="" />}
-                  </Link>
-                  <Link href={`/karta/${encodeURIComponent(c.id)}`} className="min-w-0 flex-1">
-                    <span className={`block truncate text-sm ${s.owned ? 'font-semibold text-fg' : 'text-muted'}`}>{c.name}</span>
-                    <span className="font-mono text-xs text-subtle">
-                      {c.localId}
-                      {c.price ? ` · ${c.price}` : ''}
-                      {s.want ? ` · ${t('chybí')}` : ''}
-                    </span>
-                  </Link>
-                  <div className="flex max-w-[55%] flex-wrap justify-end gap-x-3 gap-y-0.5">
-                    {c.variants.map((v) => {
-                      const n = s.variants?.[v.key] ?? 0
-                      return (
-                        <label key={v.key} className={`inline-flex min-h-9 cursor-pointer select-none items-center gap-1.5 text-xs ${n ? 'font-semibold text-fg' : 'text-muted'}`}>
-                          <input
-                            type="checkbox"
-                            checked={n > 0}
-                            disabled={!loggedIn}
-                            onChange={(e) => setVariantOwned(c.id, v.key, e.target.checked)}
-                            className="h-[18px] w-[18px] accent-[var(--positive)]"
-                          />
-                          {v.label === 'Normal' ? t('Normální') : v.label}
-                          {n > 1 ? <span className="font-mono text-subtle">×{n}</span> : null}
-                        </label>
-                      )
-                    })}
-                  </div>
-                </li>
-              )
-            })}
-        </ul>
+        <div className="mt-4 overflow-hidden rounded-panel border border-line bg-card">
+          {/* Seznam: miniatura, číslo a jméno, vpravo sloupec na každou variantu, která se v sadě vyskytuje —
+              políčka jsou pod sebou v pevných sloupcích, ať se dá sada odškrtat shora dolů bez hledání. */}
+          <div
+            className="hidden items-center gap-3 border-b border-line bg-surface px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-subtle sm:grid"
+            style={{ gridTemplateColumns: `44px minmax(0,1fr) repeat(${listColumns.length}, 7rem)` }}
+          >
+            <span />
+            <span>{t('Karta')}</span>
+            {listColumns.map((v) => (
+              <span key={v.key} className="text-center">
+                {v.label === 'Normal' ? t('Normální') : v.label}
+              </span>
+            ))}
+          </div>
+          <ul className="divide-y divide-line">
+            {cards
+              .filter((c) => !typeFilter || c.types?.includes(typeFilter))
+              .map((c) => {
+                const s = state[c.id] ?? { owned: 0, spare: 0, want: false }
+                const has = new Map(c.variants.map((v) => [v.key, v]))
+                return (
+                  <li
+                    key={c.id}
+                    className={`grid grid-cols-[44px_minmax(0,1fr)] items-center gap-x-3 gap-y-1 px-3 py-1.5 sm:gap-y-0 sm:[grid-template-columns:var(--list-cols)] ${!s.owned && ownedCount > 0 ? 'bg-surface/60' : ''}`}
+                    style={{ ['--list-cols' as string]: `44px minmax(0,1fr) repeat(${listColumns.length}, 7rem)` }}
+                  >
+                    <Link href={`/karta/${encodeURIComponent(c.id)}`} className="card-frame row-span-2 w-11 aspect-[63/88] sm:row-span-1">
+                      {c.image && <CardImg src={c.image} alt="" />}
+                    </Link>
+                    <Link href={`/karta/${encodeURIComponent(c.id)}`} className="min-w-0">
+                      <span className={`block truncate text-sm ${s.owned ? 'font-semibold text-fg' : 'text-muted'}`}>{c.name}</span>
+                      <span className="font-mono text-xs text-subtle">
+                        {c.localId}
+                        {c.price ? ` · ${c.price}` : ''}
+                        {s.want ? ` · ${t('chybí')}` : ''}
+                      </span>
+                    </Link>
+                    <div className="col-start-2 flex flex-wrap gap-x-3 sm:contents">
+                      {listColumns.map((col) => {
+                        const v = has.get(col.key)
+                        const n = v ? (s.variants?.[v.key] ?? 0) : 0
+                        return (
+                          <label
+                            key={col.key}
+                            className={`inline-flex min-h-9 select-none items-center gap-1.5 text-xs sm:justify-center ${v ? 'cursor-pointer' : 'hidden sm:invisible sm:inline-flex'} ${n ? 'font-semibold text-fg' : 'text-muted'}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={n > 0}
+                              disabled={!loggedIn || !v}
+                              onChange={(e) => v && setVariantOwned(c.id, v.key, e.target.checked)}
+                              className="h-[18px] w-[18px] accent-[var(--positive)]"
+                            />
+                            <span className="sm:sr-only">{col.label === 'Normal' ? t('Normální') : col.label}</span>
+                            {n > 1 ? <span className="font-mono text-subtle">×{n}</span> : null}
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </li>
+                )
+              })}
+          </ul>
+        </div>
       )}
 
       {setTypes.length > 1 && layout !== 'album' && (
