@@ -4,10 +4,12 @@ import type { Report } from './rows'
 
 const HLAVICKA = ['Datum', 'Den', 'Od', 'Do', 'Hodiny', 'Místo', 'Typ', 'Poznámka']
 
-// Hodnota začínající = + - @ tabulátorem nebo CR by se v Excelu stala vzorcem (#NAME?), proto předsadíme apostrof.
+// Hodnota začínající = + - @ tabulátorem nebo CR by se v Excelu stala vzorcem (#NAME?), proto předsadíme mezeru.
+// Mezera a NE apostrof: apostrof funguje jen při psaní přímo do buňky; při importu CSV je to viditelný znak
+// v datech ('-dovolená). Úvodní mezera udělá z buňky text stejně spolehlivě a není skoro vidět.
 // Ošetření jde PŘED uvozováním, aby uvozovky obalily už výslednou hodnotu.
 const bunka = (v: string) => {
-  const text = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v
+  const text = /^[=+\-@\t\r]/.test(v) ? ` ${v}` : v
   return /[;"\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 

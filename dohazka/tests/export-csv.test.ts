@@ -29,14 +29,14 @@ describe('toCsv', () => {
     expect(csv).toContain('Celkem;;;;16,5;;;\r\n')
     expect(csv).toContain('Odpracovaných dnů;;;;1;;;\r\n')
   })
-  it('hodnoty začínající vzorcovým znakem dostanou apostrof', () => {
+  it('hodnoty začínající vzorcovým znakem dostanou úvodní mezeru', () => {
     for (const znak of ['-', '+', '=', '@']) {
-      expect(toCsv(report([{ ...row, note: `${znak}dovolená` }]))).toContain(`;'${znak}dovolená\r\n`)
+      expect(toCsv(report([{ ...row, note: `${znak}dovolená` }]))).toContain(`; ${znak}dovolená\r\n`)
     }
-    expect(toCsv(report([{ ...row, note: '\tx' }]))).toContain(";'\tx\r\n")
+    expect(toCsv(report([{ ...row, note: '\tx' }]))).toContain("; \tx\r\n")
   })
   it('vzorcový znak i středník dohromady: ošetření a uvozovky', () => {
-    expect(toCsv(report([{ ...row, note: '=a;b "x"' }]))).toContain(`"'=a;b ""x"""`)
+    expect(toCsv(report([{ ...row, note: '=a;b "x"' }]))).toContain(`" =a;b ""x"""`)
   })
   it('pomlčka uvnitř textu zůstane beze změny', () => {
     expect(toCsv(report([{ ...row, place: 'Zlín-Vsetín' }]))).toContain(';Zlín-Vsetín;')
