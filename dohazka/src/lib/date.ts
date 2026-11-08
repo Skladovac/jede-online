@@ -35,22 +35,22 @@ const klic = (y: number, m: number, d: number) =>
 /** Počet dní v měsíci (month 1–12). */
 const dnuVMesici = (year: number, month: number) => new Date(Date.UTC(year, month, 0)).getUTCDate()
 
+/** První den období, které začíná v měsíci `month`: startDay omezený na délku měsíce. */
+const zacatekV = (startDay: number, year: number, month: number) => Math.min(startDay, dnuVMesici(year, month))
+
 /**
  * Období výkazu pro měsíc `month` (1–12) roku `year`.
  * startDay 1 = kalendářní měsíc; startDay 16 = od 16. předchozího měsíce do 15. tohoto.
- * Začátek se omezí na délku měsíce (31. v únoru → 28.), konec končí den před začátkem
- * následujícího období, nejvýš však posledním dnem měsíce.
+ * Období začínají vždy v `zacatekV` (31. v únoru → 28.) a končí den před začátkem dalšího,
+ * takže po sobě jdoucí období dlaždicují kalendář bez překryvu a bez děr.
  */
 export function periodRange(startDay: number, year: number, month: number): { fromKey: string; toKey: string } {
-  if (startDay === 1) {
-    return { fromKey: klic(year, month, 1), toKey: klic(year, month, dnuVMesici(year, month)) }
-  }
-  const py = month === 1 ? year - 1 : year
-  const pm = month === 1 ? 12 : month - 1
-  const from = Math.min(startDay, dnuVMesici(py, pm))
-  // Konec = den před začátkem následujícího období (startDay v tomto měsíci), v rámci měsíce.
-  const to = Math.min(startDay - 1, dnuVMesici(year, month))
-  return { fromKey: klic(py, pm, from), toKey: klic(year, month, to) }
+  // startDay 1: období začíná v tomto měsíci; jinak v předchozím.
+  const od = startDay === 1 ? { y: year, m: month } : month === 1 ? { y: year - 1, m: 12 } : { y: year, m: month - 1 }
+  const dalsi = od.m === 12 ? { y: od.y + 1, m: 1 } : { y: od.y, m: od.m + 1 }
+  const fromKey = klic(od.y, od.m, zacatekV(startDay, od.y, od.m))
+  const dalsiStart = parseDayKey(klic(dalsi.y, dalsi.m, zacatekV(startDay, dalsi.y, dalsi.m)))
+  return { fromKey, toKey: new Date(dalsiStart.getTime() - 86_400_000).toISOString().slice(0, 10) }
 }
 
 /** Hodiny s desetinnou čárkou bez zbytečných nul: 8.5 → "8,5", 8 → "8". */

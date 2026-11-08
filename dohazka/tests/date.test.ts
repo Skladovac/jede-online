@@ -22,6 +22,22 @@ describe('periodRange', () => {
   it('startDay 31 v únoru nespadne na neexistující den', () => {
     expect(periodRange(31, 2026, 3)).toEqual({ fromKey: '2026-02-28', toKey: '2026-03-30' })
   })
+  it('období dlaždicují kalendář: žádný den dvakrát, žádný nevynechaný', () => {
+    const den = 86_400_000
+    for (const startDay of [1, 16, 28, 31]) {
+      let predchozi: { fromKey: string; toKey: string } | null = null
+      for (let i = 0; i < 18; i++) { // leden 2026 až červen 2027
+        const rok = 2026 + Math.floor(i / 12)
+        const r = periodRange(startDay, rok, (i % 12) + 1)
+        expect(r.fromKey <= r.toKey, `${startDay} ${rok}-${i % 12 + 1}`).toBe(true)
+        if (predchozi) {
+          const dalsi = pragueDayKey(new Date(parseDayKey(predchozi.toKey).getTime() + den))
+          expect(r.fromKey, `startDay ${startDay}, měsíc ${i + 1}`).toBe(dalsi)
+        }
+        predchozi = r
+      }
+    }
+  })
 })
 
 describe('formatHours', () => {
