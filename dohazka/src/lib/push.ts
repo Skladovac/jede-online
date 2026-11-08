@@ -1,5 +1,8 @@
 import 'server-only'
-import webpush from 'web-push'
+// Jmenný import, ne výchozí: `web-push` je ESM balíček bez `default` exportu, takže
+// `import webpush from 'web-push'` vyrobí při buildu varování a v sbaleném kódu se
+// nemusí navázat vůbec — a notifikace by tiše nefungovaly až v produkci.
+import * as webpush from 'web-push'
 import { prisma } from '@/lib/prisma'
 
 /**

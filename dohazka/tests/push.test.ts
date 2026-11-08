@@ -5,7 +5,10 @@ vi.mock('server-only', () => ({}))
 const db = vi.hoisted(() => ({ findMany: vi.fn(), deleteMany: vi.fn() }))
 vi.mock('@/lib/prisma', () => ({ prisma: { pushSubscription: db } }))
 const wp = vi.hoisted(() => ({ setVapidDetails: vi.fn(), sendNotification: vi.fn() }))
-vi.mock('web-push', () => ({ default: wp }))
+// Tvar musí odpovídat skutečnému modulu: `web-push` vystavuje pojmenované exporty a žádný
+// `default`. Dřívější `{ default: wp }` popisoval modul, který neexistuje, takže testy
+// procházely i proti chybnému importu a varování buildu nemělo co shodit.
+vi.mock('web-push', () => wp)
 
 import { isPushEndpoint } from '@/lib/push'
 
