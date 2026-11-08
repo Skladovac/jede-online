@@ -1,3 +1,4 @@
+import { GOAL_LABEL, pickGoal } from '@/lib/goal'
 import Link from 'next/link'
 import type { Overview } from '@/lib/collection-view'
 import { cardImage } from '@/lib/format'
@@ -246,7 +247,7 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
         <h2 className="mb-4 text-2xl font-bold text-fg">{t('Sady')}</h2>
         {sets.length ? (
           <ul className="space-y-2">
-            {sets.map(({ set, owned, progress }) => (
+            {sets.map(({ set, progress, goal }) => (
               <li key={set.id}>
                 <Link
                   href={`/sady/${encodeURIComponent(set.id)}`}
@@ -254,12 +255,12 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold text-fg">{set.name}</span>
-                    <ProgressBars p={progress} compact />
+                    <ProgressBars p={progress} compact active={goal} />
                   </span>
-                  <span className="hidden h-1.5 w-32 overflow-hidden rounded-full bg-line sm:block" title="Base">
+                  <span className="hidden h-1.5 w-32 overflow-hidden rounded-full bg-line sm:block" title={GOAL_LABEL[goal]}>
                     <span
                       className="block h-full rounded-full bg-positive"
-                      style={{ width: `${progress.base ? Math.min(100, (progress.base.owned / Math.max(progress.base.total, 1)) * 100) : Math.min(100, (owned / Math.max(progress.complete.total, 1)) * 100)}%` }}
+                      style={{ width: `${Math.min(100, (pickGoal(progress, goal).owned / Math.max(pickGoal(progress, goal).total, 1)) * 100)}%` }}
                     />
                   </span>
                 </Link>

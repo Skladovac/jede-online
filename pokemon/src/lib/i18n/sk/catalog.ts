@@ -275,5 +275,13 @@ const dict: Record<string, string> = {
   'Chybí mi {n} karet': 'Chýba mi {n} kariet',
   '+ dalších {n}': '+ ďalších {n}',
   'Máš něco z toho? Napiš mi.': 'Máš niečo z toho? Napíš mi.',
+  'Sbírám:': 'Zbieram:',
+  'Co sbírám': 'Čo zbieram',
+  'můj cíl': 'môj cieľ',
+  'variant ve sbírce': 'variantov v zbierke',
+  'chybí do kompletu včetně secret': 'chýba do kompletu vrátane secret',
+  'chybí do master setu': 'chýba do master setu',
+  'Seznam': 'Zoznam',
+  'Mám {n} z {total} variant': 'Mám {n} z {total} variantov',
 }
 export default dict

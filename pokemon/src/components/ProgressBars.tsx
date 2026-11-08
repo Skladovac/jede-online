@@ -1,4 +1,4 @@
-import type { Progress } from '@/lib/progress'
+import type { Goal, Progress } from '@/lib/goal'
 import { getT } from '@/lib/i18n/server'
 
 const ROWS = [
@@ -8,7 +8,7 @@ const ROWS = [
 ] as const
 
 /** Tři postupy sady vedle sebe (base / complete / master). compact = jeden řádek pro výpis sad. */
-export async function ProgressBars({ p, compact = false }: { p: Progress; compact?: boolean }) {
+export async function ProgressBars({ p, compact = false, active }: { p: Progress; compact?: boolean; active?: Goal }) {
   const t = await getT()
   const rows = ROWS.filter(([k]) => p[k])
   if (compact)
@@ -19,7 +19,9 @@ export async function ProgressBars({ p, compact = false }: { p: Progress; compac
           return (
             <span key={k} className="inline-flex items-center gap-1" title={label}>
               <span className={`h-2 w-2 rounded-full ${color}`} />
-              {label} {v.owned}/{v.total}
+              <span className={active === k ? 'font-semibold text-fg' : undefined}>
+                {label} {v.owned}/{v.total}
+              </span>
             </span>
           )
         })}
@@ -33,7 +35,10 @@ export async function ProgressBars({ p, compact = false }: { p: Progress; compac
         return (
           <div key={k} title={t(hint)}>
             <div className="flex items-baseline justify-between text-sm">
-              <span className="font-semibold text-fg">{label}</span>
+              <span className="font-semibold text-fg">
+                {label}
+                {active === k && <span className="ml-1.5 rounded-full bg-[rgba(255,203,5,0.22)] px-1.5 py-0.5 text-[10.5px] font-semibold text-fg">{t('můj cíl')}</span>}
+              </span>
               <span className={`font-mono text-[12.5px] ${pct >= 100 ? 'text-positive' : 'text-muted'}`}>
                 {v.owned} / {v.total} · {pct} %
               </span>

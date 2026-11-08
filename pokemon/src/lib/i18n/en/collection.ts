@@ -161,5 +161,8 @@ const dict: Record<string, string> = {
   'Ukazujeme jen karty, které nemáš. Klepni na ty, které sháníš.': 'Showing only cards you don’t have. Tap the ones you’re looking for.',
   'Mám — kliknutím odebereš': 'Owned — click to remove',
   'Nemám — kliknutím přidáš 1 kus': 'Not owned — click to add 1',
+  'Master set kompletní!': 'Master set complete!',
+  'Máš všechny varianty — {n} kusů. Gratulujeme!': 'You have every variant — {n} pieces. Congratulations!',
+  'Máš všech {n} karet včetně secret. Gratulujeme!': 'You have all {n} cards including secrets. Congratulations!',
 }
 export default dict

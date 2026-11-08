@@ -5,11 +5,13 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useT } from '@/lib/i18n/client'
 import type { Variant } from '@prisma/client'
-import { changeSpare, changeVariantQty, clearSetWanted, markByNumbers, markRestWanted, toggleWant, type QuickState } from '@/app/actions/collection'
+import { changeSpare, changeVariantQty, clearSetWanted, markByNumbers, markRestWanted, toggleVariant, toggleWant, type QuickState } from '@/app/actions/collection'
+import { isBaseCard } from '@/lib/card-number'
+import type { Goal } from '@/lib/goal'
 import { CardImg } from '@/components/CardImg'
 import { POKEMON_TYPES } from '@/lib/pokemon-types'
 import { Celebration } from '@/components/Motion'
-import { ArrowLeft, ArrowRight, BookOpen, Check, LayoutGrid, Minus, Plus, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, Check, LayoutGrid, ListChecks, Minus, Plus, X } from 'lucide-react'
 
 export type GridCard = {
   id: string
@@ -40,6 +42,7 @@ export function SetGrid({
   loggedIn,
   officialCount,
   setId,
+  goal = 'base',
   baseCount,
   initialMode = 'view',
   showTip = false,
@@ -49,6 +52,8 @@ export function SetGrid({
   loggedIn: boolean
   officialCount: number
   setId: string
+  /** Co uživatel u sady sbírá — podle toho se počítá ukazatel pod režimy a oslava kompletu. */
+  goal?: Goal
   // Počet karet základní sady (bez secret rare); 0 = sada ho nemá (promo).
   baseCount: number
   /** Výchozí režim (z průvodce „Jakou sadu sbíráš?“ se otevírá rovnou „Mám“). */
@@ -62,7 +67,7 @@ export function SetGrid({
   // Karta, u které je otevřený výběr varianty (režim Mám).
   const [picker, setPicker] = useState<string | null>(null)
   // Zobrazení: mřížka, nebo album po 9 kartách (stránky jako v pořadači, prázdné kapsy = karty, které nemám).
-  const [layout, setLayout] = useState<'grid' | 'album'>('grid')
+  const [layout, setLayout] = useState<'grid' | 'album' | 'list'>('grid')
   const [page, setPage] = useState(0)
   const PER_PAGE = 9
   const pages = Math.max(1, Math.ceil(cards.length / PER_PAGE))
@@ -97,13 +102,27 @@ export function SetGrid({
   const ownedCount = cards.filter((c) => (state[c.id]?.owned ?? 0) > 0).length
   const wantCount = cards.filter((c) => state[c.id]?.want).length
   const spareCount = cards.reduce((s, c) => s + (state[c.id]?.spare ?? 0), 0)
-  // Oslava: právě teď (klepnutím) jsem dokončil(a) sadu — ne při pouhém otevření už hotové sady.
+  // Postup podle zvoleného cíle: base = karty 1–oficiální počet, complete = všechny karty, master = všechny varianty.
+  const goalCounts = (() => {
+    if (goal === 'master') {
+      let owned = 0
+      let total = 0
+      for (const c of cards) for (const v of c.variants) {
+        total++
+        if ((state[c.id]?.variants?.[v.key] ?? 0) > 0) owned++
+      }
+      return { owned, total }
+    }
+    const scope = goal === 'base' && baseCount ? cards.filter((c) => isBaseCard(c.localId, baseCount)) : cards
+    return { owned: scope.filter((c) => (state[c.id]?.owned ?? 0) > 0).length, total: scope.length }
+  })()
+  // Oslava: právě teď (klepnutím) jsem dokončil(a) cíl — ne při pouhém otevření už hotové sady.
   const [celebrate, setCelebrate] = useState(0)
-  const prevOwned = useRef(ownedCount)
+  const prevOwned = useRef(goalCounts.owned)
   useEffect(() => {
-    if (prevOwned.current < officialCount && ownedCount >= officialCount && officialCount > 0) setCelebrate((n) => n + 1)
-    prevOwned.current = ownedCount
-  }, [ownedCount, officialCount])
+    if (prevOwned.current < goalCounts.total && goalCounts.owned >= goalCounts.total && goalCounts.total > 0) setCelebrate((n) => n + 1)
+    prevOwned.current = goalCounts.owned
+  }, [goalCounts.owned, goalCounts.total])
 
   // Karty, u kterých se právě ukládá — další klepnutí se ignoruje (dvojklik by poslal dvě protichůdné změny).
   const inFlight = useRef(new Set<string>())
@@ -207,6 +226,21 @@ export function SetGrid({
     )
   }
 
+  /** Seznam: zaškrtnutí / odškrtnutí jedné varianty (1 kus ↔ nic). */
+  function setVariantOwned(cardId: string, variant: Variant, on: boolean) {
+    const cur = state[cardId] ?? { owned: 0, spare: 0, want: false }
+    if (((cur.variants?.[variant] ?? 0) > 0) === on) return
+    const vars = { ...(cur.variants ?? {}) }
+    if (on) vars[variant] = 1
+    else delete vars[variant]
+    const sum = (v: Record<string, number>) => Object.values(v).reduce((s, n) => s + n, 0)
+    const fromVars = (v: Record<string, number>): QuickState => {
+      const owned = sum(v)
+      return { owned, spare: Math.min(cur.spare, owned), want: owned ? false : cur.want, variants: v }
+    }
+    apply(cardId, fromVars(vars), async () => fromVars(await toggleVariant(cardId, variant)))
+  }
+
   function onCard(cardId: string) {
     const cur = state[cardId] ?? { owned: 0, spare: 0, want: false }
     if (mode === 'owned') {
@@ -229,7 +263,17 @@ export function SetGrid({
 
   return (
     <div className="mt-6">
-      <Celebration show={celebrate} title={t('Sada kompletní!')} text={t('Máš všech {n} karet. Gratulujeme!', { n: officialCount })} />
+      <Celebration
+        show={celebrate}
+        title={goal === 'master' ? t('Master set kompletní!') : t('Sada kompletní!')}
+        text={
+          goal === 'master'
+            ? t('Máš všechny varianty — {n} kusů. Gratulujeme!', { n: goalCounts.total })
+            : goal === 'complete'
+              ? t('Máš všech {n} karet včetně secret. Gratulujeme!', { n: goalCounts.total })
+              : t('Máš všech {n} karet. Gratulujeme!', { n: goalCounts.total })
+        }
+      />
       {tip && loggedIn && (
         <div className="mb-4 flex items-start gap-3 rounded-panel border border-line bg-[color-mix(in_srgb,var(--brand-yellow)_14%,transparent)] p-4 text-sm text-fg">
           <p className="flex-1">
@@ -375,11 +419,11 @@ export function SetGrid({
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-brand-blue to-brand-blue-dark transition-all dark:from-accent dark:to-brand-blue"
-                style={{ width: `${Math.min(100, (ownedCount / Math.max(officialCount, 1)) * 100)}%` }}
+                style={{ width: `${Math.min(100, (goalCounts.owned / Math.max(goalCounts.total, 1)) * 100)}%` }}
               />
             </div>
             <span className="shrink-0 font-mono text-[12px] text-muted">
-              {t('Mám {owned}/{total} · chybí {want} · navíc {spare}', { owned: ownedCount, total: officialCount, want: wantCount, spare: spareCount })}
+              {t('Mám {owned}/{total} · chybí {want} · navíc {spare}', { owned: goalCounts.owned, total: goalCounts.total, want: wantCount, spare: spareCount })}
             </span>
           </div>
           {error && <p className="mt-2 text-xs text-danger">{t(error)}</p>}
@@ -398,6 +442,7 @@ export function SetGrid({
           {(
             [
               ['grid', t('Mřížka'), LayoutGrid],
+              ['list', t('Seznam'), ListChecks],
               ['album', t('Album'), BookOpen],
             ] as const
           ).map(([l, label, Icon]) => (
@@ -489,7 +534,51 @@ export function SetGrid({
         </div>
       )}
 
-      {setTypes.length > 1 && layout === 'grid' && (
+      {layout === 'list' && (
+        <ul className="mt-4 divide-y divide-line overflow-hidden rounded-panel border border-line bg-card">
+          {/* Seznam: miniatura, číslo a jméno, vpravo políčka variant — odškrtáš celou sadu bez otevírání karet. */}
+          {cards
+            .filter((c) => !typeFilter || c.types?.includes(typeFilter))
+            .map((c) => {
+              const s = state[c.id] ?? { owned: 0, spare: 0, want: false }
+              return (
+                <li key={c.id} className={`flex items-center gap-3 px-3 py-2 ${!s.owned && ownedCount > 0 ? 'bg-surface/60' : ''}`}>
+                  <Link href={`/karta/${encodeURIComponent(c.id)}`} className="card-frame w-11 shrink-0 aspect-[63/88]">
+                    {c.image && <CardImg src={c.image} alt="" />}
+                  </Link>
+                  <Link href={`/karta/${encodeURIComponent(c.id)}`} className="min-w-0 flex-1">
+                    <span className={`block truncate text-sm ${s.owned ? 'font-semibold text-fg' : 'text-muted'}`}>{c.name}</span>
+                    <span className="font-mono text-xs text-subtle">
+                      {c.localId}
+                      {c.price ? ` · ${c.price}` : ''}
+                      {s.want ? ` · ${t('chybí')}` : ''}
+                    </span>
+                  </Link>
+                  <div className="flex max-w-[55%] flex-wrap justify-end gap-x-3 gap-y-0.5">
+                    {c.variants.map((v) => {
+                      const n = s.variants?.[v.key] ?? 0
+                      return (
+                        <label key={v.key} className={`inline-flex min-h-9 cursor-pointer select-none items-center gap-1.5 text-xs ${n ? 'font-semibold text-fg' : 'text-muted'}`}>
+                          <input
+                            type="checkbox"
+                            checked={n > 0}
+                            disabled={!loggedIn}
+                            onChange={(e) => setVariantOwned(c.id, v.key, e.target.checked)}
+                            className="h-[18px] w-[18px] accent-[var(--positive)]"
+                          />
+                          {v.label === 'Normal' ? t('Normální') : v.label}
+                          {n > 1 ? <span className="font-mono text-subtle">×{n}</span> : null}
+                        </label>
+                      )
+                    })}
+                  </div>
+                </li>
+              )
+            })}
+        </ul>
+      )}
+
+      {setTypes.length > 1 && layout !== 'album' && (
         <div className="mt-4 flex flex-wrap items-center gap-2 text-sm" role="group" aria-label={t('Filtr podle typu')}>
           <button
             type="button"
@@ -518,7 +607,7 @@ export function SetGrid({
         </div>
       )}
 
-      <ul className={`mt-7 grid grid-cols-3 gap-x-2.5 gap-y-5 sm:gap-x-6 sm:gap-y-9 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 ${layout === 'album' ? 'hidden' : ''}`}>
+      <ul className={`mt-7 grid grid-cols-3 gap-x-2.5 gap-y-5 sm:gap-x-6 sm:gap-y-9 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 ${layout !== 'grid' ? 'hidden' : ''}`}>
         {cards
           // Režim „Chybí“: jen karty, které nemám (ty, co mám, by tu jen překážely).
           .filter((c) => (!typeFilter || c.types?.includes(typeFilter)) && (mode !== 'want' || !(state[c.id]?.owned ?? 0)))

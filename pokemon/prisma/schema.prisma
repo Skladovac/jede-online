@@ -29,6 +29,7 @@ model CardSet {
   symbolUrl     String?
   cards         Card[]
   products      Product[]
+  goals         SetGoalChoice[]
   syncedAt      DateTime  @updatedAt
 
   @@index([game, releaseDate])
@@ -123,6 +124,7 @@ model User {
   invitedById     String?
   invitedBy       User?     @relation("Invites", fields: [invitedById], references: [id], onDelete: SetNull)
   invited         User[]    @relation("Invites")
+  setGoals        SetGoalChoice[]
   inviteCountedAt DateTime?
   followDigestAt  DateTime? // do kdy už jsme poslali souhrn nových nabídek sledovaných
   lastSeenAt      DateTime? // naposledy na webu (zapisuje se nejvýš jednou za 10 minut)
@@ -194,6 +196,24 @@ model EmailToken {
 }
 
 // ── Sbírka ──────────────────────────────────────────────────────────
+
+// Co u sady sbírám: base / complete / master — podle toho se počítá hlavní postup, „komplet“ i oslava.
+enum SetGoal {
+  BASE
+  COMPLETE
+  MASTER
+}
+
+model SetGoalChoice {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  setId     String
+  set       CardSet  @relation(fields: [setId], references: [id], onDelete: Cascade)
+  goal      SetGoal
+  updatedAt DateTime @updatedAt
+
+  @@id([userId, setId])
+}
 
 enum Variant {
   NORMAL
