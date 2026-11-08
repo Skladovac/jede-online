@@ -565,7 +565,7 @@ export function SetGrid({
                 return (
                   <li
                     key={c.id}
-                    className={`grid grid-cols-[44px_minmax(0,1fr)] items-center gap-x-3 gap-y-1 px-3 py-1.5 sm:gap-y-0 sm:[grid-template-columns:var(--list-cols)] ${!s.owned && ownedCount > 0 ? 'bg-surface/60' : ''}`}
+                    className={`grid grid-cols-[44px_minmax(0,1fr)] items-center gap-x-3 gap-y-1 px-3 py-1.5 sm:gap-y-0 sm:[grid-template-columns:var(--list-cols)] odd:bg-card even:bg-[color-mix(in_srgb,var(--brand-yellow)_9%,var(--bg-card))] hover:bg-[color-mix(in_srgb,var(--brand-yellow)_18%,transparent)]`}
                     style={{ ['--list-cols' as string]: `44px minmax(0,1fr) repeat(${listColumns.length}, 7rem)` }}
                   >
                     <Link href={`/karta/${encodeURIComponent(c.id)}`} className="card-frame row-span-2 w-11 aspect-[63/88] sm:row-span-1">
