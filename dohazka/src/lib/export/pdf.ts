@@ -39,10 +39,10 @@ const SLOUPCE = [
   { nazev: 'Poznámka', sirka: 146, pravo: false },
 ]
 
-export function toPdf(report: Report): Promise<Buffer> {
+export async function toPdf(report: Report): Promise<Buffer> {
   // Font hledáme dřív, než cokoli vykreslíme — chyba má být hned a česky.
   const font = resolvePdfFont()
-  return new Promise((resolve, reject) => {
+  return new Promise<Buffer>((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', layout: 'portrait', margin: OKRAJ, autoFirstPage: false, info: { Title: report.title } })
     const kusy: Buffer[] = []
     doc.on('data', (k: Buffer) => kusy.push(k))
@@ -52,7 +52,6 @@ export function toPdf(report: Report): Promise<Buffer> {
     try {
       doc.registerFont('body', font)
       const sirka = SLOUPCE.reduce((s, c) => s + c.sirka, 0)
-      const dno = doc.page?.height ?? 842
 
       const hlavickaTabulky = (y: number) => {
         doc.font('body').fontSize(PISMO).fillColor('#000')
@@ -78,7 +77,7 @@ export function toPdf(report: Report): Promise<Buffer> {
       doc.text(`Období: ${report.periodLabel}`, OKRAJ, y, { width: sirka })
       y += 28
       y = hlavickaTabulky(y)
-      const spodek = (doc.page?.height ?? dno) - OKRAJ
+      const spodek = doc.page.height - OKRAJ
 
       for (const r of report.rows) {
         const hodnoty = [r.dayKey, r.weekday, r.fromTime, r.toTime, r.hours, r.place, r.kind, r.note]

@@ -19,8 +19,13 @@ describe('toPdf', () => {
     const buf = await toPdf({ ...empty, rows: [{ dayKey: '2026-11-02', weekday: 'pondělí', fromTime: '', toTime: '', hours: '8,5', place: 'Zlín', kind: '', note: '' }], totalHours: '8,5', daysWorked: 1 })
     expect(buf.subarray(0, 5).toString('latin1')).toBe('%PDF-')
     expect(buf.length).toBeGreaterThan(1000)
+    // Vestavěná Helvetica nemá češtinu; kdyby se použila, diakritika by se tiše rozsypala.
+    const text = buf.toString('latin1')
+    expect(text).not.toContain('Helvetica')
+    // Vložený font je TTF z disku (Arial/DejaVu), ne jeden ze standardních 14.
+    expect(text).toMatch(/\/FontFile2/)
   })
-  it('prázdný měsíc vyrobí PDF s hlavičkou, ne chyba', async () => {
+  it('prázdný měsíc vyrobí PDF s hlavičkou, ne chybu', async () => {
     const buf = await toPdf(empty)
     expect(buf.subarray(0, 5).toString('latin1')).toBe('%PDF-')
   })
