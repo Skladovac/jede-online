@@ -9,7 +9,7 @@ SRC=$ROOT/dohazka-src            # vlastní klon repa jede-online
 APP=$SRC/dohazka
 ENVF=$ROOT/dohazka.env
 BRANCH=${BRANCH:-master}
-HEALTH=http://127.0.0.1:3500/api/health
+HEALTH=http://127.0.0.1:3600/api/health
 
 log()  { printf '\n\033[1;33m== %s\033[0m\n' "$*"; }
 fail() { printf '\n\033[1;31mSTOP: %s\033[0m\n' "$*" >&2; exit 1; }

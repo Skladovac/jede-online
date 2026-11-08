@@ -159,7 +159,7 @@ Volitelně `--period-start 16` nastaví, že výkazové období začíná 16. a 
 ```bash
 set -a; . /opt/jede/dohazka.env; set +a
 printf 'header = "Authorization: Bearer %s"\n' "$CRON_SECRET" \
-  | curl -fsS -X POST -K - 'http://127.0.0.1:3500/api/cron/reminder?force=1'
+  | curl -fsS -X POST -K - 'http://127.0.0.1:3600/api/cron/reminder?force=1'
 ```
 
 **Pozor:** zkušební pípnutí `?force=1` přes den pošle skutečný push a **nespotřebuje**

@@ -29,7 +29,7 @@ services:
       DOHAZKA_PDF_FONT: ${DOHAZKA_PDF_FONT:-}
       GIT_COMMIT: ${GIT_COMMIT:-unknown}
     ports:
-      - "127.0.0.1:3500:3000"
+      - "127.0.0.1:3600:3000"
     networks: [jede]
 
   # Migrační brána (pojistka 3) a `npm run user:add`. Stage `builder` má prisma CLI,
