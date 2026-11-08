@@ -81,7 +81,7 @@ async function disablePush() {
   store.set(OFF_KEY, '1')
 }
 
-type DeviceState = 'loading' | 'unsupported' | 'ios-install' | 'blocked' | 'on' | 'off'
+type DeviceState = 'loading' | 'bad-key' | 'unsupported' | 'ios-install' | 'blocked' | 'on' | 'off'
 
 const btn = 'min-h-11 rounded-panel px-4 py-2 font-medium disabled:opacity-60'
 const btnPrimary = `${btn} bg-accent text-on-accent hover:bg-accent-hover`
@@ -102,7 +102,13 @@ export function PushSettings({ publicKey, remindHour, remindEnabled }: { publicK
     const reg = await navigator.serviceWorker.getRegistration()
     const sub = await reg?.pushManager.getSubscription()
     // Odběr s jiným (starým) VAPID klíčem se nepočítá: server by ho odmítal, tak nabídneme zapnutí znovu.
-    const platny = !!sub && sameKey(sub.options.applicationServerKey, keyBytes(publicKey))
+    let platny: boolean
+    try {
+      platny = !!sub && sameKey(sub.options.applicationServerKey, keyBytes(publicKey))
+    } catch {
+      // Ručně vložený VAPID klíč na serveru je poškozený (atob selže): bez toho by stav zůstal na „…“ navždy.
+      return setState('bad-key')
+    }
     setState(platny && Notification.permission === 'granted' && !store.get(OFF_KEY) ? 'on' : 'off')
   }
   useEffect(() => {
@@ -146,6 +152,7 @@ export function PushSettings({ publicKey, remindHour, remindEnabled }: { publicK
             {state === 'on' && 'Zapnuté — večerní připomínka sem dorazí.'}
             {state === 'off' && 'Vypnuté.'}
             {state === 'blocked' && 'Zablokované v prohlížeči. Povol notifikace pro tento web v nastavení prohlížeče (ikona zámku vedle adresy).'}
+            {state === 'bad-key' && 'Klíč pro notifikace na serveru je poškozený, notifikace nejdou zapnout. Dej vědět správci.'}
             {state === 'unsupported' && 'Tento prohlížeč notifikace neumí.'}
             {state === 'ios-install' && 'Na iPhonu fungují notifikace jen v aplikaci na ploše: Sdílet → Přidat na plochu, pak ji otevři z plochy.'}
           </p>
