@@ -67,3 +67,16 @@ export function dayKeysInRange(fromKey: string, toKey: string): string[] {
   }
   return out
 }
+
+/**
+ * Klíč období "YYYY-MM", do kterého patří den `dayKey` (inverzní k `periodRange`).
+ * startDay 1: kalendářní měsíc dne. Jinak od začátku období (startDay omezený na délku měsíce)
+ * patří den už k následujícímu měsíci; v prosinci to přeteče do ledna dalšího roku.
+ */
+export function periodKeyForDay(startDay: number, dayKey: string): string {
+  const [y, m, d] = dayKey.split('-').map(Number)
+  const dalsi = startDay > 1 && d >= zacatekV(startDay, y, m)
+  const rok = dalsi && m === 12 ? y + 1 : y
+  const mesic = dalsi ? (m % 12) + 1 : m
+  return `${String(rok).padStart(4, '0')}-${String(mesic).padStart(2, '0')}`
+}

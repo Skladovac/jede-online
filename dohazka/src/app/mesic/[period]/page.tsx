@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth'
-import { formatHours, parseDayKey, periodRange, pragueDayKey } from '@/lib/date'
+import { formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
 import { buildMonth } from '@/lib/month'
 import { MonthList } from '../MonthList'
 
@@ -59,9 +59,8 @@ export default async function MesicPage({ params }: { params: Promise<{ period: 
     })),
   })
 
-  const dnes = pragueDayKey(new Date())
-  const [dnesRok, dnesMesic] = dnes.split('-').map(Number)
-  const dnesPeriod = klicMesice(dnesRok, dnesMesic)
+  // Období dneška podle nastavení uživatele (při startDay 16 patří 20. 11. už k 2026-12).
+  const dnesPeriod = periodKeyForDay(user.periodStartDay, pragueDayKey(new Date()))
   const odkaz = 'rounded-panel border border-line px-3 py-2 text-sm text-muted hover:border-line-strong'
 
   return (

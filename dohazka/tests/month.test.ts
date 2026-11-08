@@ -47,4 +47,13 @@ describe('buildMonth', () => {
     })
     expect(r.totalHours).toBe(8)
   })
+  it('součet neplave ani naivně (0,1 + 0,2 + 0,3 = 0,6)', () => {
+    const r = buildMonth({
+      fromKey: '2026-11-01',
+      toKey: '2026-11-03',
+      tracksFromKey: '2026-11-01',
+      entries: [e('2026-11-01', 0.1, 'Zlín'), e('2026-11-02', 0.2, 'Zlín'), e('2026-11-03', 0.3, 'Zlín')],
+    })
+    expect(r.totalHours).toBe(0.6)
+  })
 })

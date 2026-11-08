@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dayKeysInRange, formatHours, parseDayKey, periodRange, pragueDayKey, pragueHour } from '@/lib/date'
+import { dayKeysInRange, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey, pragueHour } from '@/lib/date'
 
 describe('pražský čas', () => {
   it('den se láme podle Prahy, ne podle UTC', () => {
@@ -64,5 +64,28 @@ describe('parseDayKey', () => {
     for (const key of ['2026-01-01', '2026-03-29', '2026-10-25', '2026-12-31']) {
       expect(pragueDayKey(parseDayKey(key)), key).toBe(key)
     }
+  })
+})
+
+describe('periodKeyForDay', () => {
+  it('startDay 1: období je kalendářní měsíc dne', () => {
+    expect(periodKeyForDay(1, '2026-11-20')).toBe('2026-11')
+    expect(periodKeyForDay(1, '2026-12-31')).toBe('2026-12')
+  })
+  it('startDay 16: od 16. dne patří den k následujícímu období', () => {
+    expect(periodKeyForDay(16, '2026-11-15')).toBe('2026-11')
+    expect(periodKeyForDay(16, '2026-11-16')).toBe('2026-12')
+    expect(periodKeyForDay(16, '2026-11-20')).toBe('2026-12')
+  })
+  it('přelom roku', () => {
+    expect(periodKeyForDay(16, '2026-12-20')).toBe('2027-01')
+    expect(periodKeyForDay(16, '2027-01-10')).toBe('2027-01')
+  })
+  it('souhlasí s periodRange: každý den období dá jeho klíč', () => {
+    const { fromKey, toKey } = periodRange(16, 2027, 1)
+    for (const d of dayKeysInRange(fromKey, toKey)) expect(periodKeyForDay(16, d), d).toBe('2027-01')
+  })
+  it('startDay 31 v krátkém měsíci', () => {
+    expect(periodKeyForDay(31, '2027-02-28')).toBe('2027-03')
   })
 })
