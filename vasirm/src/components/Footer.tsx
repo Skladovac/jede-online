@@ -6,9 +6,8 @@ import type { User } from '@prisma/client'
 export function Footer({ agents, nav }: { agents: Pick<User, 'id' | 'name' | 'slug' | 'role' | 'phone' | 'publicEmail'>[]; nav: NavItem[] }) {
   const year = new Date().getFullYear()
   return (
-    <footer className="relative overflow-hidden bg-ink text-paper/75">
-      <div className="module-grid pointer-events-none absolute inset-0 opacity-30" aria-hidden />
-      <div className="wrap relative grid gap-12 py-16 md:grid-cols-12 md:py-20">
+    <footer className="bg-ink text-paper/75">
+      <div className="wrap grid gap-12 py-16 md:grid-cols-12 md:py-20">
         <div className="md:col-span-4">
           <LogoFull className="w-44 text-paper" />
           <p className="mt-6 max-w-xs font-serif text-2xl leading-snug text-paper">{SITE.claim}</p>
@@ -68,8 +67,8 @@ export function Footer({ agents, nav }: { agents: Pick<User, 'id' | 'name' | 'sl
         </nav>
       </div>
 
-      <div className="relative border-t border-white/10">
-        <div className="wrap flex flex-col gap-3 py-6 text-[0.8rem] text-paper/50 md:flex-row md:items-center md:justify-between">
+      <div className="border-t border-white/10">
+        <div className="wrap flex flex-col gap-3 py-6 text-label text-paper/50 md:flex-row md:items-center md:justify-between">
           <p>
             © {year} {SITE.operator.name}
             {SITE.operator.ico ? ` · IČO ${SITE.operator.ico}` : ''}

@@ -59,7 +59,7 @@ export function Gallery({ listingId, images, title }: { listingId: string; image
             alt={title}
             sizes="(min-width: 768px) 50vw, 100vw"
             priority
-            className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.02]"
+            className="h-full w-full object-cover transition-opacity group-hover:opacity-90"
           />
         </button>
         {side.map((img, i) => (
@@ -75,7 +75,7 @@ export function Gallery({ listingId, images, title }: { listingId: string; image
               img={img}
               alt={title}
               sizes="25vw"
-              className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
+              className="h-full w-full object-cover transition-opacity group-hover:opacity-90"
             />
             {i === side.length - 1 && total > 5 && (
               <span className="absolute inset-0 grid place-items-center bg-ink/55 text-paper transition-colors group-hover:bg-ink/45">

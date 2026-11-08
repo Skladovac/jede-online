@@ -9,7 +9,7 @@ export function StatusBadge({ status, className = '' }: { status: Card['status']
   if (status === 'ACTIVE' || status === 'DRAFT') return null
   return (
     <span
-      className={`label inline-block px-3 py-1.5 text-[0.65rem] ${status === 'SOLD' ? 'bg-ink text-gold-light' : 'bg-gold text-ink'} ${className}`}
+      className={`label inline-block px-3 py-1.5 text-xs ${status === 'SOLD' ? 'bg-ink text-gold-light' : 'bg-gold text-ink'} ${className}`}
     >
       {STATUS_LABEL[status]}
     </span>
@@ -30,10 +30,10 @@ export function ListingCard({ l, priority = false, index }: { l: Card; priority?
               alt={l.title}
               sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"
               priority={priority}
-              className={`h-full w-full object-cover transition duration-[1.2s] ease-out group-hover:scale-[1.04] ${l.status === 'SOLD' ? 'grayscale-[0.6]' : ''}`}
+              className={`h-full w-full object-cover transition-opacity group-hover:opacity-90 ${l.status === 'SOLD' ? 'grayscale-[0.6]' : ''}`}
             />
           ) : (
-            <div className="module-grid h-full w-full bg-ink-2" />
+            <div className="h-full w-full bg-ink-2" />
           )}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink/60 to-transparent" />
           <div className="absolute left-4 top-4 flex gap-2">
@@ -54,7 +54,7 @@ export function ListingCard({ l, priority = false, index }: { l: Card; priority?
             {OFFER_LABEL[l.offerType]} · {l.locality}
           </p>
           <h3 className="mt-2 font-serif text-[1.6rem] leading-[1.1] text-ink">{l.title}</h3>
-          <p className="mt-2 text-[0.95rem] text-stone">{facts.join(' · ')}</p>
+          <p className="mt-2 text-ui text-stone">{facts.join(' · ')}</p>
           <p className="mt-4 text-lg font-semibold tabular-nums text-ink">
             {l.status === 'SOLD' ? 'Prodáno' : formatPrice(l.price, l.offerType === 'RENT')}
           </p>

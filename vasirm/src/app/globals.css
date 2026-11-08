@@ -34,15 +34,15 @@
   .wrap {
     @apply mx-auto w-full max-w-site px-4 sm:px-6 lg:px-10;
   }
-  /* Malý nadpis sekce: „01 — Prodej“ jako na architektonickém výkresu. */
+  /* Malý nadpis sekce: normální písmo, barvu a linku dodá místo použití. */
   .label {
-    @apply font-sans text-[0.72rem] font-semibold uppercase tracking-label;
+    @apply font-sans text-label font-medium first-letter:uppercase;
   }
   .display {
     @apply font-serif font-normal leading-[0.95] tracking-[-0.01em];
   }
   .btn {
-    @apply inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-[2px] px-6 text-[0.95rem] font-semibold transition duration-300 ease-out;
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[2px] px-6 text-ui font-medium transition-[color,background-color,border-color,transform] active:scale-[0.98];
   }
   .btn-gold {
     @apply btn bg-gold text-ink hover:bg-gold-light;
@@ -60,27 +60,17 @@
     @apply underline decoration-gold/60 decoration-1 underline-offset-[5px] transition-colors hover:decoration-gold;
   }
   .field {
-    @apply block w-full rounded-[2px] border border-ink/15 bg-white px-4 py-3 text-[1rem] text-ink placeholder:text-stone-light transition focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/25;
+    @apply block w-full rounded-[2px] border border-ink/15 bg-white px-4 py-3 text-[1rem] text-ink placeholder:text-stone-light transition-[border-color,box-shadow] focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/25;
   }
   .field-dark {
-    @apply block w-full rounded-[2px] border border-white/15 bg-white/[0.04] px-4 py-3 text-[1rem] text-paper placeholder:text-white/35 transition focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/25;
+    @apply block w-full rounded-[2px] border border-white/15 bg-white/[0.04] px-4 py-3 text-[1rem] text-paper placeholder:text-white/35 transition-[border-color,box-shadow] focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/25;
   }
   .prose-vrm p {
-    @apply mb-5 text-[1.06rem] leading-[1.75] text-ink/85;
+    @apply mb-5 text-[1.0625rem] leading-[1.75] text-ink/85;
   }
 }
 
-/* Jemná zrnitost papíru — jen ozdoba, žádný obsah. */
-.grain::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.06;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* Modulová mřížka zlínských staveb (Baťův modul 6,15 × 6,15 m) jako tenké linky. */
+/* Modulová mřížka (Baťův modul 6,15 × 6,15 m) — jen jako podklad mapy, než se načte. */
 .module-grid {
   background-image:
     linear-gradient(to right, rgb(197 168 128 / 0.13) 1px, transparent 1px),
@@ -92,18 +82,17 @@
 @media (prefers-reduced-motion: no-preference) {
   .js [data-reveal] {
     opacity: 0;
-    transform: translateY(28px);
+    transform: translateY(12px);
   }
   .js .hero-line > span {
     transform: translateY(110%);
   }
   .js [data-hero] {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(12px);
   }
   .js [data-hero-photo] {
     opacity: 0;
-    transform: scale(1.06);
   }
   .js [data-hero-frame] {
     opacity: 0;

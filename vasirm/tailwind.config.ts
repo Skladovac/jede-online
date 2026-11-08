@@ -16,9 +16,16 @@ const config: Config = {
         serif: ['var(--font-serif)', 'Georgia', 'serif'],
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
       },
+      // Logo v hlavičce (verzálky jako v logu). Popisky sekcí jsou normálním písmem.
       letterSpacing: { label: '0.18em' },
+      fontSize: {
+        label: ['0.8125rem', { lineHeight: '1.25rem' }], // 13 px — popisky sekcí, meta
+        ui: ['0.9375rem', { lineHeight: '1.375rem' }], // 15 px — tlačítka, menu, kontakty
+      },
       maxWidth: { site: '84rem' },
-      transitionTimingFunction: { out: 'cubic-bezier(.22,1,.36,1)' },
+      // Jedna křivka a krátké časy pro všechny přechody.
+      transitionTimingFunction: { DEFAULT: 'cubic-bezier(.22,1,.36,1)', out: 'cubic-bezier(.22,1,.36,1)' },
+      transitionDuration: { DEFAULT: '150ms' },
     },
   },
   plugins: [],

@@ -54,7 +54,7 @@ export function Header({ nav }: { nav: NavItem[] }) {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`relative py-2 text-[0.93rem] transition-colors hover:text-gold-light ${
+                    className={`relative py-2 text-ui transition-colors hover:text-gold-light ${
                       active(item.href) ? 'text-gold-light' : 'text-paper/80'
                     }`}
                   >
@@ -67,11 +67,11 @@ export function Header({ nav }: { nav: NavItem[] }) {
           </nav>
 
           <div className="flex items-center gap-3">
-            <a href={telHref(SITE.phone)} className="hidden items-center gap-2 text-[0.93rem] text-paper/80 transition-colors hover:text-gold-light xl:flex">
+            <a href={telHref(SITE.phone)} className="hidden items-center gap-2 text-ui text-paper/80 transition-colors hover:text-gold-light xl:flex">
               <Phone className="h-4 w-4 text-gold" aria-hidden />
               {SITE.phone}
             </a>
-            <Link href="/odhad-nemovitosti-zdarma" className="btn-gold hidden min-h-[2.6rem] px-5 text-[0.88rem] sm:inline-flex">
+            <Link href="/odhad-nemovitosti-zdarma" className="btn-gold hidden min-h-10 px-5 text-sm sm:inline-flex">
               Odhad ceny zdarma
             </Link>
             <button
@@ -95,8 +95,7 @@ export function Header({ nav }: { nav: NavItem[] }) {
           open ? 'visible opacity-100' : 'invisible opacity-0'
         }`}
       >
-        <div className="module-grid absolute inset-0 opacity-40" aria-hidden />
-        <nav aria-label="Mobilní" className="wrap relative flex min-h-full flex-col justify-between py-10">
+        <nav aria-label="Mobilní" className="wrap flex min-h-full flex-col justify-between py-10">
           <ul className="space-y-1">
             {[{ href: '/', label: 'Úvod' }, ...nav, { href: '/odhad-nemovitosti-zdarma', label: 'Odhad ceny zdarma' }].map((item, i) => (
               <li key={item.href}>

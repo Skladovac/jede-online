@@ -23,7 +23,7 @@ export function Reveal() {
         start: 'top 88%',
         once: true,
         onEnter: (batch) => {
-          const tween = gsap.to(batch, { opacity: 1, y: 0, duration: 1, ease: 'expo.out', stagger: 0.09, overwrite: true })
+          const tween = gsap.to(batch, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.05, overwrite: true })
           // Pojistka pro okno v pozadí (prohlížeč nekreslí snímky): obsah nesmí zůstat skrytý.
           timers.push(window.setTimeout(() => tween.progress(1), 2500))
         },

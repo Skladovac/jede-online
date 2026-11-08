@@ -20,7 +20,7 @@ export default async function ContactPage() {
         label="Kontakt"
         title={
           <>
-            Spojte se <em className="text-gold-light">s námi.</em>
+            Spojte se <em className="text-gold-light">s námi</em>
           </>
         }
         lead="Zavolejte, napište, nebo nám nechte vzkaz. Rádi probereme vaše možnosti — prodej, koupi i odhad ceny."

@@ -30,7 +30,7 @@ export default function SalePage() {
         label="Prodej nemovitosti"
         title={
           <>
-            Prodáme vaši nemovitost <em className="text-gold-light">rychle a bezpečně.</em>
+            Prodáme vaši nemovitost <em className="text-gold-light">rychle a bezpečně</em>
           </>
         }
         lead="Vaši nemovitost představíme v tom nejlepším světle. Od profesionálních fotografií a videoprohlídek až po vyjednání nejvyšší možné ceny."
@@ -63,15 +63,11 @@ export default function SalePage() {
 
       <section className="bg-paper py-20 md:py-28">
         <div className="wrap">
-          <div className="grid gap-8 md:grid-cols-12">
-            <div className="md:col-span-5">
-              <SectionLabel n="01">Co pro vás uděláme</SectionLabel>
-            </div>
-            <h2 data-reveal className="display text-[clamp(2.2rem,4.4vw,3.6rem)] md:col-span-7">
-              Celý prodej vedeme za vás. <em className="text-gold-deep">Vy víte, na čem jste.</em>
-            </h2>
-          </div>
-          <ul className="mt-14 grid gap-px bg-ink/10 sm:grid-cols-2 lg:grid-cols-4">
+          <SectionLabel>Co pro vás uděláme</SectionLabel>
+          <h2 data-reveal className="display mt-5 max-w-4xl text-[clamp(2.2rem,4.4vw,3.6rem)]">
+            Celý prodej vedeme za vás, vy víte, na čem jste
+          </h2>
+          <ul className="mt-12 grid gap-px bg-ink/10 sm:grid-cols-2 lg:grid-cols-4">
             {SERVICES.map(({ icon: Icon, title, text }) => (
               <li key={title} data-reveal className="bg-paper p-7">
                 <Icon className="h-6 w-6 text-gold-deep" strokeWidth={1.5} aria-hidden />
@@ -83,14 +79,14 @@ export default function SalePage() {
         </div>
       </section>
 
-      <section className="grain relative overflow-hidden bg-ink py-20 text-paper md:py-28">
-        <div className="wrap relative grid gap-12 lg:grid-cols-12">
+      <section className="bg-ink py-20 text-paper md:py-28">
+        <div className="wrap grid gap-12 lg:grid-cols-12">
           <div className="self-start lg:sticky lg:top-28 lg:col-span-5">
-            <SectionLabel n="02" dark>
+            <SectionLabel dark>
               Postup prodeje
             </SectionLabel>
             <h2 data-reveal className="display mt-6 text-[clamp(2.4rem,5vw,4rem)]">
-              Od první schůzky až po <em className="text-gold-light">předání klíčů.</em>
+              Od první schůzky až po předání klíčů
             </h2>
             <div data-reveal className="mt-8">
               <ArrowLink href="/co-dela-makler#prodej" dark>

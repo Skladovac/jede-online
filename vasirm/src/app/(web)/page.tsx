@@ -19,16 +19,19 @@ const SERVICES = [
     title: 'Prodej nemovitosti',
     text: 'Vaši nemovitost představíme v tom nejlepším světle. Od profesionálních fotografií a videoprohlídek až po vyjednání nejvyšší možné ceny.',
     href: '/prodej-nemovitosti',
+    more: 'Jak prodáváme',
   },
   {
     title: 'Koupě nemovitosti',
     text: 'Najdeme vám domov, nejen stavbu. Pohlídáme, aby transakce proběhla hladce, bezpečně a bez právních rizik.',
     href: '/koupe-nemovitosti',
+    more: 'Jak hledáme',
   },
   {
     title: 'Tržní odhad zdarma',
     text: 'Základem úspěšného obchodu je správně nastavená cena. Připravíme ji podle reálných tržních dat a našich zkušeností.',
     href: '/odhad-nemovitosti-zdarma',
+    more: 'Chci odhad',
   },
 ]
 
@@ -60,23 +63,18 @@ export default async function HomePage() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/45 to-ink/10" aria-hidden />
 
         <div className="wrap relative mt-auto pb-12 pt-[45vh] text-center md:pb-16 md:pt-[42vh]">
-          <p data-hero className="label text-shade flex items-center justify-center gap-3 text-gold-light">
-            <span className="h-px w-10 bg-gold/70" aria-hidden />
-            Realitní služby pro {SITE.region}
-            <span className="h-px w-10 bg-gold/70" aria-hidden />
-          </p>
-          <h1 className="display hero-shadow mx-auto mt-5 max-w-5xl text-[clamp(2.8rem,6vw,5.4rem)]">
+          <h1 className="display hero-shadow mx-auto max-w-5xl text-[clamp(2.8rem,6vw,5.4rem)]">
             <span className="hero-line">
               <span>Změna bydlení</span>
             </span>
             <span className="hero-line">
-              <span className="italic text-gold-light">bez stresu.</span>
+              <span className="italic text-gold-light">bez stresu</span>
             </span>
           </h1>
           <p data-hero className="text-shade mt-5 font-serif text-[clamp(1.5rem,2.6vw,2.1rem)] leading-tight text-paper/95">
             {SITE.claim} {first} a {second}.
           </p>
-          <p data-hero className="text-shade mx-auto mt-4 hidden max-w-2xl text-[1.05rem] leading-relaxed text-paper/80 sm:block">
+          <p data-hero className="text-shade mx-auto mt-4 hidden max-w-2xl text-lg leading-relaxed text-paper/80 sm:block">
             {team.yearsInField ? `Více než ${team.yearsInField} let pomáháme lidem ve Zlíně a okolí prodat i najít domov. ` : ''}
             Provedeme vás celým procesem s klidem, transparentností a osobním přístupem, který u korporátů nenajdete.
           </p>
@@ -99,15 +97,11 @@ export default async function HomePage() {
       {/* ───────── MAKLÉŘI ───────── */}
       <section id="makleri" className="scroll-mt-20 bg-paper py-20 md:py-28">
         <div className="wrap">
-          <div className="grid gap-8 md:grid-cols-12">
-            <div className="md:col-span-5">
-              <SectionLabel n="01">Vaši makléři</SectionLabel>
-            </div>
-            <h2 data-reveal className="display text-[clamp(2.2rem,4.4vw,3.6rem)] md:col-span-7">
-              Kdo vás celým prodejem <em className="text-gold-deep">osobně provede.</em>
-            </h2>
-          </div>
-          <div className="mt-16 grid gap-20 lg:grid-cols-2 lg:gap-16">
+          <SectionLabel>Vaši makléři</SectionLabel>
+          <h2 data-reveal className="display mt-5 max-w-3xl text-[clamp(2.2rem,4.4vw,3.6rem)]">
+            Kdo vás celým prodejem osobně provede
+          </h2>
+          <div className="mt-12 grid gap-20 lg:grid-cols-2 lg:items-start lg:gap-16">
             {agents.map((a, i) => (
               <AgentFeature key={a.id} agent={a} index={i} />
             ))}
@@ -117,15 +111,13 @@ export default async function HomePage() {
 
       {/* ───────── REFERENCE ───────── */}
       {testimonials.length > 0 && (
-        <section className="grain relative overflow-hidden bg-ink py-20 text-paper md:py-28">
-          <div className="wrap relative">
+        <section className="bg-ink py-20 text-paper md:py-28">
+          <div className="wrap">
             <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
               <div>
-                <SectionLabel n="02" dark>
-                  Reference
-                </SectionLabel>
+                <SectionLabel dark>Reference</SectionLabel>
                 <h2 data-reveal className="display mt-5 text-[clamp(2.4rem,5vw,4rem)]">
-                  Co říkají <em className="text-gold-light">naši klienti</em>
+                  Co říkají naši klienti
                 </h2>
               </div>
               <ArrowLink href="/reference" dark>
@@ -144,21 +136,17 @@ export default async function HomePage() {
       {/* ───────── SLUŽBY ───────── */}
       <section className="border-t border-ink/10 bg-paper-2 py-20 md:py-28">
         <div className="wrap">
-          <div className="grid gap-8 md:grid-cols-12">
-            <div className="md:col-span-5">
-              <SectionLabel n={testimonials.length ? '03' : '02'}>S čím pomůžeme</SectionLabel>
-            </div>
-            <h2 data-reveal className="display text-[clamp(2.2rem,4.4vw,3.6rem)] md:col-span-7">
-              Ať už prodáváte dům, nebo hledáte první byt, <em className="text-gold-deep">postaráme se o vše.</em>
-            </h2>
-          </div>
-          <div className="mt-14 grid gap-px bg-ink/10 md:grid-cols-3">
+          <SectionLabel>S čím pomůžeme</SectionLabel>
+          <h2 data-reveal className="display mt-5 max-w-4xl text-[clamp(2.2rem,4.4vw,3.6rem)]">
+            Ať už prodáváte dům, nebo hledáte první byt, postaráme se o vše
+          </h2>
+          <div className="mt-12 grid gap-px bg-ink/10 md:grid-cols-3">
             {SERVICES.map((s) => (
-              <Link key={s.title} href={s.href} data-reveal className="group flex flex-col bg-paper-2 p-8 transition-colors duration-500 hover:bg-paper md:p-10">
+              <Link key={s.title} href={s.href} data-reveal className="group flex flex-col bg-paper-2 p-8 transition-colors hover:bg-paper md:p-10">
                 <h3 className="font-serif text-[2rem] leading-tight">{s.title}</h3>
                 <p className="mt-4 flex-1 leading-relaxed text-stone">{s.text}</p>
-                <span className="mt-8 inline-flex items-center gap-2 text-sm font-semibold">
-                  Více <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+                <span className="mt-8 inline-flex items-center gap-2 text-ui font-medium">
+                  {s.more} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
                 </span>
               </Link>
             ))}
@@ -167,13 +155,13 @@ export default async function HomePage() {
       </section>
 
       {/* ───────── POSTUP PRODEJE ───────── */}
-      <section className="grain relative overflow-hidden bg-ink py-20 text-paper md:py-28">
-        <div className="wrap relative">
+      <section className="bg-ink py-20 text-paper md:py-28">
+        <div className="wrap">
           <div className="grid gap-12 lg:grid-cols-12">
             <div className="self-start lg:sticky lg:top-28 lg:col-span-6">
               <SectionLabel dark>Jak prodáváme</SectionLabel>
               <h2 data-reveal className="display mt-6 text-[clamp(2.4rem,5vw,4.2rem)]">
-                Od první schůzky až po <em className="text-gold-light">předání klíčů.</em>
+                Od první schůzky až po předání klíčů
               </h2>
               <p data-reveal className="mt-6 max-w-lg text-lg leading-relaxed text-paper/65">
                 S námi přesně víte, na čem jste. Celý prodej vedeme za vás a o každém kroku vás průběžně informujeme.
@@ -210,9 +198,9 @@ export default async function HomePage() {
           <div className="wrap">
             <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
               <div>
-                <SectionLabel n={testimonials.length ? '04' : '03'}>Z naší nabídky</SectionLabel>
+                <SectionLabel>Z naší nabídky</SectionLabel>
                 <h2 data-reveal className="display mt-5 text-[clamp(2.4rem,5vw,4rem)]">
-                  Na čem právě <em>pracujeme</em>
+                  Na čem právě pracujeme
                 </h2>
               </div>
               <div data-reveal>

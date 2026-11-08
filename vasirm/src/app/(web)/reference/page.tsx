@@ -21,7 +21,7 @@ export default async function ReferencesPage() {
         label="Reference"
         title={
           <>
-            Co o nás říkají <em className="text-gold-light">klienti.</em>
+            Co o nás říkají <em className="text-gold-light">klienti</em>
           </>
         }
         lead="Každá věta tady je od skutečného klienta, který s námi prodával nebo kupoval. Zveřejňujeme je jen s jeho souhlasem."

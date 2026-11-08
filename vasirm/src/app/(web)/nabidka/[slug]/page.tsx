@@ -128,7 +128,7 @@ export default async function ListingPage({ params }: Props) {
             <dl className="grid grid-cols-2 bg-ink text-paper md:grid-cols-4">
               {facts.map((f) => (
                 <div key={f.k} className="border-white/10 px-6 py-6 [&:not(:first-child)]:border-l max-md:[&:nth-child(3)]:border-l-0 max-md:[&:nth-child(n+3)]:border-t">
-                  <dt className="label text-[0.65rem] text-gold-light">{f.k}</dt>
+                  <dt className="label text-xs text-gold-light">{f.k}</dt>
                   <dd className="mt-2 font-serif text-[1.9rem] leading-none">{f.v}</dd>
                 </div>
               ))}
@@ -242,7 +242,7 @@ export default async function ListingPage({ params }: Props) {
               <div>
                 <SectionLabel>Mohlo by vás zajímat</SectionLabel>
                 <h2 data-reveal className="display mt-5 text-[clamp(2.2rem,4vw,3.4rem)]">
-                  Další z <em>naší nabídky</em>
+                  Další z naší nabídky
                 </h2>
               </div>
               <ArrowLink href="/nabidka">Celá nabídka</ArrowLink>

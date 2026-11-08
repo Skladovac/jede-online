@@ -34,7 +34,7 @@ export default async function AboutPage() {
         label="O nás"
         title={
           <>
-            Od sousedů <em className="text-gold-light">pro sousedy.</em>
+            Od sousedů <em className="text-gold-light">pro sousedy</em>
           </>
         }
         lead={`${SITE.team}. ${team.yearsInField ? `Více než ${team.yearsInField} let v realitách. ` : ''}Manželé, kteří milují reality a Zlín znají jako své boty.`}
@@ -56,7 +56,7 @@ export default async function AboutPage() {
             />
           </div>
           <div className="lg:col-span-6">
-            <SectionLabel n="01">Náš příběh</SectionLabel>
+            <SectionLabel>Náš příběh</SectionLabel>
             <div data-reveal className="prose-vrm mt-8 [&>p:first-child]:font-serif [&>p:first-child]:text-[1.6rem] [&>p:first-child]:leading-snug [&>p:first-child]:text-ink">
               {story.map((p, i) => (
                 <p key={i}>{nbsp(p)}</p>
@@ -74,11 +74,11 @@ export default async function AboutPage() {
       {/* ───────── MAKLÉŘI ───────── */}
       <section className="border-t border-ink/10 bg-paper-2 py-20 md:py-28">
         <div className="wrap">
-          <SectionLabel n="02">Kdo jsme</SectionLabel>
+          <SectionLabel>Kdo jsme</SectionLabel>
           <h2 data-reveal className="display mt-5 max-w-3xl text-[clamp(2.2rem,4.4vw,3.6rem)]">
-            Dva makléři, <em className="text-gold-deep">jeden přístup.</em>
+            Dva makléři, jeden přístup
           </h2>
-          <div className="mt-16 grid gap-20 lg:grid-cols-2 lg:gap-16">
+          <div className="mt-12 grid gap-20 lg:grid-cols-2 lg:items-start lg:gap-16">
             {agents.map((a, i) => (
               <AgentFeature key={a.id} agent={a} index={i} />
             ))}
@@ -87,9 +87,9 @@ export default async function AboutPage() {
       </section>
 
       {/* ───────── HODNOTY ───────── */}
-      <section className="grain relative overflow-hidden bg-ink py-20 text-paper md:py-28">
+      <section className="bg-ink py-20 text-paper md:py-28">
         <div className="wrap relative">
-          <SectionLabel n="03" dark>
+          <SectionLabel dark>
             Na čem si zakládáme
           </SectionLabel>
           <ul className="mt-12 grid gap-px bg-white/10 md:grid-cols-3">
@@ -107,7 +107,7 @@ export default async function AboutPage() {
         <section className="bg-paper py-20 md:py-28">
           <div className="wrap">
             <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-              <SectionLabel n="04">Co říkají klienti</SectionLabel>
+              <SectionLabel>Co říkají klienti</SectionLabel>
               <ArrowLink href="/reference">Všechny reference</ArrowLink>
             </div>
             <div className={`mt-10 grid gap-6 ${testimonials.length > 1 ? 'md:grid-cols-2' : 'max-w-3xl'}`}>

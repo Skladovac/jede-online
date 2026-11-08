@@ -79,7 +79,7 @@ export function ValuationForm() {
           {TYPES.map((t) => (
             <label
               key={t}
-              className={`flex min-h-[3.5rem] cursor-pointer items-center justify-center border px-3 text-center text-[0.95rem] font-medium transition ${
+              className={`flex min-h-[3.5rem] cursor-pointer items-center justify-center border px-3 text-center text-ui font-medium transition ${
                 type === t ? 'border-gold bg-gold/15 text-ink' : 'border-ink/15 bg-white hover:border-ink/40'
               }`}
             >

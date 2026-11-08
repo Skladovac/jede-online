@@ -4,10 +4,9 @@ import { SITE, telHref } from '@/lib/site'
 import type { Agent } from '@/lib/agents'
 
 /** „01 — Služby“: číslo, zlatá linka, popisek. */
-export function SectionLabel({ n, children, dark = false }: { n?: string; children: React.ReactNode; dark?: boolean }) {
+export function SectionLabel({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
   return (
     <p data-reveal className={`label flex items-center gap-3 ${dark ? 'text-gold-light' : 'text-gold-deep'}`}>
-      {n && <span className="tabular-nums">{n}</span>}
       <span className={`h-px w-10 ${dark ? 'bg-gold/60' : 'bg-gold'}`} aria-hidden />
       {children}
     </p>
@@ -18,10 +17,10 @@ export function ArrowLink({ href, children, dark = false }: { href: string; chil
   return (
     <Link
       href={href}
-      className={`group inline-flex items-center gap-2 text-[0.95rem] font-semibold ${dark ? 'text-paper hover:text-gold-light' : 'text-ink hover:text-gold-deep'}`}
+      className={`group inline-flex items-center gap-2 text-ui font-medium ${dark ? 'text-paper hover:text-gold-light' : 'text-ink hover:text-gold-deep'}`}
     >
       <span className="link-u">{children}</span>
-      <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
     </Link>
   )
 }
@@ -39,9 +38,8 @@ export function PageHero({
   children?: React.ReactNode
 }) {
   return (
-    <section className="grain relative overflow-hidden bg-ink text-paper">
-      <div className="module-grid pointer-events-none absolute inset-0 opacity-50 [mask-image:linear-gradient(to_bottom,black,transparent)]" aria-hidden />
-      <div className="wrap relative pb-16 pt-14 md:pb-24 md:pt-20">
+    <section className="bg-ink text-paper">
+      <div className="wrap pb-16 pt-14 md:pb-24 md:pt-20">
         <SectionLabel dark>{label}</SectionLabel>
         <h1 data-reveal className="display mt-6 max-w-4xl text-[clamp(2.8rem,7vw,5.6rem)]">
           {title}
@@ -60,16 +58,14 @@ export function PageHero({
 /** Výzva k odhadu ceny — na konci většiny stránek. */
 export function ValuationCta() {
   return (
-    <section className="relative overflow-hidden bg-gold text-ink">
-      <div className="pointer-events-none absolute -right-24 -top-24 h-[28rem] w-[28rem] rounded-full border border-ink/10" aria-hidden />
-      <div className="pointer-events-none absolute -right-8 -top-8 h-[20rem] w-[20rem] rounded-full border border-ink/10" aria-hidden />
-      <div className="wrap relative grid items-end gap-10 py-16 md:grid-cols-12 md:py-20">
+    <section className="bg-gold text-ink">
+      <div className="wrap grid items-end gap-10 py-16 md:grid-cols-12 md:py-20">
         <div className="md:col-span-8">
           <p data-reveal className="label text-ink/70">
             Odhad ceny zdarma
           </p>
           <h2 data-reveal className="display mt-4 text-[clamp(2.4rem,5vw,4.2rem)]">
-            Kolik dnes stojí <em>vaše nemovitost?</em>
+            Kolik dnes stojí vaše nemovitost?
           </h2>
           <p data-reveal className="mt-5 max-w-xl text-lg leading-relaxed text-ink/75">
             Připravíme vám tržní odhad podle reálných prodejů ve vašem okolí. Zdarma a nezávazně, ať už prodáváte hned, nebo
@@ -80,7 +76,7 @@ export function ValuationCta() {
           <Link href="/odhad-nemovitosti-zdarma" className="btn-ink w-full md:w-auto">
             Chci odhad ceny zdarma <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
-          <a href={telHref(SITE.phone)} className="text-[0.95rem] font-semibold underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
+          <a href={telHref(SITE.phone)} className="text-ui font-medium underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
             nebo zavolejte {SITE.phone}
           </a>
         </div>
@@ -129,7 +125,7 @@ export function AgentCard({ agent, dark = false }: { agent: Agent; dark?: boolea
           {agent.name}
         </Link>
         <p className={`text-sm ${dark ? 'text-paper/60' : 'text-stone'}`}>{agent.role}</p>
-        <div className={`mt-2 space-y-1 text-[0.95rem] ${dark ? 'text-paper/85' : 'text-ink'}`}>
+        <div className={`mt-2 space-y-1 text-ui ${dark ? 'text-paper/85' : 'text-ink'}`}>
           {agent.phone && (
             <a href={telHref(agent.phone)} className="flex items-center gap-2 hover:text-gold-deep">
               <Phone className="h-4 w-4 text-gold" aria-hidden /> {agent.phone}

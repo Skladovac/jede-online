@@ -74,9 +74,8 @@ export default async function AgentPage({ params }: Props) {
       />
 
       {/* ───────── HLAVIČKA ───────── */}
-      <section className="grain relative overflow-hidden bg-ink text-paper">
-        <div className="module-grid pointer-events-none absolute inset-0 opacity-60 [mask-image:linear-gradient(to_right,transparent,black_60%)]" aria-hidden />
-        <div className="wrap relative grid gap-12 pb-16 pt-10 md:pb-24 md:pt-14 lg:grid-cols-12 lg:gap-16">
+      <section className="bg-ink text-paper">
+        <div className="wrap grid gap-12 pb-16 pt-10 md:pb-24 md:pt-14 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-5">
             <nav aria-label="Drobečková navigace" className="mb-8 flex items-center gap-1.5 text-sm text-paper/55 lg:hidden">
               <Link href="/o-nas" className="hover:text-paper">
@@ -102,7 +101,7 @@ export default async function AgentPage({ params }: Props) {
             </nav>
             <p data-reveal className="label mt-0 flex items-center gap-3 text-gold-light lg:mt-10">
               <span className="h-px w-10 bg-gold/70" aria-hidden />
-              {a.role} · {SITE.short}
+              {a.role.charAt(0).toUpperCase() + a.role.slice(1)} · {SITE.short}
             </p>
             <h1 data-reveal className="display mt-6 text-[clamp(3.2rem,8vw,6.4rem)]">
               {a.name.split(' ')[0]}
@@ -142,7 +141,7 @@ export default async function AgentPage({ params }: Props) {
           <div className="lg:col-span-4">
             <SectionLabel>Můj příběh</SectionLabel>
             <h2 data-reveal className="display mt-5 text-[clamp(2.2rem,4vw,3.4rem)]">
-              Proč dělám <em className="text-gold-deep">reality.</em>
+              Proč dělám reality
             </h2>
           </div>
           <div data-reveal className="prose-vrm lg:col-span-7 lg:col-start-6 [&>p:first-child]:font-serif [&>p:first-child]:text-[1.6rem] [&>p:first-child]:leading-snug [&>p:first-child]:text-ink">
@@ -176,7 +175,7 @@ export default async function AgentPage({ params }: Props) {
           <div className="wrap">
             <SectionLabel>Moje nabídka</SectionLabel>
             <h2 data-reveal className="display mt-5 text-[clamp(2.2rem,4.4vw,3.6rem)]">
-              Co právě <em className="text-gold-deep">prodávám</em>
+              Co právě prodávám
             </h2>
             <div className={`mt-12 grid gap-x-8 gap-y-12 sm:grid-cols-2 ${gridCols(active.length)}`}>
               {active.map((l) => (
@@ -189,8 +188,8 @@ export default async function AgentPage({ params }: Props) {
 
       {/* ───────── REFERENCE ───────── */}
       {testimonials.length > 0 && (
-        <section className="grain relative overflow-hidden bg-ink py-20 text-paper md:py-28">
-          <div className="wrap relative">
+        <section className="bg-ink py-20 text-paper md:py-28">
+          <div className="wrap">
             <SectionLabel dark>Co říkají klienti</SectionLabel>
             <div className={`mt-12 grid gap-6 ${testimonials.length > 1 ? 'md:grid-cols-2' : 'max-w-3xl'} ${testimonials.length > 2 ? 'lg:grid-cols-3' : ''}`}>
               {testimonials.map((t) => (
@@ -209,10 +208,10 @@ export default async function AgentPage({ params }: Props) {
               <div>
                 <SectionLabel>Prodáno</SectionLabel>
                 <h2 data-reveal className="display mt-5 text-[clamp(2.2rem,4.4vw,3.6rem)]">
-                  Nemovitosti, které <em className="text-gold-deep">jsem prodal{she ? 'a' : ''}</em>
+                  Nemovitosti, které jsem prodal{she ? 'a' : ''}
                 </h2>
               </div>
-              <Link href="/nabidka?stav=prodano" className="inline-flex items-center gap-2 text-[0.95rem] font-semibold">
+              <Link href="/nabidka?stav=prodano" className="inline-flex items-center gap-2 text-ui font-semibold">
                 <span className="link-u">Všechny reference prodejů</span> <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
             </div>
@@ -231,7 +230,7 @@ export default async function AgentPage({ params }: Props) {
           <div className="lg:col-span-5">
             <SectionLabel>Kontakt</SectionLabel>
             <h2 data-reveal className="display mt-5 text-[clamp(2.2rem,4.4vw,3.6rem)]">
-              Napište mi <em className="text-gold-deep">přímo.</em>
+              Napište mi přímo
             </h2>
             <p data-reveal className="mt-6 text-lg leading-relaxed text-stone">
               Prodej, koupě nebo jen otázka k ceně. Zpráva přijde rovnou mně.

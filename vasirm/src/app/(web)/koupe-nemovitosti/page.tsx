@@ -26,7 +26,7 @@ export default function BuyPage() {
         label="Koupě nemovitosti"
         title={
           <>
-            Najdeme vám domov, <em className="text-gold-light">nejen stavbu.</em>
+            Najdeme vám domov, <em className="text-gold-light">nejen stavbu</em>
           </>
         }
         lead="Aktivně pro vás vyhledáme nabídky a pohlídáme, aby transakce proběhla hladce, bezpečně a bez právních rizik."
@@ -46,7 +46,7 @@ export default function BuyPage() {
 
       <section className="bg-paper py-20 md:py-28">
         <div className="wrap">
-          <SectionLabel n="01">Jak vám pomůžeme</SectionLabel>
+          <SectionLabel>Jak vám pomůžeme</SectionLabel>
           <ul className="mt-12 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
             {POINTS.map(({ icon: Icon, title, text }) => (
               <li key={title} data-reveal className="border-t border-ink/15 pt-6">
@@ -65,9 +65,9 @@ export default function BuyPage() {
       <section id="poptavka" className="scroll-mt-20 border-t border-ink/10 bg-paper-2 py-20 md:py-28">
         <div className="wrap grid gap-12 lg:grid-cols-12">
           <div className="lg:col-span-5">
-            <SectionLabel n="02">Co hledáte?</SectionLabel>
+            <SectionLabel>Co hledáte?</SectionLabel>
             <h2 data-reveal className="display mt-5 text-[clamp(2.4rem,4.6vw,3.8rem)]">
-              Napište nám, <em className="text-gold-deep">jaký domov hledáte.</em>
+              Napište nám, jaký domov hledáte
             </h2>
             <p data-reveal className="mt-6 text-lg leading-relaxed text-stone">
               Lokalita, velikost, rozpočet, termín. Ozveme se, jakmile budeme mít něco, co vám sedne.

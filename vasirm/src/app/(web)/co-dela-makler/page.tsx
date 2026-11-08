@@ -14,7 +14,7 @@ const count = (phases: ChecklistPhase[]) => phases.reduce((n, p) => n + p.items.
 
 function Checklist({ phases }: { phases: ChecklistPhase[] }) {
   return (
-    <ol className="mt-14">
+    <ol className="mt-12">
       {phases.map((p, i) => (
         <li key={p.title} data-reveal className="grid gap-5 border-t border-ink/10 py-9 last:border-b md:grid-cols-12 md:gap-8">
           <div className="flex items-baseline gap-4 md:col-span-4">
@@ -23,7 +23,7 @@ function Checklist({ phases }: { phases: ChecklistPhase[] }) {
           </div>
           <ul className="space-y-3.5 md:col-span-8">
             {p.items.map((item) => (
-              <li key={item} className="flex gap-3.5 text-[1.05rem] leading-relaxed text-ink/85">
+              <li key={item} className="flex gap-3.5 text-base leading-relaxed text-ink/85">
                 <span className="mt-[0.2rem] grid h-5 w-5 shrink-0 place-items-center rounded-full bg-gold/20 text-gold-deep">
                   <Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
                 </span>
@@ -44,7 +44,7 @@ export default function ChecklistPage() {
         label="Checklist"
         title={
           <>
-            Co všechno za vás <em className="text-gold-light">makléř udělá.</em>
+            Co všechno za vás <em className="text-gold-light">makléř udělá</em>
           </>
         }
         lead="Prodej i koupě nemovitosti mají desítky kroků. Tady je vidíte všechny, od první schůzky až po předání klíčů. O každý se postaráme a ke každému se nás můžete kdykoli zeptat."
@@ -61,28 +61,20 @@ export default function ChecklistPage() {
 
       <section id="prodej" className="scroll-mt-20 bg-paper py-20 md:py-28">
         <div className="wrap">
-          <div className="grid gap-8 md:grid-cols-12">
-            <div className="md:col-span-4">
-              <SectionLabel n="01">Prodej nemovitosti</SectionLabel>
-            </div>
-            <h2 data-reveal className="display text-[clamp(2.2rem,4.4vw,3.6rem)] md:col-span-8">
-              Když prodáváte: <em className="text-gold-deep">{count(CHECKLIST_SALE)} věcí, které za vás pohlídáme.</em>
-            </h2>
-          </div>
+          <SectionLabel>Prodej nemovitosti</SectionLabel>
+          <h2 data-reveal className="display mt-5 max-w-4xl text-[clamp(2.2rem,4.4vw,3.6rem)]">
+            Když prodáváte: {count(CHECKLIST_SALE)} věcí, které za vás pohlídáme
+          </h2>
           <Checklist phases={CHECKLIST_SALE} />
         </div>
       </section>
 
       <section id="koupe" className="scroll-mt-20 border-t border-ink/10 bg-paper-2 py-20 md:py-28">
         <div className="wrap">
-          <div className="grid gap-8 md:grid-cols-12">
-            <div className="md:col-span-4">
-              <SectionLabel n="02">Koupě nemovitosti</SectionLabel>
-            </div>
-            <h2 data-reveal className="display text-[clamp(2.2rem,4.4vw,3.6rem)] md:col-span-8">
-              Když kupujete: <em className="text-gold-deep">{count(CHECKLIST_BUY)} věcí, které za vás pohlídáme.</em>
-            </h2>
-          </div>
+          <SectionLabel>Koupě nemovitosti</SectionLabel>
+          <h2 data-reveal className="display mt-5 max-w-4xl text-[clamp(2.2rem,4.4vw,3.6rem)]">
+            Když kupujete: {count(CHECKLIST_BUY)} věcí, které za vás pohlídáme
+          </h2>
           <Checklist phases={CHECKLIST_BUY} />
         </div>
       </section>

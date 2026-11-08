@@ -51,7 +51,7 @@ export function SpecialtyChips({ items, dark = false }: { items: string[]; dark?
   return (
     <ul className="flex flex-wrap gap-2" aria-label="Specializace">
       {items.map((s) => (
-        <li key={s} className={`rounded-full border px-3.5 py-1 text-sm ${dark ? 'border-white/20 text-paper/85' : 'border-ink/15 text-ink/80'}`}>
+        <li key={s} className={`rounded-[2px] border px-3 py-1 text-sm ${dark ? 'border-white/20 text-paper/85' : 'border-ink/15 text-ink/80'}`}>
           {s}
         </li>
       ))}
@@ -64,9 +64,9 @@ export function AgentFeature({ agent, index }: { agent: Agent; index: number }) 
   return (
     <article data-reveal className={`group grid gap-8 sm:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] sm:items-end ${index % 2 ? 'lg:mt-24' : ''}`}>
       <Link href={agentHref(agent)} className="relative block max-w-sm sm:max-w-none" aria-label={`Profil: ${agent.name}`}>
-        <div className="absolute -bottom-3 -right-3 left-3 top-3 border border-gold/70 transition-transform duration-500 group-hover:translate-x-1 group-hover:translate-y-1" aria-hidden />
+        <div className="absolute -bottom-3 -right-3 left-3 top-3 border border-gold/70" aria-hidden />
         <div className="relative aspect-[3/4] overflow-hidden bg-ink-3">
-          <AgentPortrait agent={agent} sizes="(min-width: 1024px) 22vw, (min-width: 640px) 40vw, 100vw" className="transition-transform duration-[1.2s] ease-out group-hover:scale-[1.03]" />
+          <AgentPortrait agent={agent} sizes="(min-width: 1024px) 22vw, (min-width: 640px) 40vw, 100vw" />
         </div>
       </Link>
       <div className="min-w-0">
@@ -82,15 +82,15 @@ export function AgentFeature({ agent, index }: { agent: Agent; index: number }) 
             <SpecialtyChips items={agent.specialties} />
           </div>
         )}
-        <div className="mt-6 flex flex-col gap-3 text-[0.95rem]">
+        <div className="mt-6 flex flex-col gap-3 text-ui">
           {agent.phone && (
-            <a href={telHref(agent.phone)} className="inline-flex items-center gap-2 font-semibold hover:text-gold-deep">
+            <a href={telHref(agent.phone)} className="inline-flex items-center gap-2 font-medium transition-colors hover:text-gold-deep">
               <Phone className="h-4 w-4 text-gold" aria-hidden /> {agent.phone}
             </a>
           )}
-          <Link href={agentHref(agent)} className="inline-flex items-center gap-2 font-semibold">
+          <Link href={agentHref(agent)} className="inline-flex items-center gap-2 font-medium">
             <span className="link-u">Celý profil</span>
-            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
           </Link>
         </div>
       </div>

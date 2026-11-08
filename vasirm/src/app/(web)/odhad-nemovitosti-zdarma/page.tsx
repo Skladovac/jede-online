@@ -30,8 +30,7 @@ export default async function ValuationPage() {
   const agents = await getAgents()
   return (
     <>
-      <section className="grain relative overflow-hidden bg-ink text-paper">
-        <div className="module-grid pointer-events-none absolute inset-0 opacity-60 [mask-image:linear-gradient(to_bottom,black,transparent_70%)]" aria-hidden />
+      <section className="bg-ink text-paper">
         <div className="wrap relative grid gap-12 pb-20 pt-14 md:pt-20 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-5">
             <SectionLabel dark>Odhad ceny zdarma</SectionLabel>
