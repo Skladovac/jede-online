@@ -100,6 +100,12 @@ nginx, reloadne ho a zkontroluje `/api/health` (databáze i běžící commit). 
 RAM potřebuje swap — ověř `swapon --show`. Ověř zvenčí:
 `curl -s https://dohazka.jede.online/api/health` — musí vrátit `"db":"up"`.
 
+**Po každém nasazení si stáhni všechny tři exporty** (přihlas se a klikni na ně v měsíci).
+Health endpoint o nich nic neříká a knihovny na PDF a XLSX jsou jediné místo, kde se
+projeví chyba v zabalení buildu — ta nespadne při buildu ani v testech, jen na skutečném
+exportu. PDF už jednou takhle spadlo na `#standard-fonts/Helvetica`; proto je `pdfkit`
+v `next.config.ts` vyňatý z bundleru a celý kopírovaný do standalone.
+
 ## 6. Systemd timery (záloha a připomínka)
 
 Dvě dvojice jednotek: `dohazka-backup.{service,timer}` (záloha DB ve 03:25) a
