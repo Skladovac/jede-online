@@ -3,7 +3,6 @@ import { formatHours, parseDayKey } from '@/lib/date'
 import { KIND_LABEL } from '@/lib/entry'
 import type { MonthRow } from '@/lib/month'
 
-
 // Hodnota dne je UTC půlnoc (parseDayKey), proto i formátování v UTC.
 const popisDne = (key: string) =>
   new Intl.DateTimeFormat('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' }).format(parseDayKey(key))

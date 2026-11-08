@@ -6,13 +6,13 @@ import { buildMonth } from '@/lib/month'
 import { buildReport } from '@/lib/export/rows'
 import { toCsv } from '@/lib/export/csv'
 import { toXlsx } from '@/lib/export/xlsx'
+import { toPdf } from '@/lib/export/pdf'
 import { contentDisposition } from '@/lib/export/filename'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs' // exceljs potřebuje Node
+export const runtime = 'nodejs' // exceljs i pdfkit potřebují Node
 
 const FORMATY = ['csv', 'xlsx', 'pdf'] as const
-type Format = (typeof FORMATY)[number]
 
 const chyba = (status: number, zprava: string) => NextResponse.json({ error: zprava }, { status })
 
@@ -27,9 +27,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ format: 
   const period = new URL(req.url).searchParams.get('period') ?? ''
   const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period)
   if (!m) return chyba(400, 'Neplatné období, očekávám RRRR-MM.')
-
-  // PDF dodělá Task 8.
-  if ((format as Format) === 'pdf') return chyba(501, 'Export do PDF zatím není hotový.')
 
   const { fromKey, toKey } = periodRange(user.periodStartDay, Number(m[1]), Number(m[2]))
   // Vždy jen záznamy přihlášeného uživatele.
@@ -62,6 +59,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ format: 
   }
   if (format === 'csv') {
     return new NextResponse(toCsv(report), { headers: { ...hlavicky, 'Content-Type': 'text/csv; charset=utf-8' } })
+  }
+  if (format === 'pdf') {
+    const pdf = await toPdf(report)
+    return new NextResponse(new Uint8Array(pdf), { headers: { ...hlavicky, 'Content-Type': 'application/pdf' } })
   }
   const buf = await toXlsx(report)
   return new NextResponse(new Uint8Array(buf), {

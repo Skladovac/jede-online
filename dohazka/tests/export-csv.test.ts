@@ -38,6 +38,9 @@ describe('toCsv', () => {
   it('vzorcový znak i středník dohromady: ošetření a uvozovky', () => {
     expect(toCsv(report([{ ...row, note: '=a;b "x"' }]))).toContain(`" =a;b ""x"""`)
   })
+  it('poznámka s koncem řádku se uzavře do uvozovek a řádek zůstane celý', () => {
+    expect(toCsv(report([{ ...row, note: 'a\nb' }]))).toContain('"a\nb"\r\n')
+  })
   it('pomlčka uvnitř textu zůstane beze změny', () => {
     expect(toCsv(report([{ ...row, place: 'Zlín-Vsetín' }]))).toContain(';Zlín-Vsetín;')
   })
