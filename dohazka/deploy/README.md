@@ -29,11 +29,26 @@ git clone https://github.com/Skladovac/jede-online.git /opt/jede/dohazka-src
 Deploy dělá `git reset --hard origin/$BRANCH` (výchozí `master`). Kód Dohazky tedy musí
 být na `origin/master`, nebo spouštěj `BRANCH=<větev> ./deploy-dohazka.sh`.
 
-Databáze — nejdřív v `init-db.sql` změň `ZMEN_HESLO` (jen písmena a číslice), pak:
+Databáze. `deploy-dohazka.sh` dělá `reset --hard`, takže úprava souboru uvnitř klonu by
+se při deployi vrátila. Zkopíruj proto `init-db.sql` ven a uprav kopii (změň `ZMEN_HESLO`,
+jen písmena a číslice):
 
 ```bash
-docker exec -i jede-db-1 psql -U <POSTGRES_USER> -d postgres < /opt/jede/dohazka-src/dohazka/deploy/init-db.sql
+cp /opt/jede/dohazka-src/dohazka/deploy/init-db.sql /root/dohazka-init-db.sql
+nano /root/dohazka-init-db.sql
+PGU=$(docker exec jede-db-1 printenv POSTGRES_USER)   # superuživatel postgresu ve stacku landingu
+docker exec -i jede-db-1 psql -v ON_ERROR_STOP=1 -U "$PGU" -d postgres < /root/dohazka-init-db.sql
+shred -u /root/dohazka-init-db.sql
 ```
+
+Čekaný výstup: `CREATE ROLE` a `CREATE DATABASE`. Cokoli jiného (např. `ERROR … already exists`)
+je selhání — skript se díky `ON_ERROR_STOP=1` zastaví. Ověř:
+
+```bash
+docker exec jede-db-1 psql -U "$PGU" -d postgres -c '\du dohazka' -c '\l dohazka'
+```
+
+Role `dohazka` i databáze `dohazka` (vlastník `dohazka`) musí být vidět.
 
 Env soubor:
 
@@ -81,7 +96,7 @@ podle toho, jak jsou uspořádané vhosty pokemonu.) Vhost **musí** posílat
 Skript sám zkontroluje IP serveru, buildne image, ověří migrace, vymění kontejner, otestuje
 nginx, restartuje ho a zkontroluje `/api/health` (databáze i běžící commit). Build na 4 GB
 RAM potřebuje swap — ověř `swapon --show`. Ověř zvenčí:
-`curl -sI https://dohazka.jede.online/api/health`.
+`curl -s https://dohazka.jede.online/api/health` — musí vrátit `"db":"up"`.
 
 ## 6. Systemd timery (záloha a připomínka)
 
@@ -146,6 +161,19 @@ printf 'header = "Authorization: Bearer %s"\n' "$CRON_SECRET" \
 **Pozor:** zkušební pípnutí `?force=1` přes den pošle skutečný push a **nespotřebuje**
 večerní připomínku — schválně, aby test neokradl uživatele o ten pravý. Důsledek: kamarádovi
 ten den pípne telefon dvakrát (test a večer). Buď ho předem varuj, nebo test udělej večer.
+
+## Když spadne poslední krok (smoke test)
+
+Skript v tu chvíli už vyměnil kontejner, takže rozbitá verze běží. Automatický návrat není
+schválně — rozhodni ty. Skript sám vypíše přesné příkazy s hashem předchozího commitu:
+`git reset --hard <předchozí>`, `build dohazka`, oprava `GIT_COMMIT` v env a
+`up -d --force-recreate dohazka`. Migrace databáze se nevrací; ověř, že stará verze nové
+schéma zvládne. Když spadl dřívější krok, původní kontejner běží dál a nic vracet není.
+
+## Úklid disku
+
+Skript nemaže Docker build cache (globální `docker builder prune` by mazal i cizí projekty).
+Čistí ji denní timer pokemonu. Občas zkontroluj `docker system df`.
 
 ## Další nasazení
 

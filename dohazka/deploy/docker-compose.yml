@@ -40,6 +40,7 @@ services:
       target: builder
     profiles: ["tools"]
     environment:
+      TZ: Europe/Prague
       DATABASE_URL: ${DOHAZKA_DATABASE_URL:?chybi DOHAZKA_DATABASE_URL v env souboru}
     command: ["npx", "prisma", "migrate", "status"]
     networks: [jede]
