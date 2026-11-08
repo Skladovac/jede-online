@@ -283,5 +283,6 @@ const dict: Record<string, string> = {
   'chybí do master setu': 'chýba do master setu',
   'Seznam': 'Zoznam',
   'Mám {n} z {total} variant': 'Mám {n} z {total} variantov',
+  'Karta': 'Karta',
 }
 export default dict
