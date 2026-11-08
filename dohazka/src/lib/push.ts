@@ -50,7 +50,7 @@ export async function sendPush(userId: string, n: PushPayload): Promise<{ sent: 
     const payload = JSON.stringify({
       title: n.title.slice(0, 120),
       body: n.body?.slice(0, 240),
-      url: n.url?.startsWith('/') ? n.url : '/',
+      url: n.url && /^\/(?!\/)/.test(n.url) ? n.url : '/',
     })
     let sent = 0
     await Promise.all(
@@ -62,7 +62,7 @@ export async function sendPush(userId: string, n: PushPayload): Promise<{ sent: 
         } catch (err) {
           const code = (err as { statusCode?: number }).statusCode
           if (code === 404 || code === 410) await prisma.pushSubscription.deleteMany({ where: { id: s.id, userId } }).catch(() => {})
-          else console.error('[push]', code ?? err)
+          else console.error('[push]', code ?? err, (err as { body?: string }).body ?? '')
         }
       }),
     )

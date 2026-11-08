@@ -7,6 +7,7 @@ import { formatHours, parseDayKey, pragueDayKey } from '@/lib/date'
 import { KIND_LABEL } from '@/lib/entry'
 import { recentPlaces } from '@/lib/places'
 import { DayForm, DeleteEntryButton } from '../DayForm'
+import { SettingsLink } from '@/components/SettingsLink'
 
 export const metadata: Metadata = { title: 'Zápis dne' }
 
@@ -39,6 +40,7 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
 
   return (
     <main className="mx-auto max-w-md px-4 py-6">
+      <SettingsLink />
       <nav className="flex items-center justify-between gap-2" aria-label="Přechod mezi dny">
         <Link href={`/den/${posun(day, -1)}`} className={odkaz} aria-label="Předchozí den">
           ←

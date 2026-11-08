@@ -15,6 +15,17 @@ describe('isPushEndpoint', () => {
     expect(isPushEndpoint('https://fcm.googleapis.com/fcm/send/abc')).toBe(true)
     expect(isPushEndpoint('https://updates.push.services.mozilla.com/wpush/v2/abc')).toBe(true)
   })
+  it('pustí wildcard domény Windows a Apple, velká písmena i tečku na konci', () => {
+    expect(isPushEndpoint('https://db5p.notify.windows.com/w/?token=abc')).toBe(true)
+    expect(isPushEndpoint('https://api.sandbox.push.apple.com/3/device/abc')).toBe(true)
+    expect(isPushEndpoint('https://FCM.GoogleAPIs.com/fcm/send/abc')).toBe(true)
+    expect(isPushEndpoint('https://fcm.googleapis.com./fcm/send/abc')).toBe(true)
+  })
+  it('wildcard vyžaduje tečku před příponou', () => {
+    expect(isPushEndpoint('https://evilnotify.windows.com/abc')).toBe(false)
+    expect(isPushEndpoint('https://evilpush.apple.com/abc')).toBe(false)
+    expect(isPushEndpoint('https://notify.windows.com.evil.example.com/abc')).toBe(false)
+  })
   it('odmítne cokoli, co by server donutilo zavolat domů nebo jinam', () => {
     for (const bad of [
       'http://web.push.apple.com/abc',
@@ -67,12 +78,15 @@ describe('sendPush', () => {
       expect(JSON.parse(wp.sendNotification.mock.calls[0][1])).toMatchObject({ title: 'Připomínka', url: '/den/2026-11-08' })
     })
 
-    it('cizí adresu v URL nahradí kořenem', async () => {
-      db.findMany.mockResolvedValue([sub('s1')])
-      wp.sendNotification.mockResolvedValue({})
-      await (await fresh())('u1', { title: 'x', url: 'https://evil.example.com' })
-      expect(JSON.parse(wp.sendNotification.mock.calls[0][1]).url).toBe('/')
-    })
+    it.each(['https://evil.example.com', '//evil.example.com', '//evil.example.com/x', 'den/2026-11-08', ''])(
+      'cizí nebo nerelativní adresu %j nahradí kořenem',
+      async (url) => {
+        db.findMany.mockResolvedValue([sub('s1')])
+        wp.sendNotification.mockResolvedValue({})
+        await (await fresh())('u1', { title: 'x', url })
+        expect(JSON.parse(wp.sendNotification.mock.calls[0][1]).url).toBe('/')
+      },
+    )
 
     it('neposílá na endpoint, který není push služba', async () => {
       db.findMany.mockResolvedValue([sub('s1', 'https://127.0.0.1/x')])

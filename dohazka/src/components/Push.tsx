@@ -8,7 +8,7 @@ import { removePushSubscription, savePushSubscription, sendTestPush, setReminder
  * iPhone umí push jen v nainstalované aplikaci (na ploše) — tam jen vysvětlíme, jak ji nainstalovat.
  */
 
-const OFF_KEY = 'push-off' // uživatel si na tomhle zařízení notifikace vypnul
+const OFF_KEY = 'push-off' // záloha pro případ, že se odběr v prohlížeči nepodařilo zrušit (unsubscribe selhal)
 
 const supported = () => typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
 const isIosBrowser = () => {
@@ -41,6 +41,12 @@ const store = {
   },
 }
 
+function sameKey(a: ArrayBuffer | null, b: Uint8Array) {
+  if (!a) return false
+  const x = new Uint8Array(a)
+  return x.length === b.length && x.every((v, i) => v === b[i])
+}
+
 async function registration() {
   await navigator.serviceWorker.register('/sw.js')
   return navigator.serviceWorker.ready
@@ -51,7 +57,14 @@ async function enablePush(publicKey: string) {
   const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
   if (perm !== 'granted') return perm
   const reg = await registration()
-  const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) }))
+  const key = keyBytes(publicKey)
+  let sub = await reg.pushManager.getSubscription()
+  // Po výměně VAPID klíče by starý odběr dál vypadal zapnutý, ale server by ho odmítal (403): přihlásit znovu.
+  if (sub && !sameKey(sub.options.applicationServerKey, key)) {
+    await sub.unsubscribe().catch(() => {})
+    sub = null
+  }
+  sub ??= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
   const r = await savePushSubscription(JSON.parse(JSON.stringify(sub)))
   if (!r.ok) throw new Error('subscription-rejected')
   store.set(OFF_KEY, null)
@@ -82,11 +95,15 @@ export function PushSettings({ publicKey, remindHour, remindEnabled }: { publicK
   const [busy, setBusy] = useState(false)
 
   async function refresh() {
-    if (!supported()) return setState(isIosBrowser() ? 'ios-install' : 'unsupported')
+    // iPhone mimo plochu: vysvětlení instalace má přednost, i kdyby prohlížeč API nabízel.
+    if (isIosBrowser()) return setState('ios-install')
+    if (!supported()) return setState('unsupported')
     if (Notification.permission === 'denied') return setState('blocked')
     const reg = await navigator.serviceWorker.getRegistration()
     const sub = await reg?.pushManager.getSubscription()
-    setState(sub && Notification.permission === 'granted' && !store.get(OFF_KEY) ? 'on' : 'off')
+    // Odběr s jiným (starým) VAPID klíčem se nepočítá: server by ho odmítal, tak nabídneme zapnutí znovu.
+    const platny = !!sub && sameKey(sub.options.applicationServerKey, keyBytes(publicKey))
+    setState(platny && Notification.permission === 'granted' && !store.get(OFF_KEY) ? 'on' : 'off')
   }
   useEffect(() => {
     refresh()
@@ -155,6 +172,7 @@ export function PushSettings({ publicKey, remindHour, remindEnabled }: { publicK
         </button>
       )}
 
+      {/* Účtové nastavení (uložené u uživatele), nezávislé na stavu tohoto zařízení: zapnout notifikace jde i z jiného telefonu. */}
       <div className="space-y-3 border-t border-line pt-4">
         <label className="flex cursor-pointer items-start gap-3 text-sm">
           <input
@@ -175,7 +193,7 @@ export function PushSettings({ publicKey, remindHour, remindEnabled }: { publicK
           >
             {Array.from({ length: 24 }, (_, h) => (
               <option key={h} value={h}>
-                {h}:00
+                {String(h).padStart(2, '0')}:00
               </option>
             ))}
           </select>

@@ -1,6 +1,7 @@
 // Jednorázový skript na (znovu)vyrobení ikon aplikace: npx tsx scripts/make-icons.ts
-// `sharp` NENÍ v package.json — přichází jako závislost Next.js. Skript slouží jen k regeneraci
-// public/icons/*.png (výsledky jsou commitnuté) a není součástí buildu.
+// `sharp` NENÍ v package.json (nativní binárka by se zbytečně stahovala při každém buildu). Přichází jen jako
+// VOLITELNÁ závislost Next.js a může zmizet; pak před spuštěním: npm i -D sharp (a pak ho zase nezapisovat).
+// Skript slouží jen k regeneraci public/icons/*.png (výsledky jsou commitnuté) a není součástí buildu.
 import sharp from 'sharp'
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -20,4 +21,7 @@ async function main() {
     await sharp(Buffer.from(svg)).resize(size, size).png().toFile(join(out, `icon-${size}.png`))
   }
 }
-main()
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

@@ -13,3 +13,10 @@ export const reminderSchema = z.object({
   hour: z.number().int().min(0).max(23),
 })
 export type ReminderInput = z.infer<typeof reminderSchema>
+
+// Odběr push z prohlížeče (PushSubscription.toJSON). Meze odpovídají sloupcům v databázi.
+export const pushEndpointSchema = z.string().min(1).max(1000)
+export const pushSubscriptionSchema = z.object({
+  endpoint: pushEndpointSchema,
+  keys: z.object({ p256dh: z.string().min(1).max(200), auth: z.string().min(1).max(100) }),
+})

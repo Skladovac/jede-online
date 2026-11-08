@@ -1,6 +1,7 @@
 // Service worker: instalace webu jako aplikace a push notifikace. Nic necachuje — vše jde normálně ze sítě.
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()))
+// Prázdný fetch handler: Chrome ho dříve vyžadoval pro nabídku instalace na plochu. Nic necachuje.
 self.addEventListener('fetch', () => {})
 
 self.addEventListener('push', (e) => {
@@ -23,11 +24,17 @@ self.addEventListener('push', (e) => {
 // Klepnutí na notifikaci: otevřít stránku (nebo přepnout na už otevřené okno webu).
 self.addEventListener('notificationclick', (e) => {
   e.notification.close()
-  const url = new URL(e.notification.data?.url || '/', self.location.origin).href
+  // Cíl musí zůstat na našem webu: absolutní adresa nebo „//cizí.web“ by otevřela cizí stránku.
+  let target = new URL('/', self.location.origin)
+  try {
+    const u = new URL(e.notification.data?.url || '/', self.location.origin)
+    if (u.origin === self.location.origin) target = u
+  } catch {}
+  const url = target.href
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       for (const c of list) {
-        if (c.url.startsWith(self.location.origin) && 'focus' in c) {
+        if ('focus' in c) {
           c.navigate(url).catch(() => {})
           return c.focus()
         }

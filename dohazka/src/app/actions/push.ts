@@ -4,24 +4,16 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth'
 import { isPushEndpoint, sendPush } from '@/lib/push'
-import { reminderSchema, type ReminderInput } from '@/lib/validation'
+import { pushEndpointSchema, pushSubscriptionSchema, reminderSchema, type ReminderInput } from '@/lib/validation'
 
 type Vysledek = { ok?: string; error?: string }
 
 /** Uloží odběr zařízení k přihlášenému účtu. Endpoint musí být skutečná push služba (SSRF). */
 export async function savePushSubscription(sub: unknown): Promise<{ ok: boolean }> {
   const user = await requireUser()
-  const s = sub as { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } } | null
-  const endpoint = s?.endpoint
-  const p256dh = s?.keys?.p256dh
-  const auth = s?.keys?.auth
-  if (
-    typeof endpoint !== 'string' || endpoint.length > 1000 || !isPushEndpoint(endpoint) ||
-    typeof p256dh !== 'string' || !p256dh || p256dh.length > 200 ||
-    typeof auth !== 'string' || !auth || auth.length > 100
-  ) {
-    return { ok: false }
-  }
+  const v = pushSubscriptionSchema.safeParse(sub)
+  if (!v.success || !isPushEndpoint(v.data.endpoint)) return { ok: false }
+  const { endpoint, keys: { p256dh, auth } } = v.data
   // Odběr patří zařízení: když se na něm přihlásí jiný účet, odběr přejde na něj (endpoint je v daném prohlížeči jedinečný).
   await prisma.pushSubscription.upsert({
     where: { endpoint },
@@ -33,7 +25,7 @@ export async function savePushSubscription(sub: unknown): Promise<{ ok: boolean 
 
 export async function removePushSubscription(endpoint: string): Promise<{ ok: boolean }> {
   const user = await requireUser()
-  if (typeof endpoint !== 'string' || !endpoint) return { ok: false }
+  if (!pushEndpointSchema.safeParse(endpoint).success) return { ok: false }
   // Jen vlastní odběr: smazání podle samotného endpointu by dovolilo odhlásit cizí zařízení.
   await prisma.pushSubscription.deleteMany({ where: { endpoint, userId: user.id } })
   return { ok: true }
