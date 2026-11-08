@@ -8,6 +8,7 @@
 export function recentPlaces(entries: { place: string | null; day: string }[], limit = 5): string[] {
   // Stabilní řazení od nejnovějšího dne; při stejném dni zůstává pořadí ze vstupu.
   const serazene = [...entries].sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0))
+  if (limit <= 0) return []
   const videna = new Set<string>()
   for (const { place } of serazene) {
     const misto = place?.trim()

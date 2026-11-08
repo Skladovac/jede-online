@@ -27,9 +27,14 @@ export function DayForm({ day, places, hasEntries }: { day: string; places: stri
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     startTransition(async () => {
-      const r = await saveEntry(fd)
+      let r: Stav
+      try {
+        r = await saveEntry(fd)
+      } catch {
+        r = { error: 'Uložení se nepodařilo. Zkus to znovu.' }
+      }
       nastavStav(r)
-      if ('ok' in r) {
+      if (r && 'ok' in r) {
         formRef.current?.reset()
         automaticke.current = ''
         // Pole hodin je hned připravené na další záznam.
@@ -49,9 +54,14 @@ export function DayForm({ day, places, hasEntries }: { day: string; places: stri
   }
 
   function nepracoval() {
-    if (hasEntries && !window.confirm('Smazat dnešní záznamy a zapsat „Nepracoval“?')) return
+    if (hasEntries && !window.confirm('Smazat záznamy tohoto dne a zapsat „Nepracoval“?')) return
     startTransition(async () => {
-      await markDayOff(day)
+      try {
+        const r = await markDayOff(day)
+        nastavStav(r.ok ? null : { error: 'Nepodařilo se zapsat volný den. Zkus to znovu.' })
+      } catch {
+        nastavStav({ error: 'Nepodařilo se zapsat volný den. Zkus to znovu.' })
+      }
     })
   }
 
@@ -64,6 +74,7 @@ export function DayForm({ day, places, hasEntries }: { day: string; places: stri
         <input
           ref={hoursRef}
           name="hours"
+          autoFocus
           inputMode="decimal"
           autoComplete="off"
           placeholder="8"
@@ -73,7 +84,7 @@ export function DayForm({ day, places, hasEntries }: { day: string; places: stri
 
       <label className="block text-sm font-medium">
         Místo
-        <input name="place" list="mista" autoComplete="off" maxLength={200} className={pole} />
+        <input name="place" list="mista" defaultValue={places[0] ?? ''} autoComplete="off" maxLength={200} className={pole} />
         <datalist id="mista">
           {places.map((p) => (
             <option key={p} value={p} />
@@ -87,11 +98,11 @@ export function DayForm({ day, places, hasEntries }: { day: string; places: stri
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
               Od
-              <input ref={fromRef} name="fromTime" inputMode="numeric" placeholder="7:00" autoComplete="off" onChange={predvyplnHodiny} className={pole} />
+              <input ref={fromRef} name="fromTime" type="time" autoComplete="off" onChange={predvyplnHodiny} className={pole} />
             </label>
             <label className="block text-sm">
               Do
-              <input ref={toRef} name="toTime" inputMode="numeric" placeholder="15:30" autoComplete="off" onChange={predvyplnHodiny} className={pole} />
+              <input ref={toRef} name="toTime" type="time" autoComplete="off" onChange={predvyplnHodiny} className={pole} />
             </label>
           </div>
           <label className="block text-sm">
@@ -100,14 +111,12 @@ export function DayForm({ day, places, hasEntries }: { day: string; places: stri
               <option value="WORK">Práce</option>
               <option value="VACATION">Dovolená</option>
               <option value="SICK">Nemoc</option>
-              <option value="DAYOFF">Nepracoval</option>
-            </select>
+                          </select>
           </label>
           <label className="block text-sm">
             Poznámka
             <input name="note" maxLength={500} autoComplete="off" className={pole} />
           </label>
-          <p className="text-xs text-muted">Druhý záznam téhož dne přidáte dalším uložením.</p>
         </div>
       </details>
 
@@ -134,25 +143,39 @@ export function DayForm({ day, places, hasEntries }: { day: string; places: stri
           Nepracoval
         </button>
       </div>
+      {hasEntries && <p className="text-xs text-muted">Další záznam téhož dne (např. jiné místo) přidáš dalším uložením.</p>}
     </form>
   )
 }
 
 export function DeleteEntryButton({ id }: { id: string }) {
   const [pending, startTransition] = useTransition()
+  const [chyba, nastavChybu] = useState(false)
   return (
-    <button
-      type="button"
-      disabled={pending}
-      onClick={() => {
-        if (!window.confirm('Smazat tento záznam?')) return
-        startTransition(async () => {
-          await deleteEntry(id)
-        })
-      }}
-      className="shrink-0 rounded-panel border border-line px-3 py-1.5 text-sm text-muted hover:border-line-strong hover:text-fg disabled:opacity-60"
-    >
-      Smazat
-    </button>
+    <div className="flex shrink-0 flex-col items-end gap-1">
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          if (!window.confirm('Smazat tento záznam?')) return
+          startTransition(async () => {
+            try {
+              const r = await deleteEntry(id)
+              nastavChybu(!r.ok)
+            } catch {
+              nastavChybu(true)
+            }
+          })
+        }}
+        className="rounded-panel border border-line px-3 py-1.5 text-sm text-muted hover:border-line-strong hover:text-fg disabled:opacity-60"
+      >
+        Smazat
+      </button>
+      {chyba && (
+        <p role="alert" className="text-xs text-red-600">
+          Smazání se nepodařilo.
+        </p>
+      )}
+    </div>
   )
 }

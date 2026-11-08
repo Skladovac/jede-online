@@ -15,6 +15,7 @@ describe('recentPlaces', () => {
   it('respektuje limit a přeskočí prázdná místa', () => {
     expect(recentPlaces(entries, 2)).toEqual(['Zlín', 'Otrokovice'])
     expect(recentPlaces([{ place: null, day: '2026-11-01' }])).toEqual([])
+    expect(recentPlaces(entries, 0)).toEqual([])
   })
   it('řadí podle dne, i když vstup není seřazený', () => {
     const nahodne = [

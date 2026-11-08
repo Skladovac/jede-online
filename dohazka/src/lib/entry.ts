@@ -10,8 +10,8 @@ export type EntryKindValue = (typeof ENTRY_KINDS)[number]
 
 // Tvar hodin: 1–2 cifry, volitelně čárka nebo tečka a 1–2 desetinná místa.
 const HOURS_SHAPE = /^\d{1,2}([.,]\d{1,2})?$/
-// Tvar času: "7:00", "07:00", "7.00". Hodiny a minuty kontrolujeme až potom.
-const TIME_SHAPE = /^(\d{1,2})[:.](\d{2})$/
+// Tvar času: "7:00", "07:00", "7.00", "7,00". Hodiny a minuty kontrolujeme až potom.
+const TIME_SHAPE = /^(\d{1,2})[:.,](\d{2})$/
 const DAY_SHAPE = /^\d{4}-\d{2}-\d{2}$/
 
 /**

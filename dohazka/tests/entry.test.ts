@@ -23,6 +23,7 @@ describe('parseTime', () => {
     expect(parseTime('7:00')).toBe('07:00')
     expect(parseTime('07:00')).toBe('07:00')
     expect(parseTime('7.00')).toBe('07:00')
+    expect(parseTime('7,30')).toBe('07:30')
     expect(parseTime('23:59')).toBe('23:59')
   })
   it('odmítne neplatný čas', () => {

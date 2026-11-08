@@ -20,6 +20,8 @@ export async function saveEntry(formData: FormData): Promise<{ error: string } |
   const vstup = Object.fromEntries(POLE.map((k) => [k, formData.get(k)]))
   const v = validateEntry(vstup)
   if (!v.ok) return { error: v.error }
+  // „Nepracoval“ má vlastní akci, která smaže ostatní záznamy dne; jinak by vznikl den s DAYOFF i hodinami.
+  if (v.value.kind === 'DAYOFF') return { error: 'Pro volný den použij tlačítko Nepracoval.' }
   const { day, ...zbytek } = v.value
   await prisma.entry.create({ data: { ...zbytek, day: parseDayKey(day), userId: user.id } })
   obnovStranky(day)
