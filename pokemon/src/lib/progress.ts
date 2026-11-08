@@ -2,7 +2,9 @@ import 'server-only'
 import { prisma } from '@/lib/prisma'
 
 import { isBaseCard } from '@/lib/card-number'
+import { type Goal, type Progress } from '@/lib/goal'
 export { isBaseCard }
+export type { Progress }
 
 type Flags = { hasNormal: boolean; hasHolo: boolean; hasReverse: boolean; hasFirstEd: boolean; hasPokeball: boolean; hasMasterball: boolean }
 export const cardVariants = (c: Flags) => {
@@ -19,10 +21,11 @@ export const cardVariants = (c: Flags) => {
   return v.length ? v : ['NORMAL']
 }
 
-export type Progress = {
-  base: { owned: number; total: number } | null // null = sada nemá oficiální číslování (promo)
-  complete: { owned: number; total: number }
-  master: { owned: number; total: number }
+/** Cíl, který si uživatel u sad zvolil (base / complete / master); sady bez záznamu v mapě nejsou. */
+export async function setGoals(userId: string, setIds: string[]): Promise<Map<string, Goal>> {
+  if (!setIds.length) return new Map()
+  const rows = await prisma.setGoalChoice.findMany({ where: { userId, setId: { in: setIds } }, select: { setId: true, goal: true } })
+  return new Map(rows.map((r) => [r.setId, r.goal.toLowerCase() as Goal]))
 }
 
 /**

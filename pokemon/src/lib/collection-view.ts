@@ -1,7 +1,8 @@
 import 'server-only'
 import { prisma } from '@/lib/prisma'
 import { byLocalId } from '@/lib/format'
-import { setProgress } from '@/lib/progress'
+import { setGoals, setProgress } from '@/lib/progress'
+import { defaultGoal } from '@/lib/goal'
 
 /** Přehled sbírky uživatele: postup po sadách, chybějící karty a nabídky. Sdílí /sbirka a veřejný profil. */
 export async function collectionOverview(userId: string) {
@@ -27,9 +28,12 @@ export async function collectionOverview(userId: string) {
     bySet.set(i.card.setId, e)
   }
   // Tři postupy (base / complete / master) pro každou sadu ve sbírce.
-  const progress = await setProgress(userId, [...bySet.keys()])
+  const [progress, goals] = await Promise.all([setProgress(userId, [...bySet.keys()]), setGoals(userId, [...bySet.keys()])])
   const sets = [...bySet.values()]
-    .map((e) => ({ set: e.set, owned: e.cards.size, progress: progress.get(e.set.id)! }))
+    .map((e) => {
+      const p = progress.get(e.set.id)!
+      return { set: e.set, owned: e.cards.size, progress: p, goal: goals.get(e.set.id) ?? defaultGoal(p) }
+    })
     .sort((a, b) => (b.set.releaseDate?.getTime() ?? 0) - (a.set.releaseDate?.getTime() ?? 0))
 
   const offers = items

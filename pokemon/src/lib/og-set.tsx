@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { APP_URL, ogCardImage, ogFonts, ogLogo } from '@/lib/og'
 import { byLocalId, setDisplayName } from '@/lib/format'
 import { isBaseCard } from '@/lib/card-number'
+import { setGoals, setProgress } from '@/lib/progress'
+import { defaultGoal, pickGoal } from '@/lib/goal'
 import type { TFunc } from '@/lib/i18n/config'
 
 /**
@@ -128,7 +130,12 @@ export async function setShareImage(user: { id: string; nickname: string }, setI
   const owned = base.filter((c) => ownedIds.has(c.id))
   const missing = base.filter((c) => !ownedIds.has(c.id))
   const total = base.length
-  const pct = total ? Math.round((owned.length / total) * 100) : 0
+  // Hlavní číslo podle cíle, který si uživatel u sady zvolil (base / complete / master); mozaika je vždy po kartách.
+  const [progressMap, goals] = await Promise.all([setProgress(user.id, [setId]), setGoals(user.id, [setId])])
+  const prog = progressMap.get(setId)!
+  const goal = goals.get(setId) ?? defaultGoal(prog)
+  const picked = pickGoal(prog, goal)
+  const pct = picked.total ? Math.round((picked.owned / picked.total) * 100) : 0
   const name = setDisplayName(set)
   const [siteLogo, setLogo] = await Promise.all([ogLogo(), dataUri(logoPng(set.logoUrl))])
 
@@ -153,7 +160,8 @@ export async function setShareImage(user: { id: string; nickname: string }, setI
     const imgs = await fetchAll(base.map((c) => (withImage.has(c.id) ? ogCardImage(c.imageUrl) : null)))
     const numSize = Math.max(11, Math.min(18, Math.floor(cellW / 3.4)))
 
-    const sub = t('Mám {n} z {total} karet', { n: owned.length, total })
+    const sub =
+      goal === 'master' ? t('Mám {n} z {total} variant', { n: picked.owned, total: picked.total }) : t('Mám {n} z {total} karet', { n: picked.owned, total: picked.total })
     const done = t('hotovo')
     const foot = t('Veď si sbírku a najdi, s kým měnit — zdarma.')
     texts = name + sub + done + foot + user.nickname + 'pokemon.jede.online%/0123456789'
@@ -161,8 +169,8 @@ export async function setShareImage(user: { id: string; nickname: string }, setI
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         <Header siteLogo={siteLogo} setLogo={setLogo} title={name} sub={t('Moje sbírka')} />
         <div style={{ display: 'flex', alignItems: 'flex-end', marginTop: 36 }}>
-          <div style={{ fontSize: 112, fontWeight: 800, color: TEXT, lineHeight: 0.95 }}>{String(owned.length)}</div>
-          <div style={{ fontSize: 48, fontWeight: 800, color: MUTED, marginLeft: 10, marginBottom: 8 }}>{`/ ${total}`}</div>
+          <div style={{ fontSize: 112, fontWeight: 800, color: TEXT, lineHeight: 0.95 }}>{String(picked.owned)}</div>
+          <div style={{ fontSize: 48, fontWeight: 800, color: MUTED, marginLeft: 10, marginBottom: 8 }}>{`/ ${picked.total}`}</div>
           <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 'auto', alignItems: 'flex-end', marginBottom: 8 }}>
             <div style={{ fontSize: 60, fontWeight: 800, color: YELLOW, lineHeight: 1 }}>{`${pct} %`}</div>
             <div style={{ fontSize: 24, color: MUTED, marginTop: 4 }}>{done}</div>

@@ -5,7 +5,9 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { safeDecode } from '@/lib/validation'
 import { getCurrentUser } from '@/lib/auth'
-import { setProgress } from '@/lib/progress'
+import { setGoals, setProgress } from '@/lib/progress'
+import { defaultGoal, GOAL_MISSING, pickGoal, type Goal } from '@/lib/goal'
+import { GoalPicker } from '@/components/GoalPicker'
 import { ProgressBars } from '@/components/ProgressBars'
 import { byLocalId, cardImage, formatCzk, formatEur, setLogo } from '@/lib/format'
 import { ChevronRight, ImageOff, Layers } from 'lucide-react'
@@ -69,7 +71,12 @@ export default async function SetPage({ params, searchParams }: Props) {
   const [set, user] = await Promise.all([getSet((await params).id), getCurrentUser()])
   if (!set) notFound()
   // Postup přihlášeného (base / complete / master); po změně v mřížce se obnoví při dalším načtení stránky.
-  const progress = user ? (await setProgress(user.id, [set.id])).get(set.id) : null
+  const [progress, goals] = user
+    ? await Promise.all([setProgress(user.id, [set.id]).then((m) => m.get(set.id) ?? null), setGoals(user.id, [set.id])])
+    : [null, null]
+  // Co u sady sbírám (base / complete / master) — hlavní číslo, „chybí“ i sdílený obrázek se počítají podle toho.
+  const goal: Goal = progress ? (goals?.get(set.id) ?? defaultGoal(progress)) : 'base'
+  const picked = progress ? pickGoal(progress, goal) : null
   const sp = await searchParams
   const tab = sp?.tab === 'produkty' ? 'produkty' : 'karty'
   // Z průvodce „Jakou sadu sbíráš?“: rovnou režim Mám a jednorázový tip.
@@ -123,6 +130,7 @@ export default async function SetPage({ params, searchParams }: Props) {
   const ownedIds = cards.filter((c) => (initial[c.id]?.owned ?? 0) > 0)
   const ownedValue = formatCzk(ownedIds.reduce((sum, c) => sum + Number(c.priceEur ?? 0) * (initial[c.id]?.owned ?? 0), 0))
   const total = set.officialCount || set.cardCount
+  const missing = picked ? Math.max(0, picked.total - picked.owned) : Math.max(0, total - ownedIds.length)
 
   return (
     <main className="mx-auto max-w-page px-4 pb-10 pt-6 sm:px-6">
@@ -189,12 +197,12 @@ export default async function SetPage({ params, searchParams }: Props) {
                 {[
                   [
                     <>
-                      {ownedIds.length}
-                      <span className="text-xl text-subtle"> / {total}</span>
+                      {picked?.owned ?? ownedIds.length}
+                      <span className="text-xl text-subtle"> / {picked?.total ?? total}</span>
                     </>,
-                    t('karet ve sbírce'),
+                    goal === 'master' ? t('variant ve sbírce') : t('karet ve sbírce'),
                   ],
-                  [Math.max(0, total - ownedIds.length), t('chybí do kompletu')],
+                  [missing, t(GOAL_MISSING[goal])],
                   ...(ownedValue && ownedIds.length ? [[`≈ ${ownedValue}`, t('hodnota tvých karet')]] : []),
                 ].map(([v, label], n) => (
                   <div key={n} className={n ? 'border-l border-line pl-6 pr-6' : 'pr-6'}>
@@ -211,8 +219,11 @@ export default async function SetPage({ params, searchParams }: Props) {
         </div>
         {progress && (
           <div className="relative mt-7 border-t border-line pt-6">
-            <ProgressBars p={progress} />
-            <ShareSet setId={set.id} setName={setDisplayName(set)} missing={Math.max(0, total - ownedIds.length)} />
+            <GoalPicker setId={set.id} goal={goal} hasBase={!!progress.base} />
+            <div className="mt-5">
+              <ProgressBars p={progress} active={goal} />
+            </div>
+            <ShareSet setId={set.id} setName={setDisplayName(set)} missing={missing} />
           </div>
         )}
       </header>
@@ -262,6 +273,7 @@ export default async function SetPage({ params, searchParams }: Props) {
         showTip={showTip}
         officialCount={set.officialCount || set.cardCount}
         setId={set.id}
+        goal={goal}
         baseCount={set.officialCount}
         initial={initial}
         cards={cards.map((c) => ({

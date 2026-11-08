@@ -14,7 +14,8 @@ import { CollectorList } from '@/components/CollectorList'
 import { LatestOffers } from '@/components/LatestOffers'
 import { GettingStarted } from '@/components/GettingStarted'
 import { CardImg } from '@/components/CardImg'
-import { setProgress } from '@/lib/progress'
+import { setGoals, setProgress } from '@/lib/progress'
+import { defaultGoal, nextGoal, pickGoal } from '@/lib/goal'
 import { portfolio } from '@/lib/portfolio'
 import { cardImage, formatCzk, setLogo, subsetLabels } from '@/lib/format'
 import { ensureEurCzk } from '@/lib/fx'
@@ -50,12 +51,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ v
   ])
 
   // Postup přihlášeného v nejnovějších sadách (jen sady, ve kterých něco má).
-  const latestProgress = user ? await setProgress(user.id, latest.map((s) => s.id)) : null
+  const [latestProgress, latestGoals] = user
+    ? await Promise.all([setProgress(user.id, latest.map((s) => s.id)), setGoals(user.id, latest.map((s) => s.id))])
+    : [null, null]
   const hasNoAiKey = user ? (await prisma.apiToken.count({ where: { userId: user.id, revokedAt: null } })) === 0 : false
   const progressOf = (id: string) => {
     const p = latestProgress?.get(id)
     if (!p) return null
-    const pick = p.base ?? p.complete
+    const pick = pickGoal(p, latestGoals?.get(id) ?? defaultGoal(p))
     return pick.owned > 0 ? pick : null
   }
 
@@ -271,16 +274,17 @@ async function UserDashboard({
   const perSet = new Map<string, number>()
   for (const i of items) perSet.set(i.card.setId, (perSet.get(i.card.setId) ?? 0) + 1)
   const candidates = [...perSet.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([id]) => id)
-  const [progress, sets] = await Promise.all([
+  const [progress, goals, sets] = await Promise.all([
     setProgress(user.id, candidates),
+    setGoals(user.id, candidates),
     prisma.cardSet.findMany({ where: { id: { in: candidates } }, select: { id: true, name: true, logoUrl: true } }),
   ])
   const ranked = sets.map((s) => {
     const p = progress.get(s.id)!
-    const pick = p.base ?? p.complete
-    // Po dokončení základu je dalším cílem celá sada včetně secret karet, pak master set.
-    const next = p.complete.owned < p.complete.total ? p.complete : p.master.owned < p.master.total ? p.master : null
-    return { ...s, owned: pick.owned, total: pick.total, next }
+    // Postup podle cíle, který si uživatel u sady zvolil (výchozí base); „next“ = další meta po něm.
+    const goal = goals.get(s.id) ?? defaultGoal(p)
+    const pick = pickGoal(p, goal)
+    return { ...s, goal, owned: pick.owned, total: pick.total, next: nextGoal(p, goal) }
   })
   const collecting = ranked
     .filter((s) => s.total > 0 && s.owned < s.total)
@@ -364,11 +368,11 @@ async function UserDashboard({
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <Badge tone="positive">
                         <Check aria-hidden />
-                        {t('Kompletní {n}/{total}', { n: s.owned, total: s.total })}
+                        {s.goal === 'master' ? t('Master set {n}/{total}', { n: s.owned, total: s.total }) : t('Kompletní {n}/{total}', { n: s.owned, total: s.total })}
                       </Badge>
                       {s.next && (
                         <span className="text-xs text-muted tabular-nums">
-                          {s.next.total > s.total && s.next.owned < s.next.total
+                          {s.next.kind === 'complete'
                             ? t('se secret {n}/{total}', { n: s.next.owned, total: s.next.total })
                             : t('master set {n}/{total}', { n: s.next.owned, total: s.next.total })}
                         </span>
