@@ -1,15 +1,20 @@
 import 'server-only'
 import { headers } from 'next/headers'
+import { ipLimitKey } from '@/lib/ip'
 
 // Jednoduchý limit pokusů v paměti procesu (jedna instance aplikace na serveru stačí).
 const hits = new Map<string, number[]>()
 const MAX_KEYS = 20_000
 
+/**
+ * IP klienta pro limit pokusů. Aplikace MUSÍ běžet za reverzní proxy (nginx), která hlavičku x-real-ip vždy přepíše
+ * (proxy_set_header X-Real-IP $remote_addr). Na x-forwarded-for se záměrně nespoléháme: první prvek dodává klient,
+ * takže by šel podvrhnout a limit obejít. Bez x-real-ip jdou všichni do jednoho společného koše ('unknown') —
+ * limit pak raději platí příliš přísně, než aby šel obejít.
+ */
 export async function clientIp() {
   const h = await headers()
-  const ip = h.get('x-real-ip') ?? h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  // IPv6: jeden uživatel má celý blok /64 — limit počítáme za blok, ne za adresu.
-  return ip.includes(':') ? ip.split(':').slice(0, 4).join(':') + '::/64' : ip
+  return ipLimitKey(h.get('x-real-ip') ?? '')
 }
 
 /** true = ještě smí. Např. rateLimit('login:1.2.3.4', 10, 15 * 60_000). */

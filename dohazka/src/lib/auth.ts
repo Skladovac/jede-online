@@ -11,6 +11,18 @@ export { hashPassword, randomToken, sha256, verifyPassword } from '@/lib/crypto'
 const COOKIE = 'dh_session'
 const SESSION_DAYS = 30
 
+/** Pole uživatele, která smí z auth ven. Záměrně BEZ passwordHash — objekt končí v komponentách a tím i v prohlížeči. */
+const USER_SELECT = {
+  id: true,
+  email: true,
+  name: true,
+  tracksFrom: true,
+  periodStartDay: true,
+  remindHour: true,
+  remindEnabled: true,
+  createdAt: true,
+} as const
+
 /** V cookie je původní token, v databázi jen jeho sha256. */
 export async function createSession(userId: string) {
   const token = randomToken()
@@ -36,13 +48,13 @@ export async function destroySession() {
 export const getCurrentUser = cache(async () => {
   const token = (await cookies()).get(COOKIE)?.value
   if (!token) return null
-  const session = await prisma.session.findUnique({ where: { id: sha256(token) }, include: { user: true } })
+  const session = await prisma.session.findUnique({ where: { id: sha256(token) }, select: { expiresAt: true, user: { select: USER_SELECT } } })
   if (!session || session.expiresAt < new Date()) return null
   return session.user
 })
 
 /** Přihlášený uživatel; jinak přesměruje na přihlášení. */
-export async function requireUser() {
+export async function requireUser(): Promise<NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>> {
   const user = await getCurrentUser()
   if (!user) redirect('/prihlaseni')
   return user

@@ -17,12 +17,16 @@ describe('sha256', () => {
   it('je stabilní a 64 znaků', () => {
     expect(sha256('token')).toBe(sha256('token'))
     expect(sha256('token')).toHaveLength(64)
+    expect(sha256('a')).not.toBe(sha256('b'))
   })
 })
 
 describe('loginSchema', () => {
   it('vezme platný e-mail a heslo', () => {
     expect(loginSchema.safeParse({ email: 'a@b.cz', password: 'heslo1234' }).success).toBe(true)
+  })
+  it('normalizuje e-mail (mezery, velikost písmen)', () => {
+    expect(loginSchema.parse({ email: ' A@B.CZ ', password: 'heslo1234' }).email).toBe('a@b.cz')
   })
   it('odmítne nesmysl', () => {
     expect(loginSchema.safeParse({ email: 'neni-email', password: 'heslo1234' }).success).toBe(false)

@@ -32,7 +32,10 @@ async function main() {
     throw new Error('Použití: npm run user:add -- --email a@b.cz --name "Jméno" --tracks-from 2026-11-01')
   }
   const tracksFrom = parseDayKey(od)
-  if (Number.isNaN(tracksFrom.getTime())) throw new Error('--tracks-from není platné datum (RRRR-MM-DD).')
+  // parseDayKey neplatné datum (2026-13-45) tiše přetočí, proto ověříme, že vyjde zpět to samé.
+  if (Number.isNaN(tracksFrom.getTime()) || tracksFrom.toISOString().slice(0, 10) !== od) {
+    throw new Error('--tracks-from není platné datum (RRRR-MM-DD).')
+  }
   const email = loginSchema.shape.email.parse(values.email)
 
   const heslo = generujHeslo()
@@ -41,10 +44,10 @@ async function main() {
   try {
     const existuje = await prisma.user.findUnique({ where: { email }, select: { id: true } })
     if (existuje) {
-      await prisma.user.update({ where: { email }, data: { passwordHash } })
+      await prisma.user.update({ where: { email }, data: { passwordHash, name: jmeno, tracksFrom } })
       // Staré přihlášení přestane platit — po změně hesla se musí přihlásit znovu.
       await prisma.session.deleteMany({ where: { userId: existuje.id } })
-      console.log(`Účet ${email} už existoval — přepsáno heslo (jméno a datum začátku zůstaly beze změny).`)
+      console.log(`Účet ${email} už existoval — přepsáno heslo (jméno a datum začátku nastaveny podle zadání).`)
     } else {
       await prisma.user.create({ data: { email, name: jmeno, tracksFrom, passwordHash } })
       console.log(`Účet ${email} založen.`)
