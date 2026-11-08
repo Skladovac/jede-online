@@ -24,6 +24,7 @@ export async function toXlsx(report: Report): Promise<Buffer> {
   // Mezi řádky dat a součtem žádná mezera; addRow na prázdném listu s řádkem 3 pokračuje od 4.
   const soucet = ws.addRow(['Celkem', '', '', '', report.totalHours, '', '', ''])
   soucet.font = { bold: true }
+  ws.addRow(['Odpracovaných dnů', '', '', '', String(report.daysWorked), '', '', '']).font = { bold: true }
 
   SIRKY.forEach((w, i) => (ws.getColumn(i + 1).width = w))
   return Buffer.from(await wb.xlsx.writeBuffer())

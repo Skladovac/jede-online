@@ -13,7 +13,7 @@ export const KIND_LABEL: Record<EntryKindValue, string> = {
   WORK: 'Práce',
   VACATION: 'Dovolená',
   SICK: 'Nemoc',
-  DAYOFF: 'Nepracoval',
+  DAYOFF: 'Volno',
 }
 
 // Tvar hodin: 1–2 cifry, volitelně čárka nebo tečka a 1–2 desetinná místa.

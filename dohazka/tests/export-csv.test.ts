@@ -24,6 +24,23 @@ describe('toCsv', () => {
     expect(csv).toContain('"Zlín; Vsetín"')
     expect(csv).toContain('"řekl ""ano"""')
   })
+  it('součet nese hodiny i počet dnů', () => {
+    const csv = toCsv(report([row]))
+    expect(csv).toContain('Celkem;;;;16,5;;;\r\n')
+    expect(csv).toContain('Odpracovaných dnů;;;;1;;;\r\n')
+  })
+  it('hodnoty začínající vzorcovým znakem dostanou apostrof', () => {
+    for (const znak of ['-', '+', '=', '@']) {
+      expect(toCsv(report([{ ...row, note: `${znak}dovolená` }]))).toContain(`;'${znak}dovolená\r\n`)
+    }
+    expect(toCsv(report([{ ...row, note: '\tx' }]))).toContain(";'\tx\r\n")
+  })
+  it('vzorcový znak i středník dohromady: ošetření a uvozovky', () => {
+    expect(toCsv(report([{ ...row, note: '=a;b "x"' }]))).toContain(`"'=a;b ""x"""`)
+  })
+  it('pomlčka uvnitř textu zůstane beze změny', () => {
+    expect(toCsv(report([{ ...row, place: 'Zlín-Vsetín' }]))).toContain(';Zlín-Vsetín;')
+  })
   it('prázdný měsíc má hlavičku a nulový součet', () => {
     const csv = toCsv(report([]))
     expect(csv).toContain('Datum;Den;Od;Do;Hodiny;Místo;Typ;Poznámka')
