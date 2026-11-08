@@ -17,6 +17,11 @@ export async function clientIp() {
   return ipLimitKey(h.get('x-real-ip') ?? '')
 }
 
+/** Smaže počítadlo klíče (např. po úspěšném přihlášení). Ostatní klíče se nedotkne. */
+export function clearRateLimit(key: string) {
+  hits.delete(key)
+}
+
 /** true = ještě smí. Např. rateLimit('login:1.2.3.4', 10, 15 * 60_000). */
 export function rateLimit(key: string, max: number, windowMs: number) {
   const now = Date.now()
