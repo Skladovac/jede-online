@@ -1,0 +1,131 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('server-only', () => ({}))
+const db = vi.hoisted(() => ({
+  user: { findMany: vi.fn() },
+  entry: { findFirst: vi.fn() },
+  reminderLog: { findUnique: vi.fn(), create: vi.fn(), delete: vi.fn() },
+}))
+vi.mock('@/lib/prisma', () => ({ prisma: db }))
+const push = vi.hoisted(() => ({ sendPush: vi.fn() }))
+vi.mock('@/lib/push', () => push)
+
+import { runReminder, shouldRemind } from '@/lib/reminder'
+
+const user = { remindEnabled: true, remindHour: 19, tracksFromKey: '2026-01-01' }
+const base = { nowHour: 19, todayKey: '2026-11-08', user, hasEntryToday: false, alreadyRemindedToday: false }
+
+describe('shouldRemind', () => {
+  it('pípne ve svou hodinu, když není zapsáno', () => {
+    expect(shouldRemind(base)).toBe(true)
+  })
+  it('pípne i hodinu po termínu, ale ne po dvou', () => {
+    expect(shouldRemind({ ...base, nowHour: 20 })).toBe(true)
+    expect(shouldRemind({ ...base, nowHour: 21 })).toBe(true)
+    expect(shouldRemind({ ...base, nowHour: 22 })).toBe(false)
+    expect(shouldRemind({ ...base, nowHour: 2 })).toBe(false)
+  })
+  it('nepípne před svou hodinou', () => {
+    expect(shouldRemind({ ...base, nowHour: 18 })).toBe(false)
+  })
+  it('nepípne, když už je zapsáno nebo odbyto', () => {
+    expect(shouldRemind({ ...base, hasEntryToday: true })).toBe(false)
+  })
+  it('nepípne dvakrát za den', () => {
+    expect(shouldRemind({ ...base, alreadyRemindedToday: true })).toBe(false)
+  })
+  it('nepípne vypnutým', () => {
+    expect(shouldRemind({ ...base, user: { ...user, remindEnabled: false } })).toBe(false)
+  })
+  it('nepípne před datem, od kdy si zapisuje, ale v ten den už ano', () => {
+    expect(shouldRemind({ ...base, user: { ...user, tracksFromKey: '2026-12-01' } })).toBe(false)
+    expect(shouldRemind({ ...base, user: { ...user, tracksFromKey: '2026-11-08' } })).toBe(true)
+  })
+  it('pípne i v sobotu a na Vánoce', () => {
+    expect(shouldRemind({ ...base, todayKey: '2026-11-07' })).toBe(true) // sobota
+    expect(shouldRemind({ ...base, todayKey: '2026-12-24' })).toBe(true)
+  })
+  it('hodina 23 má okno jen do konce dne, ne do rána', () => {
+    expect(shouldRemind({ ...base, nowHour: 23, user: { ...user, remindHour: 23 } })).toBe(true)
+    expect(shouldRemind({ ...base, nowHour: 0, user: { ...user, remindHour: 23 } })).toBe(false)
+  })
+})
+
+describe('runReminder', () => {
+  // 18:30 UTC v listopadu = 19:30 v Praze (CET); kdyby se četlo UTC, byla by to hodina 18 a nepípalo by se.
+  const at1930 = new Date('2026-11-08T18:30:00Z')
+  const dbUser = { id: 'u1', remindEnabled: true, remindHour: 19, tracksFrom: new Date(Date.UTC(2026, 0, 1)) }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+    db.user.findMany.mockResolvedValue([dbUser])
+    db.entry.findFirst.mockResolvedValue(null)
+    db.reminderLog.findUnique.mockResolvedValue(null)
+    db.reminderLog.create.mockResolvedValue({})
+    db.reminderLog.delete.mockResolvedValue({})
+    push.sendPush.mockResolvedValue({ sent: 1 })
+  })
+
+  it('pošle push na "/" a zapíše log pražského dne', async () => {
+    expect(await runReminder({ now: at1930 })).toEqual({ checked: 1, sent: 1 })
+    expect(push.sendPush).toHaveBeenCalledWith('u1', expect.objectContaining({ title: 'Zapiš si dnešní hodiny', url: '/' }))
+    expect(db.reminderLog.create).toHaveBeenCalledWith({ data: { userId: 'u1', day: new Date(Date.UTC(2026, 10, 8)) } })
+  })
+
+  it('počítá pražskou hodinu a den: po půlnoci Praha nepípá a den je už následující', async () => {
+    const now = new Date('2026-11-08T23:30:00Z') // 00:30 dne 9. 11. v Praze
+    expect(await runReminder({ now })).toEqual({ checked: 1, sent: 0 })
+    expect(db.reminderLog.create).not.toHaveBeenCalled()
+    expect(db.entry.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: 'u1', day: new Date(Date.UTC(2026, 10, 9)) } }))
+  })
+
+  it('zapíše log dřív, než pošle push', async () => {
+    await runReminder({ now: at1930 })
+    expect(db.reminderLog.create.mock.invocationCallOrder[0]).toBeLessThan(push.sendPush.mock.invocationCallOrder[0])
+  })
+
+  it('při kolizi unique (P2002) nepošle nic', async () => {
+    db.reminderLog.create.mockRejectedValue(Object.assign(new Error('unique'), { code: 'P2002' }))
+    expect(await runReminder({ now: at1930 })).toEqual({ checked: 1, sent: 0 })
+    expect(push.sendPush).not.toHaveBeenCalled()
+  })
+
+  it('jinou chybu databáze nespolkne a nic nepošle', async () => {
+    db.reminderLog.create.mockRejectedValue(Object.assign(new Error('down'), { code: 'P1001' }))
+    await expect(runReminder({ now: at1930 })).rejects.toThrow('down')
+    expect(push.sendPush).not.toHaveBeenCalled()
+  })
+
+  it('jakýkoli záznam dne (i "Nepracoval") znamená odbyto', async () => {
+    db.entry.findFirst.mockResolvedValue({ id: 'e1' })
+    expect(await runReminder({ now: at1930 })).toEqual({ checked: 1, sent: 0 })
+    // dotaz nefiltruje podle druhu záznamu
+    expect(db.entry.findFirst).toHaveBeenCalledWith({ where: { userId: 'u1', day: new Date(Date.UTC(2026, 10, 8)) }, select: { id: true } })
+    expect(push.sendPush).not.toHaveBeenCalled()
+  })
+
+  it('už připomenutému dnes nepípne znovu', async () => {
+    db.reminderLog.findUnique.mockResolvedValue({ id: 'l1' })
+    expect(await runReminder({ now: at1930 })).toEqual({ checked: 1, sent: 0 })
+    expect(push.sendPush).not.toHaveBeenCalled()
+  })
+
+  it('hledá jen uživatele s odběrem', async () => {
+    await runReminder({ now: at1930 })
+    expect(db.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { pushSubscriptions: { some: {} } } }))
+  })
+
+  it('když push nikam nedorazí, uvolní den pro další hodinový běh a nepočítá ho', async () => {
+    push.sendPush.mockResolvedValue({ sent: 0 })
+    expect(await runReminder({ now: at1930 })).toEqual({ checked: 1, sent: 0 })
+    expect(db.reminderLog.delete).toHaveBeenCalled()
+  })
+
+  it('force pípne mimo okno, ale pořád ne vypnutým', async () => {
+    const night = new Date('2026-11-08T10:00:00Z')
+    expect((await runReminder({ now: night })).sent).toBe(0)
+    expect((await runReminder({ now: night, force: true })).sent).toBe(1)
+    db.user.findMany.mockResolvedValue([{ ...dbUser, remindEnabled: false }])
+    expect((await runReminder({ now: night, force: true })).sent).toBe(0)
+  })
+})

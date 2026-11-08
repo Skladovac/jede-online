@@ -1,0 +1,10 @@
+[Unit]
+Description=Dohazka - vecerni pripominka (push)
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/opt/jede/dohazka.env
+# Secret jde do curl přes stdin (-K -), ne na příkazovou řádku, kde by ho viděl každý `ps`.
+# $$ = literální $ pro shell (systemd jinak expanduje sám), %% = literální %.
+ExecStart=/bin/sh -c 'printf "header = \\"Authorization: Bearer %%s\\"\n" "$$CRON_SECRET" | /usr/bin/curl -fsS -X POST -K - http://127.0.0.1:3500/api/cron/reminder'
