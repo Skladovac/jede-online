@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   description: 'Zapisujte odpracované hodiny a místo práce, na konci měsíce si vyexportujte výkaz pro zaměstnavatele.',
   // Soukromá evidence, vyhledávačům nic nenabízíme.
   robots: { index: false, follow: false },
+  manifest: '/manifest.webmanifest',
 }
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1 }
