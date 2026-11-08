@@ -45,7 +45,7 @@ type TcgCard = {
   types?: string[]
   variants?: { normal?: boolean; holo?: boolean; reverse?: boolean; firstEdition?: boolean }
   // Podrobné varianty: reverse se vzorem Poké Ball / Master Ball má foil 'pokeball' / 'masterball'.
-  variants_detailed?: { type?: string; foil?: string; thirdParty?: { cardmarket?: number } }[]
+  variants_detailed?: { type?: string; foil?: string; variantId?: string; thirdParty?: { cardmarket?: number } }[]
   pricing?: {
     cardmarket?: {
       updated?: string
@@ -156,6 +156,14 @@ export async function syncCatalog(
     }
     const cm = detail?.pricing?.cardmarket
     const v = detail?.variants
+    // Čerstvě vydaná sada: TCGdex má varianty jen „vygenerované“ (všude normal) — ty nesmí přepsat
+    // naše údaje z TCGplayeru. Při prvním uložení aspoň odhad: reverse, když Cardmarket zná cenu reverse.
+    const placeholder = !!detail?.variants_detailed?.length && detail.variants_detailed.every((x) => x.variantId === 'generated')
+    const flags = detail
+      ? placeholder
+        ? { hasNormal: true, hasHolo: false, hasReverse: cm?.['trend-holo'] != null || cm?.['avg7-holo'] != null, hasFirstEd: false }
+        : { hasNormal: v?.normal ?? false, hasHolo: v?.holo ?? false, hasReverse: v?.reverse ?? false, hasFirstEd: v?.firstEdition ?? false }
+      : {}
     const data = {
       setId,
       localId: clean(brief.localId),
@@ -166,10 +174,7 @@ export async function syncCatalog(
         category: detail.category ?? null,
         rarity: detail.rarity ?? null,
         types: detail.types ?? [],
-        hasNormal: v?.normal ?? false,
-        hasHolo: v?.holo ?? false,
-        hasReverse: v?.reverse ?? false,
-        hasFirstEd: v?.firstEdition ?? false,
+        ...(placeholder ? {} : flags),
         hasPokeball: !!detail.variants_detailed?.some((x) => x.foil === 'pokeball'),
         hasMasterball: !!detail.variants_detailed?.some((x) => x.foil === 'masterball'),
         priceEur: eur(cm?.trend, cm?.avg7, cm?.avg30),
@@ -186,7 +191,7 @@ export async function syncCatalog(
     }
     const id = clean(brief.id)
     try {
-      await prisma.card.upsert({ where: { id }, create: { id, ...data, imageUrl: data.imageUrl ?? null }, update: data })
+      await prisma.card.upsert({ where: { id }, create: { id, ...data, ...flags, imageUrl: data.imageUrl ?? null }, update: data })
     } catch (err) {
       // Např. duplicitní číslo karty v sadě — jedna vadná karta nesmí shodit celý import.
       stats.cardDetailFailures++
