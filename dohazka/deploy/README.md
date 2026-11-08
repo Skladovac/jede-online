@@ -36,10 +36,12 @@ jen písmena a číslice):
 ```bash
 cp /opt/jede/dohazka-src/dohazka/deploy/init-db.sql /root/dohazka-init-db.sql
 nano /root/dohazka-init-db.sql
-PGU=$(docker exec jede-db-1 printenv POSTGRES_USER)   # superuživatel postgresu ve stacku landingu
+PGU=$(docker exec jede-db-1 printenv POSTGRES_USER)   # DOMNĚNKA, viz níže
 docker exec -i jede-db-1 psql -v ON_ERROR_STOP=1 -U "$PGU" -d postgres < /root/dohazka-init-db.sql
-shred -u /root/dohazka-init-db.sql
+rm /root/dohazka-init-db.sql   # až bude vše ověřeno; obsahuje heslo, nenechávej ho ležet
 ```
+
+Poznámka: že jde superuživatele postgresu zjistit přes `printenv POSTGRES_USER` v kontejneru `jede-db-1` je jen předpoklad (backup skripty pokemonu tuto proměnnou v kontejneru používají, ale na serveru jsem to neviděl). Když `PGU` vyjde prázdné, najdi uživatele v compose souboru stacku landingu.
 
 Čekaný výstup: `CREATE ROLE` a `CREATE DATABASE`. Cokoli jiného (např. `ERROR … already exists`)
 je selhání — skript se díky `ON_ERROR_STOP=1` zastaví. Ověř:
@@ -94,7 +96,7 @@ podle toho, jak jsou uspořádané vhosty pokemonu.) Vhost **musí** posílat
 ```
 
 Skript sám zkontroluje IP serveru, buildne image, ověří migrace, vymění kontejner, otestuje
-nginx, restartuje ho a zkontroluje `/api/health` (databáze i běžící commit). Build na 4 GB
+nginx, reloadne ho a zkontroluje `/api/health` (databáze i běžící commit). Build na 4 GB
 RAM potřebuje swap — ověř `swapon --show`. Ověř zvenčí:
 `curl -s https://dohazka.jede.online/api/health` — musí vrátit `"db":"up"`.
 
@@ -168,12 +170,12 @@ Skript v tu chvíli už vyměnil kontejner, takže rozbitá verze běží. Autom
 schválně — rozhodni ty. Skript sám vypíše přesné příkazy s hashem předchozího commitu:
 `git reset --hard <předchozí>`, `build dohazka`, oprava `GIT_COMMIT` v env a
 `up -d --force-recreate dohazka`. Migrace databáze se nevrací; ověř, že stará verze nové
-schéma zvládne. Když spadl dřívější krok, původní kontejner běží dál a nic vracet není.
+schéma zvládne. Hranice je výměna kontejneru (`up -d --force-recreate`): když skript skončí před ní (reset, build, migrační brána, `migrate deploy`), původní kontejner běží dál a nic vracet není. Od výměny dál (`nginx -t`, reload nginxu, smoke test) už běží nový kontejner a platí tento postup.
 
 ## Úklid disku
 
 Skript nemaže Docker build cache (globální `docker builder prune` by mazal i cizí projekty).
-Čistí ji denní timer pokemonu. Občas zkontroluj `docker system df`.
+V repu je ověřitelné jen tolik, že `pokemon/deploy/backup-pokemon.sh` obsahuje `docker builder prune` a `pokemon-daily.timer` je nastaven na 03:05. Jestli je ten timer na serveru opravdu zapnutý, z repa nevidíme — ověř `systemctl list-timers`. Občas zkontroluj `docker system df`.
 
 ## Další nasazení
 

@@ -24,6 +24,7 @@ dc() { docker compose -f "$APP/deploy/docker-compose.yml" --env-file "$ENVF" "$@
 log "1/7  Hard reset na origin/$BRANCH"
 # NE git pull. ⛔ Nikdy git clean.
 PREV=$(git -C "$SRC" rev-parse HEAD)   # pro návod na návrat, kdyby spadl smoke test
+PREV_SHORT=$(git -C "$SRC" rev-parse --short HEAD)   # stejný tvar jako COMMIT níže
 git -C "$SRC" fetch --prune origin
 git -C "$SRC" reset --hard "origin/$BRANCH"
 COMMIT=$(git -C "$SRC" rev-parse --short HEAD)
@@ -45,7 +46,9 @@ dc --profile tools build dohazka dohazka-migrate || fail "build spadl. Běžíc�
 # Pojistka: migrační brána na drift.
 # Hledá anglická hlášení Prisma 5; po přechodu na Prisma 6 ověř, že se znění nezměnilo.
 # -T: bez TTY (ssh host skript, cron) by `run` selhal a `|| true` by zamaskoval hlášku
-# o TTY jako "stav migrací" — brána by pak prošla, aniž by cokoli zkontrolovala.
+# o TTY jako "stav migrací". Pozor: `|| true` pořád spolkne i jiné selhání `migrate status`
+# (třeba nedostupnou databázi) — tahle brána chytá JEN drift. Skutečná pojistka je další krok,
+# `migrate deploy`, který při nedostupné DB nebo špatných migracích skončí chybou.
 log "4/7  Migrační brána"
 STATUS=$(dc --profile tools run -T --rm dohazka-migrate 2>&1 || true)
 echo "$STATUS"
@@ -62,8 +65,8 @@ log "6/7  Výměna kontejneru + reload nginx"
 dc up -d --force-recreate dohazka
 # Deploy nginx konfiguraci nemění, takže jde jen o zdvořilostní reload. Reload (ne restart) nikdy
 # neshodí ostatní weby: když selže, běžící master zůstane. Brána nginx -t je navíc.
-nginx -t || fail "nginx -t neprošel. Nginx NErestartován, oprav konfiguraci."
-systemctl reload nginx
+nginx -t || fail "nginx -t neprošel, reload neproběhl. Nový kontejner UŽ BĚŽÍ — platí postup návratu (README, 'Když spadne poslední krok')."
+systemctl reload nginx || fail "reload nginxu selhal. Nový kontejner UŽ BĚŽÍ — platí postup návratu (README, 'Když spadne poslední krok')."
 
 # Po výměně kontejneru už není automatický návrat — rozhoduje člověk. Skript jen vypíše postup.
 smoke_fail() {
@@ -75,7 +78,7 @@ smoke_fail() {
 Nová verze už běží a je rozbitá. Návrat na předchozí commit ($PREV):
   git -C $SRC reset --hard $PREV
   docker compose -f $APP/deploy/docker-compose.yml --env-file $ENVF build dohazka
-  sed -i "s/^GIT_COMMIT=.*/GIT_COMMIT=${PREV:0:7}/" $ENVF
+  sed -i "s/^GIT_COMMIT=.*/GIT_COMMIT=$PREV_SHORT/" $ENVF
   docker compose -f $APP/deploy/docker-compose.yml --env-file $ENVF up -d --force-recreate dohazka
 Migrace databáze se NEVRACEJÍ — ověř, že stará verze zvládne nové schéma.
 HINT
