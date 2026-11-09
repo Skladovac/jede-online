@@ -1,12 +1,32 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import Link from 'next/link'
 import { createOrganization } from '@/app/actions/org'
 
 const pole = 'mt-1 w-full rounded-panel border border-line bg-card px-3 py-2 text-fg focus:border-line-strong focus:outline-none'
 
 type Stav = Awaited<ReturnType<typeof createOrganization>> | null
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(text)
+          setCopied(true)
+        } catch {
+          setCopied(false) // schránka nemusí být dostupná; heslo jde označit a zkopírovat ručně
+        }
+      }}
+      className="mt-2 min-h-11 rounded-panel border border-line bg-card px-4 py-2 text-sm font-medium hover:bg-accent-soft"
+    >
+      {copied ? 'Zkopírováno' : 'Zkopírovat heslo'}
+    </button>
+  )
+}
 
 export function NewOrgForm() {
   const [stav, akce, pending] = useActionState(
@@ -28,6 +48,10 @@ export function NewOrgForm() {
           <>
             <p className="mt-3 text-sm">Heslo nového správce (zobrazeno jen teď, předej ho mu a nikam ho neukládej):</p>
             <p className="mt-1 select-all break-all font-mono text-lg">{stav.password}</p>
+            <CopyButton text={stav.password} />
+            <p role="alert" className="mt-3 text-sm font-semibold text-danger">
+              Heslo se už znovu nezobrazí. Po obnovení nebo opuštění stránky ho nelze zjistit.
+            </p>
           </>
         ) : (
           <p className="mt-3 text-sm text-muted">Správce už účet měl, přihlásí se svým dosavadním heslem.</p>
@@ -36,6 +60,9 @@ export function NewOrgForm() {
           <Link href="/admin" className="underline">
             Seznam firem
           </Link>
+          <a href="/admin/nova-firma" className="underline">
+            Založit další firmu
+          </a>
         </p>
       </section>
     )

@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: 'Firmy' }
 export default async function AdminPage() {
   await requireSuperAdmin()
   const firmy = await prisma.organization.findMany({
-    select: { id: true, name: true, createdAt: true, _count: { select: { memberships: { where: { active: true } } } } },
+    select: { id: true, name: true, _count: { select: { memberships: { where: { active: true } } } } },
     orderBy: [{ name: 'asc' }, { id: 'asc' }],
   })
   return (

@@ -35,6 +35,8 @@ export async function createOrganization(
       const existing = await tx.user.findUnique({ where: { email: ownerEmail }, select: { id: true } })
       const userId = existing ? existing.id : (await tx.user.create({ data: { email: ownerEmail, name: ownerName, passwordHash } })).id
       const org = await tx.organization.create({ data: { name, reportName }, select: { id: true } })
+      // Kolize členství (unique userId+orgId) nemůže nastat: firma je právě vytvořená, její id je čerstvé
+      // a žádné jiné členství k ní ještě nepatří.
       await tx.membership.create({ data: { userId, orgId: org.id, role: 'OWNER', active: true, tracksFrom } })
       return { orgId: org.id, created: !existing }
     })

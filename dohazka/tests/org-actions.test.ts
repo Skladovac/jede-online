@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Skutečné requireSuperAdmin (z org.ts) zůstává; nahrazujeme jen okolí: přihlášení, Next a databázi.
 // Díky tomu test spadne, i když akce kontrolu super admina vynechá nebo nahradí vlastní.
@@ -75,7 +75,28 @@ describe('createOrganization: nová firma a první správce', () => {
     expect(db.membership.create).toHaveBeenCalledTimes(1)
     const data = db.membership.create.mock.calls[0][0].data
     expect(data).toMatchObject({ userId: 'u-new', orgId: 'o-new', role: 'OWNER', active: true })
-    expect(data.tracksFrom).toBeInstanceOf(Date)
+    // Název firmy a název ve výkazu jsou dvě různé hodnoty a nesmí se zaměnit.
+    expect(db.organization.create.mock.calls[0][0].data).toEqual({ name: 'Truhlářství Novák', reportName: 'Truhlářství Novák s.r.o.' })
+  })
+
+  describe('tracksFrom je pražský den, ne UTC', () => {
+    // 23:30 UTC 8. 11. je v Praze (CET) už 0:30 dne 9. 11.; UTC den by byl o den dřív.
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-11-08T23:30:00Z'))
+    })
+    afterEach(() => vi.useRealTimers())
+
+    it('nový správce', async () => {
+      await createOrganization(vstup)
+      expect(db.membership.create.mock.calls[0][0].data.tracksFrom).toEqual(new Date(Date.UTC(2026, 10, 9)))
+    })
+
+    it('připojený existující uživatel', async () => {
+      db.user.findUnique.mockResolvedValue({ id: 'u-old' })
+      await createOrganization(vstup)
+      expect(db.membership.create.mock.calls[0][0].data.tracksFrom).toEqual(new Date(Date.UTC(2026, 10, 9)))
+    })
   })
 
   it('zápisy jdou přes klienta transakce, ne přes globální prisma', async () => {
@@ -93,8 +114,8 @@ describe('createOrganization: nová firma a první správce', () => {
     expect(db.user.create).not.toHaveBeenCalled()
   })
 
-  it('když selže členství, firma se nepotvrdí: transakce propadne a akce vrátí chybu', async () => {
-    // Skutečná transakce vrací zpět vše; simulujeme to tím, že potvrzení (návrat z callbacku) nenastane.
+  it('když selže členství, akce vrátí chybu a transakce se nedokončí (skutečný rollback řeší Prisma, mock ho neověří)', async () => {
+    // Mock jen zaznamená, že callback transakce doběhl; skutečné vrácení zápisů dělá Prisma při výjimce z callbacku.
     const potvrzeno: string[] = []
     db.$transaction.mockImplementation(async (fn: (t: typeof db) => Promise<unknown>) => {
       const r = await fn(db)
