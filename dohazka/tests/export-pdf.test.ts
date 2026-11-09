@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { resolvePdfFont, toPdf } from '@/lib/export/pdf'
 import type { Report } from '@/lib/export/rows'
 
-const empty: Report = { title: 'Výkaz odpracovaných hodin', personName: 'Jan Novák', periodLabel: 'listopad 2026', rows: [], totalHours: '0', totalHoursValue: 0, daysWorked: 0 }
+const empty: Report = { title: 'Výkaz odpracovaných hodin', orgName: 'Stavby Novák s.r.o.', personName: 'Jan Novák', periodLabel: 'listopad 2026', rows: [], totalHours: '0', totalHoursValue: 0, daysWorked: 0 }
 
 // Vytáhne z PDF textovou vrstvu i se souřadnicemi: rozbalí streamy, přečte ToUnicode mapu vloženého fontu
 // a každý kus textu (operátor Tm + TJ) vrátí jako { x, y, text }. Bez externích závislostí.

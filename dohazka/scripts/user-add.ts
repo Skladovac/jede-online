@@ -1,12 +1,14 @@
-// Založí účet, nebo existujícímu přepíše heslo (náhrada „zapomenutého hesla“), a podle zadání
-// ho zařadí do firmy s rolí nebo mu nastaví příznak super admina.
+// Založí účet, nebo existujícímu upraví jméno, heslo, členství ve firmě a příznak super admina.
 // Použití:
-//   nový účet:        npm run user:add -- --email a@b.cz --name "Jméno" [--org <id> --role EMPLOYEE --tracks-from 2026-11-01] [--super-admin]
-//   nové heslo:       npm run user:add -- --email a@b.cz --name "Jméno"
-//   jen role/příznak: npm run user:add -- --email a@b.cz --org <id> --role OWNER      (heslo se nemění)
-//                     npm run user:add -- --email a@b.cz --super-admin                (první správce po migraci)
-// Heslo se z argumentu nebere (zůstalo by v historii shellu) — vygeneruje se a vypíše jednou na konci.
-// Heslo se mění jen při zadaném --name (nový účet, nebo vědomé přepsání); samotná role ani příznak ho nemění.
+//   nový účet:        npm run user:add -- --email a@b.cz --name "Jméno" --org <id> --role EMPLOYEE --tracks-from 2026-11-01
+//   první správce:    npm run user:add -- --email a@b.cz --name "Jméno" --super-admin     (nový účet bez firmy musí být super admin)
+//   nové heslo:       npm run user:add -- --email a@b.cz --reset-password
+//   přejmenování:     npm run user:add -- --email a@b.cz --name "Nové jméno"
+//   změna role:       npm run user:add -- --email a@b.cz --org <id> --role OWNER          (aktivitu členství NEMĚNÍ)
+//   vrátit / odebrat: ... --org <id> --role OWNER --activate    |    ... --org <id> --role OWNER --deactivate
+//   příznak:          npm run user:add -- --email a@b.cz --super-admin                    (existujícímu účtu; po migraci první správce)
+// Heslo se z argumentu nebere (zůstalo by v historii shellu) — vygeneruje se a vypíše jednou, a to hned po zápisu účtu.
+// Heslo se mění jen u nového účtu a s --reset-password; --name samotné ho nemění.
 import { randomBytes } from 'node:crypto'
 import { parseArgs } from 'node:util'
 import { PrismaClient } from '@prisma/client'
@@ -38,14 +40,23 @@ async function main() {
       org: { type: 'string' },
       role: { type: 'string' },
       'super-admin': { type: 'boolean' },
+      'reset-password': { type: 'boolean' },
+      activate: { type: 'boolean' },
+      deactivate: { type: 'boolean' },
     },
   })
   if (!values.email) throw new Error('Chybí --email.')
   const email = loginSchema.shape.email.parse(values.email)
   const jmeno = values.name?.trim() || undefined
+  if (values.name !== undefined && !jmeno) throw new Error('--name nesmí být prázdné.')
 
-  // Role se ověřuje proti třem hodnotám dřív, než se sáhne na databázi: `can()` na cokoli jiného vyhazuje.
+  // Prázdný řetězec není „nezadáno“: tichým zahozením by účet zůstal bez firmy.
+  if (values.org !== undefined && !values.org.trim()) throw new Error('--org nesmí být prázdné.')
+  if (values.role !== undefined && !values.role.trim()) throw new Error('--role nesmí být prázdné.')
   if ((values.org === undefined) !== (values.role === undefined)) throw new Error('--org a --role se zadávají spolu.')
+  if (values.activate && values.deactivate) throw new Error('--activate a --deactivate nejdou dohromady.')
+  if ((values.activate || values.deactivate) && values.org === undefined) throw new Error('--activate / --deactivate patří k --org a --role.')
+  // Role se ověřuje proti třem hodnotám dřív, než se sáhne na databázi: `can()` na cokoli jiného vyhazuje.
   let role: RoleValue | undefined
   if (values.role !== undefined) {
     if (!(ROLES as readonly string[]).includes(values.role)) throw new Error(`--role musí být jedna z: ${ROLES.join(', ')}.`)
@@ -69,17 +80,23 @@ async function main() {
     if (values.org && !org) throw new Error(`Firma ${values.org} neexistuje.`)
 
     const existuje = await prisma.user.findUnique({ where: { email }, select: { id: true } })
-    if (!existuje && !jmeno) throw new Error('Nový účet potřebuje --name.')
-    if (org && !tracksFrom) {
-      const maClenstvi = existuje
-        ? await prisma.membership.findUnique({ where: { userId_orgId: { userId: existuje.id, orgId: org.id } }, select: { id: true } })
-        : null
-      if (!maClenstvi) throw new Error('Nové členství potřebuje --tracks-from (RRRR-MM-DD).')
+    if (!existuje) {
+      if (!jmeno) throw new Error('Nový účet potřebuje --name.')
+      // Účet bez firmy a bez super admina by skončil navždy na /bez-pristupu.
+      if (!org && !values['super-admin']) throw new Error('Nový účet potřebuje --org s --role, nebo --super-admin.')
     }
-    if (!jmeno && !org && !values['super-admin']) throw new Error('Není co udělat: zadej --name, --org s --role, nebo --super-admin.')
+    const clenstvi = org && existuje
+      ? await prisma.membership.findUnique({ where: { userId_orgId: { userId: existuje.id, orgId: org.id } }, select: { id: true, active: true, role: true } })
+      : null
+    if (org && !clenstvi && !tracksFrom) throw new Error('Nové členství potřebuje --tracks-from (RRRR-MM-DD).')
+    if (org && !clenstvi && values.deactivate) throw new Error('--deactivate: členství ve firmě neexistuje.')
+    if (!existuje && values['reset-password']) throw new Error('--reset-password patří k existujícímu účtu (nový dostane heslo sám).')
+    if (existuje && !jmeno && !org && !values['super-admin'] && !values['reset-password']) {
+      throw new Error('Není co udělat: zadej --name, --reset-password, --org s --role, nebo --super-admin.')
+    }
 
-    // Heslo se mění jen s --name; samotná role nebo příznak účtu heslo ani přihlášení nesmí rozbít.
-    const heslo = jmeno ? generujHeslo() : undefined
+    const noveHeslo = !existuje || values['reset-password'] === true
+    const heslo = noveHeslo ? generujHeslo() : undefined
     const passwordHash = heslo ? await hashPassword(heslo) : undefined
     const priznak = values['super-admin'] ? { isSuperAdmin: true } : {}
 
@@ -90,27 +107,35 @@ async function main() {
       if (passwordHash) {
         // Staré přihlášení přestane platit — po změně hesla se musí přihlásit znovu.
         await prisma.session.deleteMany({ where: { userId } })
-        console.log(`Účet ${email} už existoval — přepsáno heslo a jméno.`)
+        console.log(`Účet ${email} už existoval — přepsáno heslo.`)
       } else {
         console.log(`Účet ${email} už existoval — heslo beze změny.`)
       }
+      if (jmeno) console.log(`${email}: jméno nastaveno na „${jmeno}“.`)
     } else {
       const u = await prisma.user.create({ data: { email, name: jmeno!, passwordHash: passwordHash!, ...priznak } })
       userId = u.id
       console.log(`Účet ${email} založen.`)
     }
+    // Heslo se vypíše hned po zápisu účtu: kdyby spadl zápis členství, člověk by jinak byl zamčený ven bez hesla.
+    if (heslo) console.log(`Heslo (zobrazeno jen teď, uložte si ho): ${heslo}`)
     if (values['super-admin']) console.log(`${email}: nastaven super admin.`)
 
     if (org && role) {
-      // Členství se zakládá znovu aktivní: tímhle se dá vrátit i deaktivovaný člověk.
+      // `active` se mění jen výslovně: oprava role nesmí vrátit do hry někoho, komu byl přístup odebrán.
+      const active = values.deactivate ? false : values.activate ? true : undefined
       await prisma.membership.upsert({
         where: { userId_orgId: { userId, orgId: org.id } },
-        create: { userId, orgId: org.id, role, active: true, tracksFrom: tracksFrom! },
-        update: { role, active: true, ...(tracksFrom && { tracksFrom }) },
+        create: { userId, orgId: org.id, role, active: active ?? true, tracksFrom: tracksFrom! },
+        update: { role, ...(active !== undefined && { active }), ...(tracksFrom && { tracksFrom }) },
       })
       console.log(`${email}: ve firmě ${org.name} jako ${role}.`)
+      if (clenstvi && clenstvi.role !== role) console.log(`  role: ${clenstvi.role} -> ${role}`)
+      if (clenstvi && active !== undefined && clenstvi.active !== active) {
+        console.log(`  členství: ${clenstvi.active ? 'aktivní' : 'neaktivní'} -> ${active ? 'aktivní' : 'neaktivní'}`)
+      }
+      if (clenstvi && !clenstvi.active && active === undefined) console.log('  členství zůstává NEAKTIVNÍ (k návratu použij --activate).')
     }
-    if (heslo) console.log(`Heslo (zobrazeno jen teď, uložte si ho): ${heslo}`)
   } finally {
     await prisma.$disconnect()
   }

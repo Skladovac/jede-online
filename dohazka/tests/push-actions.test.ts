@@ -5,9 +5,10 @@ vi.mock('server-only', () => ({}))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/org', () => ({ requireOrgContext: vi.fn(async () => ({ user: { id: 'u1' }, membership: { id: 'm1' } })) }))
 const db = vi.hoisted(() => ({ deleteMany: vi.fn(), upsert: vi.fn() }))
-vi.mock('@/lib/prisma', () => ({ prisma: { pushSubscription: db } }))
+const userDb = vi.hoisted(() => ({ update: vi.fn() }))
+vi.mock('@/lib/prisma', () => ({ prisma: { pushSubscription: db, user: userDb } }))
 
-import { removePushSubscription, savePushSubscription } from '@/app/actions/push'
+import { removePushSubscription, savePushSubscription, setReminder } from '@/app/actions/push'
 
 describe('removePushSubscription', () => {
   beforeEach(() => vi.clearAllMocks())
@@ -42,5 +43,19 @@ describe('savePushSubscription', () => {
   ])('odmítne %s', async (_n, sub) => {
     expect(await savePushSubscription(sub)).toEqual({ ok: false })
     expect(db.upsert).not.toHaveBeenCalled()
+  })
+})
+
+describe('setReminder', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('zapíše jen osobní vypínač, nikdy hodinu', async () => {
+    expect(await setReminder({ enabled: false })).toEqual({ ok: true })
+    expect(userDb.update).toHaveBeenCalledWith({ where: { id: 'u1' }, data: { remindEnabled: false } })
+  })
+
+  it('hodinu od starého klienta odmítne a nic nezapíše', async () => {
+    expect(await setReminder({ enabled: true, hour: 22 } as never)).toEqual({ ok: false })
+    expect(userDb.update).not.toHaveBeenCalled()
   })
 })

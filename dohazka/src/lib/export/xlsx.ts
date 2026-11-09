@@ -12,7 +12,7 @@ export async function toXlsx(report: Report): Promise<Buffer> {
   const wb = new ExcelJS.Workbook()
   const ws = wb.addWorksheet('Výkaz')
 
-  ws.getCell('A1').value = `${report.title} – ${report.personName}, ${report.periodLabel}`
+  ws.getCell('A1').value = `${report.title} – ${report.orgName}, ${report.personName}, ${report.periodLabel}`
   ws.getCell('A1').font = { bold: true, size: 13 }
 
   const hlavicka = ws.getRow(3)

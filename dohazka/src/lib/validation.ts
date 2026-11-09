@@ -10,7 +10,7 @@ export type LoginInput = z.infer<typeof loginSchema>
 // Připomínka: osobní vypínač. Hodinu určuje firma (Organization.remindHour), ne člověk.
 export const reminderSchema = z.object({
   enabled: z.boolean(),
-})
+}).strict() // zahozená hodina se má ozvat chybou, ne tiše projít
 export type ReminderInput = z.infer<typeof reminderSchema>
 
 // Odběr push z prohlížeče (PushSubscription.toJSON). Meze odpovídají sloupcům v databázi.

@@ -87,7 +87,7 @@ const btn = 'min-h-11 rounded-panel px-4 py-2 font-medium disabled:opacity-60'
 const btnPrimary = `${btn} bg-accent text-on-accent hover:bg-accent-hover`
 const btnSecondary = `${btn} border border-line bg-card hover:bg-accent-soft`
 
-export function PushSettings({ publicKey, remindHour, remindEnabled }: { publicKey: string; remindHour: number; remindEnabled: boolean }) {
+export function PushSettings({ publicKey, remindHour, orgName, remindEnabled }: { publicKey: string; remindHour: number; orgName: string; remindEnabled: boolean }) {
   const [state, setState] = useState<DeviceState>('loading')
   const [enabled, setEnabled] = useState(remindEnabled)
   const [msg, setMsg] = useState<{ ok?: string; error?: string } | null>(null)
@@ -187,7 +187,7 @@ export function PushSettings({ publicKey, remindHour, remindEnabled }: { publicK
           />
           <span>Připomínat zápis hodin každý den, i o víkendu a svátcích</span>
         </label>
-        <p className="text-sm text-muted">Připomínka chodí kolem {String(remindHour).padStart(2, '0')}:00 pražského času. Hodinu určuje firma.</p>
+        <p className="text-sm text-muted">Připomínka chodí kolem {String(remindHour).padStart(2, '0')}:00 pražského času. Hodinu určuje firma {orgName}.</p>
       </div>
 
       {msg?.ok && <p className="text-sm text-positive">{msg.ok}</p>}

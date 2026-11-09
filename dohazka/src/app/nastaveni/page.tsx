@@ -21,7 +21,7 @@ export default async function NastaveniPage() {
       <section className="mt-5 rounded-panel border border-line bg-card p-4">
         <h2 className="mb-3 font-semibold">Večerní připomínka</h2>
         {publicKey ? (
-          <PushSettings publicKey={publicKey} remindHour={ctx.org.remindHour} remindEnabled={ctx.user.remindEnabled} />
+          <PushSettings publicKey={publicKey} remindHour={ctx.org.remindHour} orgName={ctx.org.name} remindEnabled={ctx.user.remindEnabled} />
         ) : (
           <p className="text-sm text-muted">Notifikace nejsou na tomto serveru nastavené.</p>
         )}

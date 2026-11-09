@@ -7,15 +7,15 @@ import { dateColumnToKey, parseDayKey, pragueDayKey, pragueHour } from '@/lib/da
 export function shouldRemind(args: {
   nowHour: number
   todayKey: string
-  user: { remindEnabled: boolean; remindHour: number; tracksFromKey: string }
+  settings: { remindEnabled: boolean; remindHour: number; tracksFromKey: string }
   hasEntryToday: boolean
   alreadyRemindedToday: boolean
 }): boolean {
-  const { nowHour, todayKey, user, hasEntryToday, alreadyRemindedToday } = args
-  if (!user.remindEnabled || hasEntryToday || alreadyRemindedToday) return false
+  const { nowHour, todayKey, settings, hasEntryToday, alreadyRemindedToday } = args
+  if (!settings.remindEnabled || hasEntryToday || alreadyRemindedToday) return false
   // Klíče dnů jsou YYYY-MM-DD, takže porovnání řetězců je porovnáním dat.
-  if (todayKey < user.tracksFromKey) return false
-  return nowHour >= user.remindHour && nowHour <= user.remindHour + 2
+  if (todayKey < settings.tracksFromKey) return false
+  return nowHour >= settings.remindHour && nowHour <= settings.remindHour + 2
 }
 
 /**
@@ -39,7 +39,7 @@ export async function runReminder(opts: { now?: Date; force?: boolean } = {}): P
       id: true,
       tracksFrom: true,
       user: { select: { id: true, remindEnabled: true } },
-      org: { select: { remindHour: true } },
+      org: { select: { remindHour: true, name: true } },
     },
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
   })
@@ -59,7 +59,7 @@ export async function runReminder(opts: { now?: Date; force?: boolean } = {}): P
       // force = ruční test mimo čas: chová se, jako by bylo právě hodina této firmy
       nowHour: opts.force ? m.org.remindHour : realHour,
       todayKey,
-      user: { remindEnabled: u.remindEnabled, remindHour: m.org.remindHour, tracksFromKey: dateColumnToKey(m.tracksFrom) },
+      settings: { remindEnabled: u.remindEnabled, remindHour: m.org.remindHour, tracksFromKey: dateColumnToKey(m.tracksFrom) },
       hasEntryToday,
       // force je zkouška, která nesmí zabrat skutečnou večerní připomínku
       alreadyRemindedToday: opts.force ? false : alreadyRemindedToday,
@@ -78,7 +78,7 @@ export async function runReminder(opts: { now?: Date; force?: boolean } = {}): P
     }
     vyrizeni.add(u.id)
 
-    const r = await sendPush(u.id, { title: 'Zapiš si dnešní hodiny', body: 'Ať na to večer nezapomeneš.', url: `/den/${todayKey}` })
+    const r = await sendPush(u.id, { title: 'Zapiš si dnešní hodiny', body: `${m.org.name}: ať na to večer nezapomeneš.`, url: `/den/${todayKey}` })
     if (r.sent > 0) {
       sent++
     } else if (!opts.force) {

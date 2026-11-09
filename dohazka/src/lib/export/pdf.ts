@@ -72,7 +72,9 @@ export async function toPdf(report: Report): Promise<Buffer> {
       let y = novaStranka()
       doc.font('body').fontSize(16).fillColor('#000').text(report.title, OKRAJ, y, { width: sirka, lineBreak: false })
       y += 26
-      doc.fontSize(11).text(`Jméno: ${report.personName}`, OKRAJ, y, { width: sirka })
+      doc.fontSize(11).text(`Firma: ${report.orgName}`, OKRAJ, y, { width: sirka })
+      y += 16
+      doc.text(`Jméno: ${report.personName}`, OKRAJ, y, { width: sirka })
       y += 16
       doc.text(`Období: ${report.periodLabel}`, OKRAJ, y, { width: sirka })
       y += 28

@@ -14,7 +14,7 @@ describe('buildReport', () => {
     tracksFromKey: '2026-11-03',
     entries: [z('2026-11-06'), z('2026-11-02'), z('2026-11-04', { kind: 'VACATION', hours: null, fromTime: null, toTime: null, place: null })],
   })
-  const r = buildReport({ personName: 'Jan Novák', fromKey: '2026-11-01', toKey: '2026-11-08', month })
+  const r = buildReport({ orgName: 'Stavby Novák s.r.o.', personName: 'Jan Novák', fromKey: '2026-11-01', toKey: '2026-11-08', month })
 
   it('vynechá dny bez záznamu a řadí chronologicky', () => {
     expect(r.rows.map((x) => x.dayKey)).toEqual(['2026-11-02', '2026-11-04', '2026-11-06'])
@@ -29,20 +29,23 @@ describe('buildReport', () => {
   it('součet a popisky', () => {
     expect(r.rows[0].hoursValue).toBe(8.5)
     expect(r.totalHoursValue).toBe(17)
-    expect(r).toMatchObject({ totalHours: '17', daysWorked: 2, periodLabel: 'listopad 2026', personName: 'Jan Novák' })
+    expect(r).toMatchObject({ totalHours: '17', daysWorked: 2, periodLabel: 'listopad 2026', personName: 'Jan Novák', orgName: 'Stavby Novák s.r.o.' })
   })
   it('nekalendářní období má v popisku rozsah', () => {
-    const x = buildReport({ personName: 'A', fromKey: '2026-10-16', toKey: '2026-11-15', month })
+    const x = buildReport({ orgName: 'F', personName: 'A', fromKey: '2026-10-16', toKey: '2026-11-15', month })
     expect(x.periodLabel).toBe('listopad 2026 (16. 10. 2026 – 15. 11. 2026)')
   })
 })
 
 describe('contentDisposition', () => {
   it('ošetří mezeru a diakritiku', () => {
-    const h = contentDisposition('Jan Novák', '2026-11', 'csv')
-    expect(h).toBe(`attachment; filename="dohazka-Jan-Novak-2026-11.csv"; filename*=UTF-8''dohazka-Jan-Nov%C3%A1k-2026-11.csv`)
+    const h = contentDisposition('Jan Novák', '2026-11', 'csv', 'Stavby Novák')
+    expect(h).toBe(`attachment; filename="dohazka-Stavby-Novak-Jan-Novak-2026-11.csv"; filename*=UTF-8''dohazka-Stavby-Nov%C3%A1k-Jan-Nov%C3%A1k-2026-11.csv`)
+  })
+  it('stejný měsíc ve dvou firmách dá dva různé názvy souborů', () => {
+    expect(contentDisposition('Jan', '2026-11', 'pdf', 'Alfa')).not.toBe(contentDisposition('Jan', '2026-11', 'pdf', 'Beta'))
   })
   it('prázdné jméno nerozbije hlavičku', () => {
-    expect(contentDisposition('???', '2026-11', 'xlsx')).toContain('filename="dohazka-vykaz-2026-11.xlsx"')
+    expect(contentDisposition('???', '2026-11', 'xlsx', '???')).toContain('filename="dohazka-vykaz-2026-11.xlsx"')
   })
 })

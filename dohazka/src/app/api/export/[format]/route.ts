@@ -51,10 +51,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ format: 
       note: e.note,
     })),
   })
-  const report = buildReport({ personName: ctx.user.name, fromKey, toKey, month })
+  const report = buildReport({ orgName: ctx.org.reportName, personName: ctx.user.name, fromKey, toKey, month })
 
   const hlavicky = {
-    'Content-Disposition': contentDisposition(ctx.user.name, period, format),
+    'Content-Disposition': contentDisposition(ctx.user.name, period, format, ctx.org.reportName),
     'Cache-Control': 'private, no-store',
   }
   if (format === 'csv') {

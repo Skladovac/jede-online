@@ -21,6 +21,8 @@ export type ReportRow = {
 
 export type Report = {
   title: string
+  /** Název firmy z Organization.reportName; odlišuje výkazy téhož člověka z různých firem. */
+  orgName: string
   personName: string
   periodLabel: string
   rows: ReportRow[]
@@ -40,6 +42,7 @@ const ddmmyyyy = (key: string) => {
 }
 
 export function buildReport(args: {
+  orgName: string
   personName: string
   fromKey: string
   toKey: string
@@ -70,6 +73,7 @@ export function buildReport(args: {
 
   return {
     title: 'Výkaz odpracovaných hodin',
+    orgName: args.orgName,
     personName: args.personName,
     periodLabel,
     rows,
