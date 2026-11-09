@@ -5,8 +5,15 @@ Kontrolní seznam v pořadí, jak se dělá. Server je Hetzner CX23 `178.104.231
 projekt `dohazka`, vlastní databázi, vlastní nginx vhost a vlastní klon repa;
 s ostatními weby sdílí jen síť `jede_default` a postgres kontejner `jede-db-1`.
 
-Nic z tohoto seznamu ještě nikdy neběželo na skutečném serveru. U každého kroku čekej,
-že se něco ukáže, a výstup si přečti, než půjdeš dál.
+U každého kroku čekej, že se něco ukáže, a výstup si přečti, než půjdeš dál.
+
+> **Kapitoly 1–8 jsou PRVNÍ instalace a na tomhle serveru už proběhly.** Nespouštěj je
+> znovu: `cp .../.env.example /opt/jede/dohazka.env` (kapitola 3) i `cp` vhostu (kapitola 4)
+> přepisují **živé** soubory bez varování. Přepsaný `dohazka.env` znamená ztracené
+> `DOHAZKA_DATABASE_URL`, `CRON_SECRET` a **privátní VAPID klíč** — s novým klíčem přestanou
+> fungovat všechny už zaregistrované push odběry a nikdo se to nedozví, jen přestanou pípat.
+> **Nasazuješ-li větev „firmy a role“, jdi rovnou na kapitolu 9**; kapitoly 1–8 jsou tam jen
+> jako odkazy na jednotlivé příkazy a na to, co která hodnota znamená.
 
 ## 1. DNS (dělá majitel, u WEDOSu)
 
@@ -276,7 +283,17 @@ tady **neplatí**: `git reset` vrátí kód, ne databázi. Návrat zpět znamen�
 Opačně by se zápis, který uživatel udělá mezi dumpem a zastavením, do dumpu nedostal — a při
 obnově by se tiše ztratil, i když by dump vypadal v pořádku.
 
-1. **Zastav aplikaci**, ať do ní nikdo nepíše během dumpu ani migrace:
+1. **Zapiš si, odkud se vracíš, a zastav aplikaci.** `deploy-dohazka.sh` v dalším kroku
+   přepíše `GIT_COMMIT` v `dohazka.env` i tag image `dohazka-dohazka:latest`, takže potom už
+   předchozí verzi nedohledáš:
+
+   ```bash
+   git -C /opt/jede/dohazka-src rev-parse HEAD                      # zapiš si hash
+   grep GIT_COMMIT /opt/jede/dohazka.env                            # zapiš si i tohle
+   docker tag dohazka-dohazka:latest dohazka-dohazka:pred-firmami    # starý image pod vlastním jménem
+   ```
+
+   Pak aplikaci zastav, ať do ní nikdo nepíše během dumpu ani migrace:
 
    ```bash
    docker compose -f /opt/jede/dohazka-src/dohazka/deploy/docker-compose.yml --env-file /opt/jede/dohazka.env stop dohazka
@@ -291,14 +308,30 @@ obnově by se tiše ztratil, i když by dump vypadal v pořádku.
    ```bash
    PGU=$(docker exec jede-db-1 printenv POSTGRES_USER)
    test -n "$PGU" && echo "uzivatel-OK: $PGU"
-   docker exec jede-db-1 pg_dump -Fc -U "$PGU" -d dohazka > /root/dohazka-pred-firmami.dump
+   docker exec jede-db-1 pg_dump -Fc -U "$PGU" -d dohazka > /root/dohazka-pred-firmami.dump      && echo dump-dobehl
    chmod 600 /root/dohazka-pred-firmami.dump
    test "$(stat -c %s /root/dohazka-pred-firmami.dump)" -gt 1024 && echo velikost-OK
    docker exec -i jede-db-1 pg_restore --list < /root/dohazka-pred-firmami.dump > /dev/null && echo dump-cte-se
-   docker exec jede-db-1 psql -U "$PGU" -d dohazka -Atc 'SELECT count(*) FROM "Entry"'   # zapiš si číslo
    ```
 
-   Čekej `uzivatel-OK`, `velikost-OK`, `dump-cte-se` a počet záznamů, který si **zapíšeš**.
+   `dump-dobehl` tam je proto, že `>` vyrobí soubor i pro `pg_dump`, který spadl v půlce —
+   a takový soubor `--list` i kontrola velikosti můžou projít.
+
+   **Zapiš si teď tahle čísla** (na papír nebo do zprávy, ne do souboru na serveru, který
+   budeš za chvíli přepisovat). Po migraci už polovina těch sloupců v databázi nebude:
+
+   ```bash
+   docker exec jede-db-1 psql -U "$PGU" -d dohazka -c      'SELECT count(*) AS zaznamu, coalesce(sum(hours),0) AS hodin FROM "Entry"'
+   docker exec jede-db-1 psql -U "$PGU" -d dohazka -c      'SELECT id, email, "createdAt", "periodStartDay", "remindHour", "tracksFrom" FROM "User" ORDER BY "createdAt", id'
+   ```
+
+   Druhý výpis si přečti pozorně: migrace dá roli **správce firmy a nastavení období**
+   tomu uživateli, který je v tom řazení **první**. Je-li tam víc než jeden účet a první
+   není ten živý, **nepokračuj** — migrace by nastavení ostatních účtů zahodila a správcem
+   by se stal někdo jiný. Po migraci tyhle sloupce na `User` už nejsou, takže tenhle výpis
+   je jediný záznam vedle dumpu.
+
+   Čekej `uzivatel-OK`, `dump-dobehl`, `velikost-OK` a `dump-cte-se`.
    Chybí-li cokoli, dump je nepoužitelný: **nepokračuj**. Že se superuživatel postgresu dá
    zjistit přes `printenv POSTGRES_USER`, je předpoklad (viz kapitola 3) — vyjde-li `PGU`
    prázdné, najdi uživatele v compose souboru stacku landingu a doplň ho ručně.
@@ -337,8 +370,14 @@ Spusť `deploy-dohazka.sh` (kapitola 5). **Je-li kód ještě na větvi, spusť 
 toho by skript klon srovnal na starý kód a „úspěšně“ nasadil to, co tam bylo. Aplikace je od
 kroku 1 zastavená, takže po celou dobu buildu (na 4 GB RAM minuty) je web mimo provoz.
 
-`prisma migrate deploy` běží v jedné transakci: selže-li kdekoli, vrátí se celá, databáze
-zůstane tak, jak byla, a kontejner se nevymění.
+`prisma migrate deploy` pouští **každý migrační soubor** v jedné transakci: selže-li cokoli
+uvnitř souboru, vrátí se ten soubor celý, databáze zůstane tak, jak byla, a kontejner se
+nevymění. Soubory jsou tu ale **dva** (`20261109120000_organizace`
+a `20261109140000_heslo_nastavil_majitel`), takže teoreticky může první projít a druhý ne.
+Pravděpodobnost je malá — druhý je jediné `ADD COLUMN ... DEFAULT false` — ale stane-li se to,
+je databáze **už na novém schématu** a rada „spusť starý kontejner na nezměněné databázi“
+z „Když něco selže“ **neplatí**. Poznáš to tak, že výpis mluví o druhé migraci, ne o první:
+pak jdi na obnovu z dumpu, nebo (lépe) chybu druhé migrace oprav a `migrate deploy` zopakuj.
 
 - Vznikne firma `org_default` („Výchozí firma“), která **převezme nastavení stávajícího
   uživatele** (začátek období, hodina připomínky), takže se mu výkaz tiše nepřepíše.
@@ -350,18 +389,36 @@ zůstane tak, jak byla, a kontejner se nevymění.
   připojení takového účtu do další firmy **přepíše**. Nikoho to nemá překvapit. Jakmile si člověk
   heslo nastaví sám (pozvánka, obnova hesla), příznak se přepne a heslo se už nepřepisuje.
 
-Ověř:
+Ověř (`PGU` se v novém terminálu musí nastavit znovu, jinak `psql -U ""` spadne):
 
 ```bash
-docker exec jede-db-1 psql -U "$PGU" -d dohazka -Atc \
-  'SELECT (SELECT count(*) FROM "Entry"), (SELECT count(*) FROM "Membership"), (SELECT count(*) FROM "Organization")'
+PGU=$(docker exec jede-db-1 printenv POSTGRES_USER)
+docker exec jede-db-1 psql -U "$PGU" -d dohazka -c \
+  'SELECT (SELECT count(*) FROM "Entry") AS zaznamu, (SELECT coalesce(sum(hours),0) FROM "Entry") AS hodin,
+          (SELECT count(*) FROM "Membership") AS clenstvi, (SELECT count(*) FROM "Organization") AS firem'
+docker exec jede-db-1 psql -U "$PGU" -d dohazka -c \
+  'SELECT m.role, m.active, m."tracksFrom", o."periodStartDay", o."remindHour"
+     FROM "Membership" m JOIN "Organization" o ON o.id = m."orgId"'
 ```
 
-První číslo musí být **shodné** s tím, které sis zapsal před migrací. Druhé = počet dosavadních
-uživatelů, třetí = `1`. Nesedí-li záznamy, **neotvírej aplikaci** a postupuj podle „Když něco selže“.
+`zaznamu` i `hodin` musí být **shodné** s tím, co sis zapsal před migrací — hodiny proto, že
+samotný počet řádků by neodhalil přepsané hodnoty. `clenstvi` = počet dosavadních uživatelů,
+`firem` = `1`. Druhý výpis musí ukázat roli `OWNER`, `active = t` a `tracksFrom`,
+`periodStartDay` i `remindHour` **beze změny** proti tomu, co měl uživatel předtím.
 
-Aplikace po `deploy-dohazka.sh` už běží (skript kontejner vyměnil). Přihlas se jako stávající
-uživatel: musíš vidět svůj měsíc se všemi dosavadními záznamy a v navigaci Výkazy, Lidé, Nastavení firmy.
+**Pozor na jednu věc, která nejde obejít:** `deploy-dohazka.sh` kontejner vyměnil a nginx
+reloadnul, takže v tuhle chvíli **aplikace už je z internetu dostupná** — tahle kontrola běží
+na živém webu, ne před jeho spuštěním. Kdyby uživatel právě teď zapsal nový den, čísla nebudou
+souhlasit, i když je všechno v pořádku. Proto mu **předem řekni, ať aplikaci neotvírá, dokud
+se neozveš**, a kontrolu udělej hned. Nesedí-li čísla, nejdřív se ho zeptej, jestli zapisoval —
+teprve potom uvažuj o obnově z dumpu, protože ta zahodí všechno, co od nasazení vzniklo.
+
+Přihlas se jako stávající uživatel: musíš vidět svůj měsíc se všemi dosavadními záznamy
+a v navigaci Výkazy, Lidé, Nastavení firmy.
+
+**Pak přejmenuj firmu.** Migrace jí dala jméno „Výchozí firma“ a to jméno jde do hlavičky
+výkazu i do názvu exportovaného souboru. V **Nastavení firmy** přepiš „Název ve výkazu“ na to,
+co má být na dokumentu pro mzdy, a stáhni si jeden export na kontrolu.
 
 ### První super admin
 
@@ -402,27 +459,34 @@ odhlas se a přihlas znovu.
 
   ```bash
   docker compose -f /opt/jede/dohazka-src/dohazka/deploy/docker-compose.yml --env-file /opt/jede/dohazka.env stop dohazka
-  docker exec jede-db-1 sh -c 'dropdb -U "$POSTGRES_USER" dohazka && createdb -U "$POSTGRES_USER" -O dohazka dohazka'
+  PGU=$(docker exec jede-db-1 printenv POSTGRES_USER)
+  docker exec jede-db-1 psql -U "$PGU" -d postgres -c 'ALTER DATABASE dohazka RENAME TO dohazka_pred_obnovou'
+  docker exec jede-db-1 sh -c 'createdb -U "$POSTGRES_USER" -O dohazka dohazka'
   docker exec -i jede-db-1 sh -c 'pg_restore --exit-on-error --no-owner --role=dohazka -U "$POSTGRES_USER" -d dohazka' < /root/dohazka-pred-firmami.dump
-  docker exec jede-db-1 psql -U "$PGU" -d dohazka -Atc 'SELECT count(*) FROM "Entry"'
+  docker exec jede-db-1 psql -U "$PGU" -d dohazka -c 'SELECT count(*) AS zaznamu, coalesce(sum(hours),0) AS hodin FROM "Entry"'
   ```
 
-  `pg_restore` **nesmí nic vypsat** a poslední příkaz musí vrátit přesně to číslo, které sis
+  **Proč přejmenování a ne `dropdb`:** dump byl ověřený jen `--list`, obnova z něj na tomhle
+  serveru nikdy neběžela, a migrovaná databáze je jediné místo, kde jsou záznamy zapsané
+  po nasazení. Kdyby `dropdb` smazal a `pg_restore` pak selhal, nezůstane nic. Takhle stará
+  databáze pořád existuje pod jménem `dohazka_pred_obnovou`; zahoď ji (`dropdb`) teprve tehdy,
+  až je obnovená databáze ověřená a web na ní běží.
+
+  `pg_restore` **nesmí nic vypsat** a poslední příkaz musí vrátit přesně ta čísla, která sis
   zapsal před migrací. Vypíše-li `pg_restore` chybu, `--exit-on-error` ho zastaví na prvním
-  problému — přečti ji, než cokoli dalšího uděláš; nepouštěj restore podruhé do napůl obnovené
-  databáze, nejdřív znovu `dropdb`/`createdb`.
+  problému — přečti ji, než cokoli dalšího uděláš; podruhé restore nepouštěj do napůl obnovené
+  databáze, nejdřív ji zahoď a vyrob znovu (`dropdb dohazka && createdb -O dohazka dohazka`).
+  Selže-li `ALTER DATABASE` hláškou, že je databáze používaná, aplikace nebyla zastavená:
+  zastav ji a opakuj.
 
-  **Ani tento postup ani obnova z dumpu nikdy neběžely na skutečném serveru.** Čti výstup
-  každého příkazu.
+  **Ani tento postup nikdy neběžel na skutečném serveru.** Čti výstup každého příkazu.
 
-  Pak je potřeba vrátit i kód, podle příkazů s hashem předchozího commitu, které vypsal
-  `deploy-dohazka.sh`. **Mít ten výpis po ruce** — až terminál zavřeš, hash hledej v
-  `git -C /opt/jede/dohazka-src log --oneline` nebo v `GIT_COMMIT` ve starém `dohazka.env`.
-
-  Pak vrať kód a image na předchozí commit podle příkazů, které `deploy-dohazka.sh` při selhání
-  smoke testu vypsal (`reset --hard`, `build dohazka`, oprava `GIT_COMMIT`, `up -d --force-recreate`).
-  Ověř `curl -s http://127.0.0.1:3600/api/health` a přihlášení.
-  Selže-li `dropdb` hláškou, že databáze je používána, aplikace nebyla zastavená: zastav ji a opakuj.
+  Pak vrať i kód a image na předchozí commit — podle hashe, který sis zapsal v kroku 1
+  („Zapiš si, odkud se vracíš“), nebo podle příkazů, které `deploy-dohazka.sh` vypsal při
+  selhání smoke testu: `reset --hard <hash>`, `build dohazka`, oprava `GIT_COMMIT`
+  v `dohazka.env` a `up -d --force-recreate dohazka`. Starý image máš pod jménem
+  `dohazka-dohazka:pred-firmami`, takže se nemusí buildovat znovu. Ověř
+  `curl -s http://127.0.0.1:3600/api/health` a přihlášení.
 - **Neodešel e-mail:** viz kapitola 5, bod 5. Pozvánka v aplikaci existuje a správce umí odkaz předat ručně.
 - Dump z kroku „Před nasazením“ nemaž, dokud nové schéma aspoň týden běží bez potíží.
 
