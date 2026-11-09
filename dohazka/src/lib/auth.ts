@@ -16,9 +16,7 @@ const USER_SELECT = {
   id: true,
   email: true,
   name: true,
-  tracksFrom: true,
-  periodStartDay: true,
-  remindHour: true,
+  isSuperAdmin: true,
   remindEnabled: true,
   createdAt: true,
 } as const
