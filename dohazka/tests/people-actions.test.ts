@@ -364,3 +364,12 @@ describe('personSchema a hranice modulu', () => {
     expect(Object.keys(peopleModule).sort()).toEqual(['addPerson', 'setActive', 'setRole'])
   })
 })
+
+describe('migrace passwordSetByOwner', () => {
+  it('přidá sloupec s výchozí hodnotou false a nepřepíše existující řádky na true (fail-closed)', async () => {
+    const { readFileSync } = await import('node:fs')
+    const sql = readFileSync('prisma/migrations/20261109140000_heslo_nastavil_majitel/migration.sql', 'utf8')
+    expect(sql).toMatch(/ADD COLUMN "passwordSetByOwner" BOOLEAN NOT NULL DEFAULT false/)
+    expect(sql).not.toMatch(/^\s*UPDATE\b/im)
+  })
+})
