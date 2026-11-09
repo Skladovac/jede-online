@@ -49,13 +49,19 @@ export async function createOrganization(
     if (result.created && delivery === 'invite') {
       try {
         const { emailed } = await inviteByMail({ userId: result.userId, membershipId: result.membershipId, kind: 'invite' })
-        return { ok: true, orgId: result.orgId, invite: { emailed, created: true } }
-      } catch {
-        return { ok: true, orgId: result.orgId, invite: { emailed: false, created: false } }
+        // E-mail neodešel: správce by jinak zůstal zamčený (heslo nikdo nezná, obnova jde stejným kanálem).
+        // Vracíme už vygenerované heslo tohoto účtu, tedy původní chování.
+        return emailed
+          ? { ok: true, orgId: result.orgId, invite: { emailed, created: true } }
+          : { ok: true, orgId: result.orgId, password, invite: { emailed: false, created: true } }
+      } catch (e) {
+        console.error('createOrganization: pozvánku se nepodařilo vytvořit', e instanceof Error ? e.name : 'chyba')
+        return { ok: true, orgId: result.orgId, password, invite: { emailed: false, created: false } }
       }
     }
     return result.created ? { ok: true, orgId: result.orgId, password } : { ok: true, orgId: result.orgId }
-  } catch {
+  } catch (e) {
+    console.error('createOrganization: založení firmy selhalo', e instanceof Error ? e.name : 'chyba')
     // Transakce se vrátila celá: firma bez správce nevznikla. Podrobnosti nepouštíme do prohlížeče.
     return { error: 'Firmu se nepodařilo založit. Zkus to znovu.' }
   }

@@ -223,14 +223,22 @@ describe('createOrganization: pozvánka místo hesla', () => {
     expect(poradi).toEqual(['commit', 'pozvanka'])
   })
 
-  it('e-mail neodešel: firma i pozvánka platí a výsledek to říká', async () => {
+  it('e-mail neodešel: správce nezůstane zamčený, vrací se heslo (původní chování) a výsledek to říká', async () => {
     inv.inviteByMail.mockResolvedValue({ emailed: false })
-    expect(await createOrganization(pozvat)).toEqual({ ok: true, orgId: 'o-new', invite: { emailed: false, created: true } })
+    const r = await createOrganization(pozvat)
+    expect(r).toMatchObject({ ok: true, orgId: 'o-new', invite: { emailed: false, created: true } })
+    const heslo = (r as { password?: string }).password
+    expect(heslo).toMatch(/^[A-Za-z0-9]{16}$/)
+    // Vrácené heslo je opravdu to uložené v účtu.
+    const { verifyPassword } = await import('@/lib/crypto')
+    expect(await verifyPassword(heslo!, db.user.create.mock.calls[0][0].data.passwordHash)).toBe(true)
   })
 
-  it('pozvánku se nepodařilo vytvořit: firma zůstává, výsledek to říká a vrací se ok', async () => {
+  it('pozvánku se nepodařilo vytvořit: firma zůstává a vrací se heslo', async () => {
     inv.inviteByMail.mockRejectedValue(new Error('db spadla'))
-    expect(await createOrganization(pozvat)).toEqual({ ok: true, orgId: 'o-new', invite: { emailed: false, created: false } })
+    const r = await createOrganization(pozvat)
+    expect(r).toMatchObject({ ok: true, orgId: 'o-new', invite: { emailed: false, created: false } })
+    expect((r as { password?: string }).password).toMatch(/^[A-Za-z0-9]{16}$/)
   })
 
   it('existující účet se nezvoucí (už má heslo)', async () => {

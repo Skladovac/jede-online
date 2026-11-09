@@ -72,17 +72,17 @@ describe('requestPasswordReset: žádné orákulum účtů', () => {
     expect(inv.inviteByMail).not.toHaveBeenCalled()
   })
 
-  it('limit na e-mail platí stejně pro známý i neznámý (3 za hodinu) a nezávisí na IP', async () => {
+  it('limit na e-mail platí stejně pro známý i neznámý (10 za hodinu) a nezávisí na IP', async () => {
     for (const existuje of [true, false]) {
       db.user.findUnique.mockResolvedValue(existuje ? { id: 'u1' } : null)
       const email = novyMail()
       const vysledky = []
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 11; i++) {
         ip.value = `20.0.${n}.${i}` // jiná IP při každém pokusu: brzdí tedy e-mail
         vysledky.push(await requestPasswordReset(fd({ email })))
       }
-      expect(vysledky.map((r) => 'ok' in r)).toEqual([true, true, true, false])
-      expect(vysledky[3]).toEqual({ error: 'Příliš mnoho pokusů. Zkuste to za chvíli.' })
+      expect(vysledky.map((r) => 'ok' in r)).toEqual([...Array(10).fill(true), false])
+      expect(vysledky[10]).toEqual({ error: 'Příliš mnoho pokusů. Zkuste to za chvíli.' })
     }
   })
 

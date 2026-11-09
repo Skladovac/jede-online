@@ -8,6 +8,9 @@ export type InvitationKind = 'invite' | 'reset'
 
 export const INVITATION_HOURS = 48
 
+// Přesný tvar tokenu: 32 bajtů v base64url = 43 znaků.
+const TVAR_TOKENU = /^[A-Za-z0-9_-]{43}$/
+
 export const NEPLATNY_ODKAZ = 'Odkaz už neplatí. Požádej o nový.'
 
 /** Základ odkazů v e-mailech. Bez APP_URL výchozí produkční adresa. */
@@ -47,8 +50,8 @@ class NeplatnyOdkaz extends Error {}
 export async function consumeInvitation(token: string, password: string): Promise<{ ok: true } | { error: string }> {
   const pw = passwordSchema.safeParse(password)
   // Slabé heslo pozvánku nespálí: kontrola je před čtením i mazáním.
-  if (!pw.success) return { error: 'Heslo musí mít aspoň 10 znaků.' }
-  if (typeof token !== 'string' || token.length < 20 || token.length > 200) return { error: NEPLATNY_ODKAZ }
+  if (!pw.success) return { error: password.length > 200 ? 'Heslo může mít nejvýše 200 znaků.' : 'Heslo musí mít aspoň 10 znaků.' }
+  if (typeof token !== 'string' || !TVAR_TOKENU.test(token)) return { error: NEPLATNY_ODKAZ }
 
   const id = sha256(token)
   const inv = await prisma.invitation.findUnique({ where: { id }, select: { userId: true, expiresAt: true } })
@@ -79,7 +82,7 @@ export async function consumeInvitation(token: string, password: string): Promis
 
 /** Co ukázat na stránce odkazu; null = neplatný nebo prošlý. Nic nemění. */
 export async function inspectInvitation(token: string) {
-  if (typeof token !== 'string' || token.length < 20 || token.length > 200) return null
+  if (typeof token !== 'string' || !TVAR_TOKENU.test(token)) return null
   const inv = await prisma.invitation.findUnique({
     where: { id: sha256(token) },
     select: {
@@ -101,12 +104,22 @@ export function invitationMail(kind: InvitationKind, orgName: string | null, lin
   if (kind === 'reset') {
     return {
       subject: 'Docházka: nastavení nového hesla',
+      text: `Dobrý den,
+
+někdo požádal o nastavení nového hesla k Docházce. Heslo nastavíte tady (odkaz platí ${INVITATION_HOURS} hodin a jde použít jednou):
+${link}
+
+Pokud jste o to nežádali, e-mail ignorujte, nic se nezmění.`,
       html: `<p>Dobrý den,</p><p>někdo požádal o nastavení nového hesla k Docházce. Heslo nastavíte tady (odkaz platí ${INVITATION_HOURS} hodin a jde použít jednou):</p><p><a href="${a}">${a}</a></p><p>Pokud jste o to nežádali, e-mail ignorujte, nic se nezmění.</p>`,
     }
   }
   const kam = orgName ? `do firmy <strong>${esc(orgName)}</strong> v Docházce` : 'do Docházky'
   return {
     subject: orgName ? `Docházka: pozvánka do firmy ${orgName}` : 'Docházka: pozvánka',
+    text: `Dobrý den,
+
+byli jste pozváni ${orgName ? `do firmy ${orgName} v Docházce` : 'do Docházky'}. Heslo si nastavíte tady (odkaz platí ${INVITATION_HOURS} hodin a jde použít jednou):
+${link}`,
     html: `<p>Dobrý den,</p><p>byli jste pozváni ${kam}. Heslo si nastavíte tady (odkaz platí ${INVITATION_HOURS} hodin a jde použít jednou):</p><p><a href="${a}">${a}</a></p>`,
   }
 }
@@ -117,13 +130,13 @@ export function invitationMail(kind: InvitationKind, orgName: string | null, lin
  */
 export async function inviteByMail(opts: { userId: string; membershipId?: string | null; kind: InvitationKind }): Promise<{ emailed: boolean }> {
   const token = await createInvitation(opts)
-  const user = await prisma.user.findUnique({ where: { id: opts.userId }, select: { email: true } })
-  if (!user) return { emailed: false }
+  // Uživatel existuje: cizí klíč v createInvitation by bez něj spadl dřív.
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: opts.userId }, select: { email: true } })
   let orgName: string | null = null
   if (opts.membershipId) {
     const m = await prisma.membership.findUnique({ where: { id: opts.membershipId }, select: { org: { select: { name: true } } } })
     orgName = m?.org.name ?? null
   }
   const mail = invitationMail(opts.kind, orgName, `${appUrl()}/pozvanka/${token}`)
-  return { emailed: await sendMail(user.email, mail.subject, mail.html) }
+  return { emailed: await sendMail(user.email, mail.subject, mail.html, mail.text) }
 }

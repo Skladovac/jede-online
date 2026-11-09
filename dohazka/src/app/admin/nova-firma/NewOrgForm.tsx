@@ -50,22 +50,19 @@ export function NewOrgForm() {
             <p className="mt-3 text-sm">Heslo nového správce (zobrazeno jen teď, předej ho mu a nikam ho neukládej):</p>
             <p className="mt-1 select-all break-all font-mono text-lg">{stav.password}</p>
             <CopyButton text={stav.password} />
+            {stav.invite && (
+              <p className="mt-3 text-sm font-semibold">
+                {stav.invite.created
+                  ? 'Pozvánku se nepodařilo e-mailem odeslat, proto je tu heslo. Předej ho správci.'
+                  : 'Pozvánku se nepodařilo vytvořit, proto je tu heslo. Předej ho správci.'}
+              </p>
+            )}
             <p role="alert" className="mt-3 text-sm font-semibold text-danger">
               Heslo se už znovu nezobrazí. Po obnovení nebo opuštění stránky ho nelze zjistit.
             </p>
           </>
         ) : stav.invite ? (
-          stav.invite.emailed ? (
-            <p className="mt-3 text-sm">Pozvánka odešla správci e-mailem. Odkaz platí 48 hodin.</p>
-          ) : stav.invite.created ? (
-            <p role="alert" className="mt-3 text-sm font-semibold text-danger">
-              Pozvánka je vytvořená, ale e-mail se nepodařilo odeslat. Správce si může nastavit heslo přes „Zapomenuté heslo“ na přihlašovací stránce.
-            </p>
-          ) : (
-            <p role="alert" className="mt-3 text-sm font-semibold text-danger">
-              Firma je založená, ale pozvánku se nepodařilo vytvořit. Správce si může nastavit heslo přes „Zapomenuté heslo“ na přihlašovací stránce.
-            </p>
-          )
+          <p className="mt-3 text-sm">Pozvánka odešla správci e-mailem. Odkaz platí 48 hodin.</p>
         ) : (
           <p className="mt-3 text-sm text-muted">Správce už účet měl, přihlásí se svým dosavadním heslem.</p>
         )}

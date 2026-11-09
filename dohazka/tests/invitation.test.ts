@@ -46,6 +46,11 @@ const db = vi.hoisted(() => {
     },
     user: {
       findUnique: async ({ where }: { where: { id: string } }) => store.users.get(where.id) ?? null,
+      findUniqueOrThrow: async ({ where }: { where: { id: string } }) => {
+        const u = store.users.get(where.id)
+        if (!u) throw new Error('nenalezeno')
+        return u
+      },
       update: async ({ where, data }: { where: { id: string }; data: { passwordHash: string } }) => {
         if (store.failUserUpdate) throw new Error('db spadla')
         const u = store.users.get(where.id)!
@@ -279,9 +284,21 @@ describe('consumeInvitation: ostatní', () => {
     expect(await consumeInvitation(token, HESLO)).toEqual({ ok: true })
   })
 
-  it('heslo delší než 200 znaků se odmítne', async () => {
+  it('heslo delší než 200 znaků se odmítne správnou hláškou (ne „aspoň 10“)', async () => {
     const token = await createInvitation({ userId: 'u1', kind: 'invite' })
-    expect(await consumeInvitation(token, 'x'.repeat(201))).toHaveProperty('error')
+    expect(await consumeInvitation(token, 'x'.repeat(201))).toEqual({ error: 'Heslo může mít nejvýše 200 znaků.' })
+    expect(await consumeInvitation(token, 'krátké')).toEqual({ error: 'Heslo musí mít aspoň 10 znaků.' })
+    expect(store.invitations.has(sha256(token))).toBe(true)
+  })
+
+  it('token jiného tvaru než 43 znaků base64url se odmítne bez dotazu do databáze', async () => {
+    const find = vi.spyOn(db.invitation, 'findUnique')
+    for (const t of ['a'.repeat(42), 'a'.repeat(44), 'a'.repeat(42) + '!', 'a'.repeat(42) + '=']) {
+      expect(await consumeInvitation(t, HESLO)).toEqual({ error: NEPLATNY_ODKAZ })
+      expect(await inspectInvitation(t)).toBeNull()
+    }
+    expect(find).not.toHaveBeenCalled()
+    find.mockRestore()
   })
 
   it('selže-li zápis hesla, transakce se vrátí: pozvánka i relace zůstanou', async () => {
@@ -348,6 +365,16 @@ describe('inviteByMail a e-mail', () => {
     expect(mail.sendMail.mock.calls[0][1]).toBe('Docházka: pozvánka')
   })
 
+  it('e-mail má i textovou alternativu s odkazem (pozvánka i obnova)', async () => {
+    await inviteByMail({ userId: 'u1', membershipId: 'm1', kind: 'invite' })
+    await inviteByMail({ userId: 'u1', kind: 'reset' })
+    for (const c of mail.sendMail.mock.calls) {
+      expect(c[3]).toMatch(/https:\/\/dohazka\.jede\.online\/pozvanka\/[A-Za-z0-9_-]{43}/)
+      expect(c[3]).not.toContain('<a ')
+    }
+    expect(mail.sendMail.mock.calls[0][3]).toContain('Truhlářství <Novák> & syn') // v textu se neescapuje
+  })
+
   it('jméno firmy se v HTML escapuje', async () => {
     await inviteByMail({ userId: 'u1', membershipId: 'm1', kind: 'invite' })
     const html = mail.sendMail.mock.calls[0][2] as string
@@ -385,6 +412,25 @@ describe('sendMail', () => {
     const sendMail = await skutecny()
     await expect(sendMail('a@b.cz', 'x', '<p>x</p>')).resolves.toBe(false)
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('chybějící klíč zaloguje jednou za běh, ne při každém e-mailu', async () => {
+    vi.stubEnv('RESEND_API_KEY', '')
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const sendMail = await skutecny()
+    await sendMail('a@b.cz', 'x', 'y')
+    await sendMail('a@b.cz', 'x', 'y')
+    expect(log).toHaveBeenCalledTimes(1)
+    expect(log.mock.calls[0][0]).toContain('RESEND_API_KEY')
+    log.mockRestore()
+  })
+
+  it('textová alternativa jde v těle požadavku', async () => {
+    vi.stubEnv('RESEND_API_KEY', 're_test')
+    fetchMock.mockResolvedValue({ ok: true, status: 200 })
+    const sendMail = await skutecny()
+    await sendMail('a@b.cz', 'x', '<p>y</p>', 'y')
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ html: '<p>y</p>', text: 'y' })
   })
 
   it('chyba sítě nevyhodí výjimku', async () => {
