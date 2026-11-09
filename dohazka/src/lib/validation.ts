@@ -43,3 +43,13 @@ export const personSchema = z.object({
   delivery: z.enum(['invite', 'password']).default('invite'),
 })
 export type PersonInput = z.input<typeof personSchema>
+
+// Nastavení firmy. Hodnoty se NEOPRAVUJÍ (žádný clamp): mimo rozsah se odmítnou, protože přetvářejí
+// každý měsíční přehled a export celé firmy. První den období je 1–28 (29–31 by přeskočily krátké měsíce,
+// 0 dává nesmyslný klíč dne "2026-10-00"). Žádná koerce: řetězec "5" ani 5.5 neprojde.
+export const orgSettingsSchema = z.object({
+  reportName: kratky,
+  periodStartDay: z.number().int().min(1).max(28),
+  remindHour: z.number().int().min(0).max(23),
+})
+export type OrgSettingsInput = z.input<typeof orgSettingsSchema>

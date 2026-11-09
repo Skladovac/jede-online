@@ -371,7 +371,7 @@ describe('createOrganization: pozvánka místo hesla', () => {
 })
 
 describe("soubor s 'use server'", () => {
-  it('exportuje jen createOrganization (každý export je veřejně volatelná akce)', () => {
-    expect(Object.keys(orgActionsModule).sort()).toEqual(['createOrganization'])
+  it('exportuje jen akce createOrganization a updateOrgSettings (každý export je veřejně volatelná akce)', () => {
+    expect(Object.keys(orgActionsModule).sort()).toEqual(['createOrganization', 'updateOrgSettings'])
   })
 })

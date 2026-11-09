@@ -34,6 +34,12 @@ export default async function NastaveniPage() {
         </Link>
       )}
 
+      {can(ctx.role, 'manageOrgSettings', ctx.isSuperAdmin) && (
+        <Link href="/firma/nastaveni" className="mt-3 flex min-h-11 items-center rounded-panel border border-line bg-card px-4 font-medium hover:bg-accent-soft">
+          Nastavení firmy
+        </Link>
+      )}
+
       <form action={logout} className="mt-6">
         <button type="submit" className="min-h-11 rounded-panel border border-line bg-card px-4 py-2 font-medium hover:bg-accent-soft">
           Odhlásit se

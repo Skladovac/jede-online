@@ -2,12 +2,12 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
-import { requireSuperAdmin } from '@/lib/org'
+import { requireCan, requireSuperAdmin } from '@/lib/org'
 import { generatePassword, hashPassword } from '@/lib/crypto'
 import { parseDayKey, pragueDayKey } from '@/lib/date'
 import { createInvitation, notifyAddedToOrg, sendInvitationMail } from '@/lib/invitation'
 import { invalidateForeignPassword } from '@/lib/people'
-import { orgSchema, type OrgInput } from '@/lib/validation'
+import { orgSchema, orgSettingsSchema, type OrgInput, type OrgSettingsInput } from '@/lib/validation'
 
 // Tenhle soubor smí exportovat jen serverové akce: každý export je volatelný z prohlížeče.
 
@@ -70,4 +70,28 @@ export async function createOrganization(
     // Transakce se vrátila celá: firma bez správce nevznikla. Podrobnosti nepouštíme do prohlížeče.
     return { error: 'Firmu se nepodařilo založit. Zkus to znovu.' }
   }
+}
+
+/**
+ * Změní nastavení AKTIVNÍ firmy (název ve výkazu, první den období, hodina připomínky).
+ * - Kontrola oprávnění je první řádek, před čtením vstupu i databáze.
+ * - Id firmy je z kontextu, nikdy ze vstupu; zapisují se jen zparsovaná pole.
+ */
+export async function updateOrgSettings(input: OrgSettingsInput): Promise<{ ok: true } | { error: string }> {
+  const ctx = await requireCan('manageOrgSettings')
+
+  const parsed = orgSettingsSchema.safeParse(input)
+  if (!parsed.success) return { error: 'Zkontroluj prosím údaje: název ve výkazu, první den období (1–28) a hodinu připomínky (0–23).' }
+  const { reportName, periodStartDay, remindHour } = parsed.data
+
+  try {
+    await prisma.organization.update({ where: { id: ctx.org.id }, data: { reportName, periodStartDay, remindHour } })
+  } catch (e) {
+    console.error('updateOrgSettings: uložení selhalo', e instanceof Error ? e.name : 'chyba')
+    return { error: 'Nastavení se nepodařilo uložit. Zkus to znovu.' }
+  }
+  revalidatePath('/firma/nastaveni')
+  revalidatePath('/mesic')
+  revalidatePath('/den')
+  return { ok: true }
 }
