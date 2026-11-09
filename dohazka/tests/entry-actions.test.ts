@@ -109,6 +109,8 @@ describe('uzavřené období neprojde žádnou akcí dne', () => {
     expect(db.periodLock.findUnique.mock.calls[0][0].where.orgId_periodKey.periodKey).toBe('2026-11')
   })
 
+  // Kód roli ani `isSuperAdmin` vůbec nečte, a přesně to tenhle test hlídá: až někdo
+  // zkusí přidat výjimku „super admin smí i do uzavřeného", spadne tady. Nemazat jako nadbytečný.
   it('super admin uzávěrku neobejde', async () => {
     ctx.isSuperAdmin = true
     try {

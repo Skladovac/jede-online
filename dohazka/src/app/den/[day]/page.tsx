@@ -90,7 +90,7 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
 
       {uzavreno ? (
         <p role="status" className="mt-5 rounded-panel border border-line bg-card px-3 py-3 text-sm">
-          Měsíc je uzavřený, záznamy tohoto dne už nejdou měnit. Pokud je potřeba je opravit, požádej správce firmy, aby měsíc otevřel.
+          Měsíc je uzavřený, záznamy tohoto dne už nejdou měnit. Změna půjde, až měsíc znovu otevře správce firmy.
         </p>
       ) : (
         <DayForm key={day} day={day} places={mista} hasEntries={zapsane.length > 0} hasWorkOrLeave={zapsane.some((e) => e.kind !== 'DAYOFF')} />
