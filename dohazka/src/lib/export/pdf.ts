@@ -72,11 +72,20 @@ export async function toPdf(report: Report): Promise<Buffer> {
       let y = novaStranka()
       doc.font('body').fontSize(16).fillColor('#000').text(report.title, OKRAJ, y, { width: sirka, lineBreak: false })
       y += 26
-      doc.fontSize(11).text(`Firma: ${report.orgName}`, OKRAJ, y, { width: sirka })
+      // Řádky hlavičky mají pevnou výšku; dlouhý text by se zalomil a překryl řádek pod sebou
+      // (lineBreak: false s width to v pdfkitu nezabrání), proto ho zkrátíme sami.
+      const radek = (text: string) => {
+        if (doc.widthOfString(text) <= sirka) return text
+        let t = text
+        while (t.length > 1 && doc.widthOfString(t + '…') > sirka) t = t.slice(0, -1)
+        return t + '…'
+      }
+      doc.fontSize(11)
+      doc.text(radek(`Firma: ${report.orgName}`), OKRAJ, y, { width: sirka, lineBreak: false })
       y += 16
-      doc.text(`Jméno: ${report.personName}`, OKRAJ, y, { width: sirka })
+      doc.text(radek(`Jméno: ${report.personName}`), OKRAJ, y, { width: sirka, lineBreak: false })
       y += 16
-      doc.text(`Období: ${report.periodLabel}`, OKRAJ, y, { width: sirka })
+      doc.text(radek(`Období: ${report.periodLabel}`), OKRAJ, y, { width: sirka, lineBreak: false })
       y += 28
       y = hlavickaTabulky(y)
       const spodek = doc.page.height - OKRAJ

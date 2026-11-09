@@ -45,6 +45,10 @@ describe('contentDisposition', () => {
   it('stejný měsíc ve dvou firmách dá dva různé názvy souborů', () => {
     expect(contentDisposition('Jan', '2026-11', 'pdf', 'Alfa')).not.toBe(contentDisposition('Jan', '2026-11', 'pdf', 'Beta'))
   })
+  it('název firmy s uvozovkou a lomítkem hlavičku nerozbije', () => {
+    const h = contentDisposition('Jan Novák', '2026-11', 'pdf', 'A"B/C')
+    expect(h).toBe(`attachment; filename="dohazka-A-B-C-Jan-Novak-2026-11.pdf"; filename*=UTF-8''dohazka-A-B-C-Jan-Nov%C3%A1k-2026-11.pdf`)
+  })
   it('prázdné jméno nerozbije hlavičku', () => {
     expect(contentDisposition('???', '2026-11', 'xlsx', '???')).toContain('filename="dohazka-vykaz-2026-11.xlsx"')
   })

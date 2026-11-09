@@ -55,6 +55,15 @@ describe('toPdf', () => {
     const buf = await toPdf(empty)
     expect(buf.subarray(0, 5).toString('latin1')).toBe('%PDF-')
   })
+  it('dlouhý název firmy se nezalomí do dalšího řádku hlavičky', async () => {
+    const kusy = textovaVrstva(await toPdf({ ...empty, orgName: 'Velmi dlouhý obchodní název společnosti '.repeat(8) }))
+    const firma = kusy.find((k) => k.text.startsWith('Firma:'))!
+    const jmeno = kusy.find((k) => k.text.startsWith('Jméno:'))!
+    expect(firma).toBeDefined()
+    expect(Math.abs(firma.y - jmeno.y)).toBeCloseTo(16, 0)
+    // Mezi řádkem Firma a Jméno nesmí být žádný zalomený zbytek.
+    expect(kusy.filter((k) => k.y < Math.max(firma.y, jmeno.y) && k.y > Math.min(firma.y, jmeno.y))).toHaveLength(0)
+  })
   it('hodnoty jednoho dne jsou na jednom řádku (datum, hodiny i typ patří k sobě)', async () => {
     // Každá buňka nese číslo svého řádku; dovolená je jen na řádku 2, řádek 3 má dlouhou poznámku (zalomí se).
     const rows = [1, 2, 3, 4].map((i) => ({

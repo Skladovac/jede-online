@@ -134,6 +134,10 @@ async function main() {
       if (clenstvi && active !== undefined && clenstvi.active !== active) {
         console.log(`  členství: ${clenstvi.active ? 'aktivní' : 'neaktivní'} -> ${active ? 'aktivní' : 'neaktivní'}`)
       }
+      // Nezakazujeme to (je to operátorův nástroj), ale nesmí to projít potichu.
+      if ((await prisma.membership.count({ where: { orgId: org.id, role: 'OWNER', active: true } })) === 0) {
+        console.warn(`!! POZOR: firma ${org.name} (${org.id}) nemá žádného aktivního správce (OWNER). Nikdo v ní teď nemůže spravovat lidi.`)
+      }
       if (clenstvi && !clenstvi.active && active === undefined) console.log('  členství zůstává NEAKTIVNÍ (k návratu použij --activate).')
     }
   } finally {
