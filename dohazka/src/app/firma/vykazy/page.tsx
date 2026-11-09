@@ -80,7 +80,7 @@ export default async function VykazyFirmyPage({ searchParams }: { searchParams: 
       {(can(ctx.role, 'lockPeriod', ctx.isSuperAdmin) || uzavreno) && (
         <section className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-panel border border-line bg-card p-4" aria-label="Uzávěrka měsíce">
           <p className="text-sm">{uzavreno ? <strong>Měsíc je uzavřený, záznamy v něm nejdou měnit.</strong> : <span className="text-muted">Měsíc je otevřený.</span>}</p>
-          {can(ctx.role, 'lockPeriod', ctx.isSuperAdmin) && <LockButton period={period} locked={uzavreno} canUnlock={smiOtevrit} />}
+          {can(ctx.role, 'lockPeriod', ctx.isSuperAdmin) && <LockButton period={period} locked={uzavreno} canUnlock={smiOtevrit} orgId={ctx.org.id} />}
         </section>
       )}
 

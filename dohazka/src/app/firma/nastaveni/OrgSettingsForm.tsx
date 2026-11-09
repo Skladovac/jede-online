@@ -8,7 +8,15 @@ const pole = 'mt-1 w-full rounded-panel border border-line bg-card px-3 py-2 tex
 
 const cislo = (v: string) => (v.trim() === '' ? NaN : Number(v))
 
-export function OrgSettingsForm({ initial }: { initial: { reportName: string; periodStartDay: number; remindHour: number } }) {
+// `orgId` je firma, pro kterou se stránka vykreslila. Posílá se s uložením, aby okno, které zůstalo na
+// předchozí firmě, nepřepsalo nastavení té, na kterou člověk mezitím přepnul (zapisuje se dál podle cookie).
+export function OrgSettingsForm({
+  initial,
+  orgId,
+}: {
+  initial: { reportName: string; periodStartDay: number; remindHour: number }
+  orgId: string
+}) {
   const router = useRouter()
   const [pending, start] = useTransition()
   const [reportName, setReportName] = useState(initial.reportName)
@@ -21,7 +29,7 @@ export function OrgSettingsForm({ initial }: { initial: { reportName: string; pe
     setMsg(null)
     start(async () => {
       // Číslo se posílá jako číslo. Number('') je 0, proto se prázdné pole převádí na NaN výslovně; server ho odmítne.
-      const r = await updateOrgSettings({ reportName, periodStartDay: cislo(den), remindHour: cislo(hodina) })
+      const r = await updateOrgSettings({ reportName, periodStartDay: cislo(den), remindHour: cislo(hodina) }, orgId)
       if ('error' in r) setMsg({ ok: false, text: r.error })
       else {
         setMsg({ ok: true, text: 'Uloženo.' })

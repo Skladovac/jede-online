@@ -7,6 +7,7 @@ import { requireCan, requireOrgContext } from '@/lib/org'
 import { dateColumnToKey, parseDayKey, periodKeyForDay } from '@/lib/date'
 import { validateEntry } from '@/lib/entry'
 import { MESIC_UZAVREN } from '@/lib/period-lock'
+import { STARA_STRANKA } from '@/lib/stale-page'
 
 // Kontrola je tady, v akci, ne jen ve stránce: schovaný formulář nikoho nezastaví před přímým voláním akce.
 // Platí pro všechny, i správce a super admina; kdo potřebuje zapsat, nejdřív období otevře.
@@ -26,15 +27,14 @@ function obnovStranky(day: string) {
 // Pole formuláře, která validateEntry čte. Cokoli jiného z FormData ignorujeme.
 const POLE = ['day', 'kind', 'hours', 'fromTime', 'toTime', 'place', 'note'] as const
 
-// Firma přichází z cookie, formulář dne posílá jen datum a hodnoty. Kdo si v jednom okně otevře den firmy A
-// a v druhém přepne na firmu B, zapíše tím prvním oknem do firmy B — a „Nepracoval“ jí smaže záznamy dne,
-// které první okno nikdy nevidělo, takže se ani nezeptá. Proto stránka posílá, pro kterou firmu se vykreslila,
-// a akce to porovná dřív, než se zapíše nebo než se vůbec sáhne na uzávěrku (ta je cizí firmy).
-const JINE_OKNO = 'Mezitím jsi v jiném okně přepnul firmu. Obnov stránku a zkus to znovu.'
+// Firma, pro kterou se stránka dne vykreslila. Proč se porovnává a proč je chybějící hodnota odmítnutí:
+// viz komentář v '@/lib/stale-page'. U „Nepracoval“ je to ta nejdražší varianta — maže záznamy dne, které
+// to okno nikdy nevidělo, takže se ani nezeptá. `saveEntryFor` a `deleteEntryFor` drží totéž `clenFirmy`
+// (cizí členství se tváří jako nenalezené), proto tam zvláštní kontrola není.
 
 export async function saveEntry(formData: FormData): Promise<{ error: string } | { ok: true }> {
   const ctx = await requireOrgContext()
-  if (formData.get('orgId') !== ctx.org.id) return { error: JINE_OKNO }
+  if (formData.get('orgId') !== ctx.org.id) return { error: STARA_STRANKA }
   const vstup = Object.fromEntries(POLE.map((k) => [k, formData.get(k)]))
   const v = validateEntry(vstup)
   if (!v.ok) return { error: v.error }
@@ -58,7 +58,7 @@ export async function deleteEntry(id: string, orgId: string): Promise<{ ok: true
   const ctx = await requireOrgContext()
   // Mazání je díky `membershipId` v `where` bezpečné i tak, ale bez téhle kontroly by hlásilo
   // „Smazání se nepodařilo.“ a člověk by nevěděl, že mu mezitím přeskočila firma.
-  if (orgId !== ctx.org.id) return { error: JINE_OKNO }
+  if (orgId !== ctx.org.id) return { error: STARA_STRANKA }
   if (typeof id !== 'string' || !id) return { error: 'Smazání se nepodařilo.' }
   // Den záznamu je potřeba znát kvůli uzávěrce; hledá se vždy jen v aktivním členství, cizí id se tváří jako nenalezené.
   const zaznam = await prisma.entry.findFirst({ where: { id, membershipId: ctx.membership.id }, select: { day: true } })
@@ -74,7 +74,7 @@ export async function deleteEntry(id: string, orgId: string): Promise<{ ok: true
 
 export async function markDayOff(day: string, orgId: string): Promise<{ ok: true } | { error: string }> {
   const ctx = await requireOrgContext()
-  if (orgId !== ctx.org.id) return { error: JINE_OKNO }
+  if (orgId !== ctx.org.id) return { error: STARA_STRANKA }
   const v = validateEntry({ day, kind: 'DAYOFF' })
   if (!v.ok) return { error: v.error }
   if (await jeDenUzavreny(ctx.org.id, ctx.org.periodStartDay, v.value.day)) return { error: MESIC_UZAVREN }

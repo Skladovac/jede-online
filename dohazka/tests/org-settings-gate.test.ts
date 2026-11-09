@@ -37,7 +37,7 @@ describe('updateOrgSettings: brána je přesně manageOrgSettings', () => {
   })
 
   it('správce firmy, kterému je zakázáno jen manageOrgSettings, je přesměrován a nic se nezapíše', async () => {
-    await expect(updateOrgSettings({ reportName: 'F', periodStartDay: 1, remindHour: 8 })).rejects.toThrow('NEXT_REDIRECT:/')
+    await expect(updateOrgSettings({ reportName: 'F', periodStartDay: 1, remindHour: 8 }, 'o')).rejects.toThrow('NEXT_REDIRECT:/')
     expect(db.organization.update.mock.calls.length + db.organization.updateMany.mock.calls.length + db.$transaction.mock.calls.length).toBe(0)
   })
 })

@@ -13,7 +13,10 @@ export default async function NastaveniFirmyPage() {
         ← Nastavení
       </Link>
       <h1 className="mt-3 text-xl font-semibold">Nastavení firmy {ctx.org.name}</h1>
-      <OrgSettingsForm initial={{ reportName: ctx.org.reportName, periodStartDay: ctx.org.periodStartDay, remindHour: ctx.org.remindHour }} />
+      <OrgSettingsForm
+        initial={{ reportName: ctx.org.reportName, periodStartDay: ctx.org.periodStartDay, remindHour: ctx.org.remindHour }}
+        orgId={ctx.org.id}
+      />
     </main>
   )
 }

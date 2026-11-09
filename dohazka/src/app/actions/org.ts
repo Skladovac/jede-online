@@ -7,6 +7,7 @@ import { generatePassword, hashPassword } from '@/lib/crypto'
 import { parseDayKey, pragueDayKey } from '@/lib/date'
 import { createInvitation, notifyAddedToOrg, sendInvitationMail } from '@/lib/invitation'
 import { invalidateForeignPassword } from '@/lib/people'
+import { STARA_STRANKA } from '@/lib/stale-page'
 import { orgSchema, orgSettingsSchema, type OrgInput, type OrgSettingsInput } from '@/lib/validation'
 
 // Tenhle soubor smí exportovat jen serverové akce: každý export je volatelný z prohlížeče.
@@ -76,9 +77,14 @@ export async function createOrganization(
  * Změní nastavení AKTIVNÍ firmy (název ve výkazu, první den období, hodina připomínky).
  * - Kontrola oprávnění je první řádek, před čtením vstupu i databáze.
  * - Id firmy je z kontextu, nikdy ze vstupu; zapisují se jen zparsovaná pole.
+ * - `orgId` je firma, pro kterou se stránka vykreslila: slouží JEN k porovnání (zapisuje se pořád do
+ *   `ctx.org.id`). Bez toho by formulář z okna, které zůstalo na firmě A, přepsal nastavení firmy B
+ *   hodnotami firmy A — a špatný `periodStartDay` potichu přemapuje, které dny patří do kterého
+ *   výkazního měsíce, na dokumentu pro mzdy. Proč se chybějící hodnota odmítá: viz '@/lib/stale-page'.
  */
-export async function updateOrgSettings(input: OrgSettingsInput): Promise<{ ok: true } | { error: string }> {
+export async function updateOrgSettings(input: OrgSettingsInput, orgId: string): Promise<{ ok: true } | { error: string }> {
   const ctx = await requireCan('manageOrgSettings')
+  if (orgId !== ctx.org.id) return { error: STARA_STRANKA }
 
   const parsed = orgSettingsSchema.safeParse(input)
   if (!parsed.success) return { error: 'Zkontroluj prosím údaje: název ve výkazu, první den období (1–28) a hodinu připomínky (0–23).' }

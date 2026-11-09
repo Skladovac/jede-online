@@ -313,8 +313,10 @@ describe('oprava cizího zápisu s historií změn', () => {
 // Okno, které zůstalo na předchozí firmě. Firma se bere z cookie, tak zápis z takového okna mířil do té
 // přepnuté — a „Nepracoval“ jí mazal záznamy dne, které to okno nikdy nevidělo, takže se ani nezeptal.
 // Stránka proto posílá firmu, pro kterou se vykreslila, a akce ji porovná dřív, než cokoli udělá.
-describe('zápis z okna, které zůstalo na předchozí firmě', () => {
-  const HLASKA = 'Mezitím jsi v jiném okně přepnul firmu. Obnov stránku a zkus to znovu.'
+// Stejná hláška platí i pro stránku z doby před nasazením, která to pole vůbec nemá — proto mluví
+// o neplatné stránce, ne o přepnutí firmy.
+describe('zápis ze stránky, která už neplatí (přepnutá firma nebo stará verze)', () => {
+  const HLASKA = 'Tahle stránka už neplatí (přepnutá firma nebo stará verze). Obnov ji a zkus to znovu.'
   const zadnyZapis = () => {
     expect(db.entry.create).not.toHaveBeenCalled()
     expect(db.entry.deleteMany).not.toHaveBeenCalled()

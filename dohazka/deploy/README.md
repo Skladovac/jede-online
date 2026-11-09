@@ -417,11 +417,12 @@ teprve potom uvažuj o obnově z dumpu, protože ta zahodí všechno, co od nasa
 Přihlas se jako stávající uživatel: musíš vidět svůj měsíc se všemi dosavadními záznamy
 a v navigaci Výkazy, Lidé, Nastavení firmy.
 
-**Řekni uživateli, ať aplikaci na telefonu jednou zavře a otevře znovu.** Stránka dne teď
-posílá s každým zápisem i to, pro kterou firmu se vykreslila — stránka, která zůstala
-otevřená z doby před nasazením, to pole nemá a první uložení odmítne hláškou
-„Obnov stránku a zkus to znovu." Je to schválně (fail-closed), ale bez varování to vypadá
-jako porucha. Nainstalovaná aplikace na ploše se po zavření a otevření načte celá znovu.
+**Řekni uživateli, ať aplikaci na telefonu jednou zavře a otevře znovu.** Stránky, ze kterých
+se zapisuje (den, výkazy firmy, nastavení firmy), teď posílají i to, pro kterou firmu se
+vykreslily — stránka, která zůstala otevřená z doby před nasazením, to pole nemá a první
+uložení odmítne hláškou „Tahle stránka už neplatí (přepnutá firma nebo stará verze). Obnov ji
+a zkus to znovu.“ Je to schválně (fail-closed), ale bez varování to vypadá jako porucha.
+Nainstalovaná aplikace na ploše se po zavření a otevření načte celá znovu.
 
 **Pak přejmenuj firmu.** Migrace jí dala jméno „Výchozí firma“ a to jméno jde do hlavičky
 výkazu i do názvu exportovaného souboru. V **Nastavení firmy** přepiš „Název ve výkazu“ na to,

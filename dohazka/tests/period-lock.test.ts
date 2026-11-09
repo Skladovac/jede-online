@@ -56,8 +56,8 @@ describe('isLocked', () => {
 describe('lockPeriod / unlockPeriod: oprávnění', () => {
   it('zaměstnanec je odmítnut a nic se nezapíše', async () => {
     jaJsem('EMPLOYEE')
-    await expect(lockPeriod('2026-11')).rejects.toThrow('NEXT_REDIRECT:/')
-    await expect(unlockPeriod('2026-11')).rejects.toThrow('NEXT_REDIRECT:/')
+    await expect(lockPeriod('2026-11', 'o-ctx')).rejects.toThrow('NEXT_REDIRECT:/')
+    await expect(unlockPeriod('2026-11', 'o-ctx')).rejects.toThrow('NEXT_REDIRECT:/')
     expect(zapisy()).toBe(0)
   })
 
@@ -65,40 +65,40 @@ describe('lockPeriod / unlockPeriod: oprávnění', () => {
   // stejně jako u zaměstnance. Dřív to byla ruční podmínka v akci a vracela chybu.
   it('účetní smí uzavřít, ale ne otevřít', async () => {
     jaJsem('ACCOUNTANT')
-    expect(await lockPeriod('2026-11')).toEqual({ ok: true })
-    await expect(unlockPeriod('2026-11')).rejects.toThrow('NEXT_REDIRECT:/')
+    expect(await lockPeriod('2026-11', 'o-ctx')).toEqual({ ok: true })
+    await expect(unlockPeriod('2026-11', 'o-ctx')).rejects.toThrow('NEXT_REDIRECT:/')
     expect(db.periodLock.deleteMany).not.toHaveBeenCalled()
   })
 
   it('správce otevře; super admin také', async () => {
-    expect(await unlockPeriod('2026-11')).toEqual({ ok: true })
+    expect(await unlockPeriod('2026-11', 'o-ctx')).toEqual({ ok: true })
     jaJsem('EMPLOYEE', true)
-    expect(await unlockPeriod('2026-11')).toEqual({ ok: true })
+    expect(await unlockPeriod('2026-11', 'o-ctx')).toEqual({ ok: true })
     expect(db.periodLock.deleteMany).toHaveBeenCalledTimes(2)
   })
 
   it('nepřihlášený je odmítnut', async () => {
     auth.getCurrentUser.mockResolvedValue(null)
-    await expect(lockPeriod('2026-11')).rejects.toThrow('NEXT_REDIRECT:/prihlaseni')
+    await expect(lockPeriod('2026-11', 'o-ctx')).rejects.toThrow('NEXT_REDIRECT:/prihlaseni')
     expect(zapisy()).toBe(0)
   })
 })
 
 describe('lockPeriod / unlockPeriod: vstup a zápis', () => {
   it.each(['', '2026-13', '2026-1', '1999-12', '2101-01', '2026-11-01', 'x', ' 2026-11'])('periodKey %j se odmítne bez zápisu', async (k) => {
-    expect(await lockPeriod(k)).toHaveProperty('error')
-    expect(await unlockPeriod(k)).toHaveProperty('error')
+    expect(await lockPeriod(k, 'o-ctx')).toHaveProperty('error')
+    expect(await unlockPeriod(k, 'o-ctx')).toHaveProperty('error')
     expect(zapisy()).toBe(0)
   })
 
   it.each([null, undefined, 202611, {}, ['2026-11']])('periodKey jiného typu než řetězec (%j) se odmítne', async (k) => {
-    expect(await lockPeriod(k as unknown as string)).toHaveProperty('error')
-    expect(await unlockPeriod(k as unknown as string)).toHaveProperty('error')
+    expect(await lockPeriod(k as unknown as string, 'o-ctx')).toHaveProperty('error')
+    expect(await unlockPeriod(k as unknown as string, 'o-ctx')).toHaveProperty('error')
     expect(zapisy()).toBe(0)
   })
 
   it('orgId a lockedById jsou z kontextu', async () => {
-    await lockPeriod('2026-11')
+    await lockPeriod('2026-11', 'o-ctx')
     const arg = db.periodLock.upsert.mock.calls[0][0]
     expect(arg.where).toEqual({ orgId_periodKey: { orgId: 'o-ctx', periodKey: '2026-11' } })
     expect(arg.create).toEqual({ orgId: 'o-ctx', periodKey: '2026-11', lockedById: 'u-me' })
@@ -106,13 +106,52 @@ describe('lockPeriod / unlockPeriod: vstup a zápis', () => {
   })
 
   it('opakované uzavření nespadne (upsert, ne create)', async () => {
-    expect(await lockPeriod('2026-11')).toEqual({ ok: true })
-    expect(await lockPeriod('2026-11')).toEqual({ ok: true })
+    expect(await lockPeriod('2026-11', 'o-ctx')).toEqual({ ok: true })
+    expect(await lockPeriod('2026-11', 'o-ctx')).toEqual({ ok: true })
   })
 
   it('otevření maže jen v aktivní firmě', async () => {
-    await unlockPeriod('2026-11')
+    await unlockPeriod('2026-11', 'o-ctx')
     expect(db.periodLock.deleteMany).toHaveBeenCalledWith({ where: { orgId: 'o-ctx', periodKey: '2026-11' } })
+  })
+})
+
+// Okno, které zůstalo na předchozí firmě (nebo stránka z doby před nasazením). Uzávěrka je to, co firmě
+// drží čísla pro mzdy, takže zamknout nebo otevřít měsíc CIZÍ firmy je stejně drahé jako do ní zapsat.
+describe('uzávěrka ze stránky, která už neplatí (přepnutá firma nebo stará verze)', () => {
+  const HLASKA = 'Tahle stránka už neplatí (přepnutá firma nebo stará verze). Obnov ji a zkus to znovu.'
+
+  it('lockPeriod s jiným orgId: chyba a žádný zápis', async () => {
+    expect(await lockPeriod('2026-11', 'o-jina')).toEqual({ error: HLASKA })
+    expect(zapisy()).toBe(0)
+  })
+
+  it('unlockPeriod s jiným orgId: chyba a žádné mazání uzávěrky', async () => {
+    expect(await unlockPeriod('2026-11', 'o-jina')).toEqual({ error: HLASKA })
+    expect(db.periodLock.deleteMany).not.toHaveBeenCalled()
+    expect(zapisy()).toBe(0)
+  })
+
+  it.each([undefined, null, '', 42, { orgId: 'o-ctx' }])('chybějící nebo neřetězcová hodnota (%j) je taky odmítnutí', async (zle) => {
+    expect(await lockPeriod('2026-11', zle as unknown as string)).toEqual({ error: HLASKA })
+    expect(await unlockPeriod('2026-11', zle as unknown as string)).toEqual({ error: HLASKA })
+    expect(zapisy()).toBe(0)
+  })
+
+  it('kontrola je dřív než platnost klíče: cizí firma se dozví o neplatné stránce, ne o období', async () => {
+    expect(await lockPeriod('kravina', 'o-jina')).toEqual({ error: HLASKA })
+    expect(zapisy()).toBe(0)
+  })
+
+  it('super admin přepnutý na firmu A taky neotevře měsíc firmy B', async () => {
+    jaJsem('EMPLOYEE', true)
+    expect(await unlockPeriod('2026-11', 'o-jina')).toEqual({ error: HLASKA })
+    expect(zapisy()).toBe(0)
+  })
+
+  it('firma z kontextu projde (důkaz, že kontrola nezakazuje všechno)', async () => {
+    expect(await lockPeriod('2026-11', 'o-ctx')).toEqual({ ok: true })
+    expect(await unlockPeriod('2026-11', 'o-ctx')).toEqual({ ok: true })
   })
 })
 

@@ -4,7 +4,9 @@ import { useState, useTransition } from 'react'
 import { lockPeriod, unlockPeriod } from '@/app/actions/lock'
 
 // Tlačítko jen pohodlí: oprávnění a platnost klíče znovu hlídá akce.
-export function LockButton({ period, locked, canUnlock }: { period: string; locked: boolean; canUnlock: boolean }) {
+// `orgId` je firma, pro kterou se stránka vykreslila; posílá se s sebou, aby okno, které zůstalo na
+// předchozí firmě, nezamklo nebo neotevřelo měsíc té, na kterou člověk mezitím přepnul.
+export function LockButton({ period, locked, canUnlock, orgId }: { period: string; locked: boolean; canUnlock: boolean; orgId: string }) {
   const [pending, startTransition] = useTransition()
   const [chyba, nastavChybu] = useState<string | null>(null)
   if (locked && !canUnlock) return null
@@ -16,7 +18,7 @@ export function LockButton({ period, locked, canUnlock }: { period: string; lock
     if (!window.confirm(text)) return
     startTransition(async () => {
       try {
-        const r = await (locked ? unlockPeriod(period) : lockPeriod(period))
+        const r = await (locked ? unlockPeriod(period, orgId) : lockPeriod(period, orgId))
         nastavChybu('error' in r ? r.error : null)
       } catch {
         nastavChybu('Nepodařilo se. Zkus to znovu.')
