@@ -3,7 +3,7 @@ import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { getCurrentUser, requireUser } from '@/lib/auth'
 import { pickMembership } from '@/lib/membership'
 import { can, type ActionValue } from '@/lib/role'
 
@@ -21,10 +21,22 @@ export const getOrgContext = cache(async () => {
   if (!user) return null
   const memberships = await prisma.membership.findMany({
     where: { userId: user.id, active: true },
-    include: { org: true },
-    orderBy: { createdAt: 'asc' },
+    // Vyjmenovaná pole: objekt končí v komponentách, nový sloupec nesmí do prohlížeče bez revize.
+    select: {
+      id: true,
+      orgId: true,
+      role: true,
+      active: true,
+      tracksFrom: true,
+      org: { select: { id: true, name: true, reportName: true, periodStartDay: true, remindHour: true } },
+    },
+    // Úplné uspořádání: createdAt je v Postgresu čas transakce, řádky z jednoho příkazu mají stejný.
+    // Záložní „první aktivní členství“ na tom stojí, proto id jako rozhodčí.
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
   })
   const wanted = (await cookies()).get(ORG_COOKIE)?.value ?? null
+  // `active: true` v dotazu i filtr v pickMembership jsou ÚMYSLNÁ redundance — každá vrstva
+  // drží deaktivovaného člověka venku sama. Neodstraňovat při úklidu.
   const membership = pickMembership(memberships, wanted)
   if (!membership) return null
   return { user, membership, org: membership.org, role: membership.role, isSuperAdmin: user.isSuperAdmin }
@@ -32,11 +44,18 @@ export const getOrgContext = cache(async () => {
 
 export type OrgContext = NonNullable<Awaited<ReturnType<typeof getOrgContext>>>
 
-/** Kontext firmy; jinak přesměruje na přihlášení. */
+// POZOR: všechny `require*` fungují vyhozením NEXT_REDIRECT. `await requireCan(...)` zabalené
+// do try/catch tu výjimku spolkne a kontrolu tiše vypne — nikdy je nebalit.
+
+/**
+ * Kontext firmy. Nepřihlášený jde na přihlášení; přihlášený bez aktivního členství na
+ * /bez-pristupu (přihlašovací stránka by ho poslala zpátky na `/` a vznikla by smyčka).
+ */
 export async function requireOrgContext(): Promise<OrgContext> {
   const ctx = await getOrgContext()
-  if (!ctx) redirect('/prihlaseni')
-  return ctx
+  if (ctx) return ctx
+  if (await getCurrentUser()) redirect('/bez-pristupu')
+  redirect('/prihlaseni')
 }
 
 /** Kontext firmy, a to jen pokud smí danou akci; jinak přesměruje na úvod. */
@@ -46,9 +65,12 @@ export async function requireCan(action: ActionValue): Promise<OrgContext> {
   return ctx
 }
 
-/** Jen super admin; jinak přesměruje na úvod. */
-export async function requireSuperAdmin(): Promise<OrgContext> {
-  const ctx = await requireOrgContext()
-  if (!ctx.isSuperAdmin) redirect('/')
-  return ctx
+/**
+ * Jen super admin. Příznak je na uživateli, ne v roli firmy, a funguje napříč firmami,
+ * proto nevyžaduje firemní kontext a vrací uživatele. Firmu si volající případně vezme z `getOrgContext()`.
+ */
+export async function requireSuperAdmin() {
+  const user = await requireUser()
+  if (!user.isSuperAdmin) redirect('/')
+  return user
 }
