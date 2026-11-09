@@ -101,13 +101,22 @@ hesla nese **jednorázový token v cestě URL** a access log by ho jinak uložil
 
 ```bash
 nginx -T 2>/dev/null | grep -A2 'location ^~ /pozvanka/'   # blok musí být vidět
+LOG=$(nginx -T 2>/dev/null | awk '$1=="access_log"{gsub(/;/,"",$2); print $2; exit}')
+echo "$LOG"                                                 # skutečná cesta k logu, ne hádaná
+curl -s -o /dev/null https://dohazka.jede.online/prihlaseni
+grep -c '/prihlaseni' "$LOG"                                # KONTROLNÍ: musí být > 0
 curl -s -o /dev/null https://dohazka.jede.online/pozvanka/zkusebni-token-neexistuje
-grep -c zkusebni-token-neexistuje /var/log/nginx/access.log   # musí být 0
+grep -c zkusebni-token-neexistuje "$LOG"                    # musí být 0
 ```
 
-Když je počet větší než 0, vhost v `sites-enabled` není ten z repa, nebo nginx nenačetl reload:
-porovnej `diff` s repem a udělej `nginx -t && systemctl reload nginx`. (Cesta k logu může být
-jiná, ověř podle `access_log` v hlavní konfiguraci.)
+**Ten kontrolní požadavek je tam schválně.** Samotná nula u tokenu nic nedokazuje — vyjde
+i tehdy, když se koukáš do špatného souboru, log je vypnutý nebo ještě nevyprázdněný.
+Teprve když `/prihlaseni` v logu **je** a token **není**, je to důkaz. Vyjde-li i kontrolní
+řádek 0, cestu k logu hledej ručně (`nginx -T | grep access_log`, případně `lsof -p` na
+proces nginxu) a kontrolu zopakuj.
+
+Vyjde-li u tokenu víc než 0, vhost v `sites-enabled` není ten z repa, nebo nginx nenačetl
+reload: porovnej `diff` s repem a udělej `nginx -t && systemctl reload nginx`.
 
 ## 5. První nasazení
 
@@ -202,7 +211,7 @@ hned po zápisu účtu. Předej ho bezpečnou cestou.
 | Odebrat / vrátit přístup do firmy | `--email a@b.cz --org <id> --role OWNER --deactivate` / `--activate` |
 | Nové heslo | `--email a@b.cz --reset-password` |
 | Přejmenování | `--email a@b.cz --name "Nové jméno"` |
-| Super admin | `--email a@b.cz --super-admin` (existujícímu účtu); nový účet bez firmy: `--name "Jméno" --super-admin` |
+| Super admin | `--email a@b.cz --super-admin --reset-password` (u účtu s heslem od stroje si příkaz `--reset-password` **vynutí**, viz kapitola 9); nový účet bez firmy: `--name "Jméno" --super-admin` |
 
 Role jsou `OWNER` (správce firmy), `ACCOUNTANT` (účetní), `EMPLOYEE` (zaměstnanec).
 `--org` a `--role` se zadávají **vždy spolu**. `<id>` firmy zjistíš v databázi:
@@ -263,34 +272,73 @@ tady **neplatí**: `git reset` vrátí kód, ne databázi. Návrat zpět znamen�
 
 ### Před nasazením
 
-1. **Svěží `pg_dump`.** Noční záloha nestačí (může být skoro o den stará a na serveru je živý
-   uživatel):
+**Pořadí prvních dvou kroků je důležité.** Nejdřív se zastaví aplikace, teprve pak se dumpuje.
+Opačně by se zápis, který uživatel udělá mezi dumpem a zastavením, do dumpu nedostal — a při
+obnově by se tiše ztratil, i když by dump vypadal v pořádku.
 
-   ```bash
-   PGU=$(docker exec jede-db-1 printenv POSTGRES_USER)
-   docker exec jede-db-1 pg_dump -Fc -U "$PGU" -d dohazka > /root/dohazka-pred-firmami.dump
-   test "$(stat -c %s /root/dohazka-pred-firmami.dump)" -gt 1024 && echo velikost-OK
-   docker exec -i jede-db-1 pg_restore --list < /root/dohazka-pred-firmami.dump > /dev/null && echo dump-cte-se
-   docker exec jede-db-1 psql -U "$PGU" -d dohazka -Atc 'SELECT count(*) FROM "Entry"'   # zapiš si číslo
-   ```
-
-   Čekej `velikost-OK`, `dump-cte-se` a počet záznamů, který si **zapíšeš**. Chybí-li cokoli,
-   dump je nepoužitelný: **nepokračuj**.
-2. **Zastav aplikaci**, ať do ní nikdo nepíše mezi dumpem a migrací (takový zápis by se při
-   obnově ztratil):
+1. **Zastav aplikaci**, ať do ní nikdo nepíše během dumpu ani migrace:
 
    ```bash
    docker compose -f /opt/jede/dohazka-src/dohazka/deploy/docker-compose.yml --env-file /opt/jede/dohazka.env stop dohazka
    ```
 
+   Od téhle chvíle je web mimo provoz, a bude dokud `deploy-dohazka.sh` nevymění kontejner —
+   včetně buildu image, který na 4 GB RAM trvá minuty. Dělej to tedy ve chvíli, kdy uživatel
+   aplikaci nepotřebuje, a dej mu vědět.
+2. **Svěží `pg_dump`.** Noční záloha nestačí (může být skoro o den stará a na serveru je živý
+   uživatel):
+
+   ```bash
+   PGU=$(docker exec jede-db-1 printenv POSTGRES_USER)
+   test -n "$PGU" && echo "uzivatel-OK: $PGU"
+   docker exec jede-db-1 pg_dump -Fc -U "$PGU" -d dohazka > /root/dohazka-pred-firmami.dump
+   chmod 600 /root/dohazka-pred-firmami.dump
+   test "$(stat -c %s /root/dohazka-pred-firmami.dump)" -gt 1024 && echo velikost-OK
+   docker exec -i jede-db-1 pg_restore --list < /root/dohazka-pred-firmami.dump > /dev/null && echo dump-cte-se
+   docker exec jede-db-1 psql -U "$PGU" -d dohazka -Atc 'SELECT count(*) FROM "Entry"'   # zapiš si číslo
+   ```
+
+   Čekej `uzivatel-OK`, `velikost-OK`, `dump-cte-se` a počet záznamů, který si **zapíšeš**.
+   Chybí-li cokoli, dump je nepoužitelný: **nepokračuj**. Že se superuživatel postgresu dá
+   zjistit přes `printenv POSTGRES_USER`, je předpoklad (viz kapitola 3) — vyjde-li `PGU`
+   prázdné, najdi uživatele v compose souboru stacku landingu a doplň ho ručně.
+   `chmod 600` tam je proto, že dump obsahuje osobní údaje; po ověřeném nasazení ho smaž
+   (`shred -u`).
 3. V `/opt/jede/dohazka.env` doplň `RESEND_API_KEY` a případně `APP_URL` (kapitola 3).
-4. Nahraj aktuální vhost z repa (blok `/pozvanka/` s `access_log off`, kapitola 4) a ověř ho
-   tamtéž popsaným příkazem.
+   **Bez `RESEND_API_KEY` se obnova hesla tiše neodešle**, i když obrazovka napíše, že odkaz
+   byl poslán — a zamčený člověk nemá jak dovnitř. Nepřeskakuj to.
+4. **Nahraj nový vhost** (blok `/pozvanka/` s `access_log off`, kapitola 4). Klon v
+   `/opt/jede/dohazka-src` je ale ještě na starém commitu, nový soubor v něm **není**;
+   `deploy-dohazka.sh` ho stáhne teprve při nasazení. Vezmi ho proto přímo z originu, aniž
+   bys klonu hýbal pracovním stromem:
+
+   ```bash
+   git -C /opt/jede/dohazka-src fetch origin
+   git -C /opt/jede/dohazka-src show origin/master:dohazka/deploy/nginx-dohazka.jede.online.conf > /tmp/dohazka-vhost-novy.conf
+   diff /etc/nginx/sites-available/dohazka.jede.online /tmp/dohazka-vhost-novy.conf
+   ```
+
+   (Je-li kód ještě na větvi, místo `origin/master` použij `origin/<větev>`.) `diff` si
+   **přečti**: kromě bloku `/pozvanka/` nesmí ukázat nic, co bys tím přepsáním ztratil
+   (třeba dočasně zakomentovaný blok 443 z vystavování certifikátu). Teprve pak:
+
+   ```bash
+   cp /tmp/dohazka-vhost-novy.conf /etc/nginx/sites-available/dohazka.jede.online
+   nginx -t && systemctl reload nginx
+   ```
+
+   a ověř to kontrolou z kapitoly 4 (včetně kontrolního požadavku). **Dokud tohle neproběhne,
+   neposílej žádnou pozvánku ani obnovu hesla** — token by se uložil do access logu.
 
 ### Nasazení a co migrace udělá se živými daty
 
-Spusť `deploy-dohazka.sh` (kapitola 5). `prisma migrate deploy` běží v jedné transakci: selže-li
-kdekoli, vrátí se celá, databáze zůstane tak, jak byla, a kontejner se nevymění.
+Spusť `deploy-dohazka.sh` (kapitola 5). **Je-li kód ještě na větvi, spusť ho s `BRANCH=`**
+(`BRANCH=claude/dohazka-organizace /opt/jede/.../deploy-dohazka.sh`) — výchozí je `master`, a bez
+toho by skript klon srovnal na starý kód a „úspěšně“ nasadil to, co tam bylo. Aplikace je od
+kroku 1 zastavená, takže po celou dobu buildu (na 4 GB RAM minuty) je web mimo provoz.
+
+`prisma migrate deploy` běží v jedné transakci: selže-li kdekoli, vrátí se celá, databáze
+zůstane tak, jak byla, a kontejner se nevymění.
 
 - Vznikne firma `org_default` („Výchozí firma“), která **převezme nastavení stávajícího
   uživatele** (začátek období, hodina připomínky), takže se mu výkaz tiše nepřepíše.
@@ -335,10 +383,19 @@ odhlas se a přihlas znovu.
 
 ### Když něco selže
 
-- **Skript skončil `STOP: migrace neprošly`:** databáze je beze změny (transakce), ale aplikaci jsi
-  před tím ručně zastavil a starý kontejner stále existuje. Přečti chybu. Chceš-li hned vrátit
-  provoz na starou verzi: `docker compose -f … --env-file … start dohazka` (spustí původní,
-  nevyměněný kontejner na nezměněné databázi). Jinak oprav příčinu a spusť skript znovu.
+- **Skript skončil jakoukoli hláškou `STOP:` před výměnou kontejneru** — selhal build (málo
+  RAM nebo chybějící swap), neprošla migrační brána, nebo `STOP: migrace neprošly`: databáze je
+  beze změny (transakce), ale aplikaci jsi v kroku 1 **ručně zastavil**, takže web je pořád
+  mimo provoz a sám se nerozjede. Tohle je ten případ, kdy hláška skriptu „běžící verze zůstává
+  nasazená" **neplatí** — žádná neběží. Vrať provoz na starou verzi:
+
+  ```bash
+  docker compose -f /opt/jede/dohazka-src/dohazka/deploy/docker-compose.yml --env-file /opt/jede/dohazka.env start dohazka
+  curl -s http://127.0.0.1:3600/api/health
+  ```
+
+  (spustí původní, nevyměněný kontejner na nezměněné databázi). Teprve pak řeš příčinu
+  a spusť skript znovu.
 - **Migrace prošla, ale smoke test nebo ruční kontrola ukázaly chybu:** návrat na starý commit
   samotný **nepomůže**. Rozhodni mezi opravou dopředu (nový commit, `deploy-dohazka.sh`) a
   **obnovou z dumpu**. Záznamy zapsané od spuštění nové verze se obnovou **ztratí**.
@@ -347,7 +404,20 @@ odhlas se a přihlas znovu.
   docker compose -f /opt/jede/dohazka-src/dohazka/deploy/docker-compose.yml --env-file /opt/jede/dohazka.env stop dohazka
   docker exec jede-db-1 sh -c 'dropdb -U "$POSTGRES_USER" dohazka && createdb -U "$POSTGRES_USER" -O dohazka dohazka'
   docker exec -i jede-db-1 sh -c 'pg_restore --exit-on-error --no-owner --role=dohazka -U "$POSTGRES_USER" -d dohazka' < /root/dohazka-pred-firmami.dump
+  docker exec jede-db-1 psql -U "$PGU" -d dohazka -Atc 'SELECT count(*) FROM "Entry"'
   ```
+
+  `pg_restore` **nesmí nic vypsat** a poslední příkaz musí vrátit přesně to číslo, které sis
+  zapsal před migrací. Vypíše-li `pg_restore` chybu, `--exit-on-error` ho zastaví na prvním
+  problému — přečti ji, než cokoli dalšího uděláš; nepouštěj restore podruhé do napůl obnovené
+  databáze, nejdřív znovu `dropdb`/`createdb`.
+
+  **Ani tento postup ani obnova z dumpu nikdy neběžely na skutečném serveru.** Čti výstup
+  každého příkazu.
+
+  Pak je potřeba vrátit i kód, podle příkazů s hashem předchozího commitu, které vypsal
+  `deploy-dohazka.sh`. **Mít ten výpis po ruce** — až terminál zavřeš, hash hledej v
+  `git -C /opt/jede/dohazka-src log --oneline` nebo v `GIT_COMMIT` ve starém `dohazka.env`.
 
   Pak vrať kód a image na předchozí commit podle příkazů, které `deploy-dohazka.sh` při selhání
   smoke testu vypsal (`reset --hard`, `build dohazka`, oprava `GIT_COMMIT`, `up -d --force-recreate`).
