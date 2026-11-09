@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { can, ROLE_LABEL } from '@/lib/role'
+import { ACTIONS, can, ROLE_LABEL } from '@/lib/role'
 
 describe('can', () => {
+  it('správce firmy smí přesně tu množinu akcí, kterou známe', () => {
+    // Přesná rovnost, ne „obsahuje": přidání osmé akce do ACTIONS musí test shodit,
+    // aby se autor rozhodl, jestli ji správce dostane.
+    const known = ['managePeople','manageOrgSettings','editOthersEntry','viewOthersEntries','exportCompany','lockPeriod','viewChangeLog']
+    expect([...ACTIONS].sort()).toEqual([...known].sort())
+    expect(ACTIONS.filter((a) => can('OWNER', a)).sort()).toEqual([...known].sort())
+  })
   it('správce firmy smí všech sedm akcí matice', () => {
     for (const a of ['managePeople','manageOrgSettings','editOthersEntry','viewOthersEntries','exportCompany','lockPeriod','viewChangeLog'] as const)
       expect(can('OWNER', a), a).toBe(true)
