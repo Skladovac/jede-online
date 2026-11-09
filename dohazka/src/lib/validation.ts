@@ -34,3 +34,12 @@ export type OrgInput = z.input<typeof orgSchema>
 
 // Nové heslo (pozvánka, obnova). Horní mez kvůli bcryptu; stejná jako u přihlášení.
 export const passwordSchema = z.string().min(10).max(200)
+
+// Nový člověk ve firmě. E-mail se normalizuje stejně jako při přihlášení, aby šlo o tutéž osobu.
+export const personSchema = z.object({
+  email: loginSchema.shape.email,
+  name: kratky,
+  role: z.enum(['OWNER', 'ACCOUNTANT', 'EMPLOYEE']),
+  delivery: z.enum(['invite', 'password']).default('invite'),
+})
+export type PersonInput = z.input<typeof personSchema>
