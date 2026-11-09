@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { requireUser } from '@/lib/auth'
+import { requireOrgContext } from '@/lib/org'
 import { pushPublicKey } from '@/lib/push'
 import { logout } from '@/app/actions/auth'
 import { PushSettings } from '@/components/Push'
@@ -8,7 +8,7 @@ import { PushSettings } from '@/components/Push'
 export const metadata: Metadata = { title: 'Nastavení' }
 
 export default async function NastaveniPage() {
-  const user = await requireUser()
+  const ctx = await requireOrgContext()
   const publicKey = pushPublicKey()
 
   return (
@@ -21,7 +21,7 @@ export default async function NastaveniPage() {
       <section className="mt-5 rounded-panel border border-line bg-card p-4">
         <h2 className="mb-3 font-semibold">Večerní připomínka</h2>
         {publicKey ? (
-          <PushSettings publicKey={publicKey} remindHour={user.remindHour} remindEnabled={user.remindEnabled} />
+          <PushSettings publicKey={publicKey} remindHour={ctx.org.remindHour} remindEnabled={ctx.user.remindEnabled} />
         ) : (
           <p className="text-sm text-muted">Notifikace nejsou na tomto serveru nastavené.</p>
         )}

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { requireUser } from '@/lib/auth'
+import { requireOrgContext } from '@/lib/org'
 import { dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, pragueDayKey } from '@/lib/date'
 import { KIND_LABEL } from '@/lib/entry'
 import { recentPlaces } from '@/lib/places'
@@ -20,15 +20,15 @@ const popisDne = (key: string) =>
   )
 
 export default async function DenPage({ params }: { params: Promise<{ day: string }> }) {
-  const user = await requireUser()
+  const ctx = await requireOrgContext()
   const { day } = await params
   // Tvar i existence data: 2026-02-31 by parseDayKey tiše přetočil, proto kontrola převodem zpět.
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || posun(day, 0) !== day) notFound()
 
   const [zapsane, posledni] = await Promise.all([
-    prisma.entry.findMany({ where: { userId: user.id, day: parseDayKey(day) }, orderBy: { createdAt: 'asc' } }),
+    prisma.entry.findMany({ where: { membershipId: ctx.membership.id, day: parseDayKey(day) }, orderBy: { createdAt: 'asc' } }),
     prisma.entry.findMany({
-      where: { userId: user.id, place: { not: null } },
+      where: { membershipId: ctx.membership.id, place: { not: null } },
       orderBy: { day: 'desc' },
       take: 60,
       select: { place: true, day: true },
@@ -42,7 +42,7 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
     <main className="mx-auto max-w-md px-4 py-6">
       <div className="mb-2 flex items-center justify-between">
         <Link
-          href={`/mesic/${periodKeyForDay(user.periodStartDay, day)}`}
+          href={`/mesic/${periodKeyForDay(ctx.org.periodStartDay, day)}`}
           className="flex min-h-11 items-center px-1 text-sm text-accent-strong underline"
         >
           Měsíc a export

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 // Akce importují server-only, auth, prisma a next/cache; nahradíme je.
 vi.mock('server-only', () => ({}))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
-vi.mock('@/lib/auth', () => ({ requireUser: vi.fn(async () => ({ id: 'u1' })) }))
+vi.mock('@/lib/org', () => ({ requireOrgContext: vi.fn(async () => ({ user: { id: 'u1' }, membership: { id: 'm1' } })) }))
 const db = vi.hoisted(() => ({ deleteMany: vi.fn(), upsert: vi.fn() }))
 vi.mock('@/lib/prisma', () => ({ prisma: { pushSubscription: db } }))
 
