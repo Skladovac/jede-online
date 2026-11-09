@@ -62,13 +62,16 @@ export function buildCompanyReport(args: {
   }
 }
 
-/** "2026-11-03" → "3. 11." */
+const DNY_TYDNE = ['ne', 'po', 'út', 'st', 'čt', 'pá', 'so']
+
+/**
+ * Den bez záznamu na obrazovce: "3. 11. (st)". Bez roku — ten je v názvu období nad seznamem.
+ * Den v týdnu tu je ze stejného důvodu jako v exportu: hned je vidět, které díry jsou víkend.
+ */
 export const dayShort = (key: string) => {
   const [, m, d] = key.split('-').map(Number)
-  return `${d}. ${m}.`
+  return `${d}. ${m}. (${DNY_TYDNE[parseDayKey(key).getUTCDay()]})`
 }
-
-const DNY_TYDNE = ['ne', 'po', 'út', 'st', 'čt', 'pá', 'so']
 
 /**
  * Den bez záznamu pro export: "4. 11. 2026 (st)".

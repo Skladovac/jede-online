@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { buildMonth } from '@/lib/month'
-import { buildCompanyReport, missingDayLabel } from '@/lib/company-report'
+import { buildCompanyReport, dayShort, missingDayLabel } from '@/lib/company-report'
 
 const e = (dayKey: string, hours: number | null, kind = 'WORK') =>
   ({ id: dayKey + hours + kind, dayKey, kind, hours, fromTime: null, toTime: null, place: null, note: null }) as never
@@ -103,5 +103,13 @@ describe('missingDayLabel', () => {
     expect(missingDayLabel('2026-11-07')).toBe('7. 11. 2026 (so)')
     expect(missingDayLabel('2026-11-08')).toBe('8. 11. 2026 (ne)')
     expect(missingDayLabel('2026-11-09')).toBe('9. 11. 2026 (po)')
+  })
+})
+
+describe('dayShort', () => {
+  it('na obrazovce je den týdne taky, ale rok ne (je v názvu období)', () => {
+    expect(dayShort('2026-11-07')).toBe('7. 11. (so)')
+    expect(dayShort('2026-11-08')).toBe('8. 11. (ne)')
+    expect(dayShort('2026-11-09')).toBe('9. 11. (po)')
   })
 })
