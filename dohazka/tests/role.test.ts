@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { can, ROLE_LABEL } from '@/lib/role'
 
 describe('can', () => {
-  it('správce firmy smí všechno kromě zakládání firem', () => {
+  it('správce firmy smí všech sedm akcí matice', () => {
     for (const a of ['managePeople','manageOrgSettings','editOthersEntry','viewOthersEntries','exportCompany','lockPeriod','viewChangeLog'] as const)
       expect(can('OWNER', a), a).toBe(true)
   })

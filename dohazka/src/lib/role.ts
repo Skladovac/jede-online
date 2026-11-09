@@ -25,12 +25,19 @@ export const ACTIONS = [
 ] as const
 export type ActionValue = (typeof ACTIONS)[number]
 
-const ALL_ACTIONS = new Set<ActionValue>(ACTIONS)
-
 // Matice rolí. Záměrně explicitní seznamy místo odvozování: zaměstnanec nemá nic,
 // účetní jen čtení, export a uzavírání období — nikdy správu lidí ani nastavení.
+// Nová akce je proto zakázaná všem, dokud ji někdo vědomě nepřidělí (fail-closed).
 const MATRIX: Record<RoleValue, ReadonlySet<ActionValue>> = {
-  OWNER: ALL_ACTIONS,
+  OWNER: new Set<ActionValue>([
+    'managePeople',
+    'manageOrgSettings',
+    'editOthersEntry',
+    'viewOthersEntries',
+    'exportCompany',
+    'lockPeriod',
+    'viewChangeLog',
+  ]),
   ACCOUNTANT: new Set<ActionValue>(['viewOthersEntries', 'exportCompany', 'lockPeriod']),
   EMPLOYEE: new Set<ActionValue>(),
 }
