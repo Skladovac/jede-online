@@ -17,6 +17,8 @@ const popis = (s: unknown) => {
   return [druh, e.hours != null && `${e.hours} h`, e.fromTime && e.toTime && `${e.fromTime}–${e.toTime}`, e.place, e.note].filter(Boolean).join(' · ')
 }
 
+const LIMIT = 200
+
 const kdy = (d: Date) => new Intl.DateTimeFormat('cs-CZ', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Europe/Prague' }).format(d)
 
 // Historie je jen tady: do výkazu, exportu ani PDF se nedostává. Účetní oprávnění nemá.
@@ -26,7 +28,7 @@ export default async function HistorieZmenPage({ params }: { params: Promise<{ m
   // `orgId` v podmínce: id z adresy z cizí firmy se tváří, jako by neexistovalo.
   const clen = await prisma.membership.findFirst({ where: { id: membershipId, orgId: ctx.org.id }, select: { user: { select: { name: true } } } })
   if (!clen) notFound()
-  const zmeny = await prisma.entryChangeLog.findMany({ where: { membershipId }, orderBy: { changedAt: 'desc' }, take: 200 })
+  const zmeny = await prisma.entryChangeLog.findMany({ where: { membershipId }, orderBy: { changedAt: 'desc' }, take: LIMIT })
   // changedById je jen id uživatele, jména se dohledají jedním dotazem.
   const ids = [...new Set(zmeny.map((z) => z.changedById))]
   const lide = await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } })
@@ -54,6 +56,7 @@ export default async function HistorieZmenPage({ params }: { params: Promise<{ m
           ))}
         </ul>
       )}
+      {zmeny.length === LIMIT && <p className="mt-3 text-sm text-muted">Je vidět posledních {LIMIT} změn, starší tu nejsou.</p>}
     </main>
   )
 }

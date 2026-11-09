@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { requireCan } from '@/lib/org'
 import { can } from '@/lib/role'
+import { isLocked } from '@/lib/period-lock'
 import { PridatZapis, SmazatZapis } from './OpravaZapisu'
 import { parsePeriod, dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
 import { KIND_LABEL } from '@/lib/entry'
@@ -61,7 +62,11 @@ export default async function VykazClovekaPage({
   })
   const videt = visibleRows(rows, dnes)
   // Oprava cizích záznamů a historie jsou zvláštní oprávnění; účetní výkaz jen čte.
-  const smiOpravit = can(ctx.role, 'editOthersEntry', ctx.isSuperAdmin)
+  const zamky = await prisma.periodLock.findMany({ where: { orgId: ctx.org.id }, select: { periodKey: true } })
+  // Uzavřené období akce stejně odmítne; ovládání se schová hned, ať správce nezjistí důvod až po potvrzení.
+  const uzavreno = isLocked(zamky.map((z) => z.periodKey), ctx.org.periodStartDay, fromKey)
+  const smiOpravit = can(ctx.role, 'editOthersEntry', ctx.isSuperAdmin) && !uzavreno
+  const nabidnoutUzavrenost = can(ctx.role, 'editOthersEntry', ctx.isSuperAdmin) && uzavreno
   const smiHistorii = can(ctx.role, 'viewChangeLog', ctx.isSuperAdmin)
 
   return (
@@ -90,6 +95,11 @@ export default async function VykazClovekaPage({
           Historie změn
         </Link>
       )}
+      {nabidnoutUzavrenost && (
+        <p className="mt-5 text-sm text-muted">
+          Měsíc je uzavřený, záznamy už nejdou měnit. Změna půjde, až měsíc znovu otevře správce firmy.
+        </p>
+      )}
       {smiOpravit && <PridatZapis membershipId={membershipId} />}
 
       {videt.length === 0 ? (
@@ -107,16 +117,13 @@ export default async function VykazClovekaPage({
               {r.state === 'filled' ? (
                 <span className="min-w-0 flex-1 space-y-0.5">
                   {r.entries.map((e) => (
-                    <span key={e.id} className="block truncate">
-                      {KIND_LABEL[e.kind]}
-                      {e.hours !== null && ` · ${formatHours(e.hours)} h`}
-                      {(e.place || e.note) && <span className="text-muted"> · {[e.place, e.note].filter(Boolean).join(' · ')}</span>}
-                      {smiOpravit && (
-                        <>
-                          {' '}
-                          <SmazatZapis membershipId={membershipId} id={e.id} />
-                        </>
-                      )}
+                    <span key={e.id} className="flex items-baseline gap-2">
+                      <span className="min-w-0 flex-1 truncate">
+                        {KIND_LABEL[e.kind]}
+                        {e.hours !== null && ` · ${formatHours(e.hours)} h`}
+                        {(e.place || e.note) && <span className="text-muted"> · {[e.place, e.note].filter(Boolean).join(' · ')}</span>}
+                      </span>
+                      {smiOpravit && <SmazatZapis membershipId={membershipId} id={e.id} popis={`${popisDne(r.dayKey)}, ${KIND_LABEL[e.kind]}`} />}
                     </span>
                   ))}
                 </span>
