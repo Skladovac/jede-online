@@ -7,7 +7,7 @@ vi.mock('server-only', () => ({}))
 type Inv = { id: string; userId: string; membershipId: string | null; kind: string; expiresAt: Date; createdAt: Date }
 const store = vi.hoisted(() => ({
   invitations: new Map<string, unknown>(),
-  users: new Map<string, { id: string; email: string; passwordHash: string }>(),
+  users: new Map<string, { id: string; email: string; passwordHash: string; passwordSetByOwner?: boolean }>(),
   sessions: new Map<string, { id: string; userId: string }>(),
   memberships: new Map<string, { id: string; org: { name: string } }>(),
   failUserUpdate: false,
@@ -51,10 +51,11 @@ const db = vi.hoisted(() => {
         if (!u) throw new Error('nenalezeno')
         return u
       },
-      update: async ({ where, data }: { where: { id: string }; data: { passwordHash: string } }) => {
+      update: async ({ where, data }: { where: { id: string }; data: { passwordHash: string; passwordSetByOwner?: boolean } }) => {
         if (store.failUserUpdate) throw new Error('db spadla')
         const u = store.users.get(where.id)!
         u.passwordHash = data.passwordHash
+        u.passwordSetByOwner = data.passwordSetByOwner
         return u
       },
     },
@@ -164,6 +165,13 @@ describe('consumeInvitation: úspěch', () => {
     // Všechny relace tohoto uživatele pryč, cizí zůstává.
     expect([...store.sessions.keys()]).toEqual(['s-cizi'])
     expect(store.users.get('u2')!.passwordHash).toBe('cizi-hash')
+  })
+
+  it('označí heslo jako nastavené majitelem účtu (zneplatnění při připojení do další firmy na tom stojí)', async () => {
+    const token = await createInvitation({ userId: 'u1', membershipId: 'm1', kind: 'invite' })
+    await consumeInvitation(token, HESLO)
+    expect(store.users.get('u1')!.passwordSetByOwner).toBe(true)
+    expect(store.users.get('u2')!.passwordSetByOwner).toBeUndefined()
   })
 
   it('smaže i ostatní nevyřízené odkazy téhož člověka, cizí ne', async () => {

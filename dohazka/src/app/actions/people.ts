@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { requireCan } from '@/lib/org'
 import { generatePassword, hashPassword } from '@/lib/crypto'
 import { parseDayKey, pragueDayKey } from '@/lib/date'
-import { inviteByMail } from '@/lib/invitation'
+import { inviteByMail, notifyAddedToOrg } from '@/lib/invitation'
 import { changeMembership } from '@/lib/people'
 import { ROLES } from '@/lib/role'
 import { personSchema, type PersonInput } from '@/lib/validation'
@@ -23,7 +23,7 @@ const JE_VE_FIRME = 'Tenhle e-mail už ve firmě je. Pokud je neaktivní, znovu 
  */
 export async function addPerson(
   input: PersonInput,
-): Promise<{ ok: true; password?: string; invite?: { emailed: boolean; created: boolean }; attached?: boolean } | { error: string }> {
+): Promise<{ ok: true; password?: string; invite?: { emailed: boolean; created: boolean } } | { error: string }> {
   const ctx = await requireCan('managePeople')
   const orgId = ctx.org.id
 
@@ -37,26 +37,41 @@ export async function addPerson(
     const tracksFrom = parseDayKey(pragueDayKey(new Date()))
 
     const result = await prisma.$transaction(async (tx) => {
-      const existing = await tx.user.findUnique({ where: { email }, select: { id: true } })
+      const existing = await tx.user.findUnique({ where: { email }, select: { id: true, passwordSetByOwner: true } })
       if (existing) {
         const uz = await tx.membership.findFirst({ where: { userId: existing.id, orgId }, select: { id: true } })
         if (uz) return { duplicate: true as const }
       }
       const userId = existing ? existing.id : (await tx.user.create({ data: { email, name, passwordHash } })).id
+      // Účet s heslem, které vygeneroval jiný správce (a zná ho), se připojením do další firmy zneplatní:
+      // jinak by se tím heslem dostal tamní správce i do téhle firmy. Heslo se přepíše na náhodné, které nezná nikdo,
+      // relace se zruší a člověk si nové heslo nastaví z pozvánky. Totéž v jedné transakci s členstvím.
+      const zneplatnit = !!existing && !existing.passwordSetByOwner
+      if (zneplatnit) {
+        await tx.user.update({ where: { id: userId }, data: { passwordHash } })
+        await tx.session.deleteMany({ where: { userId } })
+      }
       const membership = await tx.membership.create({ data: { userId, orgId, role, active: true, tracksFrom }, select: { id: true } })
-      return { duplicate: false as const, created: !existing, userId, membershipId: membership.id }
+      return { duplicate: false as const, created: !existing, zneplatnit, userId, membershipId: membership.id }
     })
     if (result.duplicate) return { error: JE_VE_FIRME }
 
     revalidatePath('/firma/lide')
-    if (!result.created) return { ok: true, attached: true }
-    if (delivery === 'invite') {
+    // Existující účet: správci se nikdy nevrací heslo a nic, podle čeho by poznal, že účet existoval jinde.
+    if (!result.created && !result.zneplatnit) {
+      // Heslo si nastavil majitel sám: nechává se, jen dostane informační e-mail.
+      const emailed = await notifyAddedToOrg(result.userId, ctx.org.name).catch(() => false)
+      return { ok: true, invite: { emailed, created: true } }
+    }
+    if (!result.created || delivery === 'invite') {
       try {
         const { emailed } = await inviteByMail({ userId: result.userId, membershipId: result.membershipId, kind: 'invite' })
-        return emailed ? { ok: true, invite: { emailed, created: true } } : { ok: true, password, invite: { emailed: false, created: true } }
+        if (emailed) return { ok: true, invite: { emailed, created: true } }
+        // U existujícího účtu heslo vracet nelze (je zneplatněné a správce ho nesmí znát); člověk použije „zapomenuté heslo“.
+        return result.created ? { ok: true, password, invite: { emailed: false, created: true } } : { ok: true, invite: { emailed: false, created: true } }
       } catch (e) {
         console.error('addPerson: pozvánku se nepodařilo vytvořit', e instanceof Error ? e.name : 'chyba')
-        return { ok: true, password, invite: { emailed: false, created: false } }
+        return result.created ? { ok: true, password, invite: { emailed: false, created: false } } : { ok: true, invite: { emailed: false, created: false } }
       }
     }
     return { ok: true, password }

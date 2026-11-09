@@ -103,7 +103,7 @@ async function main() {
     let userId: string
     if (existuje) {
       userId = existuje.id
-      await prisma.user.update({ where: { email }, data: { ...(jmeno && { name: jmeno }), ...(passwordHash && { passwordHash }), ...priznak } })
+      await prisma.user.update({ where: { email }, data: { ...(jmeno && { name: jmeno }), ...(passwordHash && { passwordHash, passwordSetByOwner: false }), ...priznak } })
       if (passwordHash) {
         // Staré přihlášení přestane platit — po změně hesla se musí přihlásit znovu.
         await prisma.session.deleteMany({ where: { userId } })

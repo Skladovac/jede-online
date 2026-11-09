@@ -105,10 +105,10 @@ export function PeopleManager({ lide }: { lide: Clen[] }) {
                 Heslo se už znovu nezobrazí.
               </p>
             </>
-          ) : stav.attached ? (
-            <p className="text-sm">Člověk už účet měl, byl přidán do firmy. Přihlásí se svým dosavadním heslem.</p>
+          ) : stav.invite?.emailed ? (
+            <p className="text-sm">Člověk dostal e-mail. Pokud šlo o pozvánku, odkaz platí 48 hodin.</p>
           ) : (
-            <p className="text-sm">Pozvánka odešla e-mailem. Odkaz platí 48 hodin.</p>
+            <p className="text-sm">E-mail se nepodařilo odeslat. Člověk si může heslo nastavit na přihlašovací stránce přes „zapomenuté heslo“.</p>
           )}
         </section>
       )}
@@ -142,7 +142,7 @@ export function PeopleManager({ lide }: { lide: Clen[] }) {
             Vygenerovat heslo (zobrazí se jednou)
           </label>
         </fieldset>
-        <p className="text-sm text-muted">Pokud e-mail už v systému je, připojí se existující účet a jeho heslo ani jméno se nezmění.</p>
+        <p className="text-sm text-muted">Pokud e-mail už v systému je, připojí se existující účet; jeho jméno se nezmění.</p>
         {stav && 'error' in stav && (
           <p role="alert" className="text-sm text-danger">
             {stav.error}

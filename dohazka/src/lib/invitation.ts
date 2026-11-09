@@ -67,7 +67,7 @@ export async function consumeInvitation(token: string, password: string): Promis
     await prisma.$transaction(async (tx) => {
       const smazano = await tx.invitation.deleteMany({ where: { id, expiresAt: { gt: new Date() } } })
       if (smazano.count !== 1) throw new NeplatnyOdkaz()
-      await tx.user.update({ where: { id: inv.userId }, data: { passwordHash } })
+      await tx.user.update({ where: { id: inv.userId }, data: { passwordHash, passwordSetByOwner: true } })
       await tx.session.deleteMany({ where: { userId: inv.userId } })
       // Ostatní nevyřízené odkazy téhož člověka už nemají smysl a nesmí zůstat jako zadní vrátka.
       await tx.invitation.deleteMany({ where: { userId: inv.userId } })
@@ -122,6 +122,21 @@ byli jste pozváni ${orgName ? `do firmy ${orgName} v Docházce` : 'do Docházky
 ${link}`,
     html: `<p>Dobrý den,</p><p>byli jste pozváni ${kam}. Heslo si nastavíte tady (odkaz platí ${INVITATION_HOURS} hodin a jde použít jednou):</p><p><a href="${a}">${a}</a></p>`,
   }
+}
+
+/** Informační e-mail: existující účet byl přidán do další firmy (heslo se nemění). Nevyhazuje; vrací, zda odešel. */
+export async function notifyAddedToOrg(userId: string, orgName: string): Promise<boolean> {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { email: true } })
+  const link = appUrl()
+  return sendMail(
+    user.email,
+    `Docházka: přidání do firmy ${orgName}`,
+    `<p>Dobrý den,</p><p>byli jste přidáni do firmy <strong>${esc(orgName)}</strong> v Docházce. Přihlásíte se svým dosavadním heslem, firmu přepnete v aplikaci.</p><p><a href="${esc(link)}">${esc(link)}</a></p>`,
+    `Dobrý den,
+
+byli jste přidáni do firmy ${orgName} v Docházce. Přihlásíte se svým dosavadním heslem, firmu přepnete v aplikaci.
+${link}`,
+  )
 }
 
 /**
