@@ -61,10 +61,10 @@ export function NewOrgForm() {
               Heslo se už znovu nezobrazí. Po obnovení nebo opuštění stránky ho nelze zjistit.
             </p>
           </>
-        ) : stav.invite ? (
-          <p className="mt-3 text-sm">Pozvánka odešla správci e-mailem. Odkaz platí 48 hodin.</p>
+        ) : stav.invite?.emailed ? (
+          <p className="mt-3 text-sm">Správce dostal e-mail. Pokud šlo o pozvánku, odkaz platí 48 hodin.</p>
         ) : (
-          <p className="mt-3 text-sm text-muted">Správce už účet měl, přihlásí se svým dosavadním heslem.</p>
+          <p className="mt-3 text-sm font-semibold">E-mail se nepodařilo odeslat. Správce si heslo nastaví na přihlašovací stránce přes „zapomenuté heslo“.</p>
         )}
         <p className="mt-4 flex gap-4 text-sm">
           <Link href="/admin" className="underline">
@@ -107,7 +107,7 @@ export function NewOrgForm() {
           Vygenerovat heslo (zobrazí se jednou)
         </label>
       </fieldset>
-      <p className="text-sm text-muted">Pokud e-mail už v systému je, připojí se existující účet a jeho heslo se nezmění.</p>
+      <p className="text-sm text-muted">Pokud e-mail už v systému je, připojí se existující účet.</p>
       {stav && 'error' in stav && (
         <p role="alert" className="text-sm text-danger">
           {stav.error}
