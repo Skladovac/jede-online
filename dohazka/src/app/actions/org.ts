@@ -84,6 +84,12 @@ export async function updateOrgSettings(input: OrgSettingsInput): Promise<{ ok: 
   if (!parsed.success) return { error: 'Zkontroluj prosím údaje: název ve výkazu, první den období (1–28) a hodinu připomínky (0–23).' }
   const { reportName, periodStartDay, remindHour } = parsed.data
 
+  // Uzávěrka je uložená jako klíč období RRRR-MM. Posun prvního dne období by potichu přemapoval, které dny
+  // zamyká, proto se mění jen bez uzávěrek. Nezměněná hodnota projde (uložení ostatních polí musí fungovat).
+  if (periodStartDay !== ctx.org.periodStartDay && (await prisma.periodLock.count({ where: { orgId: ctx.org.id } })) > 0) {
+    return { error: 'Měsíc je už uzavřený, první den období se proto měnit nedá.' }
+  }
+
   try {
     await prisma.organization.update({ where: { id: ctx.org.id }, data: { reportName, periodStartDay, remindHour } })
   } catch (e) {

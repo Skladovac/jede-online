@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { requireOrgContext } from '@/lib/org'
 import { dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, pragueDayKey } from '@/lib/date'
 import { KIND_LABEL } from '@/lib/entry'
+import { isLocked } from '@/lib/period-lock'
 import { recentPlaces } from '@/lib/places'
 import { DayForm, DeleteEntryButton } from '../DayForm'
 import { SettingsLink } from '@/components/SettingsLink'
@@ -25,7 +26,7 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
   // Tvar i existence data: 2026-02-31 by parseDayKey tiše přetočil, proto kontrola převodem zpět.
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || posun(day, 0) !== day) notFound()
 
-  const [zapsane, posledni] = await Promise.all([
+  const [zapsane, posledni, zamky] = await Promise.all([
     prisma.entry.findMany({ where: { membershipId: ctx.membership.id, day: parseDayKey(day) }, orderBy: { createdAt: 'asc' } }),
     prisma.entry.findMany({
       where: { membershipId: ctx.membership.id, place: { not: null } },
@@ -33,7 +34,10 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
       take: 60,
       select: { place: true, day: true },
     }),
+    prisma.periodLock.findMany({ where: { orgId: ctx.org.id }, select: { periodKey: true } }),
   ])
+  // Schování formuláře je jen pohodlí; skutečnou ochranu dělá kontrola v akcích zápisu.
+  const uzavreno = isLocked(zamky.map((z) => z.periodKey), ctx.org.periodStartDay, day)
   const mista = recentPlaces(posledni.map((e) => ({ place: e.place, day: dateColumnToKey(e.day) })))
   const dnes = pragueDayKey(new Date())
   const odkaz = 'rounded-panel border border-line px-3 py-2 text-sm text-muted hover:border-line-strong'
@@ -78,13 +82,19 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
                 </p>
                 {(e.place || e.note) && <p className="truncate text-muted">{[e.place, e.note].filter(Boolean).join(' · ')}</p>}
               </div>
-              <DeleteEntryButton id={e.id} />
+              {!uzavreno && <DeleteEntryButton id={e.id} />}
             </li>
           ))}
         </ul>
       )}
 
-      <DayForm key={day} day={day} places={mista} hasEntries={zapsane.length > 0} hasWorkOrLeave={zapsane.some((e) => e.kind !== 'DAYOFF')} />
+      {uzavreno ? (
+        <p role="status" className="mt-5 rounded-panel border border-line bg-card px-3 py-3 text-sm">
+          Měsíc je uzavřený, záznamy tohoto dne už nejdou měnit. Pokud je potřeba je opravit, požádej správce firmy, aby měsíc otevřel.
+        </p>
+      ) : (
+        <DayForm key={day} day={day} places={mista} hasEntries={zapsane.length > 0} hasWorkOrLeave={zapsane.some((e) => e.kind !== 'DAYOFF')} />
+      )}
     </main>
   )
 }

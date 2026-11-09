@@ -2,10 +2,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireCan } from '@/lib/org'
+import { prisma } from '@/lib/prisma'
 import { can } from '@/lib/role'
 import { parsePeriod, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
 import { loadCompanyPeople } from '@/lib/company-data'
 import { buildCompanyReport, dayShort } from '@/lib/company-report'
+import { LockButton } from './LockButton'
 
 export const metadata: Metadata = { title: 'Výkazy firmy' }
 
@@ -32,7 +34,13 @@ export default async function VykazyFirmyPage({ searchParams }: { searchParams: 
   const { year, month } = parsed
 
   const { fromKey, toKey } = periodRange(ctx.org.periodStartDay, year, month)
-  const lide = await loadCompanyPeople(ctx.org.id, fromKey, toKey)
+  const [lide, zamky] = await Promise.all([
+    loadCompanyPeople(ctx.org.id, fromKey, toKey),
+    prisma.periodLock.findMany({ where: { orgId: ctx.org.id }, select: { periodKey: true } }),
+  ])
+  // Období zobrazené stránkou je klíč RRRR-MM (parsePeriod ho ověřil), takže se hledá přímo v seznamu.
+  const uzavreno = zamky.some((z) => z.periodKey === period)
+  const smiOtevrit = ctx.role === 'OWNER' || ctx.isSuperAdmin
   const report = buildCompanyReport({
     orgName: ctx.org.reportName,
     fromKey,
@@ -67,6 +75,13 @@ export default async function VykazyFirmyPage({ searchParams }: { searchParams: 
           →
         </Link>
       </nav>
+
+      {(can(ctx.role, 'lockPeriod', ctx.isSuperAdmin) || uzavreno) && (
+        <section className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-panel border border-line bg-card p-4" aria-label="Uzávěrka měsíce">
+          <p className="text-sm">{uzavreno ? <strong>Měsíc je uzavřený, záznamy v něm nejdou měnit.</strong> : <span className="text-muted">Měsíc je otevřený.</span>}</p>
+          {can(ctx.role, 'lockPeriod', ctx.isSuperAdmin) && <LockButton period={period} locked={uzavreno} canUnlock={smiOtevrit} />}
+        </section>
+      )}
 
       <section className="mt-5 rounded-panel border border-line bg-card p-4" aria-label="Dny bez záznamu">
         <h2 className="font-semibold">Dny bez záznamu</h2>

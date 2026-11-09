@@ -13,6 +13,7 @@ const auth = vi.hoisted(() => ({ requireUser: vi.fn(), getCurrentUser: vi.fn() }
 vi.mock('@/lib/auth', () => auth)
 const db = vi.hoisted(() => ({
   organization: { update: vi.fn(), updateMany: vi.fn(), create: vi.fn() },
+  periodLock: { count: vi.fn() },
   membership: { findMany: vi.fn() },
   $transaction: vi.fn(),
 }))
@@ -37,6 +38,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   jaJsem('OWNER')
   db.organization.update.mockResolvedValue({ id: 'o-ctx' })
+  db.periodLock.count.mockResolvedValue(0)
 })
 
 describe('updateOrgSettings: oprávnění', () => {
@@ -128,6 +130,28 @@ describe('updateOrgSettings: zapisuje se jen do aktivní firmy a jen povolená p
     const r = await updateOrgSettings(platne)
     expect(r).toHaveProperty('error')
     expect(JSON.stringify(r)).not.toContain('ECONNREFUSED')
+  })
+})
+
+describe('updateOrgSettings: s uzávěrkou se první den období nemění', () => {
+  const HLASKA = 'Měsíc je už uzavřený, první den období se proto měnit nedá.'
+
+  it('jiný periodStartDay při existující uzávěrce: chyba a žádný zápis', async () => {
+    db.periodLock.count.mockResolvedValue(1)
+    expect(await updateOrgSettings(platne)).toEqual({ error: HLASKA })
+    expect(db.organization.update).not.toHaveBeenCalled()
+    // Počítá se jen uzávěrka aktivní firmy.
+    expect(db.periodLock.count).toHaveBeenCalledWith({ where: { orgId: 'o-ctx' } })
+  })
+
+  it('stejný periodStartDay při uzávěrce: uloží se (název a hodina se měnit smí)', async () => {
+    db.periodLock.count.mockResolvedValue(3)
+    expect(await updateOrgSettings({ ...platne, periodStartDay: 1 })).toEqual({ ok: true })
+    expect(db.organization.update).toHaveBeenCalledTimes(1)
+  })
+
+  it('jiný periodStartDay bez uzávěrky: uloží se', async () => {
+    expect(await updateOrgSettings(platne)).toEqual({ ok: true })
   })
 })
 

@@ -58,7 +58,8 @@ export function DayForm({ day, places, hasEntries, hasWorkOrLeave }: { day: stri
     startTransition(async () => {
       try {
         const r = await markDayOff(day)
-        nastavStav(r.ok ? null : { error: 'Nepodařilo se zapsat volný den. Zkus to znovu.' })
+        // Důvod (např. uzavřený měsíc) říká akce; obecná hláška zůstává jen pro vyhozenou výjimku.
+        nastavStav('error' in r ? { error: r.error } : null)
       } catch {
         nastavStav({ error: 'Nepodařilo se zapsat volný den. Zkus to znovu.' })
       }
@@ -150,7 +151,7 @@ export function DayForm({ day, places, hasEntries, hasWorkOrLeave }: { day: stri
 
 export function DeleteEntryButton({ id }: { id: string }) {
   const [pending, startTransition] = useTransition()
-  const [chyba, nastavChybu] = useState(false)
+  const [chyba, nastavChybu] = useState<string | null>(null)
   return (
     <div className="flex shrink-0 flex-col items-end gap-1">
       <button
@@ -161,9 +162,9 @@ export function DeleteEntryButton({ id }: { id: string }) {
           startTransition(async () => {
             try {
               const r = await deleteEntry(id)
-              nastavChybu(!r.ok)
+              nastavChybu('error' in r ? r.error : null)
             } catch {
-              nastavChybu(true)
+              nastavChybu('Smazání se nepodařilo.')
             }
           })
         }}
@@ -173,7 +174,7 @@ export function DeleteEntryButton({ id }: { id: string }) {
       </button>
       {chyba && (
         <p role="alert" className="text-xs text-danger">
-          Smazání se nepodařilo.
+          {chyba}
         </p>
       )}
     </div>
