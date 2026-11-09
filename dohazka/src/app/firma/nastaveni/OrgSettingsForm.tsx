@@ -6,6 +6,8 @@ import { updateOrgSettings } from '@/app/actions/org'
 
 const pole = 'mt-1 w-full rounded-panel border border-line bg-card px-3 py-2 text-fg focus:border-line-strong focus:outline-none'
 
+const cislo = (v: string) => (v.trim() === '' ? NaN : Number(v))
+
 export function OrgSettingsForm({ initial }: { initial: { reportName: string; periodStartDay: number; remindHour: number } }) {
   const router = useRouter()
   const [pending, start] = useTransition()
@@ -18,8 +20,8 @@ export function OrgSettingsForm({ initial }: { initial: { reportName: string; pe
     e.preventDefault()
     setMsg(null)
     start(async () => {
-      // Číslo se posílá jako číslo; prázdné pole dá NaN a server ho odmítne.
-      const r = await updateOrgSettings({ reportName, periodStartDay: Number(den), remindHour: Number(hodina) })
+      // Číslo se posílá jako číslo. Number('') je 0, proto se prázdné pole převádí na NaN výslovně; server ho odmítne.
+      const r = await updateOrgSettings({ reportName, periodStartDay: cislo(den), remindHour: cislo(hodina) })
       if ('error' in r) setMsg({ ok: false, text: r.error })
       else {
         setMsg({ ok: true, text: 'Uloženo.' })

@@ -91,7 +91,7 @@ export async function updateOrgSettings(input: OrgSettingsInput): Promise<{ ok: 
     return { error: 'Nastavení se nepodařilo uložit. Zkus to znovu.' }
   }
   revalidatePath('/firma/nastaveni')
-  revalidatePath('/mesic')
-  revalidatePath('/den')
+  revalidatePath('/mesic', 'layout')
+  revalidatePath('/den/[day]', 'page')
   return { ok: true }
 }

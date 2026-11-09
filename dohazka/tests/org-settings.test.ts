@@ -89,7 +89,7 @@ describe('updateOrgSettings: mezní hodnoty se odmítají, ne opravují', () => 
     expect(await updateOrgSettings({ ...platne, remindHour })).toEqual({ ok: true })
   })
 
-  it.each(['', '   ', '\t\n'])('reportName %j (prázdný nebo jen mezery): chyba a žádný zápis', async (reportName) => {
+  it.each(['', '   ', '\t\n', 'Firma\u0000', 'A\nB', 'A\u007fB'])('reportName %j (prázdný nebo jen mezery): chyba a žádný zápis', async (reportName) => {
     expect(await updateOrgSettings({ ...platne, reportName })).toHaveProperty('error')
     expect(db.organization.update).not.toHaveBeenCalled()
   })
