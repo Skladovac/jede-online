@@ -85,15 +85,22 @@ function Radek({ clen }: { clen: Clen }) {
 
 type Stav = Awaited<ReturnType<typeof addPerson>> | null
 
-export function PeopleManager({ lide }: { lide: Clen[] }) {
+// `orgId` je firma, pro kterou se seznam vykreslil. Posílá se s přidáním člověka, aby okno, které zůstalo
+// na předchozí firmě, nepřidalo člověka do té, na kterou člověk mezitím přepnul (zapisuje se dál podle cookie).
+// Ostatní akce na řádku (role, aktivita, pozvánka znovu) to nepotřebují: pracují s `membershipId`, které se
+// hledá jen v aktivní firmě, takže id z neplatné stránky se chová jako neexistující.
+export function PeopleManager({ lide, orgId }: { lide: Clen[]; orgId: string }) {
   const router = useRouter()
   const [stav, akce, pending] = useActionState(async (_: Stav, fd: FormData): Promise<Stav> => {
-    const r = await addPerson({
-      email: String(fd.get('email') ?? ''),
-      name: String(fd.get('name') ?? ''),
-      role: String(fd.get('role') ?? '') as RoleValue,
-      delivery: fd.get('delivery') === 'password' ? 'password' : 'invite',
-    })
+    const r = await addPerson(
+      {
+        email: String(fd.get('email') ?? ''),
+        name: String(fd.get('name') ?? ''),
+        role: String(fd.get('role') ?? '') as RoleValue,
+        delivery: fd.get('delivery') === 'password' ? 'password' : 'invite',
+      },
+      orgId,
+    )
     if ('ok' in r) router.refresh()
     return r
   }, null)

@@ -33,6 +33,7 @@ export default async function LidePage() {
       </div>
       <PeopleManager
         lide={clenove.map((m) => ({ id: m.id, name: m.user.name, email: m.user.email, role: m.role, active: m.active, isMe: m.userId === ctx.user.id }))}
+        orgId={ctx.org.id}
       />
     </main>
   )

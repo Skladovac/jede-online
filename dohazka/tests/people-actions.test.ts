@@ -59,7 +59,7 @@ beforeEach(() => {
 describe('oprávnění: fail-closed pro všechny tři akce', () => {
   it.each(['ACCOUNTANT', 'EMPLOYEE'] as const)('%s: žádná akce nic nezapíše ani nezačne transakci', async (role) => {
     jaJsem(role)
-    await expect(addPerson(vstup)).rejects.toThrow('NEXT_REDIRECT:/')
+    await expect(addPerson(vstup, 'o1')).rejects.toThrow('NEXT_REDIRECT:/')
     await expect(setRole('m1', 'OWNER')).rejects.toThrow('NEXT_REDIRECT:/')
     await expect(setActive('m1', false)).rejects.toThrow('NEXT_REDIRECT:/')
     expect(db.$transaction).not.toHaveBeenCalled()
@@ -75,7 +75,7 @@ describe('oprávnění: fail-closed pro všechny tři akce', () => {
 
   it('kontrola je před validací: cizí s neplatným vstupem se dozví jen přesměrování', async () => {
     jaJsem('EMPLOYEE')
-    await expect(addPerson({ ...vstup, email: 'ne' })).rejects.toThrow('NEXT_REDIRECT:/')
+    await expect(addPerson({ ...vstup, email: 'ne' }, 'o1')).rejects.toThrow('NEXT_REDIRECT:/')
   })
 })
 
@@ -197,7 +197,7 @@ describe('setRole / setActive: vstup', () => {
 
 describe('addPerson: nový člověk', () => {
   it('vytvoří účet s normalizovaným e-mailem a členství v AKTIVNÍ firmě s vybranou rolí', async () => {
-    const r = await addPerson({ ...vstup, delivery: 'invite' })
+    const r = await addPerson({ ...vstup, delivery: 'invite' }, 'o1')
     expect(r).toEqual({ ok: true, invite: { emailed: true, created: true } })
     expect(db.user.findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { email: 'eva@firma.cz' } }))
     expect(db.user.create.mock.calls[0][0].data).toMatchObject({ email: 'eva@firma.cz', name: 'Eva Nová' })
@@ -208,7 +208,7 @@ describe('addPerson: nový člověk', () => {
   })
 
   it('orgId se bere z kontextu, nikdy z cizího pole ve vstupu', async () => {
-    await addPerson({ ...vstup, orgId: 'o2' } as never)
+    await addPerson({ ...vstup, orgId: 'o2' } as never, 'o1')
     expect(db.membership.create.mock.calls[0][0].data.orgId).toBe('o1')
   })
 
@@ -223,13 +223,13 @@ describe('addPerson: nový člověk', () => {
       poradi.push('invite')
       return { emailed: true }
     })
-    await addPerson({ ...vstup, delivery: 'invite' })
+    await addPerson({ ...vstup, delivery: 'invite' }, 'o1')
     expect(poradi).toEqual(['commit', 'invite'])
   })
 
   it('e-mail neodešel: vrátí vygenerované heslo (hash v databázi, ne heslo)', async () => {
     inv.sendInvitationMail.mockResolvedValue({ emailed: false })
-    const r = (await addPerson({ ...vstup, delivery: 'invite' })) as { password?: string; invite?: unknown }
+    const r = (await addPerson({ ...vstup, delivery: 'invite' }, 'o1')) as { password?: string; invite?: unknown }
     expect(r.password).toMatch(/^[A-Za-z0-9]{16}$/)
     expect(r.invite).toEqual({ emailed: false, created: true })
     const hash = db.user.create.mock.calls[0][0].data.passwordHash
@@ -245,7 +245,7 @@ describe('addPerson: nový člověk', () => {
       return r
     })
     inv.createInvitation.mockRejectedValue(new Error('db'))
-    const r = await addPerson({ ...vstup, delivery: 'invite' })
+    const r = await addPerson({ ...vstup, delivery: 'invite' }, 'o1')
     expect(r).toHaveProperty('error')
     expect(r).not.toHaveProperty('password')
     expect(potvrzeno).toEqual([])
@@ -253,7 +253,7 @@ describe('addPerson: nový člověk', () => {
   })
 
   it('volba "heslo": vrátí heslo a nic nepošle', async () => {
-    const r = (await addPerson({ ...vstup, delivery: 'password' })) as { password?: string }
+    const r = (await addPerson({ ...vstup, delivery: 'password' }, 'o1')) as { password?: string }
     expect(r.password).toMatch(/^[A-Za-z0-9]{16}$/)
     expect(inv.createInvitation).not.toHaveBeenCalled()
     expect(inv.sendInvitationMail).not.toHaveBeenCalled()
@@ -261,7 +261,7 @@ describe('addPerson: nový člověk', () => {
 
   it('neplatný vstup: chyba a žádný zápis', async () => {
     for (const zmena of [{ email: 'neni' }, { name: '  ' }, { role: 'ROOT' }]) {
-      expect(await addPerson({ ...vstup, ...zmena } as never)).toHaveProperty('error')
+      expect(await addPerson({ ...vstup, ...zmena } as never, 'o1')).toHaveProperty('error')
     }
     expect(db.$transaction).not.toHaveBeenCalled()
     expect(zapisy()).toBe(0)
@@ -269,8 +269,54 @@ describe('addPerson: nový člověk', () => {
 
   it('chyba databáze: obecná chyba, nic nevyzradí', async () => {
     db.membership.create.mockRejectedValue(new Error('unique constraint on secret_table'))
-    const r = (await addPerson(vstup)) as { error: string }
+    const r = (await addPerson(vstup, 'o1')) as { error: string }
     expect(r.error).not.toContain('secret_table')
+  })
+})
+
+// Okno, které zůstalo na předchozí firmě (nebo stránka z doby před nasazením). Lidé se nikdy nemažou,
+// jen deaktivují, takže člověk přidaný do špatné firmy v ní zůstane natrvalo a z aplikace ho nikdo
+// neuklidí — a jeho skutečnému e-mailu mezitím odejde pozvánka do firmy, se kterou nemá nic společného.
+describe('addPerson ze stránky, která už neplatí (přepnutá firma nebo stará verze)', () => {
+  const HLASKA = 'Tahle stránka už neplatí (přepnutá firma nebo stará verze). Obnov ji a zkus to znovu.'
+
+  it('jiné orgId: chyba, žádný zápis, žádný e-mail a limit se nespotřebuje', async () => {
+    expect(await addPerson(vstup, 'o-jina')).toEqual({ error: HLASKA })
+    expect(db.$transaction).not.toHaveBeenCalled()
+    expect(zapisy()).toBe(0)
+    expect(db.user.findUnique).not.toHaveBeenCalled()
+    expect(db.user.updateMany).not.toHaveBeenCalled()
+    expect(db.session.deleteMany).not.toHaveBeenCalled()
+    expect(inv.createInvitation).not.toHaveBeenCalled()
+    expect(inv.sendInvitationMail).not.toHaveBeenCalled()
+    expect(inv.notifyAddedToOrg).not.toHaveBeenCalled()
+    expect(rl.rateLimit).not.toHaveBeenCalled()
+  })
+
+  it.each([undefined, null, '', 42, { orgId: 'o1' }])('chybějící nebo neřetězcová hodnota (%j) je taky odmítnutí', async (zle) => {
+    expect(await addPerson(vstup, zle as unknown as string)).toEqual({ error: HLASKA })
+    expect(db.$transaction).not.toHaveBeenCalled()
+    expect(zapisy()).toBe(0)
+    expect(inv.sendInvitationMail).not.toHaveBeenCalled()
+    expect(rl.rateLimit).not.toHaveBeenCalled()
+  })
+
+  it('kontrola je dřív než validace i než limity: neplatný vstup z cizí stránky hlásí neplatnou stránku', async () => {
+    expect(await addPerson({ ...vstup, email: 'neni-email' }, 'o-jina')).toEqual({ error: HLASKA })
+    expect(rl.rateLimit).not.toHaveBeenCalled()
+    expect(zapisy()).toBe(0)
+  })
+
+  it('ani super admin nepřidá člověka do firmy, na kterou není přepnutý', async () => {
+    jaJsem('OWNER', true)
+    expect(await addPerson(vstup, 'o-jina')).toEqual({ error: HLASKA })
+    expect(zapisy()).toBe(0)
+    expect(inv.sendInvitationMail).not.toHaveBeenCalled()
+  })
+
+  it('firma z kontextu projde a členství vzniká v ní (orgId je jen na porovnání)', async () => {
+    expect(await addPerson({ ...vstup, delivery: 'invite' }, 'o1')).toEqual({ ok: true, invite: { emailed: true, created: true } })
+    expect(db.membership.create.mock.calls[0][0].data.orgId).toBe('o1')
   })
 })
 
@@ -278,14 +324,14 @@ describe('addPerson: nový člověk', () => {
 // posílá e-mail cizímu člověku. Stejný vzor jako resendInvitation pár řádků dál.
 describe('addPerson: limit opakování', () => {
   it('limity: 30/h na správce, 10/h na adresáta', async () => {
-    await addPerson(vstup)
+    await addPerson(vstup, 'o1')
     expect(rl.rateLimit).toHaveBeenCalledWith('add-admin:u-me', 30, 3_600_000)
     expect(rl.rateLimit).toHaveBeenCalledWith('add-user:eva@firma.cz', 10, 3_600_000)
   })
 
   it.each(['add-admin:', 'add-user:'])('po vyčerpání (%s): chyba, žádný zápis ani e-mail', async (klic) => {
     rl.rateLimit.mockImplementation((k: string) => !k.startsWith(klic))
-    expect(await addPerson(vstup)).toEqual({ error: 'Příliš mnoho pokusů. Zkus to za chvíli.' })
+    expect(await addPerson(vstup, 'o1')).toEqual({ error: 'Příliš mnoho pokusů. Zkus to za chvíli.' })
     expect(db.$transaction).not.toHaveBeenCalled()
     expect(zapisy()).toBe(0)
     expect(inv.createInvitation).not.toHaveBeenCalled()
@@ -294,7 +340,7 @@ describe('addPerson: limit opakování', () => {
 
   it('limit adresáta se počítá až po kontrole oprávnění: účetní ho nevyčerpá', async () => {
     jaJsem('ACCOUNTANT')
-    await expect(addPerson(vstup)).rejects.toThrow('NEXT_REDIRECT:/')
+    await expect(addPerson(vstup, 'o1')).rejects.toThrow('NEXT_REDIRECT:/')
     expect(rl.rateLimit).not.toHaveBeenCalled()
   })
 })
@@ -305,7 +351,7 @@ describe('addPerson: existující e-mail, heslo nastavil majitel účtu', () => 
   })
 
   it('připojí existující účet: žádný nový uživatel, žádný zápis do uživatele (heslo, jméno), žádné rušení relací', async () => {
-    const r = await addPerson({ ...vstup, name: 'Jiné jméno', delivery: 'password' })
+    const r = await addPerson({ ...vstup, name: 'Jiné jméno', delivery: 'password' }, 'o1')
     expect(r).toEqual({ ok: true, existing: { emailed: true } })
     expect(db.user.create).not.toHaveBeenCalled()
     expect(db.user.update).not.toHaveBeenCalled()
@@ -316,7 +362,7 @@ describe('addPerson: existující e-mail, heslo nastavil majitel účtu', () => 
   })
 
   it('nevrací heslo (ani při volbě "heslo"), nevytvoří pozvánku, jen informační e-mail', async () => {
-    const r = await addPerson({ ...vstup, delivery: 'password' })
+    const r = await addPerson({ ...vstup, delivery: 'password' }, 'o1')
     expect(r).not.toHaveProperty('password')
     expect(inv.createInvitation).not.toHaveBeenCalled()
     expect(inv.sendInvitationMail).not.toHaveBeenCalled()
@@ -325,7 +371,7 @@ describe('addPerson: existující e-mail, heslo nastavil majitel účtu', () => 
 
   it('už je členem téhle firmy (i neaktivní): chyba, žádný zápis, hledá se jen v této firmě', async () => {
     db.membership.findFirst.mockResolvedValue({ id: 'm-x' })
-    const r = await addPerson(vstup)
+    const r = await addPerson(vstup, 'o1')
     expect(r).toHaveProperty('error')
     expect(zapisy()).toBe(0)
     expect(db.session.deleteMany).not.toHaveBeenCalled()
@@ -346,7 +392,7 @@ describe('addPerson: existující účet, heslo nastavil někdo jiný (správce 
   })
 
   it('správce firmy je odmítnut a NIC se nezapíše: heslo, relace, členství ani pozvánka', async () => {
-    expect(await addPerson(vstup)).toEqual({ error: HLASKA })
+    expect(await addPerson(vstup, 'o1')).toEqual({ error: HLASKA })
     expect(db.user.updateMany).not.toHaveBeenCalled()
     expect(db.session.deleteMany).not.toHaveBeenCalled()
     expect(db.membership.create).not.toHaveBeenCalled()
@@ -361,7 +407,7 @@ describe('addPerson: existující účet, heslo nastavil někdo jiný (správce 
     db.membership.findFirst.mockImplementation(async ({ where }: { where: { userId?: string; orgId?: string } }) =>
       where.userId === 'u-old' && where.orgId === 'o2' ? { id: 'm-cizi' } : null,
     )
-    expect(await addPerson(vstup)).toEqual({ error: HLASKA })
+    expect(await addPerson(vstup, 'o1')).toEqual({ error: HLASKA })
     expect(db.user.updateMany).not.toHaveBeenCalled()
     expect(db.session.deleteMany).not.toHaveBeenCalled()
     expect(zapisy()).toBe(0)
@@ -369,7 +415,7 @@ describe('addPerson: existující účet, heslo nastavil někdo jiný (správce 
 
   it('účet, kterému si heslo nastavil majitel sám, se připojí jako dřív (odmítá se jen cizí heslo)', async () => {
     db.user.findUnique.mockResolvedValue({ id: 'u-old', passwordSetByOwner: true })
-    expect(await addPerson(vstup)).toEqual({ ok: true, existing: { emailed: true } })
+    expect(await addPerson(vstup, 'o1')).toEqual({ ok: true, existing: { emailed: true } })
     expect(db.membership.create).toHaveBeenCalledTimes(1)
   })
 })
@@ -393,7 +439,7 @@ describe('addPerson: existující e-mail, heslo zná jiný správce — super ad
     db.membership.create.mockImplementation(async () => (poradi.push('membership'), { id: 'm-new' }))
     inv.createInvitation.mockImplementation(async () => (poradi.push('invitation'), 'tok'))
     inv.sendInvitationMail.mockImplementation(async () => (poradi.push('mail'), { emailed: true }))
-    await addPerson({ ...vstup, delivery: 'password' })
+    await addPerson({ ...vstup, delivery: 'password' }, 'o1')
     expect(poradi).toEqual(['update', 'sessions', 'membership', 'invitation', 'commit', 'mail'])
     const upd = db.user.updateMany.mock.calls[0][0]
     // Podmínka passwordSetByOwner: false je zámek proti souběhu s consumeInvitation.
@@ -406,7 +452,7 @@ describe('addPerson: existující e-mail, heslo zná jiný správce — super ad
 
   it('souběh: majitel si mezitím nastavil vlastní heslo (updateMany count 0) - nic se nepřepíše, relace zůstanou, jen informační e-mail', async () => {
     db.user.updateMany.mockResolvedValue({ count: 0 })
-    const r = await addPerson(vstup)
+    const r = await addPerson(vstup, 'o1')
     expect(db.session.deleteMany).not.toHaveBeenCalled()
     expect(inv.createInvitation).not.toHaveBeenCalled()
     expect(inv.notifyAddedToOrg).toHaveBeenCalledTimes(1)
@@ -414,7 +460,7 @@ describe('addPerson: existující e-mail, heslo zná jiný správce — super ad
   })
 
   it('správci se nevrací žádné heslo ani u volby "heslo"; odejde pozvánka (kind invite)', async () => {
-    const r = await addPerson({ ...vstup, delivery: 'password' })
+    const r = await addPerson({ ...vstup, delivery: 'password' }, 'o1')
     expect(r).toEqual({ ok: true, existing: { emailed: true } })
     expect(r).not.toHaveProperty('password')
     expect(inv.createInvitation).toHaveBeenCalledWith({ userId: 'u-old', membershipId: 'm-new', kind: 'invite' }, db)
@@ -423,15 +469,15 @@ describe('addPerson: existující e-mail, heslo zná jiný správce — super ad
   })
 
   it('odpověď pro existující účet je stejná bez ohledu na příznak (nic neprozradí o účtu)', async () => {
-    const a = await addPerson(vstup)
+    const a = await addPerson(vstup, 'o1')
     db.user.findUnique.mockResolvedValue({ id: 'u-old', passwordSetByOwner: true })
-    const b = await addPerson(vstup)
+    const b = await addPerson(vstup, 'o1')
     expect(a).toEqual(b)
   })
 
   it('e-mail neodešel: i tak žádné heslo (správce by ho znal)', async () => {
     inv.sendInvitationMail.mockResolvedValueOnce({ emailed: false })
-    const r = await addPerson(vstup)
+    const r = await addPerson(vstup, 'o1')
     expect(r).not.toHaveProperty('password')
     expect(r).toEqual({ ok: true, existing: { emailed: false } })
   })
@@ -445,7 +491,7 @@ describe('addPerson: existující e-mail, heslo zná jiný správce — super ad
         return r
       })
       rozbit()
-      expect(await addPerson(vstup)).toHaveProperty('error')
+      expect(await addPerson(vstup, 'o1')).toHaveProperty('error')
       expect(potvrzeno).toEqual([])
     }
     expect(inv.sendInvitationMail).not.toHaveBeenCalled()
@@ -453,7 +499,7 @@ describe('addPerson: existující e-mail, heslo zná jiný správce — super ad
 
   it('nový účet se zneplatnění netýká (nepřepisuje se, nic se neruší)', async () => {
     db.user.findUnique.mockResolvedValue(null)
-    await addPerson(vstup)
+    await addPerson(vstup, 'o1')
     expect(db.user.updateMany).not.toHaveBeenCalled()
     expect(db.session.deleteMany).not.toHaveBeenCalled()
   })

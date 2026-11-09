@@ -9,6 +9,7 @@ import { parseDayKey, pragueDayKey } from '@/lib/date'
 import { createInvitation, notifyAddedToOrg, sendInvitationMail } from '@/lib/invitation'
 import { changeMembership, CIZI_CLEN, invalidateForeignPassword, NEAKTIVNI_CLEN } from '@/lib/people'
 import { ROLES } from '@/lib/role'
+import { STARA_STRANKA } from '@/lib/stale-page'
 import { personSchema, type PersonInput } from '@/lib/validation'
 
 // Tenhle soubor smí exportovat jen serverové akce: každý export je volatelný z prohlížeče.
@@ -25,12 +26,21 @@ const PRILIS = { error: 'Příliš mnoho pokusů. Zkus to za chvíli.' }
  * - Účet, kterému heslo nastavil někdo jiný, správce firmy přidat nemůže (CIZI_UCET) — jen super admin.
  * - Nový účet: pozvánka e-mailem, nebo vygenerované heslo (zobrazí se jen teď). Když e-mail neodejde,
  *   vrací se heslo, aby správce nezůstal s nedostupným účtem (stejně jako createOrganization).
+ * - `orgIdStranky` je firma, pro kterou se seznam lidí vykreslil; slouží JEN k porovnání (zapisuje se pořád
+ *   do `ctx.org.id`). Bez toho by formulář z okna, které zůstalo na firmě A, přidal člověka do firmy B:
+ *   lidé se nikdy nemažou, jen deaktivují, takže ten řádek už z aplikace nikdo neuklidí — a cizímu
+ *   člověku mezitím odejde pozvánka do firmy, se kterou nemá nic společného.
+ *   Proč se chybějící hodnota odmítá: viz komentář v '@/lib/stale-page'.
+ * - `setRole`, `setActive` ani `resendInvitation` tuhle kontrolu nepotřebují: hledají `membershipId`
+ *   s `orgId` aktivní firmy, takže id z neplatné stránky se chová jako neexistující.
  */
 export async function addPerson(
   input: PersonInput,
+  orgIdStranky: string,
 ): Promise<{ ok: true; password?: string; invite?: { emailed: boolean; created: true }; existing?: { emailed: boolean } } | { error: string }> {
   const ctx = await requireCan('managePeople')
   const orgId = ctx.org.id
+  if (orgIdStranky !== orgId) return { error: STARA_STRANKA }
 
   const parsed = personSchema.safeParse(input)
   if (!parsed.success) return { error: 'Zkontroluj prosím e-mail, jméno a roli.' }

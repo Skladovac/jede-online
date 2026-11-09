@@ -418,7 +418,7 @@ Přihlas se jako stávající uživatel: musíš vidět svůj měsíc se všemi 
 a v navigaci Výkazy, Lidé, Nastavení firmy.
 
 **Řekni uživateli, ať aplikaci na telefonu jednou zavře a otevře znovu.** Stránky, ze kterých
-se zapisuje (den, výkazy firmy, nastavení firmy), teď posílají i to, pro kterou firmu se
+se zapisuje (den, výkazy firmy, nastavení firmy, lidé), teď posílají i to, pro kterou firmu se
 vykreslily — stránka, která zůstala otevřená z doby před nasazením, to pole nemá a první
 uložení odmítne hláškou „Tahle stránka už neplatí (přepnutá firma nebo stará verze). Obnov ji
 a zkus to znovu.“ Je to schválně (fail-closed), ale bez varování to vypadá jako porucha.
