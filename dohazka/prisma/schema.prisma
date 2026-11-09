@@ -19,6 +19,7 @@ model User {
 
   sessions          Session[]
   memberships       Membership[]
+  invitations       Invitation[]
   pushSubscriptions PushSubscription[]
   reminderLogs      ReminderLog[]
 }
@@ -59,9 +60,9 @@ model Membership {
   tracksFrom DateTime     @db.Date
   createdAt  DateTime     @default(now())
 
-  entries    Entry[]
-  changeLogs EntryChangeLog[]
-  invitation Invitation?
+  entries     Entry[]
+  changeLogs  EntryChangeLog[]
+  invitations Invitation[]
 
   @@unique([userId, orgId])
   @@index([orgId])
@@ -82,7 +83,7 @@ model PeriodLock {
 model EntryChangeLog {
   id           String     @id @default(cuid())
   membershipId String
-  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Restrict)
   dayKey       String
   changedById  String
   changedAt    DateTime   @default(now())
@@ -92,14 +93,19 @@ model EntryChangeLog {
   @@index([membershipId, dayKey])
 }
 
-// Pozvánka / obnova hesla. V DB jen sha256 tokenu.
+// Pozvánka / obnova hesla. V DB jen sha256 tokenu. Patří uživateli (obnova hesla je věc
+// uživatele, ne členství); membershipId je jen volitelný kontext "kam mě zvou".
 model Invitation {
-  id           String     @id // sha256(token)
-  membershipId String     @unique
-  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  id           String      @id // sha256(token)
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  membershipId String?
+  membership   Membership? @relation(fields: [membershipId], references: [id], onDelete: SetNull)
   kind         String // "invite" | "reset"
   expiresAt    DateTime
-  createdAt    DateTime   @default(now())
+  createdAt    DateTime    @default(now())
+
+  @@index([userId])
 }
 
 // Přihlášení: v cookie je náhodný token, v DB jen jeho SHA-256 (únik DB ≠ převzetí relací).
@@ -123,7 +129,7 @@ enum EntryKind {
 model Entry {
   id           String     @id @default(cuid())
   membershipId String
-  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Restrict)
   day          DateTime   @db.Date
   kind         EntryKind  @default(WORK)
   hours        Decimal?   @db.Decimal(4, 2)
