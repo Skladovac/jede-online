@@ -25,9 +25,12 @@ export function appUrl(): string {
  * („kam tě zvou“) a u obnovy hesla bývá null.
  * Víc nevyřízených pozvánek jedné osobě je povoleno.
  */
-export async function createInvitation(opts: { userId: string; membershipId?: string | null; kind: InvitationKind }): Promise<string> {
+export async function createInvitation(
+  opts: { userId: string; membershipId?: string | null; kind: InvitationKind },
+  db: Pick<typeof prisma, 'invitation'> = prisma,
+): Promise<string> {
   const token = randomToken()
-  await prisma.invitation.create({
+  await db.invitation.create({
     data: {
       id: sha256(token),
       userId: opts.userId,
@@ -140,18 +143,32 @@ ${link}`,
 }
 
 /**
+ * Pošle e-mail k už vytvořené pozvánce (token z `createInvitation`). Nikdy nevyhazuje: vrací, zda e-mail odešel.
+ * Určeno pro volání PO potvrzení transakce, ve které řádek pozvánky vznikl.
+ */
+export async function sendInvitationMail(opts: { userId: string; membershipId?: string | null; kind: InvitationKind; token: string }): Promise<{ emailed: boolean }> {
+  try {
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: opts.userId }, select: { email: true } })
+    let orgName: string | null = null
+    if (opts.membershipId) {
+      const m = await prisma.membership.findUnique({ where: { id: opts.membershipId }, select: { org: { select: { name: true } } } })
+      orgName = m?.org.name ?? null
+    }
+    const mail = invitationMail(opts.kind, orgName, `${appUrl()}/pozvanka/${opts.token}`)
+    return { emailed: await sendMail(user.email, mail.subject, mail.html, mail.text) }
+  } catch (e) {
+    console.error('sendInvitationMail: e-mail se nepodařilo připravit', e instanceof Error ? e.name : 'chyba')
+    return { emailed: false }
+  }
+}
+
+/**
  * Vytvoří pozvánku a pokusí se ji poslat. Vrací, zda e-mail odešel; pozvánka platí i tak
  * (volající ukáže, že e-mail neodešel). Nevyhazuje kvůli e-mailu, jen kvůli databázi.
  */
 export async function inviteByMail(opts: { userId: string; membershipId?: string | null; kind: InvitationKind }): Promise<{ emailed: boolean }> {
   const token = await createInvitation(opts)
   // Uživatel existuje: cizí klíč v createInvitation by bez něj spadl dřív.
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: opts.userId }, select: { email: true } })
-  let orgName: string | null = null
-  if (opts.membershipId) {
-    const m = await prisma.membership.findUnique({ where: { id: opts.membershipId }, select: { org: { select: { name: true } } } })
-    orgName = m?.org.name ?? null
-  }
-  const mail = invitationMail(opts.kind, orgName, `${appUrl()}/pozvanka/${token}`)
-  return { emailed: await sendMail(user.email, mail.subject, mail.html, mail.text) }
+  await prisma.user.findUniqueOrThrow({ where: { id: opts.userId }, select: { id: true } })
+  return sendInvitationMail({ ...opts, token })
 }

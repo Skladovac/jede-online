@@ -16,6 +16,7 @@ import { hashPassword } from '../src/lib/crypto'
 import { parseDayKey } from '../src/lib/date'
 import { ROLES, type RoleValue } from '../src/lib/role'
 import { loginSchema } from '../src/lib/validation'
+import { vyzadujeResetHesla } from '../src/lib/attach-guard'
 
 const ABECEDA = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789' // bez zaměnitelných znaků
 
@@ -79,7 +80,7 @@ async function main() {
     const org = values.org ? await prisma.organization.findUnique({ where: { id: values.org }, select: { id: true, name: true } }) : null
     if (values.org && !org) throw new Error(`Firma ${values.org} neexistuje.`)
 
-    const existuje = await prisma.user.findUnique({ where: { email }, select: { id: true } })
+    const existuje = await prisma.user.findUnique({ where: { email }, select: { id: true, passwordSetByOwner: true } })
     if (!existuje) {
       if (!jmeno) throw new Error('Nový účet potřebuje --name.')
       // Účet bez firmy a bez super admina by skončil navždy na /bez-pristupu.
@@ -90,6 +91,11 @@ async function main() {
       : null
     if (org && !clenstvi && !tracksFrom) throw new Error('Nové členství potřebuje --tracks-from (RRRR-MM-DD).')
     if (org && !clenstvi && values.deactivate) throw new Error('--deactivate: členství ve firmě neexistuje.')
+    // Nové členství existujícímu účtu s heslem, které vygeneroval stroj a zná ho někdo jiný (např. správce jiné firmy),
+    // by tomu někomu otevřelo i tuto firmu. Nebezpečný stav nesmí projít potichu: heslo se musí vyměnit.
+    if (vyzadujeResetHesla({ existujeUcet: !!existuje, heslaNastavilMajitel: existuje?.passwordSetByOwner ?? false, noveClenstvi: !!org && !clenstvi, resetHesla: values['reset-password'] === true })) {
+      throw new Error('Účet má heslo, které nenastavil jeho majitel (zná ho ten, kdo účet zakládal). Přidání do další firmy by mu to heslo otevřelo i tady. Přidej --reset-password: heslo se vymění a vypíše se nové.')
+    }
     if (!existuje && values['reset-password']) throw new Error('--reset-password patří k existujícímu účtu (nový dostane heslo sám).')
     if (existuje && !jmeno && !org && !values['super-admin'] && !values['reset-password']) {
       throw new Error('Není co udělat: zadej --name, --reset-password, --org s --role, nebo --super-admin.')

@@ -95,7 +95,7 @@ vi.mock('@/lib/prisma', () => ({ prisma: db }))
 const mail = vi.hoisted(() => ({ sendMail: vi.fn() }))
 vi.mock('@/lib/mail', () => mail)
 
-import { appUrl, consumeInvitation, createInvitation, inspectInvitation, inviteByMail, invitationMail, NEPLATNY_ODKAZ } from '@/lib/invitation'
+import { appUrl, consumeInvitation, createInvitation, inspectInvitation, inviteByMail, sendInvitationMail, invitationMail, NEPLATNY_ODKAZ } from '@/lib/invitation'
 import { sha256, verifyPassword, hashPassword } from '@/lib/crypto'
 
 const HESLO = 'nove-heslo-123'
@@ -465,5 +465,28 @@ describe('sendMail', () => {
     expect(init.headers.Authorization).toBe('Bearer re_test')
     expect(JSON.parse(init.body)).toMatchObject({ to: ['a@b.cz'], subject: 'Předmět' })
     expect(init.body).not.toContain('re_test')
+  })
+})
+
+describe('createInvitation v cizí transakci a sendInvitationMail', () => {
+  it('řádek pozvánky se zapíše přes předaného klienta, ne přes globální prisma', async () => {
+    const globalni = vi.spyOn(db.invitation, 'create')
+    const tx = { invitation: { create: vi.fn().mockResolvedValue({}) } }
+    const token = await createInvitation({ userId: 'u1', membershipId: 'm1', kind: 'invite' }, tx as never)
+    expect(tx.invitation.create).toHaveBeenCalledTimes(1)
+    expect(tx.invitation.create.mock.calls[0][0].data).toMatchObject({ id: sha256(token), userId: 'u1', membershipId: 'm1', kind: 'invite' })
+    expect(globalni).not.toHaveBeenCalled()
+  })
+
+  it('sendInvitationMail jen odešle e-mail s daným tokenem a nevytváří žádný řádek', async () => {
+    const token = 'A'.repeat(43)
+    const r = await sendInvitationMail({ userId: 'u1', membershipId: 'm1', kind: 'invite', token })
+    expect(r).toEqual({ emailed: true })
+    expect(mail.sendMail.mock.calls[0][2]).toContain(`/pozvanka/${token}`)
+    expect(store.invitations.size).toBe(0)
+  })
+
+  it('sendInvitationMail nikdy nevyhazuje: neexistující uživatel = emailed false', async () => {
+    expect(await sendInvitationMail({ userId: 'nikdo', kind: 'invite', token: 'A'.repeat(43) })).toEqual({ emailed: false })
   })
 })

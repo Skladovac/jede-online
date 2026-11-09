@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { addPerson, setActive, setRole } from '@/app/actions/people'
+import { addPerson, resendInvitation, setActive, setRole } from '@/app/actions/people'
 import { ROLES, ROLE_LABEL, type RoleValue } from '@/lib/role'
 
 const pole = 'mt-1 w-full rounded-panel border border-line bg-card px-3 py-2 text-fg focus:border-line-strong focus:outline-none'
@@ -13,11 +13,19 @@ function Radek({ clen }: { clen: Clen }) {
   const router = useRouter()
   const [pending, start] = useTransition()
   const [chyba, setChyba] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const zmen = (fn: () => Promise<{ ok: true } | { error: string }>) =>
     start(async () => {
       const r = await fn()
+      setInfo(null)
       setChyba('error' in r ? r.error : null)
       if ('ok' in r) router.refresh()
+    })
+  const poslatZnovu = () =>
+    start(async () => {
+      const r = await resendInvitation(clen.id)
+      setChyba('error' in r ? r.error : null)
+      setInfo('ok' in r ? (r.emailed ? 'Pozvánka odešla e-mailem.' : 'E-mail se nepodařilo odeslat. Zkus to později.') : null)
     })
   return (
     <li className="px-4 py-3">
@@ -56,6 +64,16 @@ function Radek({ clen }: { clen: Clen }) {
           {clen.active ? 'Deaktivovat' : 'Znovu aktivovat'}
         </button>
       </div>
+      {clen.active && (
+        <button type="button" disabled={pending} onClick={poslatZnovu} className="mt-2 min-h-11 text-sm underline disabled:opacity-60">
+          Poslat pozvánku znovu
+        </button>
+      )}
+      {info && (
+        <p role="status" className="mt-1 text-sm">
+          {info}
+        </p>
+      )}
       {chyba && (
         <p role="alert" className="mt-2 text-sm text-danger">
           {chyba}
@@ -105,10 +123,12 @@ export function PeopleManager({ lide }: { lide: Clen[] }) {
                 Heslo se už znovu nezobrazí.
               </p>
             </>
-          ) : stav.invite?.emailed ? (
+          ) : stav.invite?.emailed || stav.existing?.emailed ? (
             <p className="text-sm">Člověk dostal e-mail. Pokud šlo o pozvánku, odkaz platí 48 hodin.</p>
           ) : (
-            <p className="text-sm">E-mail se nepodařilo odeslat. Člověk si může heslo nastavit na přihlašovací stránce přes „zapomenuté heslo“.</p>
+            <p className="text-sm">
+              E-mail se nepodařilo odeslat. Pokud se člověk nemůže přihlásit, pošli mu v seznamu pozvánku znovu, nebo si může heslo nastavit přes „zapomenuté heslo“.
+            </p>
           )}
         </section>
       )}

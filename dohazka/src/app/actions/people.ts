@@ -5,8 +5,8 @@ import { prisma } from '@/lib/prisma'
 import { requireCan } from '@/lib/org'
 import { generatePassword, hashPassword } from '@/lib/crypto'
 import { parseDayKey, pragueDayKey } from '@/lib/date'
-import { inviteByMail, notifyAddedToOrg } from '@/lib/invitation'
-import { changeMembership } from '@/lib/people'
+import { createInvitation, notifyAddedToOrg, sendInvitationMail } from '@/lib/invitation'
+import { changeMembership, CIZI_CLEN, invalidateForeignPassword } from '@/lib/people'
 import { ROLES } from '@/lib/role'
 import { personSchema, type PersonInput } from '@/lib/validation'
 
@@ -23,7 +23,7 @@ const JE_VE_FIRME = 'Tenhle e-mail už ve firmě je. Pokud je neaktivní, znovu 
  */
 export async function addPerson(
   input: PersonInput,
-): Promise<{ ok: true; password?: string; invite?: { emailed: boolean; created: boolean } } | { error: string }> {
+): Promise<{ ok: true; password?: string; invite?: { emailed: boolean; created: true }; existing?: { emailed: boolean } } | { error: string }> {
   const ctx = await requireCan('managePeople')
   const orgId = ctx.org.id
 
@@ -45,40 +45,55 @@ export async function addPerson(
       const userId = existing ? existing.id : (await tx.user.create({ data: { email, name, passwordHash } })).id
       // Účet s heslem, které vygeneroval jiný správce (a zná ho), se připojením do další firmy zneplatní:
       // jinak by se tím heslem dostal tamní správce i do téhle firmy. Heslo se přepíše na náhodné, které nezná nikdo,
-      // relace se zruší a člověk si nové heslo nastaví z pozvánky. Totéž v jedné transakci s členstvím.
-      const zneplatnit = !!existing && !existing.passwordSetByOwner
-      if (zneplatnit) {
-        await tx.user.update({ where: { id: userId }, data: { passwordHash } })
-        await tx.session.deleteMany({ where: { userId } })
-      }
+      // relace se zruší a člověk si nové heslo nastaví z pozvánky. Vše v jedné transakci s členstvím.
+      const zneplatnit = !!existing && !existing.passwordSetByOwner && (await invalidateForeignPassword(tx, userId, passwordHash))
       const membership = await tx.membership.create({ data: { userId, orgId, role, active: true, tracksFrom }, select: { id: true } })
-      return { duplicate: false as const, created: !existing, zneplatnit, userId, membershipId: membership.id }
+      // Řádek pozvánky vzniká TADY, v transakci: výpadek databáze nenechá člena bez přihlašovacích údajů a bez pozvánky.
+      // Mail se posílá až po potvrzení.
+      const posilatPozvanku = existing ? zneplatnit : delivery === 'invite'
+      const token = posilatPozvanku ? await createInvitation({ userId, membershipId: membership.id, kind: 'invite' }, tx) : null
+      return { duplicate: false as const, created: !existing, userId, membershipId: membership.id, token }
     })
     if (result.duplicate) return { error: JE_VE_FIRME }
 
     revalidatePath('/firma/lide')
-    // Existující účet: správci se nikdy nevrací heslo a nic, podle čeho by poznal, že účet existoval jinde.
-    if (!result.created && !result.zneplatnit) {
-      // Heslo si nastavil majitel sám: nechává se, jen dostane informační e-mail.
-      const emailed = await notifyAddedToOrg(result.userId, ctx.org.name).catch(() => false)
-      return { ok: true, invite: { emailed, created: true } }
+    if (result.token) {
+      const { emailed } = await sendInvitationMail({ userId: result.userId, membershipId: result.membershipId, kind: 'invite', token: result.token })
+      // Existující účet: správci se nikdy nevrací heslo (zná ho jiný správce) ani nic, podle čeho by poznal, že účet existoval jinde.
+      if (!result.created) return { ok: true, existing: { emailed } }
+      // Nový účet a e-mail neodešel: vracíme vygenerované heslo, aby správce nezůstal s nedostupným účtem.
+      return emailed ? { ok: true, invite: { emailed, created: true } } : { ok: true, password, invite: { emailed: false, created: true } }
     }
-    if (!result.created || delivery === 'invite') {
-      try {
-        const { emailed } = await inviteByMail({ userId: result.userId, membershipId: result.membershipId, kind: 'invite' })
-        if (emailed) return { ok: true, invite: { emailed, created: true } }
-        // U existujícího účtu heslo vracet nelze (je zneplatněné a správce ho nesmí znát); člověk použije „zapomenuté heslo“.
-        return result.created ? { ok: true, password, invite: { emailed: false, created: true } } : { ok: true, invite: { emailed: false, created: true } }
-      } catch (e) {
-        console.error('addPerson: pozvánku se nepodařilo vytvořit', e instanceof Error ? e.name : 'chyba')
-        return result.created ? { ok: true, password, invite: { emailed: false, created: false } } : { ok: true, invite: { emailed: false, created: false } }
-      }
+    if (!result.created) {
+      // Heslo si nastavil majitel sám (nebo si ho nastavil těsně před tímhle voláním): nechává se, jen dostane informaci.
+      const emailed = await notifyAddedToOrg(result.userId, ctx.org.name).catch(() => false)
+      return { ok: true, existing: { emailed } }
     }
     return { ok: true, password }
   } catch (e) {
     // Souběh dvou přidání téhož e-mailu skončí porušením unikátnosti; nic se nezapsalo.
     console.error('addPerson: přidání selhalo', e instanceof Error ? e.name : 'chyba')
     return { error: 'Člověka se nepodařilo přidat. Zkus to znovu.' }
+  }
+}
+
+/**
+ * Pošle pozvánku znovu (nová pozvánka a nový e-mail). Jen aktivnímu členovi VLASTNÍ firmy: členství se hledá
+ * s `orgId` v `where`, takže cizí id se chová jako neexistující a nic se nevytvoří ani neodešle.
+ * Slouží jako cesta ven, když první e-mail nedorazil.
+ */
+export async function resendInvitation(membershipId: string): Promise<{ ok: true; emailed: boolean } | { error: string }> {
+  const ctx = await requireCan('managePeople')
+  if (typeof membershipId !== 'string' || !membershipId) return { error: 'Neplatný požadavek.' }
+  try {
+    const m = await prisma.membership.findFirst({ where: { id: membershipId, orgId: ctx.org.id, active: true }, select: { id: true, userId: true } })
+    if (!m) return { error: CIZI_CLEN }
+    const token = await createInvitation({ userId: m.userId, membershipId: m.id, kind: 'invite' })
+    const { emailed } = await sendInvitationMail({ userId: m.userId, membershipId: m.id, kind: 'invite', token })
+    return { ok: true, emailed }
+  } catch (e) {
+    console.error('resendInvitation: selhalo', e instanceof Error ? e.name : 'chyba')
+    return { error: 'Pozvánku se nepodařilo vytvořit. Zkus to znovu.' }
   }
 }
 

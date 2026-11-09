@@ -5,7 +5,8 @@ import { prisma } from '@/lib/prisma'
 import { requireSuperAdmin } from '@/lib/org'
 import { generatePassword, hashPassword } from '@/lib/crypto'
 import { parseDayKey, pragueDayKey } from '@/lib/date'
-import { inviteByMail, notifyAddedToOrg } from '@/lib/invitation'
+import { createInvitation, notifyAddedToOrg, sendInvitationMail } from '@/lib/invitation'
+import { invalidateForeignPassword } from '@/lib/people'
 import { orgSchema, type OrgInput } from '@/lib/validation'
 
 // Tenhle soubor smí exportovat jen serverové akce: každý export je volatelný z prohlížeče.
@@ -18,7 +19,7 @@ import { orgSchema, type OrgInput } from '@/lib/validation'
  */
 export async function createOrganization(
   input: OrgInput,
-): Promise<{ ok: true; orgId: string; password?: string; invite?: { emailed: boolean; created: boolean } } | { error: string }> {
+): Promise<{ ok: true; orgId: string; password?: string; invite?: { emailed: boolean; created: true }; existing?: { emailed: boolean } } | { error: string }> {
   await requireSuperAdmin()
 
   const parsed = orgSchema.safeParse(input)
@@ -39,48 +40,29 @@ export async function createOrganization(
       // Existující účet s heslem, které vygeneroval (a zná) správce jiné firmy, se tady stane správcem NOVÉ firmy.
       // Heslo se proto zneplatní: přepíše se na náhodné, relace se zruší a správce dostane pozvánku. Jinak by se
       // tím heslem do této firmy dostal správce té druhé, rovnou jako OWNER.
-      const zneplatnit = !!existing && !existing.passwordSetByOwner
-      if (zneplatnit) {
-        await tx.user.update({ where: { id: userId }, data: { passwordHash } })
-        await tx.session.deleteMany({ where: { userId } })
-      }
+      const zneplatnit = !!existing && !existing.passwordSetByOwner && (await invalidateForeignPassword(tx, userId, passwordHash))
       const org = await tx.organization.create({ data: { name, reportName }, select: { id: true } })
       // Kolize členství (unique userId+orgId) nemůže nastat: firma je právě vytvořená, její id je čerstvé
       // a žádné jiné členství k ní ještě nepatří.
       const membership = await tx.membership.create({ data: { userId, orgId: org.id, role: 'OWNER', active: true, tracksFrom }, select: { id: true } })
-      return { orgId: org.id, created: !existing, zneplatnit, userId, membershipId: membership.id }
+      // Řádek pozvánky vzniká v transakci (výpadek nenechá správce bez přístupu a bez pozvánky); mail jde až po potvrzení.
+      const posilatPozvanku = existing ? zneplatnit : delivery === 'invite'
+      const token = posilatPozvanku ? await createInvitation({ userId, membershipId: membership.id, kind: 'invite' }, tx) : null
+      return { orgId: org.id, created: !existing, userId, membershipId: membership.id, token }
     })
 
     revalidatePath('/admin')
-    // Nový účet + pozvánka: pozvánka se vytváří až po potvrzení transakce. Firma už existuje, takže selhání
-    // pozvánky nebo e-mailu firmu nevrací; admin se to dozví a dostane jiný postup (zapomenuté heslo).
-    // Existující účet: super adminovi se nikdy nevrací heslo.
-    if (!result.created && !result.zneplatnit) {
-      // Heslo si nastavil majitel sám: nechává se, jen dostane informační e-mail.
-      const emailed = await notifyAddedToOrg(result.userId, name).catch(() => false)
-      return { ok: true, orgId: result.orgId, invite: { emailed, created: true } }
+    if (result.token) {
+      const { emailed } = await sendInvitationMail({ userId: result.userId, membershipId: result.membershipId, kind: 'invite', token: result.token })
+      // Existující účet: super adminovi se nikdy nevrací heslo.
+      if (!result.created) return { ok: true, orgId: result.orgId, existing: { emailed } }
+      // Nový účet a e-mail neodešel: správce by jinak zůstal zamčený. Vracíme vygenerované heslo tohoto účtu.
+      return emailed ? { ok: true, orgId: result.orgId, invite: { emailed, created: true } } : { ok: true, orgId: result.orgId, password, invite: { emailed: false, created: true } }
     }
     if (!result.created) {
-      try {
-        const { emailed } = await inviteByMail({ userId: result.userId, membershipId: result.membershipId, kind: 'invite' })
-        return { ok: true, orgId: result.orgId, invite: { emailed, created: true } }
-      } catch (e) {
-        console.error('createOrganization: pozvánku se nepodařilo vytvořit', e instanceof Error ? e.name : 'chyba')
-        return { ok: true, orgId: result.orgId, invite: { emailed: false, created: false } }
-      }
-    }
-    if (delivery === 'invite') {
-      try {
-        const { emailed } = await inviteByMail({ userId: result.userId, membershipId: result.membershipId, kind: 'invite' })
-        // E-mail neodešel: správce by jinak zůstal zamčený (heslo nikdo nezná, obnova jde stejným kanálem).
-        // Vracíme už vygenerované heslo tohoto účtu, tedy původní chování.
-        return emailed
-          ? { ok: true, orgId: result.orgId, invite: { emailed, created: true } }
-          : { ok: true, orgId: result.orgId, password, invite: { emailed: false, created: true } }
-      } catch (e) {
-        console.error('createOrganization: pozvánku se nepodařilo vytvořit', e instanceof Error ? e.name : 'chyba')
-        return { ok: true, orgId: result.orgId, password, invite: { emailed: false, created: false } }
-      }
+      // Heslo si nastavil majitel sám: nechává se, jen dostane informační e-mail.
+      const emailed = await notifyAddedToOrg(result.userId, name).catch(() => false)
+      return { ok: true, orgId: result.orgId, existing: { emailed } }
     }
     return { ok: true, orgId: result.orgId, password }
   } catch (e) {
