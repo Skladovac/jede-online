@@ -20,6 +20,8 @@ const db = vi.hoisted(() => ({
 vi.mock('@/lib/prisma', () => ({ prisma: db }))
 const inv = vi.hoisted(() => ({ createInvitation: vi.fn(), sendInvitationMail: vi.fn(), notifyAddedToOrg: vi.fn() }))
 vi.mock('@/lib/invitation', () => inv)
+const rl = vi.hoisted(() => ({ rateLimit: vi.fn() }))
+vi.mock('@/lib/rate-limit', () => rl)
 
 import { addPerson, resendInvitation, setActive, setRole } from '@/app/actions/people'
 import * as peopleModule from '@/app/actions/people'
@@ -48,6 +50,7 @@ beforeEach(() => {
   db.membership.create.mockResolvedValue({ id: 'm-new' })
   db.membership.updateMany.mockResolvedValue({ count: 1 })
   db.user.updateMany.mockResolvedValue({ count: 1 })
+  rl.rateLimit.mockReturnValue(true)
   inv.createInvitation.mockResolvedValue('tok')
   inv.sendInvitationMail.mockResolvedValue({ emailed: true })
   inv.notifyAddedToOrg.mockResolvedValue(true)
@@ -416,6 +419,30 @@ describe('resendInvitation', () => {
     jaJsem(role)
     await expect(resendInvitation('m1')).rejects.toThrow('NEXT_REDIRECT:/')
     expect(inv.createInvitation).not.toHaveBeenCalled()
+  })
+
+  it('limit četnosti: po vyčerpání (na správce i na adresáta) chyba a žádná pozvánka ani e-mail', async () => {
+    for (const klic of ['resend-admin:', 'resend-user:']) {
+      vi.clearAllMocks()
+      db.membership.findFirst.mockResolvedValue({ id: 'm1', userId: 'u-x' })
+      rl.rateLimit.mockImplementation((k: string) => !k.startsWith(klic))
+      const r = await resendInvitation('m1')
+      expect(r).toHaveProperty('error')
+      expect(inv.createInvitation).not.toHaveBeenCalled()
+      expect(inv.sendInvitationMail).not.toHaveBeenCalled()
+    }
+  })
+
+  it('limit adresáta se nespotřebuje na členy cizí firmy', async () => {
+    db.membership.findFirst.mockResolvedValue(null)
+    await resendInvitation('m-cizi')
+    expect(rl.rateLimit.mock.calls.map((c) => c[0] as string).some((k) => k.startsWith('resend-user:'))).toBe(false)
+  })
+
+  it('limity: 30/h na správce, 10/h na adresáta (jako obnova hesla)', async () => {
+    await resendInvitation('m1')
+    expect(rl.rateLimit).toHaveBeenCalledWith('resend-admin:u-me', 30, 3_600_000)
+    expect(rl.rateLimit).toHaveBeenCalledWith('resend-user:u-x', 10, 3_600_000)
   })
 
   it('e-mail neodešel: ok s emailed:false', async () => {

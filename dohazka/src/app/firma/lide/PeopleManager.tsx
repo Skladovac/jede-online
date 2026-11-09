@@ -116,7 +116,7 @@ export function PeopleManager({ lide }: { lide: Clen[] }) {
               <p className="mt-1 select-all break-all font-mono text-lg">{stav.password}</p>
               {stav.invite && (
                 <p className="mt-2 text-sm font-semibold">
-                  {stav.invite.created ? 'Pozvánku se nepodařilo e-mailem odeslat, proto je tu heslo.' : 'Pozvánku se nepodařilo vytvořit, proto je tu heslo.'}
+                  Pozvánku se nepodařilo e-mailem odeslat, proto je tu heslo.
                 </p>
               )}
               <p role="alert" className="mt-2 text-sm font-semibold text-danger">

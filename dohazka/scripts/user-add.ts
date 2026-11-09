@@ -93,8 +93,8 @@ async function main() {
     if (org && !clenstvi && values.deactivate) throw new Error('--deactivate: členství ve firmě neexistuje.')
     // Nové členství existujícímu účtu s heslem, které vygeneroval stroj a zná ho někdo jiný (např. správce jiné firmy),
     // by tomu někomu otevřelo i tuto firmu. Nebezpečný stav nesmí projít potichu: heslo se musí vyměnit.
-    if (vyzadujeResetHesla({ existujeUcet: !!existuje, heslaNastavilMajitel: existuje?.passwordSetByOwner ?? false, noveClenstvi: !!org && !clenstvi, resetHesla: values['reset-password'] === true })) {
-      throw new Error('Účet má heslo, které nenastavil jeho majitel (zná ho ten, kdo účet zakládal). Přidání do další firmy by mu to heslo otevřelo i tady. Přidej --reset-password: heslo se vymění a vypíše se nové.')
+    if (vyzadujeResetHesla({ existujeUcet: !!existuje, heslaNastavilMajitel: existuje?.passwordSetByOwner ?? false, noveClenstvi: !!org && !clenstvi, udelujeSuperAdmin: values['super-admin'] === true, resetHesla: values['reset-password'] === true })) {
+      throw new Error('Účet má heslo, které nenastavil jeho majitel (zná ho ten, kdo účet zakládal). Přidání do další firmy nebo udělení --super-admin by mu to heslo otevřelo i tam. Přidej --reset-password: heslo se vymění a vypíše se nové.')
     }
     if (!existuje && values['reset-password']) throw new Error('--reset-password patří k existujícímu účtu (nový dostane heslo sám).')
     if (existuje && !jmeno && !org && !values['super-admin'] && !values['reset-password']) {

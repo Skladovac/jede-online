@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { requireCan } from '@/lib/org'
+import { rateLimit } from '@/lib/rate-limit'
 import { generatePassword, hashPassword } from '@/lib/crypto'
 import { parseDayKey, pragueDayKey } from '@/lib/date'
 import { createInvitation, notifyAddedToOrg, sendInvitationMail } from '@/lib/invitation'
@@ -85,9 +86,14 @@ export async function addPerson(
 export async function resendInvitation(membershipId: string): Promise<{ ok: true; emailed: boolean } | { error: string }> {
   const ctx = await requireCan('managePeople')
   if (typeof membershipId !== 'string' || !membershipId) return { error: 'Neplatný požadavek.' }
+  const PRILIS = { error: 'Příliš mnoho pokusů. Zkus to za chvíli.' }
+  // Limit na správce (kolik e-mailů rozešle) a na adresáta (stejných 10 za hodinu jako obnova hesla), aby
+  // se člověku nedalo zahltit schránku. Adresátův limit se počítá až po ověření, že patří do TÉHLE firmy.
+  if (!rateLimit('resend-admin:' + ctx.user.id, 30, 60 * 60_000)) return PRILIS
   try {
     const m = await prisma.membership.findFirst({ where: { id: membershipId, orgId: ctx.org.id, active: true }, select: { id: true, userId: true } })
     if (!m) return { error: CIZI_CLEN }
+    if (!rateLimit('resend-user:' + m.userId, 10, 60 * 60_000)) return PRILIS
     const token = await createInvitation({ userId: m.userId, membershipId: m.id, kind: 'invite' })
     const { emailed } = await sendInvitationMail({ userId: m.userId, membershipId: m.id, kind: 'invite', token })
     return { ok: true, emailed }

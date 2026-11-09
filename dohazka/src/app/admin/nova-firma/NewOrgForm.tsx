@@ -52,9 +52,7 @@ export function NewOrgForm() {
             <CopyButton text={stav.password} />
             {stav.invite && (
               <p className="mt-3 text-sm font-semibold">
-                {stav.invite.created
-                  ? 'Pozvánku se nepodařilo e-mailem odeslat, proto je tu heslo. Předej ho správci.'
-                  : 'Pozvánku se nepodařilo vytvořit, proto je tu heslo. Předej ho správci.'}
+                {'Pozvánku se nepodařilo e-mailem odeslat, proto je tu heslo. Předej ho správci.'}
               </p>
             )}
             <p role="alert" className="mt-3 text-sm font-semibold text-danger">
