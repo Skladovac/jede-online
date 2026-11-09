@@ -6,7 +6,7 @@ import { requireOrgContext } from '@/lib/org'
 import { parsePeriod, dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
 import { buildMonth } from '@/lib/month'
 import { MonthList } from '../MonthList'
-import { SettingsLink } from '@/components/SettingsLink'
+import { AppNav } from '@/components/AppNav'
 
 export const metadata: Metadata = { title: 'Měsíc' }
 
@@ -65,7 +65,7 @@ export default async function MesicPage({ params }: { params: Promise<{ period: 
 
   return (
     <main className="mx-auto max-w-md px-4 py-6">
-      <SettingsLink />
+      <AppNav period={period} />
       <nav className="flex items-center justify-between gap-2" aria-label="Přechod mezi měsíci">
         <Link href={`/mesic/${posunMesic(year, month, -1)}`} className={odkaz} aria-label="Předchozí měsíc">
           ←

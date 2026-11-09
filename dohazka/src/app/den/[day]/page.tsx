@@ -8,7 +8,7 @@ import { KIND_LABEL } from '@/lib/entry'
 import { isLocked } from '@/lib/period-lock'
 import { recentPlaces } from '@/lib/places'
 import { DayForm, DeleteEntryButton } from '../DayForm'
-import { SettingsLink } from '@/components/SettingsLink'
+import { AppNav } from '@/components/AppNav'
 
 export const metadata: Metadata = { title: 'Zápis dne' }
 
@@ -44,15 +44,7 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
 
   return (
     <main className="mx-auto max-w-md px-4 py-6">
-      <div className="mb-2 flex items-center justify-between">
-        <Link
-          href={`/mesic/${periodKeyForDay(ctx.org.periodStartDay, day)}`}
-          className="flex min-h-11 items-center px-1 text-sm text-accent-strong underline"
-        >
-          Měsíc a export
-        </Link>
-        <SettingsLink />
-      </div>
+      <AppNav period={periodKeyForDay(ctx.org.periodStartDay, day)} />
       <nav className="flex items-center justify-between gap-2" aria-label="Přechod mezi dny">
         <Link href={`/den/${posun(day, -1)}`} className={odkaz} aria-label="Předchozí den">
           ←
