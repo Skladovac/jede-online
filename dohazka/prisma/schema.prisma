@@ -1,0 +1,90 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  passwordHash   String
+  name           String
+  // Od kdy se u uživatele počítá, že má zapsáno. Bez tohohle by měsíční přehled
+  // označil jako chybějící každý den před založením účtu.
+  tracksFrom     DateTime @db.Date
+  // První den období výkazu. 1 = kalendářní měsíc, 16 = období od 16. do 15.
+  // Zaměstnavatel možná chce 16.–15., zatím to nevíme, proto to není zadrátované.
+  periodStartDay Int      @default(1)
+  remindHour     Int      @default(19)
+  remindEnabled  Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  sessions          Session[]
+  entries           Entry[]
+  pushSubscriptions PushSubscription[]
+  reminderLogs      ReminderLog[]
+}
+
+// Přihlášení: v cookie je náhodný token, v DB jen jeho SHA-256 (únik DB ≠ převzetí relací).
+model Session {
+  id        String   @id // sha256(token)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum EntryKind {
+  WORK
+  VACATION
+  SICK
+  DAYOFF
+}
+
+model Entry {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day       DateTime  @db.Date
+  kind      EntryKind @default(WORK)
+  hours     Decimal?  @db.Decimal(4, 2)
+  fromTime  String? // "HH:MM"
+  toTime    String? // "HH:MM"
+  place     String?
+  note      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Záměrně NE unique: jeden den může mít víc záznamů (dopoledne jinde než odpoledne).
+  @@index([userId, day])
+}
+
+// Push notifikace: jeden řádek = jedno zařízení/prohlížeč (endpoint od push služby prohlížeče).
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique @db.VarChar(1000)
+  p256dh    String   @db.VarChar(200)
+  auth      String   @db.VarChar(100)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Záznam, že se ten den už pípalo. Unique na [userId, day] je pojistka proti dvojímu
+// pípnutí, když se systemd timer po výpadku spustí znovu.
+model ReminderLog {
+  id     String   @id @default(cuid())
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day    DateTime @db.Date
+  sentAt DateTime @default(now())
+
+  @@unique([userId, day])
+}

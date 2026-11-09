@@ -29,3 +29,6 @@ npm-debug.log*
 
 # Prisma migrations (generuje Vercel při buildu)
 prisma/migrations/
+
+# Pracovni adresar skillu superpowers (scratch, nepatri do repa)
+.superpowers/

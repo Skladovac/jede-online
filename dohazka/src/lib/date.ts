@@ -1,0 +1,87 @@
+// Čisté datumové funkce. Žádné `server-only` — testy tenhle modul importují přímo.
+// "Dnes" a "hodina" se vždy počítají v pražské zóně, nikdy z UTC.
+
+const ZONA = 'Europe/Prague'
+
+const dnesFormat = new Intl.DateTimeFormat('en-CA', {
+  timeZone: ZONA,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
+
+const hodinaFormat = new Intl.DateTimeFormat('en-GB', { timeZone: ZONA, hour: '2-digit', hour12: false })
+
+/** Den v pražském čase jako "2026-11-08". */
+export function pragueDayKey(d: Date): string {
+  const p = Object.fromEntries(dnesFormat.formatToParts(d).map((x) => [x.type, x.value]))
+  return `${p.year}-${p.month}-${p.day}`
+}
+
+/** Hodina 0–23 v pražském čase. (`% 24` kvůli prohlížečům, které o půlnoci vrátí "24".) */
+export function pragueHour(d: Date): number {
+  return Number(hodinaFormat.format(d)) % 24
+}
+
+/** Sloupec @db.Date (UTC půlnoc) → "2026-11-08". Jediný převod pro všechna místa, ne pražský čas. */
+export function dateColumnToKey(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+/** "2026-11-08" → Date v UTC půlnoci (pro sloupce @db.Date, aby den neujížděl o zónu). */
+export function parseDayKey(key: string): Date {
+  const [y, m, d] = key.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d))
+}
+
+const klic = (y: number, m: number, d: number) =>
+  `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+
+/** Počet dní v měsíci (month 1–12). */
+const dnuVMesici = (year: number, month: number) => new Date(Date.UTC(year, month, 0)).getUTCDate()
+
+/** První den období, které začíná v měsíci `month`: startDay omezený na délku měsíce. */
+const zacatekV = (startDay: number, year: number, month: number) => Math.min(startDay, dnuVMesici(year, month))
+
+/**
+ * Období výkazu pro měsíc `month` (1–12) roku `year`.
+ * startDay 1 = kalendářní měsíc; startDay 16 = od 16. předchozího měsíce do 15. tohoto.
+ * Období začínají vždy v `zacatekV` (31. v únoru → 28.) a končí den před začátkem dalšího,
+ * takže po sobě jdoucí období dlaždicují kalendář bez překryvu a bez děr.
+ */
+export function periodRange(startDay: number, year: number, month: number): { fromKey: string; toKey: string } {
+  // startDay 1: období začíná v tomto měsíci; jinak v předchozím.
+  const od = startDay === 1 ? { y: year, m: month } : month === 1 ? { y: year - 1, m: 12 } : { y: year, m: month - 1 }
+  const dalsi = od.m === 12 ? { y: od.y + 1, m: 1 } : { y: od.y, m: od.m + 1 }
+  const fromKey = klic(od.y, od.m, zacatekV(startDay, od.y, od.m))
+  const dalsiStart = parseDayKey(klic(dalsi.y, dalsi.m, zacatekV(startDay, dalsi.y, dalsi.m)))
+  return { fromKey, toKey: new Date(dalsiStart.getTime() - 86_400_000).toISOString().slice(0, 10) }
+}
+
+/** Hodiny s desetinnou čárkou bez zbytečných nul: 8.5 → "8,5", 8 → "8". */
+export function formatHours(h: number): string {
+  return String(Math.round(h * 100) / 100).replace('.', ',')
+}
+
+/** Všechny dny od `fromKey` do `toKey` včetně krajních. */
+export function dayKeysInRange(fromKey: string, toKey: string): string[] {
+  const out: string[] = []
+  const end = parseDayKey(toKey).getTime()
+  for (let t = parseDayKey(fromKey).getTime(); t <= end; t += 86_400_000) {
+    out.push(new Date(t).toISOString().slice(0, 10))
+  }
+  return out
+}
+
+/**
+ * Klíč období "YYYY-MM", do kterého patří den `dayKey` (inverzní k `periodRange`).
+ * startDay 1: kalendářní měsíc dne. Jinak od začátku období (startDay omezený na délku měsíce)
+ * patří den už k následujícímu měsíci; v prosinci to přeteče do ledna dalšího roku.
+ */
+export function periodKeyForDay(startDay: number, dayKey: string): string {
+  const [y, m, d] = dayKey.split('-').map(Number)
+  const dalsi = startDay > 1 && d >= zacatekV(startDay, y, m)
+  const rok = dalsi && m === 12 ? y + 1 : y
+  const mesic = dalsi ? (m % 12) + 1 : m
+  return `${String(rok).padStart(4, '0')}-${String(mesic).padStart(2, '0')}`
+}
