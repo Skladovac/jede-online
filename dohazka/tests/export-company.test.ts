@@ -74,7 +74,7 @@ describe('toCompanyCsv', () => {
       expect(radek.startsWith(' ' + zlo.slice(0, 1))).toBe(true)
     }
   })
-  it('jediný den bez záznamu má rok a úvodní mezeru, aby ho Excel nečetl jako datum', () => {
+  it('jediný den bez záznamu nese rok i den v týdnu, aby ho Excel nečetl jako datum', () => {
     const csv = toCompanyCsv(report({ rows: [{ ...jedna('X')[0], missingDays: ['2026-11-04'] }] }))
     expect(csv).toContain('X;1;1;1;4. 11. 2026 (st)\r\n')
   })

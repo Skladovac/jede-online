@@ -10,7 +10,7 @@ const bunka = (v: string) => {
   return /[;"\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
-// Tvar "4. 11. 2026 (st)": závorka na konci dělá z buňky text, který Excel jako datum nepřečte (úvodní mezeru nespoléháme).
+// Tvar "4. 11. 2026 (st)": závorka na konci dělá z buňky text, který Excel jako datum nepřečte (na úvodní mezeru, která by se mohla zahodit, se nespoléháme).
 const dnyBezZaznamu = (dny: string[]) => dny.map(missingDayLabel).join(', ')
 
 export function toCompanyCsv(r: CompanyReport): string {
