@@ -25,6 +25,8 @@ services:
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      APP_URL: ${APP_URL:-}
       # Prázdné = použije se výchozí cesta k DejaVu fontu z Dockerfilu.
       DOHAZKA_PDF_FONT: ${DOHAZKA_PDF_FONT:-}
       GIT_COMMIT: ${GIT_COMMIT:-unknown}

@@ -19,6 +19,8 @@ const db = vi.hoisted(() => ({
   $transaction: vi.fn(),
 }))
 vi.mock('@/lib/prisma', () => ({ prisma: db }))
+const inv = vi.hoisted(() => ({ inviteByMail: vi.fn() }))
+vi.mock('@/lib/invitation', () => inv)
 
 import { createOrganization } from '@/app/actions/org'
 import { orgSchema } from '@/lib/validation'
@@ -39,6 +41,7 @@ beforeEach(() => {
   db.user.create.mockResolvedValue({ id: 'u-new' })
   db.organization.create.mockResolvedValue({ id: 'o-new' })
   db.membership.create.mockResolvedValue({ id: 'm-new' })
+  inv.inviteByMail.mockResolvedValue({ emailed: true })
 })
 
 describe('createOrganization: oprávnění', () => {
@@ -192,6 +195,70 @@ describe('createOrganization: validace', () => {
     const v = orgSchema.parse({ ...vstup, name: '  Firma  ' })
     expect(v.name).toBe('Firma')
     expect(v.ownerEmail).toBe('jan@novak.cz')
+  })
+})
+
+describe('createOrganization: pozvánka místo hesla', () => {
+  const pozvat = { ...vstup, delivery: 'invite' as const }
+
+  it('nový správce: heslo se nevrací a pozvánka míří na jeho účet a členství', async () => {
+    const r = await createOrganization(pozvat)
+    expect(r).toEqual({ ok: true, orgId: 'o-new', invite: { emailed: true, created: true } })
+    expect(r).not.toHaveProperty('password')
+    expect(inv.inviteByMail).toHaveBeenCalledWith({ userId: 'u-new', membershipId: 'm-new', kind: 'invite' })
+  })
+
+  it('pozvánka se vytváří až po potvrzení transakce', async () => {
+    const poradi: string[] = []
+    db.$transaction.mockImplementation(async (fn: (t: typeof db) => Promise<unknown>) => {
+      const r = await fn(db)
+      poradi.push('commit')
+      return r
+    })
+    inv.inviteByMail.mockImplementation(async () => {
+      poradi.push('pozvanka')
+      return { emailed: true }
+    })
+    await createOrganization(pozvat)
+    expect(poradi).toEqual(['commit', 'pozvanka'])
+  })
+
+  it('e-mail neodešel: firma i pozvánka platí a výsledek to říká', async () => {
+    inv.inviteByMail.mockResolvedValue({ emailed: false })
+    expect(await createOrganization(pozvat)).toEqual({ ok: true, orgId: 'o-new', invite: { emailed: false, created: true } })
+  })
+
+  it('pozvánku se nepodařilo vytvořit: firma zůstává, výsledek to říká a vrací se ok', async () => {
+    inv.inviteByMail.mockRejectedValue(new Error('db spadla'))
+    expect(await createOrganization(pozvat)).toEqual({ ok: true, orgId: 'o-new', invite: { emailed: false, created: false } })
+  })
+
+  it('existující účet se nezvoucí (už má heslo)', async () => {
+    db.user.findUnique.mockResolvedValue({ id: 'u-old' })
+    const r = await createOrganization(pozvat)
+    expect(r).toEqual({ ok: true, orgId: 'o-new' })
+    expect(inv.inviteByMail).not.toHaveBeenCalled()
+  })
+
+  it('bez volby (nebo delivery: password) zůstává původní chování s heslem a bez pozvánky', async () => {
+    for (const d of [{}, { delivery: 'password' as const }]) {
+      inv.inviteByMail.mockClear()
+      const r = await createOrganization({ ...vstup, ...d })
+      expect((r as { password?: string }).password).toMatch(/^[A-Za-z0-9]{16}$/)
+      expect(inv.inviteByMail).not.toHaveBeenCalled()
+    }
+  })
+
+  it('neznámá hodnota volby je chyba bez zápisu', async () => {
+    const r = await createOrganization({ ...vstup, delivery: 'sms' } as never)
+    expect(r).toHaveProperty('error')
+    expect(db.$transaction).not.toHaveBeenCalled()
+  })
+
+  it('běžný uživatel pozvánku nevyvolá', async () => {
+    auth.requireUser.mockResolvedValue({ id: 'u1', isSuperAdmin: false })
+    await expect(createOrganization(pozvat)).rejects.toThrow('NEXT_REDIRECT:/')
+    expect(inv.inviteByMail).not.toHaveBeenCalled()
   })
 })
 

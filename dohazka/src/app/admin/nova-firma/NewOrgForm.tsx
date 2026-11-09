@@ -36,6 +36,7 @@ export function NewOrgForm() {
         reportName: String(fd.get('reportName') ?? ''),
         ownerEmail: String(fd.get('ownerEmail') ?? ''),
         ownerName: String(fd.get('ownerName') ?? ''),
+        delivery: fd.get('delivery') === 'invite' ? 'invite' : 'password',
       }),
     null,
   )
@@ -53,6 +54,18 @@ export function NewOrgForm() {
               Heslo se už znovu nezobrazí. Po obnovení nebo opuštění stránky ho nelze zjistit.
             </p>
           </>
+        ) : stav.invite ? (
+          stav.invite.emailed ? (
+            <p className="mt-3 text-sm">Pozvánka odešla správci e-mailem. Odkaz platí 48 hodin.</p>
+          ) : stav.invite.created ? (
+            <p role="alert" className="mt-3 text-sm font-semibold text-danger">
+              Pozvánka je vytvořená, ale e-mail se nepodařilo odeslat. Správce si může nastavit heslo přes „Zapomenuté heslo“ na přihlašovací stránce.
+            </p>
+          ) : (
+            <p role="alert" className="mt-3 text-sm font-semibold text-danger">
+              Firma je založená, ale pozvánku se nepodařilo vytvořit. Správce si může nastavit heslo přes „Zapomenuté heslo“ na přihlašovací stránce.
+            </p>
+          )
         ) : (
           <p className="mt-3 text-sm text-muted">Správce už účet měl, přihlásí se svým dosavadním heslem.</p>
         )}
@@ -86,6 +99,17 @@ export function NewOrgForm() {
         Jméno správce
         <input name="ownerName" required maxLength={120} autoComplete="off" className={pole} />
       </label>
+      <fieldset className="space-y-2 text-sm">
+        <legend>Jak správce získá přístup</legend>
+        <label className="flex items-center gap-2">
+          <input type="radio" name="delivery" value="invite" defaultChecked />
+          Poslat pozvánku e-mailem (správce si sám nastaví heslo)
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="radio" name="delivery" value="password" />
+          Vygenerovat heslo (zobrazí se jednou)
+        </label>
+      </fieldset>
       <p className="text-sm text-muted">Pokud e-mail už v systému je, připojí se existující účet a jeho heslo se nezmění.</p>
       {stav && 'error' in stav && (
         <p role="alert" className="text-sm text-danger">

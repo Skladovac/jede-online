@@ -27,5 +27,10 @@ export const orgSchema = z.object({
   reportName: kratky,
   ownerEmail: loginSchema.shape.email,
   ownerName: kratky,
+  // Výchozí 'password' drží dosavadní chování pro volající, kteří volbu neposílají.
+  delivery: z.enum(['invite', 'password']).default('password'),
 })
-export type OrgInput = z.infer<typeof orgSchema>
+export type OrgInput = z.input<typeof orgSchema>
+
+// Nové heslo (pozvánka, obnova). Horní mez kvůli bcryptu; stejná jako u přihlášení.
+export const passwordSchema = z.string().min(10).max(200)
