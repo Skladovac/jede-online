@@ -4,15 +4,22 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 const ctx = vi.hoisted(() => ({ user: { id: 'u1' }, membership: { id: 'm1' }, org: { id: 'o1', periodStartDay: 1 }, role: 'OWNER', isSuperAdmin: false }))
-vi.mock('@/lib/org', () => ({ requireOrgContext: vi.fn(async () => ctx) }))
+// requireCan v ostré verzi při zamítnutí přesměruje (vyhodí NEXT_REDIRECT); mock to napodobí.
+const requireCan = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/org', () => ({ requireOrgContext: vi.fn(async () => ctx), requireCan }))
 const db = vi.hoisted(() => ({
-  entry: { deleteMany: vi.fn(), create: vi.fn(), findFirst: vi.fn() },
+  entry: { deleteMany: vi.fn(), create: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
+  entryChangeLog: { create: vi.fn() },
+  membership: { findFirst: vi.fn() },
   periodLock: { findUnique: vi.fn() },
-  $transaction: vi.fn(async (ops: unknown[]) => Promise.all(ops)),
+  // Pole operací (už vytvořené promisy) i interaktivní tvar s callbackem.
+  $transaction: vi.fn(async (arg: unknown): Promise<unknown> => (typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(db) : Promise.all(arg as unknown[]))),
 }))
 vi.mock('@/lib/prisma', () => ({ prisma: db }))
 
-import { deleteEntry, markDayOff, saveEntry } from '@/app/actions/entry'
+import { deleteEntry, deleteEntryFor, markDayOff, saveEntry, saveEntryFor } from '@/app/actions/entry'
+import { can } from '@/lib/role'
+import { Prisma } from '@prisma/client'
 
 function form(o: Record<string, string>) {
   const f = new FormData()
@@ -125,5 +132,122 @@ describe('uzavřené období neprojde žádnou akcí dne', () => {
     db.periodLock.findUnique.mockResolvedValue(null)
     expect(await markDayOff('2026-11-09')).toEqual({ ok: true })
     expect(db.entry.create).toHaveBeenCalledTimes(1)
+  })
+})
+
+// Oprava cizího zápisu: správce firmy mění zápis jiného členství a zůstává po tom stopa.
+describe('oprava cizího zápisu s historií změn', () => {
+  const ZAMEK = 'Měsíc je uzavřený, zápis už nejde změnit.'
+  const redirect = new Error('NEXT_REDIRECT')
+  const zadnyZapis = () => {
+    expect(db.entry.create).not.toHaveBeenCalled()
+    expect(db.entry.deleteMany).not.toHaveBeenCalled()
+    expect(db.entryChangeLog.create).not.toHaveBeenCalled()
+    expect(db.$transaction).not.toHaveBeenCalled()
+  }
+  const radek = { id: 'e9', day: new Date(Date.UTC(2026, 10, 9)), kind: 'WORK', hours: { toString: () => '7.5' }, fromTime: '08:00', toTime: '15:30', place: 'Zlín', note: null }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    requireCan.mockImplementation(async () => ctx)
+    db.membership.findFirst.mockResolvedValue({ id: 'm2' })
+    db.entry.deleteMany.mockResolvedValue({ count: 1 })
+    db.entry.create.mockResolvedValue({})
+    db.entry.findMany.mockResolvedValue([])
+    db.entry.findFirst.mockResolvedValue(radek)
+    db.entryChangeLog.create.mockResolvedValue({})
+    db.periodLock.findUnique.mockResolvedValue(null)
+  })
+
+  it('saveEntryFor zapíše záznam cizímu členství a log before:null / after, changedById je ten, kdo mění', async () => {
+    expect(await saveEntryFor('m2', form({ day: '2026-11-09', kind: 'WORK', hours: '8', place: 'Zlín' }))).toEqual({ ok: true })
+    expect(requireCan).toHaveBeenCalledWith('editOthersEntry')
+    expect(db.membership.findFirst).toHaveBeenCalledWith({ where: { id: 'm2', orgId: 'o1' }, select: { id: true } })
+    expect(db.entry.create.mock.calls[0][0].data.membershipId).toBe('m2')
+    expect(db.entryChangeLog.create).toHaveBeenCalledTimes(1)
+    expect(db.entryChangeLog.create.mock.calls[0][0].data).toEqual({
+      membershipId: 'm2',
+      dayKey: '2026-11-09',
+      changedById: 'u1',
+      before: Prisma.DbNull,
+      after: { kind: 'WORK', hours: 8, fromTime: null, toTime: null, place: 'Zlín', note: null },
+    })
+  })
+
+  it('saveEntryFor, který přebije „Nepracoval“, zaloguje i zmizelé volno', async () => {
+    db.entry.findMany.mockResolvedValue([{ kind: 'DAYOFF', hours: null, fromTime: null, toTime: null, place: null, note: null }])
+    await saveEntryFor('m2', form({ day: '2026-11-09', kind: 'WORK', hours: '8', place: 'Zlín' }))
+    const logy = db.entryChangeLog.create.mock.calls.map((c) => c[0].data)
+    expect(logy).toHaveLength(2)
+    expect(logy[0]).toMatchObject({ membershipId: 'm2', after: Prisma.DbNull, before: { kind: 'DAYOFF' } })
+  })
+
+  it('člen cizí firmy: chyba a žádný zápis', async () => {
+    db.membership.findFirst.mockResolvedValue(null)
+    expect(await saveEntryFor('cizi', form({ day: '2026-11-09', kind: 'WORK', hours: '8', place: 'Zlín' }))).toHaveProperty('error')
+    expect(await deleteEntryFor('cizi', 'e9')).toHaveProperty('error')
+    expect(db.membership.findFirst).toHaveBeenCalledWith({ where: { id: 'cizi', orgId: 'o1' }, select: { id: true } })
+    zadnyZapis()
+  })
+
+  it('bez oprávnění editOthersEntry akce skončí přesměrováním a nic nezapíše', async () => {
+    requireCan.mockRejectedValue(redirect)
+    await expect(saveEntryFor('m2', form({ day: '2026-11-09', kind: 'WORK', hours: '8', place: 'Zlín' }))).rejects.toBe(redirect)
+    await expect(deleteEntryFor('m2', 'e9')).rejects.toBe(redirect)
+    expect(db.membership.findFirst).not.toHaveBeenCalled()
+    zadnyZapis()
+  })
+
+  it('uzavřené období platí i pro cizí zápis (zápis i smazání)', async () => {
+    db.periodLock.findUnique.mockResolvedValue({ id: 'l1' })
+    expect(await saveEntryFor('m2', form({ day: '2026-11-09', kind: 'WORK', hours: '8', place: 'Zlín' }))).toEqual({ error: ZAMEK })
+    expect(await deleteEntryFor('m2', 'e9')).toEqual({ error: ZAMEK })
+    zadnyZapis()
+  })
+
+  it('neplatný vstup a DAYOFF nic nezapíšou', async () => {
+    expect(await saveEntryFor('m2', form({ day: '2026-11-09', kind: 'WORK' }))).toHaveProperty('error')
+    expect(await saveEntryFor('m2', form({ day: '2026-11-09', kind: 'DAYOFF' }))).toHaveProperty('error')
+    zadnyZapis()
+  })
+
+  it('deleteEntryFor maže jen v daném členství a loguje before:snímek / after:null s hodinami jako číslem', async () => {
+    expect(await deleteEntryFor('m2', 'e9')).toEqual({ ok: true })
+    expect(db.entry.findFirst).toHaveBeenCalledWith({ where: { id: 'e9', membershipId: 'm2' } })
+    expect(db.entry.deleteMany).toHaveBeenCalledWith({ where: { id: 'e9', membershipId: 'm2' } })
+    expect(db.entryChangeLog.create.mock.calls[0][0].data).toEqual({
+      membershipId: 'm2',
+      dayKey: '2026-11-09',
+      changedById: 'u1',
+      before: { kind: 'WORK', hours: 7.5, fromTime: '08:00', toTime: '15:30', place: 'Zlín', note: null },
+      after: Prisma.DbNull,
+    })
+  })
+
+  it('deleteEntryFor: záznam jiného členství se nenajde, nic se nesmaže ani nezaloguje', async () => {
+    db.entry.findFirst.mockResolvedValue(null)
+    expect(await deleteEntryFor('m2', 'cizi')).toEqual({ error: 'Smazání se nepodařilo.' })
+    zadnyZapis()
+  })
+
+  it('deleteEntryFor: count 0 je chyba a log nevznikne', async () => {
+    db.entry.deleteMany.mockResolvedValue({ count: 0 })
+    expect(await deleteEntryFor('m2', 'e9')).toEqual({ error: 'Smazání se nepodařilo.' })
+    expect(db.entryChangeLog.create).not.toHaveBeenCalled()
+  })
+
+  it('vlastní zápis zaměstnance historii nezakládá', async () => {
+    db.entry.findFirst.mockResolvedValue({ day: new Date(Date.UTC(2026, 10, 9)) })
+    await saveEntry(form({ day: '2026-11-09', kind: 'WORK', hours: '8', place: 'Zlín' }))
+    await deleteEntry('e1')
+    await markDayOff('2026-11-09')
+    expect(db.entryChangeLog.create).not.toHaveBeenCalled()
+  })
+
+  it('historii změn účetní nevidí, správce a super admin ano', () => {
+    expect(can('ACCOUNTANT', 'viewChangeLog', false)).toBe(false)
+    expect(can('EMPLOYEE', 'viewChangeLog', false)).toBe(false)
+    expect(can('OWNER', 'viewChangeLog', false)).toBe(true)
+    expect(can('EMPLOYEE', 'viewChangeLog', true)).toBe(true)
   })
 })

@@ -1,8 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { requireOrgContext } from '@/lib/org'
+import { requireCan, requireOrgContext } from '@/lib/org'
 import { dateColumnToKey, parseDayKey, periodKeyForDay } from '@/lib/date'
 import { validateEntry } from '@/lib/entry'
 import { MESIC_UZAVREN } from '@/lib/period-lock'
@@ -73,5 +74,84 @@ export async function markDayOff(day: string): Promise<{ ok: true } | { error: s
     prisma.entry.create({ data: { membershipId: ctx.membership.id, day: den, kind: 'DAYOFF', hours: null, fromTime: null, toTime: null, place: null, note: null } }),
   ])
   obnovStranky(v.value.day)
+  return { ok: true }
+}
+
+// Do historie jdou jen pole záznamu, nikdy celý objekt z Prismy: Decimal se do JSON nevejde čistě,
+// proto jsou hodiny číslo. Stejný tvar pro `before` i `after`, ať se dají porovnat.
+type Snimek = { kind: string; hours: number | null; fromTime: string | null; toTime: string | null; place: string | null; note: string | null }
+const snimek = (e: { kind: string; hours: unknown; fromTime: string | null; toTime: string | null; place: string | null; note: string | null }): Snimek => ({
+  kind: e.kind,
+  hours: e.hours === null || e.hours === undefined ? null : Number(e.hours),
+  fromTime: e.fromTime,
+  toTime: e.toTime,
+  place: e.place,
+  note: e.note,
+})
+
+// `membershipId` přichází z prohlížeče, proto se před jakýmkoli zápisem ověří, že patří do aktivní firmy;
+// jinak by správce jedné firmy opravoval zápisy v cizí. Cizí id se tváří jako nenalezené.
+async function clenFirmy(orgId: string, membershipId: unknown): Promise<boolean> {
+  if (typeof membershipId !== 'string' || !membershipId) return false
+  return (await prisma.membership.findFirst({ where: { id: membershipId, orgId }, select: { id: true } })) !== null
+}
+
+function obnovStrankyClena(membershipId: string, day: string) {
+  revalidatePath(`/firma/vykazy/${membershipId}`)
+  revalidatePath(`/firma/vykazy/${membershipId}/historie`)
+  revalidatePath('/mesic', 'layout')
+  revalidatePath(`/den/${day}`)
+}
+
+// Oprava cizího zápisu: totéž co saveEntry, ale pro jiné členství firmy a se záznamem do historie změn.
+// Historie vzniká ve stejné transakci jako změna, takže po neúspěšném zápisu nezůstane osiřelý log.
+export async function saveEntryFor(membershipId: string, formData: FormData): Promise<{ error: string } | { ok: true }> {
+  const ctx = await requireCan('editOthersEntry')
+  if (!(await clenFirmy(ctx.org.id, membershipId))) return { error: 'Zápis se nepodařilo uložit.' }
+  const vstup = Object.fromEntries(POLE.map((k) => [k, formData.get(k)]))
+  const v = validateEntry(vstup)
+  if (!v.ok) return { error: v.error }
+  if (v.value.kind === 'DAYOFF') return { error: 'Volný den zapisuje člověk sám tlačítkem Nepracoval.' }
+  const { day, ...zbytek } = v.value
+  // Správce není nad uzávěrkou: nejdřív období otevře.
+  if (await jeDenUzavreny(ctx.org.id, ctx.org.periodStartDay, day)) return { error: MESIC_UZAVREN }
+  const den = parseDayKey(day)
+  const data = { ...zbytek, place: zbytek.kind === 'WORK' ? zbytek.place : null, day: den, membershipId }
+  // Zápis dne přebije „Nepracoval“; kdo o volný den přijde, musí být v historii vidět taky.
+  const volno = await prisma.entry.findMany({ where: { membershipId, day: den, kind: 'DAYOFF' } })
+  const zmenil = { membershipId, dayKey: day, changedById: ctx.user.id }
+  await prisma.$transaction([
+    prisma.entry.deleteMany({ where: { membershipId, day: den, kind: 'DAYOFF' } }),
+    prisma.entry.create({ data }),
+    ...volno.map((e) => prisma.entryChangeLog.create({ data: { ...zmenil, before: snimek(e), after: Prisma.DbNull } })),
+    prisma.entryChangeLog.create({ data: { ...zmenil, before: Prisma.DbNull, after: snimek(data) } }),
+  ])
+  obnovStrankyClena(membershipId, day)
+  return { ok: true }
+}
+
+const NEUSPECH_SMAZANI = 'Smazání se nepodařilo.'
+
+export async function deleteEntryFor(membershipId: string, id: string): Promise<{ ok: true } | { error: string }> {
+  const ctx = await requireCan('editOthersEntry')
+  if (typeof id !== 'string' || !id) return { error: NEUSPECH_SMAZANI }
+  if (!(await clenFirmy(ctx.org.id, membershipId))) return { error: NEUSPECH_SMAZANI }
+  const zaznam = await prisma.entry.findFirst({ where: { id, membershipId } })
+  if (!zaznam) return { error: NEUSPECH_SMAZANI }
+  const dayKey = dateColumnToKey(zaznam.day)
+  if (await jeDenUzavreny(ctx.org.id, ctx.org.periodStartDay, dayKey)) return { error: MESIC_UZAVREN }
+  // Smazání a log v jedné transakci; když mezitím záznam zmizel (count 0), log se nezapíše a vrací se chyba.
+  const NENALEZENO = new Error('nenalezeno')
+  try {
+    await prisma.$transaction(async (tx) => {
+      const smazano = await tx.entry.deleteMany({ where: { id, membershipId } })
+      if (smazano.count === 0) throw NENALEZENO
+      await tx.entryChangeLog.create({ data: { membershipId, dayKey, changedById: ctx.user.id, before: snimek(zaznam), after: Prisma.DbNull } })
+    })
+  } catch (e) {
+    if (e === NENALEZENO) return { error: NEUSPECH_SMAZANI }
+    throw e
+  }
+  obnovStrankyClena(membershipId, dayKey)
   return { ok: true }
 }

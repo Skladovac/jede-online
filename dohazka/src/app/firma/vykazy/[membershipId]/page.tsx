@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { requireCan } from '@/lib/org'
+import { can } from '@/lib/role'
+import { PridatZapis, SmazatZapis } from './OpravaZapisu'
 import { parsePeriod, dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
 import { KIND_LABEL } from '@/lib/entry'
 import { ddmmyyyy } from '@/lib/export/rows'
@@ -58,6 +60,9 @@ export default async function VykazClovekaPage({
     })),
   })
   const videt = visibleRows(rows, dnes)
+  // Oprava cizích záznamů a historie jsou zvláštní oprávnění; účetní výkaz jen čte.
+  const smiOpravit = can(ctx.role, 'editOthersEntry', ctx.isSuperAdmin)
+  const smiHistorii = can(ctx.role, 'viewChangeLog', ctx.isSuperAdmin)
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-6">
@@ -80,7 +85,13 @@ export default async function VykazClovekaPage({
         </div>
       </div>
 
-      {/* Jen ke čtení: cizí záznamy upravuje správce jinde (úprava cizích záznamů je zvláštní oprávnění). */}
+      {smiHistorii && (
+        <Link href={`/firma/vykazy/${membershipId}/historie`} className="mt-3 inline-block text-sm text-muted underline hover:text-fg">
+          Historie změn
+        </Link>
+      )}
+      {smiOpravit && <PridatZapis membershipId={membershipId} />}
+
       {videt.length === 0 ? (
         <p className="mt-5 text-sm text-muted">V tomto období zatím nejsou žádné dny.</p>
       ) : (
@@ -100,6 +111,12 @@ export default async function VykazClovekaPage({
                       {KIND_LABEL[e.kind]}
                       {e.hours !== null && ` · ${formatHours(e.hours)} h`}
                       {(e.place || e.note) && <span className="text-muted"> · {[e.place, e.note].filter(Boolean).join(' · ')}</span>}
+                      {smiOpravit && (
+                        <>
+                          {' '}
+                          <SmazatZapis membershipId={membershipId} id={e.id} />
+                        </>
+                      )}
                     </span>
                   ))}
                 </span>
