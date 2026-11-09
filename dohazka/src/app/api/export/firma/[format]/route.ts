@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireCan } from '@/lib/org'
-import { periodRange } from '@/lib/date'
+import { parsePeriod, periodRange } from '@/lib/date'
 import { loadCompanyPeople } from '@/lib/company-data'
 import { buildCompanyReport } from '@/lib/company-report'
 import { toCompanyCsv } from '@/lib/export/company-csv'
@@ -22,10 +22,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ format: 
   if (format !== 'csv' && format !== 'xlsx') return chyba(400, 'Neznámý formát.')
 
   const period = new URL(req.url).searchParams.get('period') ?? ''
-  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period)
-  if (!m) return chyba(400, 'Neplatné období, očekávám RRRR-MM.')
+  const parsed = parsePeriod(period)
+  if (!parsed) return chyba(400, 'Neplatné období, očekávám RRRR-MM.')
 
-  const { fromKey, toKey } = periodRange(ctx.org.periodStartDay, Number(m[1]), Number(m[2]))
+  const { fromKey, toKey } = periodRange(ctx.org.periodStartDay, parsed.year, parsed.month)
   const people = await loadCompanyPeople(ctx.org.id, fromKey, toKey)
   const report = buildCompanyReport({ orgName: ctx.org.reportName, fromKey, toKey, people })
 

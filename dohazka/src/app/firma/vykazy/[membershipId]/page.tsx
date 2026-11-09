@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { requireCan } from '@/lib/org'
-import { dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
+import { parsePeriod, dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
 import { KIND_LABEL } from '@/lib/entry'
 import { ddmmyyyy } from '@/lib/export/rows'
 import { buildMonth, visibleRows } from '@/lib/month'
@@ -24,10 +24,10 @@ export default async function VykazClovekaPage({
   const { membershipId } = await params
   const dnes = pragueDayKey(new Date())
   const { period = periodKeyForDay(ctx.org.periodStartDay, dnes) } = await searchParams
-  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period)
-  if (!m) notFound()
+  const parsed = parsePeriod(period)
+  if (!parsed) notFound()
 
-  const { fromKey, toKey } = periodRange(ctx.org.periodStartDay, Number(m[1]), Number(m[2]))
+  const { fromKey, toKey } = periodRange(ctx.org.periodStartDay, parsed.year, parsed.month)
   // `orgId` v podmínce: id z adresy z cizí firmy se tváří, jako by neexistovalo.
   const clen = await prisma.membership.findFirst({
     where: { id: membershipId, orgId: ctx.org.id },

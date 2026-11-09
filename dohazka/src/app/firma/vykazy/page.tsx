@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireCan } from '@/lib/org'
 import { can } from '@/lib/role'
-import { periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
+import { parsePeriod, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
 import { loadCompanyPeople } from '@/lib/company-data'
 import { buildCompanyReport, dayShort } from '@/lib/company-report'
 
@@ -27,10 +27,9 @@ export default async function VykazyFirmyPage({ searchParams }: { searchParams: 
   const dnes = pragueDayKey(new Date())
   const dnesPeriod = periodKeyForDay(ctx.org.periodStartDay, dnes)
   const { period = dnesPeriod } = await searchParams
-  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period)
-  if (!m) notFound()
-  const year = Number(m[1])
-  const month = Number(m[2])
+  const parsed = parsePeriod(period)
+  if (!parsed) notFound()
+  const { year, month } = parsed
 
   const { fromKey, toKey } = periodRange(ctx.org.periodStartDay, year, month)
   const lide = await loadCompanyPeople(ctx.org.id, fromKey, toKey)
@@ -69,10 +68,10 @@ export default async function VykazyFirmyPage({ searchParams }: { searchParams: 
         </Link>
       </nav>
 
-      <section className="mt-5 rounded-panel border border-line bg-card p-4" aria-label="Kdo nemá zapsáno">
-        <h2 className="font-semibold">Kdo nemá zapsáno</h2>
+      <section className="mt-5 rounded-panel border border-line bg-card p-4" aria-label="Dny bez záznamu">
+        <h2 className="font-semibold">Dny bez záznamu</h2>
         {bezZapisu.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">Všichni mají za uplynulé dny období zapsáno.</p>
+          <p className="mt-2 text-sm text-muted">Nikdo nemá za uplynulé dny období žádný den bez záznamu.</p>
         ) : (
           <ul className="mt-2 space-y-2 text-sm">
             {bezZapisu.map((r) => (
@@ -92,7 +91,7 @@ export default async function VykazyFirmyPage({ searchParams }: { searchParams: 
 
       <section className="mt-5" aria-label="Hodiny podle lidí">
         {radky.length === 0 ? (
-          <p className="text-sm text-muted">Ve firmě zatím nejsou žádní zaměstnanci.</p>
+          <p className="text-sm text-muted">Ve firmě zatím nejsou žádní lidé.</p>
         ) : (
           <table className="w-full text-sm">
             <thead>

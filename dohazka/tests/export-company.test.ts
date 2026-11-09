@@ -61,8 +61,8 @@ describe('toCompanyCsv', () => {
   it('má BOM, středníky a CRLF', () => {
     const csv = toCompanyCsv(report())
     expect(csv.startsWith('﻿')).toBe(true)
-    expect(csv).toContain('Jméno;Hodiny;Odpracované dny;Chybějící dny (počet);Chybějící dny\r\n')
-    expect(csv).toContain('Jan Novák;16,5;2;2;4. 11., 5. 11.\r\n')
+    expect(csv).toContain('Jméno;Hodiny;Odpracované dny;Dny bez záznamu (počet);Dny bez záznamu\r\n')
+    expect(csv).toContain('Jan Novák;16,5;2;2; 4. 11. 2026, 5. 11. 2026\r\n')
     expect(csv).toContain('Eva Svobodová;8;1;0;\r\n')
     expect(csv).toContain('Celkem;24,5;;;\r\n')
   })
@@ -73,6 +73,10 @@ describe('toCompanyCsv', () => {
       const radek = csv.slice(csv.indexOf('\r\n') + 2).replace(/^"/, '')
       expect(radek.startsWith(' ' + zlo.slice(0, 1))).toBe(true)
     }
+  })
+  it('jediný den bez záznamu má rok a úvodní mezeru, aby ho Excel nečetl jako datum', () => {
+    const csv = toCompanyCsv(report({ rows: [{ ...jedna('X')[0], missingDays: ['2026-11-04'] }] }))
+    expect(csv).toContain('X;1;1;1; 4. 11. 2026\r\n')
   })
   it('uvozuje jméno se středníkem a uvozovkou', () => {
     const csv = toCompanyCsv(report({ rows: jedna('Novák; "Jan"') }))
@@ -166,6 +170,10 @@ describe('GET /api/export/firma/[format]', () => {
     nastavDb('OWNER')
     expect((await zadost('docx')).status).toBe(400)
     expect((await zadost('csv', '2026-13')).status).toBe(400)
+    // rok 0050 by Date.UTC přemapoval na 1950 a období by se rozjelo (pád na 500)
+    expect((await zadost('csv', '0050-11')).status).toBe(400)
+    expect((await zadost('csv', '1999-11')).status).toBe(400)
+    expect((await zadost('csv', '2101-11')).status).toBe(400)
   })
   it('CSV účetní obsahuje zaměstnance své firmy a nikoho z cizí', async () => {
     nastavDb('ACCOUNTANT')

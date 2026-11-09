@@ -63,13 +63,37 @@ describe('buildCompanyReport', () => {
   })
   it('bez todayKey se bere dnešek z hodin v pražském čase', () => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-11-03T12:00:00Z'))
+    vi.setSystemTime(new Date('2026-11-03T23:30:00Z')) // v Praze už 4. 11., v UTC ještě 3.
     try {
       const { todayKey: _t, ...bez } = base
       const r = buildCompanyReport({ ...bez, people: [{ personName: 'A', month: mesic('2026-11-01', []) }] })
-      expect(r.rows[0].missingDays).toEqual(['2026-11-01', '2026-11-02'])
+      expect(r.rows[0].missingDays).toEqual(['2026-11-01', '2026-11-02', '2026-11-03'])
     } finally {
       vi.useRealTimers()
     }
+  })
+  it('směs: noční směna, dovolená bez hodin, nemoc s hodinami, dva zápisy v dni; firma = součet řádků', () => {
+    const z = (dayKey: string, hours: number | null, kind: string) => e(dayKey, hours, kind)
+    const r = buildCompanyReport({
+      ...base,
+      people: [
+        { personName: 'Noční', month: mesic('2026-11-01', [z('2026-11-02', 10.1, 'WORK'), z('2026-11-03', 0.2, 'WORK'), z('2026-11-04', 7.7, 'WORK')]) },
+        { personName: 'Dovolená', month: mesic('2026-11-01', [z('2026-11-02', null, 'VACATION'), z('2026-11-03', null, 'VACATION')]) },
+        { personName: 'Nemoc', month: mesic('2026-11-01', [z('2026-11-02', 8, 'SICK'), z('2026-11-03', 3.3, 'WORK')]) },
+        { personName: 'Dva zápisy', month: mesic('2026-11-01', [z('2026-11-02', 4.1, 'WORK'), z('2026-11-02', 3.9, 'WORK'), z('2026-11-03', 0.1, 'WORK')]) },
+      ],
+    })
+    const hodnoty = r.rows.map((x) => x.totalHoursValue)
+    expect(hodnoty).toEqual([18, 0, 11.3, 8.1])
+    // dovolená bez hodin je den bez záznamu hodin, ale zápis existuje -> není "bez záznamu" a nepřidá hodiny
+    expect(r.rows[1].missingDays).not.toContain('2026-11-02')
+    // dva zápisy v jednom dni jsou jeden odpracovaný den
+    expect(r.rows[3].daysWorked).toBe(2)
+    // nemoc se nepočítá jako odpracovaný den, ale její hodiny jsou v součtu
+    expect(r.rows[2].daysWorked).toBe(1)
+    // firma = součet řádků, v setinách
+    expect(r.totalHoursValue).toBe(Math.round(hodnoty.reduce((s2, h) => s2 + Math.round(h * 100), 0)) / 100)
+    expect(r.totalHoursValue).toBe(37.4)
+    expect(r.totalHours).toBe('37,4')
   })
 })

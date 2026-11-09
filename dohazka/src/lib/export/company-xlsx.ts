@@ -4,7 +4,7 @@ import ExcelJS from 'exceljs'
 import { dayShort } from '@/lib/company-report'
 import type { CompanyReport } from '@/lib/company-report'
 
-const HLAVICKA = ['Jméno', 'Hodiny', 'Odpracované dny', 'Chybějící dny (počet)', 'Chybějící dny']
+const HLAVICKA = ['Jméno', 'Hodiny', 'Odpracované dny', 'Dny bez záznamu (počet)', 'Dny bez záznamu']
 const HODINY_FORMAT = '0.00'
 const SIRKY = [28, 10, 16, 20, 50]
 
