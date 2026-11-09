@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/auth'
 import { getOrgContext } from '@/lib/org'
@@ -8,12 +9,20 @@ export const metadata: Metadata = { title: 'Bez přístupu' }
 
 // Záměrně nevolá requireOrgContext — ten sem přesměrovává, vznikla by smyčka.
 export default async function BezPristupuPage() {
-  if (!(await getCurrentUser())) redirect('/prihlaseni')
+  const user = await getCurrentUser()
+  if (!user) redirect('/prihlaseni')
   if (await getOrgContext()) redirect('/')
   return (
     <main className="mx-auto max-w-sm px-4 py-16">
       <h1 className="text-2xl font-semibold">Bez přístupu</h1>
       <p className="mt-4">Tento účet nepatří k žádné firmě. Ozvi se správci své firmy.</p>
+      {user.isSuperAdmin && (
+        <p className="mt-4">
+          <Link href="/admin" className="underline">
+            Správa firem
+          </Link>
+        </p>
+      )}
       <form action={logout} className="mt-6">
         <button type="submit" className="underline">
           Odhlásit se

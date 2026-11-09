@@ -19,3 +19,13 @@ export const pushSubscriptionSchema = z.object({
   endpoint: pushEndpointSchema,
   keys: z.object({ p256dh: z.string().min(1).max(200), auth: z.string().min(1).max(100) }),
 })
+
+// Nová firma spolu s jejím prvním správcem (OWNER). Zakládá ji jen super admin.
+const kratky = z.string().trim().min(1).max(120)
+export const orgSchema = z.object({
+  name: kratky,
+  reportName: kratky,
+  ownerEmail: loginSchema.shape.email,
+  ownerName: kratky,
+})
+export type OrgInput = z.infer<typeof orgSchema>
