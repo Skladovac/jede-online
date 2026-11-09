@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireOrgContext } from '@/lib/org'
-import { dateColumnToKey, parseDayKey, periodRange } from '@/lib/date'
+import { parsePeriod, dateColumnToKey, parseDayKey, periodRange } from '@/lib/date'
 import { buildMonth } from '@/lib/month'
 import { buildReport } from '@/lib/export/rows'
 import { toCsv } from '@/lib/export/csv'
@@ -25,10 +25,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ format: 
   if (!(FORMATY as readonly string[]).includes(format)) return chyba(400, 'Neznámý formát.')
 
   const period = new URL(req.url).searchParams.get('period') ?? ''
-  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period)
-  if (!m) return chyba(400, 'Neplatné období, očekávám RRRR-MM.')
+  const p = parsePeriod(period)
+  if (!p) return chyba(400, 'Neplatné období, očekávám RRRR-MM.')
 
-  const { fromKey, toKey } = periodRange(ctx.org.periodStartDay, Number(m[1]), Number(m[2]))
+  const { fromKey, toKey } = periodRange(ctx.org.periodStartDay, p.year, p.month)
   // Vždy jen záznamy aktivního členství.
   const zapsane = await prisma.entry.findMany({
     where: { membershipId: ctx.membership.id, day: { gte: parseDayKey(fromKey), lte: parseDayKey(toKey) } },

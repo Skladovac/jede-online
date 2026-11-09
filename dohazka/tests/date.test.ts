@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dateColumnToKey, dayKeysInRange, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey, pragueHour } from '@/lib/date'
+import { dateColumnToKey, dayKeysInRange, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey, pragueHour, parsePeriod } from '@/lib/date'
 
 describe('pražský čas', () => {
   it('den se láme podle Prahy, ne podle UTC', () => {
@@ -96,7 +96,6 @@ describe('dateColumnToKey', () => {
   })
 })
 
-import { parsePeriod } from '@/lib/date'
 describe('parsePeriod', () => {
   it('bere jen rok 2000–2100 a platný měsíc', () => {
     expect(parsePeriod('2026-11')).toEqual({ year: 2026, month: 11 })

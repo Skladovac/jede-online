@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { requireOrgContext } from '@/lib/org'
-import { dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
+import { parsePeriod, dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
 import { buildMonth } from '@/lib/month'
 import { MonthList } from '../MonthList'
 import { SettingsLink } from '@/components/SettingsLink'
@@ -31,10 +31,9 @@ const EXPORTY = [
 export default async function MesicPage({ params }: { params: Promise<{ period: string }> }) {
   const ctx = await requireOrgContext()
   const { period } = await params
-  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period)
-  if (!m) notFound()
-  const year = Number(m[1])
-  const month = Number(m[2])
+  const p = parsePeriod(period)
+  if (!p) notFound()
+  const { year, month } = p
 
   const { fromKey, toKey } = periodRange(ctx.org.periodStartDay, year, month)
   // Vždy jen záznamy aktivního členství.

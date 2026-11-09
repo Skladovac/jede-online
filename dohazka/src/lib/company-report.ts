@@ -1,7 +1,7 @@
 // Firemní přehled: čistá funkce bez Prismy a bez `server-only`. Sčítá lidi v setinách (jako buildMonth),
 // aby 7,7 + 0,1 + 0,2 vyšlo přesně 8. Formáty souborů řeší company-csv.ts a company-xlsx.ts.
 
-import { formatHours, pragueDayKey } from '@/lib/date'
+import { formatHours, parseDayKey, pragueDayKey } from '@/lib/date'
 import { periodLabelFor } from '@/lib/export/rows'
 import type { buildMonth } from '@/lib/month'
 
@@ -66,4 +66,20 @@ export function buildCompanyReport(args: {
 export const dayShort = (key: string) => {
   const [, m, d] = key.split('-').map(Number)
   return `${d}. ${m}.`
+}
+
+const DNY_TYDNE = ['ne', 'po', 'út', 'st', 'čt', 'pá', 'so']
+
+/**
+ * Den bez záznamu pro export: "4. 11. 2026 (st)".
+ * Rok i závorka se zkratkou dne jsou schválně. Samotné "4. 11." si český Excel v CSV
+ * převede na datum a domyslí si letošní rok; text se závorkou na konci jako datum
+ * přečíst nejde, takže o chování Excelu nic nehádáme. Zkratka dne navíc rovnou říká,
+ * které díry jsou víkend — přehled je schválně bez rozvrhu pracovních dnů.
+ * Zkratky jsou napsané ručně, ne z `Intl`: krátké názvy dnů se mezi verzemi ICU liší.
+ * Index je z `getUTCDay()`: parseDayKey vrací UTC půlnoc, s místní zónou by pátek vyšel jako čtvrtek.
+ */
+export const missingDayLabel = (key: string) => {
+  const [y, m, d] = key.split('-').map(Number)
+  return `${d}. ${m}. ${y} (${DNY_TYDNE[parseDayKey(key).getUTCDay()]})`
 }

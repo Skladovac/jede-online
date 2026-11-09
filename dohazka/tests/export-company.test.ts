@@ -46,7 +46,7 @@ describe('toCompanyXlsx', () => {
     expect(ws.getCell('B2').numFmt).toBe('0.00')
     expect(ws.getCell('C2').type).toBe(ExcelJS.ValueType.Number)
     expect(ws.getCell('D2').value).toBe(2)
-    expect(ws.getCell('E2').value).toBe('4. 11., 5. 11.')
+    expect(ws.getCell('E2').value).toBe('4. 11. 2026 (st), 5. 11. 2026 (čt)')
     expect(ws.getCell('A4').value).toBe('Celkem')
     expect(ws.getCell('B4').value).toBe(24.5)
     expect(ws.getCell('B4').type).toBe(ExcelJS.ValueType.Number)
@@ -62,7 +62,7 @@ describe('toCompanyCsv', () => {
     const csv = toCompanyCsv(report())
     expect(csv.startsWith('﻿')).toBe(true)
     expect(csv).toContain('Jméno;Hodiny;Odpracované dny;Dny bez záznamu (počet);Dny bez záznamu\r\n')
-    expect(csv).toContain('Jan Novák;16,5;2;2; 4. 11. 2026, 5. 11. 2026\r\n')
+    expect(csv).toContain('Jan Novák;16,5;2;2;4. 11. 2026 (st), 5. 11. 2026 (čt)\r\n')
     expect(csv).toContain('Eva Svobodová;8;1;0;\r\n')
     expect(csv).toContain('Celkem;24,5;;;\r\n')
   })
@@ -76,7 +76,7 @@ describe('toCompanyCsv', () => {
   })
   it('jediný den bez záznamu má rok a úvodní mezeru, aby ho Excel nečetl jako datum', () => {
     const csv = toCompanyCsv(report({ rows: [{ ...jedna('X')[0], missingDays: ['2026-11-04'] }] }))
-    expect(csv).toContain('X;1;1;1; 4. 11. 2026\r\n')
+    expect(csv).toContain('X;1;1;1;4. 11. 2026 (st)\r\n')
   })
   it('uvozuje jméno se středníkem a uvozovkou', () => {
     const csv = toCompanyCsv(report({ rows: jedna('Novák; "Jan"') }))
