@@ -64,7 +64,8 @@ export function PridatZapis({ membershipId }: { membershipId: string }) {
     <details className="mt-5 rounded-panel border border-line bg-card px-3 py-3">
       <summary className="cursor-pointer text-sm font-medium">Přidat záznam</summary>
       <p className="mt-2 text-sm text-muted">Špatný záznam nejdřív smaž, pak zapiš správný. Oboje se uloží do historie změn.</p>
-      <form ref={formRef} onSubmit={odeslat} className="mt-3 space-y-2">
+      {/* Jakmile správce začne psát další záznam, hláška o uložení už nemluví o tom, co je ve formuláři. */}
+      <form ref={formRef} onSubmit={odeslat} onInput={() => nastavUlozeno(false)} className="mt-3 space-y-2">
         <label className="block text-sm">
           Den
           <input name="day" type="date" required className={pole} />

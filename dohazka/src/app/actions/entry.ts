@@ -123,6 +123,12 @@ export async function saveEntryFor(membershipId: string, formData: FormData): Pr
   // Předčtení je uvnitř transakce se smazáním, jinak by DAYOFF vzniklý mezi nimi zmizel bez řádku v historii.
   const zmenil = { membershipId, dayKey: day, changedById: ctx.user.id }
   await prisma.$transaction(async (tx) => {
+    // Postgres jede v READ COMMITTED, takze DAYOFF, ktery stihne vzniknout mezi tim ctenim a mazanim,
+    // se smaze bez radku v historii. NEOPRAVOVAT to mazanim podle prectenych id: takovy DAYOFF by pak
+    // u dne zustal spolu s novym zaznamem a den by rikal 'nepracoval' i 'osm hodin' zaroven, coz je
+    // videt ve vykazu pro mzdy. Uzavrit to poradne by znamenalo prepnout VSECHNY zapisy dne na
+    // Serializable (SSI plati, jen kdyz jsou serializable obe strany). Okno je milisekundy a vyzaduje,
+    // aby zamestnanec zmackl Nepracoval presne ve chvili opravy; vedome prijato.
     const volno = await tx.entry.findMany({ where: { membershipId, day: den, kind: 'DAYOFF' } })
     await tx.entry.deleteMany({ where: { membershipId, day: den, kind: 'DAYOFF' } })
     await tx.entry.create({ data })

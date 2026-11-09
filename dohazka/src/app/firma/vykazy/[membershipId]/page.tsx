@@ -96,7 +96,7 @@ export default async function VykazClovekaPage({
         </Link>
       )}
       {nabidnoutUzavrenost && (
-        <p className="mt-5 text-sm text-muted">
+        <p role="status" className="mt-5 text-sm text-muted">
           Měsíc je uzavřený, záznamy už nejdou měnit. Změna půjde, až měsíc znovu otevře správce firmy.
         </p>
       )}
@@ -123,7 +123,7 @@ export default async function VykazClovekaPage({
                         {e.hours !== null && ` · ${formatHours(e.hours)} h`}
                         {(e.place || e.note) && <span className="text-muted"> · {[e.place, e.note].filter(Boolean).join(' · ')}</span>}
                       </span>
-                      {smiOpravit && <SmazatZapis membershipId={membershipId} id={e.id} popis={`${popisDne(r.dayKey)}, ${KIND_LABEL[e.kind]}`} />}
+                      {smiOpravit && <SmazatZapis membershipId={membershipId} id={e.id} popis={[popisDne(r.dayKey), KIND_LABEL[e.kind], e.hours !== null && `${formatHours(e.hours)} h`, e.place].filter(Boolean).join(', ')} />}
                     </span>
                   ))}
                 </span>
