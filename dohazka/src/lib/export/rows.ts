@@ -41,6 +41,12 @@ const ddmmyyyy = (key: string) => {
   return `${d}. ${m}. ${y}`
 }
 
+/** Popisek období: pojmenované po měsíci, ve kterém končí (viz periodRange); mimo kalendářní měsíc s rozsahem. */
+export function periodLabelFor(fromKey: string, toKey: string): string {
+  const mesic = mesicFormat.format(parseDayKey(toKey))
+  return fromKey.endsWith('-01') ? mesic : `${mesic} (${ddmmyyyy(fromKey)} – ${ddmmyyyy(toKey)})`
+}
+
 export function buildReport(args: {
   orgName: string
   personName: string
@@ -67,9 +73,7 @@ export function buildReport(args: {
       })),
     )
 
-  // Období je pojmenované po měsíci, ve kterém končí (viz periodRange). Mimo kalendářní měsíc přidáme rozsah.
-  const mesic = mesicFormat.format(parseDayKey(toKey))
-  const periodLabel = fromKey.endsWith('-01') ? mesic : `${mesic} (${ddmmyyyy(fromKey)} – ${ddmmyyyy(toKey)})`
+  const periodLabel = periodLabelFor(fromKey, toKey)
 
   return {
     title: 'Výkaz odpracovaných hodin',

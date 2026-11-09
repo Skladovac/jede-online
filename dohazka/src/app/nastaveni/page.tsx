@@ -28,6 +28,12 @@ export default async function NastaveniPage() {
         )}
       </section>
 
+      {can(ctx.role, 'viewOthersEntries', ctx.isSuperAdmin) && (
+        <Link href="/firma/vykazy" className="mt-5 flex min-h-11 items-center rounded-panel border border-line bg-card px-4 font-medium hover:bg-accent-soft">
+          Výkazy firmy
+        </Link>
+      )}
+
       {can(ctx.role, 'managePeople', ctx.isSuperAdmin) && (
         <Link href="/firma/lide" className="mt-5 flex min-h-11 items-center rounded-panel border border-line bg-card px-4 font-medium hover:bg-accent-soft">
           Lidé ve firmě
