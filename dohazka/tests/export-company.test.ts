@@ -108,7 +108,7 @@ const nastavDb = (mojeRole: string, mojeOrg = 'A') => {
   const moje = { id: 'm-me', orgId: mojeOrg, role: mojeRole, active: true, userId: 'u-me', tracksFrom: den('2026-01-01'), createdAt: den('2026-01-01'), org: org(mojeOrg), user: { name: 'Já' }, entries: [] }
   db.membership.findMany.mockImplementation(async ({ where }: { where: Where }) => {
     if (where.userId === 'u-me') return [moje]
-    return DATA.filter((m) => (where.orgId === undefined || m.orgId === where.orgId) && (where.role === undefined || m.role === where.role) && (m.active || m.entries.length > 0))
+    return DATA.filter((m) => (where.orgId === undefined || m.orgId === where.orgId) && (m.active || m.entries.length > 0))
   })
 }
 const dotazyNaFirmu = () => db.membership.findMany.mock.calls.filter(([a]) => a.where.userId === undefined)
@@ -120,10 +120,15 @@ describe('loadCompanyPeople', () => {
     vi.clearAllMocks()
     nastavDb('ACCOUNTANT')
   })
-  it('vrací jen zaměstnance vlastní firmy: ani cizí firma, ani správce, ani účetní', async () => {
+  it('vrací členy vlastní firmy všech rolí, nikdy cizí firmu', async () => {
     const lide = await loadCompanyPeople('A', '2026-11-01', '2026-11-30')
-    expect(lide.map((l) => l.personName)).toEqual(['Adam Zaměstnanec', 'Odešel Bývalý'])
-    expect(db.membership.findMany.mock.calls[0][0].where).toMatchObject({ orgId: 'A', role: 'EMPLOYEE' })
+    expect(lide.map((l) => l.personName)).toEqual(['Adam Zaměstnanec', 'Odešel Bývalý', 'Olga Správkyně', 'Ucta Účetní'])
+    expect(db.membership.findMany.mock.calls[0][0].where).toMatchObject({ orgId: 'A' })
+  })
+  it('díry se hledají jen aktivním zaměstnancům, ne správci ani účetní', async () => {
+    const lide = await loadCompanyPeople('A', '2026-11-01', '2026-11-30')
+    const gaps = Object.fromEntries(lide.map((l) => [l.personName, l.trackGaps]))
+    expect(gaps).toEqual({ 'Adam Zaměstnanec': true, 'Odešel Bývalý': false, 'Olga Správkyně': false, 'Ucta Účetní': false })
   })
   it('neaktivní s hodinami v období zůstane (patří do mezd), ale bez hledání mezer', async () => {
     const lide = await loadCompanyPeople('A', '2026-11-01', '2026-11-30')
@@ -173,9 +178,10 @@ describe('GET /api/export/firma/[format]', () => {
     expect(csv).toContain('Odešel Bývalý;3;1;0;') // neaktivní s hodinami, bez falešných mezer
     expect(csv).not.toContain('Odešel Bezhodin')
     expect(csv).not.toContain('Cizí Zaměstnanec')
-    expect(csv).not.toContain('Olga Správkyně')
-    expect(csv).not.toContain('Ucta Účetní')
-    expect(csv).toContain('Celkem;11;') // 8 + 3, ne 99 z firmy B
+    // správce s hodinami je v mzdách a nemá vypsané díry (počet 0, seznam prázdný)
+    expect(csv).toContain('Olga Správkyně;5;1;0;\r\n')
+    expect(csv).toContain('Ucta Účetní;0;0;0;\r\n')
+    expect(csv).toContain('Celkem;16;') // 8 + 5 + 3, ne 99 z firmy B
     expect(r.headers.get('Content-Disposition')).toContain('Firma-A')
   })
   it('XLSX správce je skutečný xlsx jen s lidmi své firmy', async () => {
@@ -187,7 +193,7 @@ describe('GET /api/export/firma/[format]', () => {
     const jmena = wb.getWorksheet('Firma')!.getColumn(1).values.filter(Boolean)
     expect(jmena).toContain('Adam Zaměstnanec')
     expect(jmena).not.toContain('Cizí Zaměstnanec')
-    expect(jmena).not.toContain('Olga Správkyně')
+    expect(jmena).toContain('Olga Správkyně')
   })
   it('aktivní firma je ta z členství, ne z jiné: uživatel firmy B dostane B', async () => {
     nastavDb('OWNER', 'B')

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { requireCan } from '@/lib/org'
 import { dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
 import { KIND_LABEL } from '@/lib/entry'
+import { ddmmyyyy } from '@/lib/export/rows'
 import { buildMonth, visibleRows } from '@/lib/month'
 
 export const metadata: Metadata = { title: 'Výkaz člověka' }
@@ -65,7 +66,7 @@ export default async function VykazClovekaPage({
       </Link>
       <h1 className="mt-3 text-xl font-semibold">{clen.user.name}</h1>
       <p className="text-sm text-subtle">
-        {fromKey.split('-').reverse().join('. ')} – {toKey.split('-').reverse().join('. ')}
+        {ddmmyyyy(fromKey)} – {ddmmyyyy(toKey)}
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">

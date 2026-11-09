@@ -38,8 +38,8 @@ describe('buildCompanyReport', () => {
       ...base,
       people: [{ personName: 'A', month: mesic('2026-11-05', [e('2026-11-06', 8), e('2026-11-20', 8, 'VACATION')]) }],
     })
-    // 5. a 7.–10. (dnes včetně); 1.–4. je před začátkem zapisování, 11.–30. je budoucnost, 20. má záznam
-    expect(r.rows[0].missingDays).toEqual(['2026-11-05', '2026-11-07', '2026-11-08', '2026-11-09', '2026-11-10'])
+    // 5. a 7.–9.; dnešek (10.) ještě neskončil; 1.–4. je před začátkem zapisování, 11.–30. budoucnost, 20. má záznam
+    expect(r.rows[0].missingDays).toEqual(['2026-11-05', '2026-11-07', '2026-11-08', '2026-11-09'])
   })
   it('člověk, kterému se mezery nehledají (neaktivní), je má prázdné, hodiny mu zůstanou', () => {
     const r = buildCompanyReport({
@@ -67,7 +67,7 @@ describe('buildCompanyReport', () => {
     try {
       const { todayKey: _t, ...bez } = base
       const r = buildCompanyReport({ ...bez, people: [{ personName: 'A', month: mesic('2026-11-01', []) }] })
-      expect(r.rows[0].missingDays).toEqual(['2026-11-01', '2026-11-02', '2026-11-03'])
+      expect(r.rows[0].missingDays).toEqual(['2026-11-01', '2026-11-02'])
     } finally {
       vi.useRealTimers()
     }

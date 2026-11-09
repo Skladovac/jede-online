@@ -36,7 +36,7 @@ export type Report = {
 const dnyFormat = new Intl.DateTimeFormat('cs-CZ', { weekday: 'long', timeZone: 'UTC' })
 const mesicFormat = new Intl.DateTimeFormat('cs-CZ', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
-const ddmmyyyy = (key: string) => {
+export const ddmmyyyy = (key: string) => {
   const [y, m, d] = key.split('-').map(Number)
   return `${d}. ${m}. ${y}`
 }

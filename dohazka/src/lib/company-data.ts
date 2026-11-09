@@ -6,16 +6,18 @@ import { buildMonth } from '@/lib/month'
 /**
  * Měsíce všech zaměstnanců JEDNÉ firmy. Jediné místo, odkud jdou data do přehledu i do exportu.
  * - `orgId` je v dotazu na členství; záznamy se čtou vnořeně pod ně, takže se k cizí firmě nedá dostat ani přes id.
- * - Jen role EMPLOYEE: účetní a správce nemají povinnost zapisovat, jejich `tracksFrom` je den založení
- *   a v seznamu mezer by trvale svítili.
+ * - Všechny role: vlastní výkaz má každá, správce malé firmy si hodiny zapisuje a patří do mezd.
+ * - Mezery (`trackGaps`) se hledají jen aktivním zaměstnancům: účetní a správce nemají povinnost zapisovat,
+ *   jejich `tracksFrom` je den založení a svítili by trvale.
  * - Neaktivní člen se bere jen když v období něco zapsal (jeho hodiny patří do mezd), a mezery se mu nehledají.
  */
 export async function loadCompanyPeople(orgId: string, fromKey: string, toKey: string) {
   const rozsah = { gte: parseDayKey(fromKey), lte: parseDayKey(toKey) }
   const clenove = await prisma.membership.findMany({
-    where: { orgId, role: 'EMPLOYEE', OR: [{ active: true }, { entries: { some: { day: rozsah } } }] },
+    where: { orgId, OR: [{ active: true }, { entries: { some: { day: rozsah } } }] },
     select: {
       id: true,
+      role: true,
       active: true,
       tracksFrom: true,
       user: { select: { name: true } },
@@ -27,7 +29,7 @@ export async function loadCompanyPeople(orgId: string, fromKey: string, toKey: s
       membershipId: m.id,
       personName: m.user.name,
       active: m.active,
-      trackGaps: m.active,
+      trackGaps: m.active && m.role === 'EMPLOYEE',
       month: buildMonth({
         fromKey,
         toKey,

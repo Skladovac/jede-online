@@ -11,7 +11,7 @@ export type CompanyRow = {
   /** Číselná hodnota pro XLSX (CSV ji ignoruje). */
   totalHoursValue: number
   daysWorked: number
-  /** Dny bez záznamu od začátku zapisování do dneška (včetně), vzestupně jako "2026-11-03". Budoucí dny sem nepatří. */
+  /** Dny bez záznamu od začátku zapisování do včerejška (dnešek ještě neskončil), vzestupně jako "2026-11-03". Budoucí dny sem nepatří. */
   missingDays: string[]
 }
 
@@ -48,7 +48,7 @@ export function buildCompanyReport(args: {
       p.trackGaps === false
         ? []
         : p.month.rows
-            .filter((r) => r.state === 'empty' && r.dayKey <= today)
+            .filter((r) => r.state === 'empty' && r.dayKey < today)
             .map((r) => r.dayKey)
             .sort(),
   }))
