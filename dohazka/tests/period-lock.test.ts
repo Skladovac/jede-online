@@ -61,10 +61,12 @@ describe('lockPeriod / unlockPeriod: oprávnění', () => {
     expect(zapisy()).toBe(0)
   })
 
+  // Otevření je vlastní akce matice ('unlockPeriod'), kterou účetní nemá, takže requireCan přesměruje
+  // stejně jako u zaměstnance. Dřív to byla ruční podmínka v akci a vracela chybu.
   it('účetní smí uzavřít, ale ne otevřít', async () => {
     jaJsem('ACCOUNTANT')
     expect(await lockPeriod('2026-11')).toEqual({ ok: true })
-    expect(await unlockPeriod('2026-11')).toHaveProperty('error')
+    await expect(unlockPeriod('2026-11')).rejects.toThrow('NEXT_REDIRECT:/')
     expect(db.periodLock.deleteMany).not.toHaveBeenCalled()
   })
 

@@ -9,7 +9,21 @@ const pole = 'mt-1 w-full rounded-panel border border-line bg-card px-3 py-2 tex
 
 type Stav = { error: string } | { ok: true } | null
 
-export function DayForm({ day, places, hasEntries, hasWorkOrLeave }: { day: string; places: string[]; hasEntries: boolean; hasWorkOrLeave: boolean }) {
+// `orgId` je firma, pro kterou se stránka vykreslila. Posílá se s každým zápisem, aby okno, které zůstalo
+// na předchozí firmě, nezapsalo (a „Nepracoval“ nesmazal) data té, na kterou člověk mezitím přepnul.
+export function DayForm({
+  day,
+  orgId,
+  places,
+  hasEntries,
+  hasWorkOrLeave,
+}: {
+  day: string
+  orgId: string
+  places: string[]
+  hasEntries: boolean
+  hasWorkOrLeave: boolean
+}) {
   const formRef = useRef<HTMLFormElement>(null)
   const hoursRef = useRef<HTMLInputElement>(null)
   const fromRef = useRef<HTMLInputElement>(null)
@@ -57,7 +71,7 @@ export function DayForm({ day, places, hasEntries, hasWorkOrLeave }: { day: stri
     if (hasEntries && !window.confirm('Smazat záznamy tohoto dne a zapsat „Nepracoval“?')) return
     startTransition(async () => {
       try {
-        const r = await markDayOff(day)
+        const r = await markDayOff(day, orgId)
         // Důvod (např. uzavřený měsíc) říká akce; obecná hláška zůstává jen pro vyhozenou výjimku.
         nastavStav('error' in r ? { error: r.error } : null)
       } catch {
@@ -69,6 +83,7 @@ export function DayForm({ day, places, hasEntries, hasWorkOrLeave }: { day: stri
   return (
     <form ref={formRef} onSubmit={odeslat} className="mt-5 space-y-4">
       <input type="hidden" name="day" value={day} />
+      <input type="hidden" name="orgId" value={orgId} />
 
       <label className="block text-sm font-medium">
         Hodiny
@@ -149,7 +164,7 @@ export function DayForm({ day, places, hasEntries, hasWorkOrLeave }: { day: stri
   )
 }
 
-export function DeleteEntryButton({ id }: { id: string }) {
+export function DeleteEntryButton({ id, orgId }: { id: string; orgId: string }) {
   const [pending, startTransition] = useTransition()
   const [chyba, nastavChybu] = useState<string | null>(null)
   return (
@@ -161,7 +176,7 @@ export function DeleteEntryButton({ id }: { id: string }) {
           if (!window.confirm('Smazat tento záznam?')) return
           startTransition(async () => {
             try {
-              const r = await deleteEntry(id)
+              const r = await deleteEntry(id, orgId)
               nastavChybu('error' in r ? r.error : null)
             } catch {
               nastavChybu('Smazání se nepodařilo.')

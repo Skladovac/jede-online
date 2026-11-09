@@ -26,8 +26,15 @@ function obnovStranky(day: string) {
 // Pole formuláře, která validateEntry čte. Cokoli jiného z FormData ignorujeme.
 const POLE = ['day', 'kind', 'hours', 'fromTime', 'toTime', 'place', 'note'] as const
 
+// Firma přichází z cookie, formulář dne posílá jen datum a hodnoty. Kdo si v jednom okně otevře den firmy A
+// a v druhém přepne na firmu B, zapíše tím prvním oknem do firmy B — a „Nepracoval“ jí smaže záznamy dne,
+// které první okno nikdy nevidělo, takže se ani nezeptá. Proto stránka posílá, pro kterou firmu se vykreslila,
+// a akce to porovná dřív, než se zapíše nebo než se vůbec sáhne na uzávěrku (ta je cizí firmy).
+const JINE_OKNO = 'Mezitím jsi v jiném okně přepnul firmu. Obnov stránku a zkus to znovu.'
+
 export async function saveEntry(formData: FormData): Promise<{ error: string } | { ok: true }> {
   const ctx = await requireOrgContext()
+  if (formData.get('orgId') !== ctx.org.id) return { error: JINE_OKNO }
   const vstup = Object.fromEntries(POLE.map((k) => [k, formData.get(k)]))
   const v = validateEntry(vstup)
   if (!v.ok) return { error: v.error }
@@ -47,8 +54,11 @@ export async function saveEntry(formData: FormData): Promise<{ error: string } |
   return { ok: true }
 }
 
-export async function deleteEntry(id: string): Promise<{ ok: true } | { error: string }> {
+export async function deleteEntry(id: string, orgId: string): Promise<{ ok: true } | { error: string }> {
   const ctx = await requireOrgContext()
+  // Mazání je díky `membershipId` v `where` bezpečné i tak, ale bez téhle kontroly by hlásilo
+  // „Smazání se nepodařilo.“ a člověk by nevěděl, že mu mezitím přeskočila firma.
+  if (orgId !== ctx.org.id) return { error: JINE_OKNO }
   if (typeof id !== 'string' || !id) return { error: 'Smazání se nepodařilo.' }
   // Den záznamu je potřeba znát kvůli uzávěrce; hledá se vždy jen v aktivním členství, cizí id se tváří jako nenalezené.
   const zaznam = await prisma.entry.findFirst({ where: { id, membershipId: ctx.membership.id }, select: { day: true } })
@@ -62,8 +72,9 @@ export async function deleteEntry(id: string): Promise<{ ok: true } | { error: s
   return { ok: true }
 }
 
-export async function markDayOff(day: string): Promise<{ ok: true } | { error: string }> {
+export async function markDayOff(day: string, orgId: string): Promise<{ ok: true } | { error: string }> {
   const ctx = await requireOrgContext()
+  if (orgId !== ctx.org.id) return { error: JINE_OKNO }
   const v = validateEntry({ day, kind: 'DAYOFF' })
   if (!v.ok) return { error: v.error }
   if (await jeDenUzavreny(ctx.org.id, ctx.org.periodStartDay, v.value.day)) return { error: MESIC_UZAVREN }

@@ -9,6 +9,7 @@ const userDb = vi.hoisted(() => ({ update: vi.fn() }))
 vi.mock('@/lib/prisma', () => ({ prisma: { pushSubscription: db, user: userDb } }))
 
 import { removePushSubscription, savePushSubscription, setReminder } from '@/app/actions/push'
+import * as pushModule from '@/app/actions/push'
 
 describe('removePushSubscription', () => {
   beforeEach(() => vi.clearAllMocks())
@@ -57,5 +58,11 @@ describe('setReminder', () => {
   it('hodinu od starého klienta odmítne a nic nezapíše', async () => {
     expect(await setReminder({ enabled: true, hour: 22 } as never)).toEqual({ ok: false })
     expect(userDb.update).not.toHaveBeenCalled()
+  })
+})
+
+describe("soubor s 'use server'", () => {
+  it('exportuje jen čtyři akce odběrů a připomínek (každý export je veřejně volatelný endpoint)', () => {
+    expect(Object.keys(pushModule).sort()).toEqual(['removePushSubscription', 'savePushSubscription', 'sendTestPush', 'setReminder'])
   })
 })

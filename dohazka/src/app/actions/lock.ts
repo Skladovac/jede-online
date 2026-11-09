@@ -33,12 +33,12 @@ export async function lockPeriod(periodKey: string): Promise<{ ok: true } | { er
 }
 
 /**
- * Otevře období. Smí jen správce firmy (nebo super admin): `can` vrací super adminovi true na všechno,
- * takže samotné requireCan roli OWNER nezaručí a účetní by uzávěrku, kterou sám zamkl, mohl tiše obejít.
+ * Otevře období. Vlastní akce matice (`unlockPeriod`), kterou má jen OWNER: účetní smí zamykat, ale ne
+ * odemykat, jinak by uzávěrku, kterou sám zamkl, tiše obešel. Super adminovi `can` vrací true na všechno,
+ * takže requireCan pokryje správce firmy i jeho a ruční podmínka na roli tu být nemusí.
  */
 export async function unlockPeriod(periodKey: string): Promise<{ ok: true } | { error: string }> {
-  const ctx = await requireCan('lockPeriod')
-  if (ctx.role !== 'OWNER' && !ctx.isSuperAdmin) return { error: 'Měsíc smí otevřít jen správce firmy.' }
+  const ctx = await requireCan('unlockPeriod')
   if (!platnyKlic(periodKey)) return { error: 'Neplatné období.' }
   // deleteMany: neexistující uzávěrka není chyba a orgId z kontextu drží izolaci firem.
   await prisma.periodLock.deleteMany({ where: { orgId: ctx.org.id, periodKey } })

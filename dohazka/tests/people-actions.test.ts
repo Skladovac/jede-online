@@ -274,6 +274,31 @@ describe('addPerson: nový člověk', () => {
   })
 })
 
+// Bez limitu zakládá každé volání na neexistující adresu účet a posílá e-mail; na existující adresu
+// posílá e-mail cizímu člověku. Stejný vzor jako resendInvitation pár řádků dál.
+describe('addPerson: limit opakování', () => {
+  it('limity: 30/h na správce, 10/h na adresáta', async () => {
+    await addPerson(vstup)
+    expect(rl.rateLimit).toHaveBeenCalledWith('add-admin:u-me', 30, 3_600_000)
+    expect(rl.rateLimit).toHaveBeenCalledWith('add-user:eva@firma.cz', 10, 3_600_000)
+  })
+
+  it.each(['add-admin:', 'add-user:'])('po vyčerpání (%s): chyba, žádný zápis ani e-mail', async (klic) => {
+    rl.rateLimit.mockImplementation((k: string) => !k.startsWith(klic))
+    expect(await addPerson(vstup)).toEqual({ error: 'Příliš mnoho pokusů. Zkus to za chvíli.' })
+    expect(db.$transaction).not.toHaveBeenCalled()
+    expect(zapisy()).toBe(0)
+    expect(inv.createInvitation).not.toHaveBeenCalled()
+    expect(inv.sendInvitationMail).not.toHaveBeenCalled()
+  })
+
+  it('limit adresáta se počítá až po kontrole oprávnění: účetní ho nevyčerpá', async () => {
+    jaJsem('ACCOUNTANT')
+    await expect(addPerson(vstup)).rejects.toThrow('NEXT_REDIRECT:/')
+    expect(rl.rateLimit).not.toHaveBeenCalled()
+  })
+})
+
 describe('addPerson: existující e-mail, heslo nastavil majitel účtu', () => {
   beforeEach(() => {
     db.user.findUnique.mockResolvedValue({ id: 'u-old', passwordSetByOwner: true })
@@ -309,8 +334,50 @@ describe('addPerson: existující e-mail, heslo nastavil majitel účtu', () => 
   })
 })
 
-describe('addPerson: existující e-mail, heslo zná jiný správce (eskalace napříč firmami)', () => {
+// Zrcadlový obraz eskalace, kterou tahle větev opravovala: účet se hledá JEN podle e-mailu, který napsal
+// volající, takže zneplatnění hesla je zbraň — správce firmy A by podle uhádnutého e-mailu odhlásil
+// a zamkl správce firmy B. Fail-closed: odmítnout, a to před jakýmkoli zápisem.
+describe('addPerson: existující účet, heslo nastavil někdo jiný (správce firmy nesmí)', () => {
+  const HLASKA =
+    'Tenhle e-mail už účet má a heslo mu nastavil někdo jiný. Ať si ho ten člověk nejdřív nastaví sám přes „Zapomenuté heslo“, potom ho půjde přidat.'
+
   beforeEach(() => {
+    db.user.findUnique.mockResolvedValue({ id: 'u-old', passwordSetByOwner: false })
+  })
+
+  it('správce firmy je odmítnut a NIC se nezapíše: heslo, relace, členství ani pozvánka', async () => {
+    expect(await addPerson(vstup)).toEqual({ error: HLASKA })
+    expect(db.user.updateMany).not.toHaveBeenCalled()
+    expect(db.session.deleteMany).not.toHaveBeenCalled()
+    expect(db.membership.create).not.toHaveBeenCalled()
+    expect(inv.createInvitation).not.toHaveBeenCalled()
+    expect(inv.sendInvitationMail).not.toHaveBeenCalled()
+    expect(inv.notifyAddedToOrg).not.toHaveBeenCalled()
+    expect(zapisy()).toBe(0)
+  })
+
+  it('účet je členem JEN cizí firmy: správce firmy A se ho nesmí dotknout', async () => {
+    // Věrná náhrada databáze: u-old má členství jen v o2, v aktivní firmě o1 žádné.
+    db.membership.findFirst.mockImplementation(async ({ where }: { where: { userId?: string; orgId?: string } }) =>
+      where.userId === 'u-old' && where.orgId === 'o2' ? { id: 'm-cizi' } : null,
+    )
+    expect(await addPerson(vstup)).toEqual({ error: HLASKA })
+    expect(db.user.updateMany).not.toHaveBeenCalled()
+    expect(db.session.deleteMany).not.toHaveBeenCalled()
+    expect(zapisy()).toBe(0)
+  })
+
+  it('účet, kterému si heslo nastavil majitel sám, se připojí jako dřív (odmítá se jen cizí heslo)', async () => {
+    db.user.findUnique.mockResolvedValue({ id: 'u-old', passwordSetByOwner: true })
+    expect(await addPerson(vstup)).toEqual({ ok: true, existing: { emailed: true } })
+    expect(db.membership.create).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('addPerson: existující e-mail, heslo zná jiný správce — super admin (zneplatnění zůstává)', () => {
+  beforeEach(() => {
+    // Majitel stroje zakládá firmy a má i cestu přes CLI; jemu zneplatnění hesla zůstává.
+    jaJsem('OWNER', true)
     db.user.findUnique.mockResolvedValue({ id: 'u-old', passwordSetByOwner: false })
   })
 
@@ -394,25 +461,37 @@ describe('addPerson: existující e-mail, heslo zná jiný správce (eskalace na
 
 describe('resendInvitation', () => {
   beforeEach(() => {
-    db.membership.findFirst.mockResolvedValue({ id: 'm1', userId: 'u-x' })
+    db.membership.findFirst.mockResolvedValue({ id: 'm1', userId: 'u-x', active: true })
   })
 
-  it('vytvoří novou pozvánku a pošle e-mail; hledá jen aktivní členství VLASTNÍ firmy', async () => {
+  it('vytvoří novou pozvánku a pošle e-mail; hledá členství jen ve VLASTNÍ firmě', async () => {
     const r = await resendInvitation('m1')
     expect(r).toEqual({ ok: true, emailed: true })
-    expect(db.membership.findFirst.mock.calls[0][0].where).toEqual({ id: 'm1', orgId: 'o1', active: true })
+    // `active` už není v dotazu, ale v rozhodnutí: neaktivní člen vlastní firmy má vlastní hlášku.
+    expect(db.membership.findFirst.mock.calls[0][0].where).toEqual({ id: 'm1', orgId: 'o1' })
     expect(inv.createInvitation).toHaveBeenCalledWith({ userId: 'u-x', membershipId: 'm1', kind: 'invite' })
     expect(inv.sendInvitationMail).toHaveBeenCalledWith({ userId: 'u-x', membershipId: 'm1', kind: 'invite', token: 'tok' })
   })
 
   it('členství z cizí firmy: chyba, žádná pozvánka ani e-mail', async () => {
     db.membership.findFirst.mockImplementation(async ({ where }: { where: { orgId?: string } }) =>
-      where.orgId === undefined || where.orgId === 'o2' ? { id: 'm-cizi', userId: 'u-cizi' } : null,
+      where.orgId === undefined || where.orgId === 'o2' ? { id: 'm-cizi', userId: 'u-cizi', active: true } : null,
     )
     const r = await resendInvitation('m-cizi')
-    expect(r).toHaveProperty('error')
+    expect(r).toEqual({ error: 'Tenhle člověk ve vaší firmě není.' })
     expect(inv.createInvitation).not.toHaveBeenCalled()
     expect(inv.sendInvitationMail).not.toHaveBeenCalled()
+  })
+
+  it('neaktivní člen VLASTNÍ firmy: hláška o neaktivitě, ne „ve vaší firmě není“', async () => {
+    db.membership.findFirst.mockResolvedValue({ id: 'm1', userId: 'u-x', active: false })
+    expect(await resendInvitation('m1')).toEqual({
+      error: 'Tenhle člověk je ve firmě neaktivní. Nejdřív ho v seznamu aktivuj, potom mu pozvánka půjde poslat.',
+    })
+    expect(inv.createInvitation).not.toHaveBeenCalled()
+    expect(inv.sendInvitationMail).not.toHaveBeenCalled()
+    // Limit adresáta se nespotřebuje: pozvánka neodešla.
+    expect(rl.rateLimit.mock.calls.map((c) => c[0] as string).some((k) => k.startsWith('resend-user:'))).toBe(false)
   })
 
   it.each(['ACCOUNTANT', 'EMPLOYEE'] as const)('%s: přesměrování a žádná pozvánka', async (role) => {
@@ -424,7 +503,7 @@ describe('resendInvitation', () => {
   it('limit četnosti: po vyčerpání (na správce i na adresáta) chyba a žádná pozvánka ani e-mail', async () => {
     for (const klic of ['resend-admin:', 'resend-user:']) {
       vi.clearAllMocks()
-      db.membership.findFirst.mockResolvedValue({ id: 'm1', userId: 'u-x' })
+      db.membership.findFirst.mockResolvedValue({ id: 'm1', userId: 'u-x', active: true })
       rl.rateLimit.mockImplementation((k: string) => !k.startsWith(klic))
       const r = await resendInvitation('m1')
       expect(r).toHaveProperty('error')

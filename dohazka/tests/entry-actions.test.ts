@@ -26,11 +26,14 @@ const tx = () => {
 vi.mock('@/lib/prisma', () => ({ prisma: db }))
 
 import { deleteEntry, deleteEntryFor, markDayOff, saveEntry, saveEntryFor } from '@/app/actions/entry'
+import * as entryModule from '@/app/actions/entry'
 import { can } from '@/lib/role'
 import { Prisma } from '@prisma/client'
 
+// Formulář dne posílá i `orgId` firmy, pro kterou se stránka vykreslila; bez jiné hodnoty je to firma z kontextu.
 function form(o: Record<string, string>) {
   const f = new FormData()
+  f.set('orgId', 'o1')
   for (const [k, v] of Object.entries(o)) f.set(k, v)
   return f
 }
@@ -56,19 +59,19 @@ describe('zápisy jsou omezené členstvím, ne uživatelem', () => {
   })
 
   it('deleteEntry maže cizí id jen v rámci aktivního členství', async () => {
-    await deleteEntry('e42')
+    await deleteEntry('e42', 'o1')
     expect(db.entry.deleteMany).toHaveBeenCalledWith({ where: { id: 'e42', membershipId: 'm1' } })
   })
 
   it('deleteEntry bez shody (záznam jiného členství) vrací chybu a nemaže', async () => {
     db.entry.findFirst.mockResolvedValue(null)
-    expect(await deleteEntry('cizi')).toEqual({ error: 'Smazání se nepodařilo.' })
+    expect(await deleteEntry('cizi', 'o1')).toEqual({ error: 'Smazání se nepodařilo.' })
     expect(db.entry.findFirst).toHaveBeenCalledWith({ where: { id: 'cizi', membershipId: 'm1' }, select: { day: true } })
     expect(db.entry.deleteMany).not.toHaveBeenCalled()
   })
 
   it('markDayOff maže a zakládá jen pod aktivním členstvím', async () => {
-    await markDayOff('2026-11-09')
+    await markDayOff('2026-11-09', 'o1')
     expect(db.entry.deleteMany.mock.calls[0][0].where).toEqual({ membershipId: 'm1', day: new Date(Date.UTC(2026, 10, 9)) })
     const data = db.entry.create.mock.calls[0][0].data
     expect(data.membershipId).toBe('m1')
@@ -100,12 +103,12 @@ describe('uzavřené období neprojde žádnou akcí dne', () => {
   })
 
   it('deleteEntry: chyba a žádný zápis', async () => {
-    expect(await deleteEntry('e1')).toEqual({ error: HLASKA })
+    expect(await deleteEntry('e1', 'o1')).toEqual({ error: HLASKA })
     zadnyZapis()
   })
 
   it('markDayOff: chyba a žádný zápis', async () => {
-    expect(await markDayOff('2026-11-09')).toEqual({ error: HLASKA })
+    expect(await markDayOff('2026-11-09', 'o1')).toEqual({ error: HLASKA })
     zadnyZapis()
   })
 
@@ -117,10 +120,10 @@ describe('uzavřené období neprojde žádnou akcí dne', () => {
 
   it('uzávěrka ctí periodStartDay firmy: při 16 patří 20. 11. do období 2026-12', async () => {
     ctx.org.periodStartDay = 16
-    await markDayOff('2026-11-20')
+    await markDayOff('2026-11-20', 'o1')
     expect(db.periodLock.findUnique.mock.calls[0][0].where.orgId_periodKey.periodKey).toBe('2026-12')
     db.periodLock.findUnique.mockClear()
-    await markDayOff('2026-11-15')
+    await markDayOff('2026-11-15', 'o1')
     expect(db.periodLock.findUnique.mock.calls[0][0].where.orgId_periodKey.periodKey).toBe('2026-11')
   })
 
@@ -129,7 +132,7 @@ describe('uzavřené období neprojde žádnou akcí dne', () => {
   it('super admin uzávěrku neobejde', async () => {
     ctx.isSuperAdmin = true
     try {
-      expect(await markDayOff('2026-11-09')).toEqual({ error: HLASKA })
+      expect(await markDayOff('2026-11-09', 'o1')).toEqual({ error: HLASKA })
       zadnyZapis()
     } finally {
       ctx.isSuperAdmin = false
@@ -138,7 +141,7 @@ describe('uzavřené období neprojde žádnou akcí dne', () => {
 
   it('otevřené období zapisuje normálně', async () => {
     db.periodLock.findUnique.mockResolvedValue(null)
-    expect(await markDayOff('2026-11-09')).toEqual({ ok: true })
+    expect(await markDayOff('2026-11-09', 'o1')).toEqual({ ok: true })
     expect(db.entry.create).toHaveBeenCalledTimes(1)
   })
 })
@@ -252,8 +255,8 @@ describe('oprava cizího zápisu s historií změn', () => {
     db.entry.findFirst.mockResolvedValue({ day: new Date(Date.UTC(2026, 10, 9)) })
     // Důkaz „zapsalo a nelogovalo“, ne jen „nelogovalo“: všechny tři akce opravdu uspěly.
     expect(await saveEntry(form({ day: '2026-11-09', kind: 'WORK', hours: '8', place: 'Zlín' }))).toEqual({ ok: true })
-    expect(await deleteEntry('e1')).toEqual({ ok: true })
-    expect(await markDayOff('2026-11-09')).toEqual({ ok: true })
+    expect(await deleteEntry('e1', 'o1')).toEqual({ ok: true })
+    expect(await markDayOff('2026-11-09', 'o1')).toEqual({ ok: true })
     expect(db.entry.create).toHaveBeenCalled()
     expect(db.entryChangeLog.create).not.toHaveBeenCalled()
   })
@@ -304,5 +307,70 @@ describe('oprava cizího zápisu s historií změn', () => {
   it('deleteEntryFor čte jen pole snímku a den', async () => {
     await deleteEntryFor('m2', 'e9')
     expect(db.entry.findFirst.mock.calls[0][0].select).toEqual({ day: true, kind: true, hours: true, fromTime: true, toTime: true, place: true, note: true })
+  })
+})
+
+// Okno, které zůstalo na předchozí firmě. Firma se bere z cookie, tak zápis z takového okna mířil do té
+// přepnuté — a „Nepracoval“ jí mazal záznamy dne, které to okno nikdy nevidělo, takže se ani nezeptal.
+// Stránka proto posílá firmu, pro kterou se vykreslila, a akce ji porovná dřív, než cokoli udělá.
+describe('zápis z okna, které zůstalo na předchozí firmě', () => {
+  const HLASKA = 'Mezitím jsi v jiném okně přepnul firmu. Obnov stránku a zkus to znovu.'
+  const zadnyZapis = () => {
+    expect(db.entry.create).not.toHaveBeenCalled()
+    expect(db.entry.deleteMany).not.toHaveBeenCalled()
+    expect(db.$transaction).not.toHaveBeenCalled()
+    // Kontrola je před uzávěrkou: na zámek cizí firmy se akce ani nezeptá.
+    expect(db.periodLock.findUnique).not.toHaveBeenCalled()
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    ctx.org.periodStartDay = 1
+    db.entry.deleteMany.mockResolvedValue({ count: 1 })
+    db.entry.create.mockResolvedValue({})
+    db.entry.findFirst.mockResolvedValue({ day: new Date(Date.UTC(2026, 10, 9)) })
+    db.periodLock.findUnique.mockResolvedValue(null)
+  })
+
+  it('saveEntry: jiná firma ve skrytém poli, chyba a žádný zápis', async () => {
+    expect(await saveEntry(form({ orgId: 'o2', day: '2026-11-09', kind: 'WORK', hours: '8', place: 'Zlín' }))).toEqual({ error: HLASKA })
+    zadnyZapis()
+  })
+
+  it('saveEntry: formulář firmu neposlal vůbec, taky chyba (fail-closed)', async () => {
+    const fd = form({ day: '2026-11-09', kind: 'WORK', hours: '8', place: 'Zlín' })
+    fd.delete('orgId')
+    expect(await saveEntry(fd)).toEqual({ error: HLASKA })
+    zadnyZapis()
+  })
+
+  it('markDayOff: jiná firma, chyba a nic se nemaže', async () => {
+    expect(await markDayOff('2026-11-09', 'o2')).toEqual({ error: HLASKA })
+    zadnyZapis()
+  })
+
+  it('deleteEntry: jiná firma, chyba která říká co se stalo (ne obecné „Smazání se nepodařilo“)', async () => {
+    expect(await deleteEntry('e1', 'o2')).toEqual({ error: HLASKA })
+    expect(db.entry.findFirst).not.toHaveBeenCalled()
+    zadnyZapis()
+  })
+
+  it('i při uzavřeném období se ptá nejdřív na firmu, zámek cizí firmy se nečte', async () => {
+    db.periodLock.findUnique.mockResolvedValue({ id: 'l1' })
+    expect(await markDayOff('2026-11-09', 'o2')).toEqual({ error: HLASKA })
+    expect(db.periodLock.findUnique).not.toHaveBeenCalled()
+  })
+
+  it('firma z kontextu projde: všechny tři akce zapíšou (důkaz, že kontrola nezakazuje všechno)', async () => {
+    expect(await markDayOff('2026-11-09', 'o1')).toEqual({ ok: true })
+    expect(await saveEntry(form({ day: '2026-11-09', kind: 'WORK', hours: '8', place: 'Zlín' }))).toEqual({ ok: true })
+    expect(await deleteEntry('e1', 'o1')).toEqual({ ok: true })
+  })
+})
+
+describe("soubor s 'use server'", () => {
+  it('exportuje jen akce dne a opravy cizího zápisu (každý export je veřejně volatelný endpoint)', () => {
+    // `jeDenUzavreny`, `clenFirmy` ani `snimek` mezi exporty být nesmí: jednou už se to muselo opravovat.
+    expect(Object.keys(entryModule).sort()).toEqual(['deleteEntry', 'deleteEntryFor', 'markDayOff', 'saveEntry', 'saveEntryFor'])
   })
 })

@@ -100,7 +100,8 @@ certbot certonly --webroot -w /opt/jede/dohazka-acme -d dohazka.jede.online
 
 odkomentuj blok 443 a znovu `nginx -t`. (Cesty `sites-available`/`sites-enabled` ověř
 podle toho, jak jsou uspořádané vhosty pokemonu.) Vhost **musí** posílat
-`X-Real-IP` — aplikace z něj bere IP pro omezení přihlašování.
+`X-Real-IP` — aplikace z něj bere IP pro omezení přihlašování — a `X-Forwarded-Host`,
+proti kterému Next kontroluje `Origin` u serverových akcí (bez něj by prošla hodnota od klienta).
 
 Vhost má blok `location ^~ /pozvanka/ { access_log off; … }`. Odkaz na pozvánku i na obnovu
 hesla nese **jednorázový token v cestě URL** a access log by ho jinak uložil čitelně na disk

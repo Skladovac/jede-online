@@ -40,7 +40,8 @@ export default async function VykazyFirmyPage({ searchParams }: { searchParams: 
   ])
   // Období zobrazené stránkou je klíč RRRR-MM (parsePeriod ho ověřil), takže se hledá přímo v seznamu.
   const uzavreno = zamky.some((z) => z.periodKey === period)
-  const smiOtevrit = ctx.role === 'OWNER' || ctx.isSuperAdmin
+  // Stejná akce matice, jakou hlídá unlockPeriod; žádná ruční podmínka na roli, ať se ty dvě místa nerozejdou.
+  const smiOtevrit = can(ctx.role, 'unlockPeriod', ctx.isSuperAdmin)
   const report = buildCompanyReport({
     orgName: ctx.org.reportName,
     fromKey,

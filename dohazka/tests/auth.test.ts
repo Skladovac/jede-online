@@ -1,6 +1,15 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// Kryptografie a schéma se testují doopravdy; nahrazuje se jen okolí, aby šel importovat modul akcí
+// (kvůli seznamu jeho exportů — v souboru s 'use server' je každý export veřejný endpoint).
+vi.mock('server-only', () => ({}))
+vi.mock('next/headers', () => ({ cookies: vi.fn(async () => ({ get: () => undefined, set: vi.fn(), delete: vi.fn() })) }))
+vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
+vi.mock('@/lib/prisma', () => ({ prisma: { user: { findUnique: vi.fn() }, session: { create: vi.fn(), deleteMany: vi.fn() } } }))
+
 import { hashPassword, sha256, verifyPassword } from '@/lib/crypto'
 import { loginSchema } from '@/lib/validation'
+import * as authModule from '@/app/actions/auth'
 
 describe('hesla', () => {
   it('ověří správné a odmítne špatné', async () => {
@@ -31,5 +40,11 @@ describe('loginSchema', () => {
   it('odmítne nesmysl', () => {
     expect(loginSchema.safeParse({ email: 'neni-email', password: 'heslo1234' }).success).toBe(false)
     expect(loginSchema.safeParse({ email: 'a@b.cz', password: '' }).success).toBe(false)
+  })
+})
+
+describe("soubor s 'use server'", () => {
+  it('exportuje jen login a logout (každý export je veřejně volatelný endpoint)', () => {
+    expect(Object.keys(authModule).sort()).toEqual(['login', 'logout'])
   })
 })

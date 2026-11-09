@@ -62,8 +62,11 @@ export function NewOrgForm() {
         ) : stav.invite?.emailed || stav.existing?.emailed ? (
           <p className="mt-3 text-sm">Správce dostal e-mail. Pokud šlo o pozvánku, odkaz platí 48 hodin.</p>
         ) : (
+          /* Do seznamu lidí cizí firmy se super admin nedostane (/firma/lide je vždy jen jeho přepnutá firma),
+             takže tady jde poradit jen to, co opravdu půjde splnit: obnova hesla, nebo CLI. */
           <p className="mt-3 text-sm font-semibold">
-            E-mail se nepodařilo odeslat. Pokud se správce nemůže přihlásit, může si heslo nastavit přes „zapomenuté heslo“ na přihlašovací stránce, nebo mu v seznamu lidí pošli pozvánku znovu.
+            E-mail se nepodařilo odeslat. Správce si může heslo nastavit přes „zapomenuté heslo“ na přihlašovací stránce. Když ani to
+            nepomůže, nastav mu nové heslo na serveru: <code>npm run user:add -- --email jeho@email.cz --reset-password</code>.
           </p>
         )}
         <p className="mt-4 flex gap-4 text-sm">

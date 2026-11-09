@@ -74,7 +74,7 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
                 </p>
                 {(e.place || e.note) && <p className="truncate text-muted">{[e.place, e.note].filter(Boolean).join(' · ')}</p>}
               </div>
-              {!uzavreno && <DeleteEntryButton id={e.id} />}
+              {!uzavreno && <DeleteEntryButton id={e.id} orgId={ctx.org.id} />}
             </li>
           ))}
         </ul>
@@ -85,7 +85,14 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
           Měsíc je uzavřený, záznamy tohoto dne už nejdou měnit. Změna půjde, až měsíc znovu otevře správce firmy.
         </p>
       ) : (
-        <DayForm key={day} day={day} places={mista} hasEntries={zapsane.length > 0} hasWorkOrLeave={zapsane.some((e) => e.kind !== 'DAYOFF')} />
+        <DayForm
+          key={day}
+          day={day}
+          orgId={ctx.org.id}
+          places={mista}
+          hasEntries={zapsane.length > 0}
+          hasWorkOrLeave={zapsane.some((e) => e.kind !== 'DAYOFF')}
+        />
       )}
     </main>
   )

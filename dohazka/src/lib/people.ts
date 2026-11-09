@@ -7,6 +7,8 @@ import type { RoleValue } from '@/lib/role'
 export type Zmena = { role: RoleValue } | { active: boolean }
 
 export const CIZI_CLEN = 'Tenhle člověk ve vaší firmě není.'
+// Samostatná hláška: CIZI_CLEN patří cizímu id, tohle neaktivnímu členovi vlastní firmy — ten ve firmě je.
+export const NEAKTIVNI_CLEN = 'Tenhle člověk je ve firmě neaktivní. Nejdřív ho v seznamu aktivuj, potom mu pozvánka půjde poslat.'
 export const POSLEDNI_SPRAVCE = 'Firma musí mít aspoň jednoho aktivního správce. Nejdřív jmenuj jiného.'
 
 class Odmitnuto extends Error {}

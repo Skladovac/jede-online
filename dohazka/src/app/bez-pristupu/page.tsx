@@ -15,7 +15,8 @@ export default async function BezPristupuPage() {
   return (
     <main className="mx-auto max-w-sm px-4 py-16">
       <h1 className="text-2xl font-semibold">Bez přístupu</h1>
-      <p className="mt-4">Tento účet nepatří k žádné firmě. Ozvi se správci své firmy.</p>
+      {/* Sem chodí i deaktivovaný člen, který k firmě patří — hláška proto mluví o přístupu, ne o členství. */}
+      <p className="mt-4">Do žádné firmy teď nemáš přístup. Buď k žádné nepatříš, nebo je tvoje členství neaktivní — ozvi se správci své firmy.</p>
       {user.isSuperAdmin && (
         <p className="mt-4">
           <Link href="/admin" className="underline">

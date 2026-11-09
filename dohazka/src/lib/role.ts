@@ -21,12 +21,14 @@ export const ACTIONS = [
   'viewOthersEntries',
   'exportCompany',
   'lockPeriod',
+  'unlockPeriod',
   'viewChangeLog',
 ] as const
 export type ActionValue = (typeof ACTIONS)[number]
 
 // Matice rolí. Záměrně explicitní seznamy místo odvozování: zaměstnanec nemá nic,
-// účetní jen čtení, export a uzavírání období — nikdy správu lidí ani nastavení.
+// účetní jen čtení, export a uzavírání období — nikdy správu lidí, nastavení, ani otevření
+// uzavřeného měsíce (jinak by si vlastní uzávěrku tiše odemkl).
 // Nová akce je proto zakázaná všem rolím v matici, dokud ji někdo vědomě nepřidělí (fail-closed).
 // Super admin tuto matici obchází (viz `can`), proto to platí jen pro role firmy.
 const MATRIX: Record<RoleValue, ReadonlySet<ActionValue>> = {
@@ -37,6 +39,7 @@ const MATRIX: Record<RoleValue, ReadonlySet<ActionValue>> = {
     'viewOthersEntries',
     'exportCompany',
     'lockPeriod',
+    'unlockPeriod',
     'viewChangeLog',
   ]),
   ACCOUNTANT: new Set<ActionValue>(['viewOthersEntries', 'exportCompany', 'lockPeriod']),
