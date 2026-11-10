@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { requireUser } from '@/lib/auth'
+import { requireOrgContext } from '@/lib/org'
+import { can } from '@/lib/role'
 import { pushPublicKey } from '@/lib/push'
 import { logout } from '@/app/actions/auth'
 import { PushSettings } from '@/components/Push'
@@ -8,7 +9,7 @@ import { PushSettings } from '@/components/Push'
 export const metadata: Metadata = { title: 'Nastavení' }
 
 export default async function NastaveniPage() {
-  const user = await requireUser()
+  const ctx = await requireOrgContext()
   const publicKey = pushPublicKey()
 
   return (
@@ -21,11 +22,29 @@ export default async function NastaveniPage() {
       <section className="mt-5 rounded-panel border border-line bg-card p-4">
         <h2 className="mb-3 font-semibold">Večerní připomínka</h2>
         {publicKey ? (
-          <PushSettings publicKey={publicKey} remindHour={user.remindHour} remindEnabled={user.remindEnabled} />
+          <PushSettings publicKey={publicKey} remindHour={ctx.org.remindHour} orgName={ctx.org.name} remindEnabled={ctx.user.remindEnabled} />
         ) : (
           <p className="text-sm text-muted">Notifikace nejsou na tomto serveru nastavené.</p>
         )}
       </section>
+
+      {can(ctx.role, 'viewOthersEntries', ctx.isSuperAdmin) && (
+        <Link href="/firma/vykazy" className="mt-5 flex min-h-11 items-center rounded-panel border border-line bg-card px-4 font-medium hover:bg-accent-soft">
+          Výkazy firmy
+        </Link>
+      )}
+
+      {can(ctx.role, 'managePeople', ctx.isSuperAdmin) && (
+        <Link href="/firma/lide" className="mt-5 flex min-h-11 items-center rounded-panel border border-line bg-card px-4 font-medium hover:bg-accent-soft">
+          Lidé ve firmě
+        </Link>
+      )}
+
+      {can(ctx.role, 'manageOrgSettings', ctx.isSuperAdmin) && (
+        <Link href="/firma/nastaveni" className="mt-3 flex min-h-11 items-center rounded-panel border border-line bg-card px-4 font-medium hover:bg-accent-soft">
+          Nastavení firmy
+        </Link>
+      )}
 
       <form action={logout} className="mt-6">
         <button type="submit" className="min-h-11 rounded-panel border border-line bg-card px-4 py-2 font-medium hover:bg-accent-soft">

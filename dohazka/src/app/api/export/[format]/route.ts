@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireUser } from '@/lib/auth'
-import { dateColumnToKey, parseDayKey, periodRange } from '@/lib/date'
+import { requireOrgContext } from '@/lib/org'
+import { parsePeriod, dateColumnToKey, parseDayKey, periodRange } from '@/lib/date'
 import { buildMonth } from '@/lib/month'
 import { buildReport } from '@/lib/export/rows'
 import { toCsv } from '@/lib/export/csv'
@@ -16,22 +16,22 @@ const FORMATY = ['csv', 'xlsx', 'pdf'] as const
 
 const chyba = (status: number, zprava: string) => NextResponse.json({ error: zprava }, { status })
 
-/** GET /api/export/[format]?period=YYYY-MM — výkaz přihlášeného uživatele. */
+/** GET /api/export/[format]?period=YYYY-MM — výkaz přihlášeného člena aktivní firmy. */
 export async function GET(req: Request, { params }: { params: Promise<{ format: string }> }) {
   // Není tu žádný middleware, route je volatelná zvenčí — přihlášení si hlídáme sami.
-  const user = await requireUser()
+  const ctx = await requireOrgContext()
 
   const { format } = await params
   if (!(FORMATY as readonly string[]).includes(format)) return chyba(400, 'Neznámý formát.')
 
   const period = new URL(req.url).searchParams.get('period') ?? ''
-  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period)
-  if (!m) return chyba(400, 'Neplatné období, očekávám RRRR-MM.')
+  const p = parsePeriod(period)
+  if (!p) return chyba(400, 'Neplatné období, očekávám RRRR-MM.')
 
-  const { fromKey, toKey } = periodRange(user.periodStartDay, Number(m[1]), Number(m[2]))
-  // Vždy jen záznamy přihlášeného uživatele.
+  const { fromKey, toKey } = periodRange(ctx.org.periodStartDay, p.year, p.month)
+  // Vždy jen záznamy aktivního členství.
   const zapsane = await prisma.entry.findMany({
-    where: { userId: user.id, day: { gte: parseDayKey(fromKey), lte: parseDayKey(toKey) } },
+    where: { membershipId: ctx.membership.id, day: { gte: parseDayKey(fromKey), lte: parseDayKey(toKey) } },
     orderBy: [{ day: 'asc' }, { createdAt: 'asc' }],
   })
 
@@ -39,7 +39,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ format: 
     fromKey,
     toKey,
     // @db.Date přichází jako UTC půlnoc, proto UTC.
-    tracksFromKey: dateColumnToKey(user.tracksFrom),
+    tracksFromKey: dateColumnToKey(ctx.membership.tracksFrom),
     entries: zapsane.map((e) => ({
       id: e.id,
       dayKey: dateColumnToKey(e.day),
@@ -51,10 +51,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ format: 
       note: e.note,
     })),
   })
-  const report = buildReport({ personName: user.name, fromKey, toKey, month })
+  const report = buildReport({ orgName: ctx.org.reportName, personName: ctx.user.name, fromKey, toKey, month })
 
   const hlavicky = {
-    'Content-Disposition': contentDisposition(user.name, period, format),
+    'Content-Disposition': contentDisposition(ctx.user.name, period, format, ctx.org.reportName),
     'Cache-Control': 'private, no-store',
   }
   if (format === 'csv') {

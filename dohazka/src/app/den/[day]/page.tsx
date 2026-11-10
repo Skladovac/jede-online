@@ -2,12 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { requireUser } from '@/lib/auth'
+import { requireOrgContext } from '@/lib/org'
 import { dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, pragueDayKey } from '@/lib/date'
 import { KIND_LABEL } from '@/lib/entry'
+import { isLocked } from '@/lib/period-lock'
 import { recentPlaces } from '@/lib/places'
 import { DayForm, DeleteEntryButton } from '../DayForm'
-import { SettingsLink } from '@/components/SettingsLink'
+import { AppNav } from '@/components/AppNav'
 
 export const metadata: Metadata = { title: 'Zápis dne' }
 
@@ -20,35 +21,30 @@ const popisDne = (key: string) =>
   )
 
 export default async function DenPage({ params }: { params: Promise<{ day: string }> }) {
-  const user = await requireUser()
+  const ctx = await requireOrgContext()
   const { day } = await params
   // Tvar i existence data: 2026-02-31 by parseDayKey tiše přetočil, proto kontrola převodem zpět.
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || posun(day, 0) !== day) notFound()
 
-  const [zapsane, posledni] = await Promise.all([
-    prisma.entry.findMany({ where: { userId: user.id, day: parseDayKey(day) }, orderBy: { createdAt: 'asc' } }),
+  const [zapsane, posledni, zamky] = await Promise.all([
+    prisma.entry.findMany({ where: { membershipId: ctx.membership.id, day: parseDayKey(day) }, orderBy: { createdAt: 'asc' } }),
     prisma.entry.findMany({
-      where: { userId: user.id, place: { not: null } },
+      where: { membershipId: ctx.membership.id, place: { not: null } },
       orderBy: { day: 'desc' },
       take: 60,
       select: { place: true, day: true },
     }),
+    prisma.periodLock.findMany({ where: { orgId: ctx.org.id }, select: { periodKey: true } }),
   ])
+  // Schování formuláře je jen pohodlí; skutečnou ochranu dělá kontrola v akcích zápisu.
+  const uzavreno = isLocked(zamky.map((z) => z.periodKey), ctx.org.periodStartDay, day)
   const mista = recentPlaces(posledni.map((e) => ({ place: e.place, day: dateColumnToKey(e.day) })))
   const dnes = pragueDayKey(new Date())
   const odkaz = 'rounded-panel border border-line px-3 py-2 text-sm text-muted hover:border-line-strong'
 
   return (
     <main className="mx-auto max-w-md px-4 py-6">
-      <div className="mb-2 flex items-center justify-between">
-        <Link
-          href={`/mesic/${periodKeyForDay(user.periodStartDay, day)}`}
-          className="flex min-h-11 items-center px-1 text-sm text-accent-strong underline"
-        >
-          Měsíc a export
-        </Link>
-        <SettingsLink />
-      </div>
+      <AppNav period={periodKeyForDay(ctx.org.periodStartDay, day)} />
       <nav className="flex items-center justify-between gap-2" aria-label="Přechod mezi dny">
         <Link href={`/den/${posun(day, -1)}`} className={odkaz} aria-label="Předchozí den">
           ←
@@ -78,13 +74,26 @@ export default async function DenPage({ params }: { params: Promise<{ day: strin
                 </p>
                 {(e.place || e.note) && <p className="truncate text-muted">{[e.place, e.note].filter(Boolean).join(' · ')}</p>}
               </div>
-              <DeleteEntryButton id={e.id} />
+              {!uzavreno && <DeleteEntryButton id={e.id} orgId={ctx.org.id} />}
             </li>
           ))}
         </ul>
       )}
 
-      <DayForm key={day} day={day} places={mista} hasEntries={zapsane.length > 0} hasWorkOrLeave={zapsane.some((e) => e.kind !== 'DAYOFF')} />
+      {uzavreno ? (
+        <p role="status" className="mt-5 rounded-panel border border-line bg-card px-3 py-3 text-sm">
+          Měsíc je uzavřený, záznamy tohoto dne už nejdou měnit. Změna půjde, až měsíc znovu otevře správce firmy.
+        </p>
+      ) : (
+        <DayForm
+          key={day}
+          day={day}
+          orgId={ctx.org.id}
+          places={mista}
+          hasEntries={zapsane.length > 0}
+          hasWorkOrLeave={zapsane.some((e) => e.kind !== 'DAYOFF')}
+        />
+      )}
     </main>
   )
 }

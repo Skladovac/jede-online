@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { requireUser } from '@/lib/auth'
-import { dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
+import { requireOrgContext } from '@/lib/org'
+import { parsePeriod, dateColumnToKey, formatHours, parseDayKey, periodKeyForDay, periodRange, pragueDayKey } from '@/lib/date'
 import { buildMonth } from '@/lib/month'
 import { MonthList } from '../MonthList'
-import { SettingsLink } from '@/components/SettingsLink'
+import { AppNav } from '@/components/AppNav'
 
 export const metadata: Metadata = { title: 'Měsíc' }
 
@@ -29,17 +29,16 @@ const EXPORTY = [
 ] as const
 
 export default async function MesicPage({ params }: { params: Promise<{ period: string }> }) {
-  const user = await requireUser()
+  const ctx = await requireOrgContext()
   const { period } = await params
-  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period)
-  if (!m) notFound()
-  const year = Number(m[1])
-  const month = Number(m[2])
+  const p = parsePeriod(period)
+  if (!p) notFound()
+  const { year, month } = p
 
-  const { fromKey, toKey } = periodRange(user.periodStartDay, year, month)
-  // Vždy jen záznamy přihlášeného uživatele.
+  const { fromKey, toKey } = periodRange(ctx.org.periodStartDay, year, month)
+  // Vždy jen záznamy aktivního členství.
   const zapsane = await prisma.entry.findMany({
-    where: { userId: user.id, day: { gte: parseDayKey(fromKey), lte: parseDayKey(toKey) } },
+    where: { membershipId: ctx.membership.id, day: { gte: parseDayKey(fromKey), lte: parseDayKey(toKey) } },
     orderBy: [{ day: 'asc' }, { createdAt: 'asc' }],
   })
 
@@ -47,7 +46,7 @@ export default async function MesicPage({ params }: { params: Promise<{ period: 
     fromKey,
     toKey,
     // @db.Date přichází jako UTC půlnoc, proto UTC a ne pražský čas.
-    tracksFromKey: dateColumnToKey(user.tracksFrom),
+    tracksFromKey: dateColumnToKey(ctx.membership.tracksFrom),
     entries: zapsane.map((e) => ({
       id: e.id,
       dayKey: dateColumnToKey(e.day),
@@ -60,13 +59,13 @@ export default async function MesicPage({ params }: { params: Promise<{ period: 
     })),
   })
 
-  // Období dneška podle nastavení uživatele (při startDay 16 patří 20. 11. už k 2026-12).
-  const dnesPeriod = periodKeyForDay(user.periodStartDay, pragueDayKey(new Date()))
+  // Období dneška podle nastavení firmy (při startDay 16 patří 20. 11. už k 2026-12).
+  const dnesPeriod = periodKeyForDay(ctx.org.periodStartDay, pragueDayKey(new Date()))
   const odkaz = 'rounded-panel border border-line px-3 py-2 text-sm text-muted hover:border-line-strong'
 
   return (
     <main className="mx-auto max-w-md px-4 py-6">
-      <SettingsLink />
+      <AppNav period={period} />
       <nav className="flex items-center justify-between gap-2" aria-label="Přechod mezi měsíci">
         <Link href={`/mesic/${posunMesic(year, month, -1)}`} className={odkaz} aria-label="Předchozí měsíc">
           ←

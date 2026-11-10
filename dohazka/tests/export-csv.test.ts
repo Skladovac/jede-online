@@ -4,7 +4,7 @@ import type { Report } from '@/lib/export/rows'
 
 const report = (rows: Report['rows']): Report => ({
   title: 'Výkaz odpracovaných hodin',
-  personName: 'Jan Novák',
+  orgName: 'Stavby Novák s.r.o.', personName: 'Jan Novák',
   periodLabel: 'listopad 2026',
   rows,
   totalHours: rows.length ? '16,5' : '0',

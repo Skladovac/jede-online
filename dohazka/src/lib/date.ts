@@ -85,3 +85,11 @@ export function periodKeyForDay(startDay: number, dayKey: string): string {
   const mesic = dalsi ? (m % 12) + 1 : m
   return `${String(rok).padStart(4, '0')}-${String(mesic).padStart(2, '0')}`
 }
+
+/** "2026-11" → { year, month }; jinak null. Rok jen 2000–2100: `Date.UTC` bere roky 0–99 jako 19xx a období by se rozjelo. */
+export function parsePeriod(period: string): { year: number; month: number } | null {
+  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period)
+  if (!m) return null
+  const year = Number(m[1])
+  return year >= 2000 && year <= 2100 ? { year, month: Number(m[2]) } : null
+}

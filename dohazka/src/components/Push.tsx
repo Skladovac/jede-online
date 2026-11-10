@@ -87,10 +87,9 @@ const btn = 'min-h-11 rounded-panel px-4 py-2 font-medium disabled:opacity-60'
 const btnPrimary = `${btn} bg-accent text-on-accent hover:bg-accent-hover`
 const btnSecondary = `${btn} border border-line bg-card hover:bg-accent-soft`
 
-export function PushSettings({ publicKey, remindHour, remindEnabled }: { publicKey: string; remindHour: number; remindEnabled: boolean }) {
+export function PushSettings({ publicKey, remindHour, orgName, remindEnabled }: { publicKey: string; remindHour: number; orgName: string; remindEnabled: boolean }) {
   const [state, setState] = useState<DeviceState>('loading')
   const [enabled, setEnabled] = useState(remindEnabled)
-  const [hour, setHour] = useState(remindHour)
   const [msg, setMsg] = useState<{ ok?: string; error?: string } | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -128,16 +127,14 @@ export function PushSettings({ publicKey, remindHour, remindEnabled }: { publicK
     setBusy(false)
   }
 
-  // Zapnutí/vypnutí a hodina se ukládají hned; při chybě se vrátí původní hodnota.
-  async function saveReminder(next: { enabled: boolean; hour: number }) {
-    const before = { enabled, hour }
+  // Zapnutí/vypnutí se ukládá hned; při chybě se vrátí původní hodnota.
+  async function saveReminder(next: { enabled: boolean }) {
+    const before = { enabled }
     setEnabled(next.enabled)
-    setHour(next.hour)
     setMsg(null)
     const r = await setReminder(next).catch(() => ({ ok: false }))
     if (!r.ok) {
       setEnabled(before.enabled)
-      setHour(before.hour)
       setMsg({ error: 'Nastavení připomínky se nepodařilo uložit.' })
     }
   }
@@ -185,26 +182,12 @@ export function PushSettings({ publicKey, remindHour, remindEnabled }: { publicK
           <input
             type="checkbox"
             checked={enabled}
-            onChange={(e) => saveReminder({ enabled: e.target.checked, hour })}
+            onChange={(e) => saveReminder({ enabled: e.target.checked })}
             className="mt-0.5 h-5 w-5 accent-[var(--accent)]"
           />
           <span>Připomínat zápis hodin každý den, i o víkendu a svátcích</span>
         </label>
-        <label className="block text-sm">
-          <span className="text-muted">Hodina připomínky (pražský čas)</span>
-          <select
-            value={hour}
-            disabled={!enabled}
-            onChange={(e) => saveReminder({ enabled, hour: Number(e.target.value) })}
-            className="mt-1 block min-h-11 w-full rounded-panel border border-line bg-card px-3 py-2 disabled:opacity-60"
-          >
-            {Array.from({ length: 24 }, (_, h) => (
-              <option key={h} value={h}>
-                {String(h).padStart(2, '0')}:00
-              </option>
-            ))}
-          </select>
-        </label>
+        <p className="text-sm text-muted">Připomínka chodí kolem {String(remindHour).padStart(2, '0')}:00 pražského času. Hodinu určuje firma {orgName}.</p>
       </div>
 
       {msg?.ok && <p className="text-sm text-positive">{msg.ok}</p>}

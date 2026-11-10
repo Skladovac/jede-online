@@ -3,7 +3,7 @@ import ExcelJS from 'exceljs'
 import { toXlsx } from '@/lib/export/xlsx'
 import type { Report } from '@/lib/export/rows'
 
-const empty: Report = { title: 'Výkaz odpracovaných hodin', personName: 'Jan Novák', periodLabel: 'listopad 2026', rows: [], totalHours: '0', totalHoursValue: 0, daysWorked: 0 }
+const empty: Report = { title: 'Výkaz odpracovaných hodin', orgName: 'Stavby Novák s.r.o.', personName: 'Jan Novák', periodLabel: 'listopad 2026', rows: [], totalHours: '0', totalHoursValue: 0, daysWorked: 0 }
 
 describe('toXlsx', () => {
   it('vyrobí skutečný xlsx, ne csv s jinou příponou', async () => {
@@ -14,6 +14,7 @@ describe('toXlsx', () => {
     await wb.xlsx.load(buf as unknown as ExcelJS.Buffer) // typy exceljs mají vlastní Buffer
     const ws = wb.getWorksheet('Výkaz')!
     expect(ws.getCell('A1').value).toContain('Jan Novák')
+    expect(ws.getCell('A1').value).toContain('Stavby Novák s.r.o.')
     expect(ws.getCell('F4').value).toBe('Zlín')
     // Čísla, ne české texty: jde sečíst a Excel nehlásí „číslo uložené jako text“.
     expect(ws.getCell('E4').value).toBe(8.5)

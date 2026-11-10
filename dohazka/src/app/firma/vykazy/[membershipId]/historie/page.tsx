@@ -1,0 +1,67 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
+import { requireCan } from '@/lib/org'
+import { formatHours } from '@/lib/date'
+import { KIND_LABEL, type EntryKindValue } from '@/lib/entry'
+import { findOrgMemberName } from '@/lib/org-member'
+import { ddmmyyyy } from '@/lib/export/rows'
+
+export const metadata: Metadata = { title: 'Historie změn' }
+
+type Snimek = { kind?: string; hours?: number | null; fromTime?: string | null; toTime?: string | null; place?: string | null; note?: string | null }
+
+const popis = (s: unknown) => {
+  if (!s || typeof s !== 'object') return '-'
+  const e = s as Snimek
+  const druh = e.kind && e.kind in KIND_LABEL ? KIND_LABEL[e.kind as EntryKindValue] : (e.kind ?? '')
+  // Hodiny přes formatHours: celá aplikace má desetinnou čárku, `${e.hours}` by vypsalo 8.5.
+  return [druh, e.hours != null && `${formatHours(e.hours)} h`, e.fromTime && e.toTime && `${e.fromTime}–${e.toTime}`, e.place, e.note]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+const LIMIT = 200
+
+const kdy = (d: Date) => new Intl.DateTimeFormat('cs-CZ', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Europe/Prague' }).format(d)
+
+// Historie je jen tady: do výkazu, exportu ani PDF se nedostává. Účetní oprávnění nemá.
+export default async function HistorieZmenPage({ params }: { params: Promise<{ membershipId: string }> }) {
+  const ctx = await requireCan('viewChangeLog')
+  const { membershipId } = await params
+  // Hledání členství je ve `findOrgMemberName`, aby šlo otestovat, že nese `orgId` aktivní firmy.
+  const jmenoClena = await findOrgMemberName(ctx.org.id, membershipId)
+  if (jmenoClena === null) notFound()
+  const zmeny = await prisma.entryChangeLog.findMany({ where: { membershipId }, orderBy: { changedAt: 'desc' }, take: LIMIT })
+  // changedById je jen id uživatele, jména se dohledají jedním dotazem.
+  const ids = [...new Set(zmeny.map((z) => z.changedById))]
+  const lide = await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } })
+  const jmeno = new Map(lide.map((u) => [u.id, u.name]))
+
+  return (
+    <main className="mx-auto w-full max-w-md px-4 py-6">
+      <Link href={`/firma/vykazy/${membershipId}`} className="text-sm text-muted hover:text-fg">
+        ← Výkaz člověka
+      </Link>
+      <h1 className="mt-3 text-xl font-semibold">Historie změn: {jmenoClena}</h1>
+      {zmeny.length === 0 ? (
+        <p className="mt-5 text-sm text-muted">Nikdo zatím nic neopravil.</p>
+      ) : (
+        <ul className="mt-5 space-y-2">
+          {zmeny.map((z) => (
+            <li key={z.id} className="rounded-panel border border-line bg-card px-3 py-2 text-sm">
+              <p className="font-medium">{ddmmyyyy(z.dayKey)}</p>
+              <p className="text-muted">Bylo: {popis(z.before)}</p>
+              <p className="text-muted">Je: {popis(z.after)}</p>
+              <p className="text-xs text-subtle">
+                {jmeno.get(z.changedById) ?? 'Neznámý uživatel'} · {kdy(z.changedAt)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+      {zmeny.length === LIMIT && <p className="mt-3 text-sm text-muted">Je vidět posledních {LIMIT} změn, starší tu nejsou.</p>}
+    </main>
+  )
+}

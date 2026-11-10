@@ -21,6 +21,8 @@ export type ReportRow = {
 
 export type Report = {
   title: string
+  /** Název firmy z Organization.reportName; odlišuje výkazy téhož člověka z různých firem. */
+  orgName: string
   personName: string
   periodLabel: string
   rows: ReportRow[]
@@ -34,12 +36,19 @@ export type Report = {
 const dnyFormat = new Intl.DateTimeFormat('cs-CZ', { weekday: 'long', timeZone: 'UTC' })
 const mesicFormat = new Intl.DateTimeFormat('cs-CZ', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
-const ddmmyyyy = (key: string) => {
+export const ddmmyyyy = (key: string) => {
   const [y, m, d] = key.split('-').map(Number)
   return `${d}. ${m}. ${y}`
 }
 
+/** Popisek období: pojmenované po měsíci, ve kterém končí (viz periodRange); mimo kalendářní měsíc s rozsahem. */
+export function periodLabelFor(fromKey: string, toKey: string): string {
+  const mesic = mesicFormat.format(parseDayKey(toKey))
+  return fromKey.endsWith('-01') ? mesic : `${mesic} (${ddmmyyyy(fromKey)} – ${ddmmyyyy(toKey)})`
+}
+
 export function buildReport(args: {
+  orgName: string
   personName: string
   fromKey: string
   toKey: string
@@ -64,12 +73,11 @@ export function buildReport(args: {
       })),
     )
 
-  // Období je pojmenované po měsíci, ve kterém končí (viz periodRange). Mimo kalendářní měsíc přidáme rozsah.
-  const mesic = mesicFormat.format(parseDayKey(toKey))
-  const periodLabel = fromKey.endsWith('-01') ? mesic : `${mesic} (${ddmmyyyy(fromKey)} – ${ddmmyyyy(toKey)})`
+  const periodLabel = periodLabelFor(fromKey, toKey)
 
   return {
     title: 'Výkaz odpracovaných hodin',
+    orgName: args.orgName,
     personName: args.personName,
     periodLabel,
     rows,
