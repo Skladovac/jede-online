@@ -10,7 +10,7 @@ import { defaultGoal, GOAL_MISSING, pickGoal, type Goal } from '@/lib/goal'
 import { GoalPicker } from '@/components/GoalPicker'
 import { ProgressBars } from '@/components/ProgressBars'
 import { byLocalId, cardImage, formatCzk, formatEur, setLogo } from '@/lib/format'
-import { ChevronRight, ImageOff, Layers } from 'lucide-react'
+import { ChevronRight, ImageOff, Layers, Package } from 'lucide-react'
 import { panel } from '@/components/design'
 import { PriceNote } from '@/components/PriceNote'
 import { SetGrid } from '@/components/SetGrid'
@@ -237,18 +237,25 @@ export default async function SetPage({ params, searchParams }: Props) {
         </p>
       )}
 
-      <nav className="mt-7 flex gap-6 border-b border-line">
-        {[
-          ['karty', t('Karty ({n})', { n: cards.length })],
-          ['produkty', t('Produkty ({n})', { n: products.length })],
-        ].map(([k, label]) => (
+      {/* Karty / Produkty jako výrazný přepínač (záložka s podtržením se přehlížela — produkty nikdo nenašel). */}
+      <nav aria-label={t('Karty nebo produkty')} className="mt-7 inline-flex gap-1 rounded-xl bg-surface p-1 ring-1 ring-inset ring-line">
+        {(
+          [
+            ['karty', t('Karty ({n})', { n: cards.length }), t('jednotlivé karty sady'), Layers],
+            ['produkty', t('Produkty ({n})', { n: products.length }), t('ETB, boostery, tiny, balíčky'), Package],
+          ] as const
+        ).map(([k, label, hint, Icon]) => (
           <Link
             key={k}
             href={`/sady/${encodeURIComponent(set.id)}${k === 'produkty' ? '?tab=produkty' : ''}`}
             aria-current={tab === k ? 'page' : undefined}
-            className={`-mb-px border-b-2 py-2.5 text-[15px] font-semibold transition-colors ${tab === k ? 'border-fg text-fg' : 'border-transparent text-muted hover:text-fg'}`}
+            className={`flex min-h-12 items-center gap-2.5 rounded-[9px] px-4 transition-colors ${tab === k ? 'bg-card text-fg shadow-soft ring-1 ring-inset ring-line' : 'text-muted hover:text-fg'}`}
           >
-            {label}
+            <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />
+            <span className="leading-tight">
+              <span className="block text-[15px] font-semibold">{label}</span>
+              <span className="block text-xs text-subtle">{hint}</span>
+            </span>
           </Link>
         ))}
       </nav>

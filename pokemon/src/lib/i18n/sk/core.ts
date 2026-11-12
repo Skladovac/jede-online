@@ -265,5 +265,6 @@ const dict: Record<string, string> = {
   'Zatím nikdo další nemá nic z toho, co ti chybí. Mrkni sem později.': 'Zatiaľ nikto ďalší nemá nič z toho, čo ti chýba. Pozri sa sem neskôr.',
   'Master set {n}/{total}': 'Master set {n}/{total}',
   'Pojď sbírat Pokémon karty se mnou': 'Poď zbierať Pokémon karty so mnou',
+  '{n} produktů': '{n} produktov',
 }
 export default dict

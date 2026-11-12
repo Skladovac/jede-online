@@ -146,52 +146,8 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
         ))}
       </dl>
   )
-  return (
-    <div className="space-y-10">
-      {!view && stats}
-
-
-      {showOffers && (
-      <section>
-        <h2 className="mb-4 text-2xl font-semibold text-fg">{t('Nabízí')} ({offers.length})</h2>
-        {offers.length ? (
-          <BySet
-            t={t}
-            items={offers}
-            card={(o) => o.card}
-            extra={(o) => (
-              <p className="mt-1 text-xs font-semibold tabular-nums text-accent">
-                {o.spareQty}× {o.offerType === 'SELL' && o.priceCzk ? `${o.priceCzk} Kč` : t(OFFER[o.offerType!])}
-              </p>
-            )}
-          />
-        ) : (
-          <p className="text-sm text-subtle">
-            {own ? t('Zatím nic. V sadě přepni na „Navíc“ a klepni na karty, které máš víckrát.') : t('Zatím nic.')}
-          </p>
-        )}
-      </section>
-      )}
-
-      {showWanted && (
-      <section>
-        <h2 className="mb-4 text-2xl font-semibold text-fg">{t('Chybí')} ({wanted.length})</h2>
-        {wanted.length ? (
-          <BySet
-            t={t}
-            items={wanted}
-            card={(c) => c}
-            extra={(c) => c.buy && <BuyBadge price={c.maxPriceCzk} />}
-          />
-        ) : (
-          <p className="text-sm text-subtle">
-            {own ? t('Zatím nic. V sadě přepni na „Chybí“ a označ karty, které sháníš.') : t('Zatím nic.')}
-          </p>
-        )}
-      </section>
-      )}
-
-      {(productItems.length > 0 || productWants.length > 0 || (own && !view)) && (
+  // Zapečetěné produkty: ve vlastní sbírce hned pod čísly (ať se neztratí pod kartami), na profilu za seznamy.
+  const products = (productItems.length > 0 || productWants.length > 0 || (own && !view)) && (
         <section>
           <h2 className="mb-4 text-2xl font-semibold text-fg">{t('Zapečetěné produkty')}</h2>
           {productItems.length ? (
@@ -239,8 +195,54 @@ export async function CollectionOverview({ data, own, view }: { data: Overview; 
             </>
           )}
         </section>
+  )
+  return (
+    <div className="space-y-10">
+      {!view && stats}
+      {!view && products}
+
+
+      {showOffers && (
+      <section>
+        <h2 className="mb-4 text-2xl font-semibold text-fg">{t('Nabízí')} ({offers.length})</h2>
+        {offers.length ? (
+          <BySet
+            t={t}
+            items={offers}
+            card={(o) => o.card}
+            extra={(o) => (
+              <p className="mt-1 text-xs font-semibold tabular-nums text-accent">
+                {o.spareQty}× {o.offerType === 'SELL' && o.priceCzk ? `${o.priceCzk} Kč` : t(OFFER[o.offerType!])}
+              </p>
+            )}
+          />
+        ) : (
+          <p className="text-sm text-subtle">
+            {own ? t('Zatím nic. V sadě přepni na „Navíc“ a klepni na karty, které máš víckrát.') : t('Zatím nic.')}
+          </p>
+        )}
+      </section>
       )}
 
+      {showWanted && (
+      <section>
+        <h2 className="mb-4 text-2xl font-semibold text-fg">{t('Chybí')} ({wanted.length})</h2>
+        {wanted.length ? (
+          <BySet
+            t={t}
+            items={wanted}
+            card={(c) => c}
+            extra={(c) => c.buy && <BuyBadge price={c.maxPriceCzk} />}
+          />
+        ) : (
+          <p className="text-sm text-subtle">
+            {own ? t('Zatím nic. V sadě přepni na „Chybí“ a označ karty, které sháníš.') : t('Zatím nic.')}
+          </p>
+        )}
+      </section>
+      )}
+
+      {view && products}
       {view && stats}
 
       <section>

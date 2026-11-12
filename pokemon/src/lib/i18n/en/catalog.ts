@@ -284,5 +284,8 @@ const dict: Record<string, string> = {
   'Seznam': 'List',
   'Mám {n} z {total} variant': 'I have {n} of {total} variants',
   'Karta': 'Card',
+  'Karty nebo produkty': 'Cards or products',
+  'jednotlivé karty sady': 'single cards of the set',
+  'ETB, boostery, tiny, balíčky': 'ETB, boosters, tins, decks',
 }
 export default dict
