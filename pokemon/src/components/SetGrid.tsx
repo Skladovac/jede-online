@@ -45,6 +45,8 @@ export function SetGrid({
   goal = 'base',
   baseCount,
   initialMode = 'view',
+  initialLayout = 'grid',
+  initialPage = 0,
   showTip = false,
 }: {
   cards: GridCard[]
@@ -58,6 +60,9 @@ export function SetGrid({
   baseCount: number
   /** Výchozí režim (z průvodce „Jakou sadu sbíráš?“ se otevírá rovnou „Mám“). */
   initialMode?: 'view' | 'owned'
+  /** Zobrazení a strana alba z adresy (?zobrazeni=album&strana=3) — po „Zpět“ z detailu karty se stránka vykreslí stejně a prohlížeč trefí původní pozici. */
+  initialLayout?: 'grid' | 'album' | 'list'
+  initialPage?: number
   /** Jednorázový tip pro nováčka nad mřížkou. */
   showTip?: boolean
 }) {
@@ -67,10 +72,38 @@ export function SetGrid({
   // Karta, u které je otevřený výběr varianty (režim Mám).
   const [picker, setPicker] = useState<string | null>(null)
   // Zobrazení: mřížka, nebo album po 9 kartách (stránky jako v pořadači, prázdné kapsy = karty, které nemám).
-  const [layout, setLayout] = useState<'grid' | 'album' | 'list'>('grid')
-  const [page, setPage] = useState(0)
+  // Při návratu „Zpět“ z karty vykreslí Next stránku z paměti (s původními parametry), ale adresa už nese
+  // aktuální zobrazení — proto se výchozí stav bere z adresy v prohlížeči; na serveru (a při první hydrataci) z props.
+  const fromUrl = () => {
+    if (typeof window === 'undefined') return null
+    const q = new URL(window.location.href).searchParams
+    const z = q.get('zobrazeni')
+    return { layout: z === 'album' || z === 'list' ? z : 'grid', page: Math.max(0, (Number(q.get('strana')) || 1) - 1) } as const
+  }
+  const [layout, setLayoutState] = useState<'grid' | 'album' | 'list'>(() => fromUrl()?.layout ?? initialLayout)
   const PER_PAGE = 9
   const pages = Math.max(1, Math.ceil(cards.length / PER_PAGE))
+  const [page, setPageState] = useState(() => Math.min(Math.max(0, fromUrl()?.page ?? initialPage), pages - 1))
+  // Zobrazení a strana alba se zapisují do adresy (bez načtení stránky), aby po „Zpět“ z karty zůstalo totéž
+  // rozložení — jinak prohlížeč obnoví posun na jinak vysoké stránce a člověk skončí nahoře nebo dole.
+  const syncUrl = (l: typeof layout, p: number) => {
+    const u = new URL(window.location.href)
+    if (l === 'grid') u.searchParams.delete('zobrazeni')
+    else u.searchParams.set('zobrazeni', l)
+    if (l === 'album' && p > 0) u.searchParams.set('strana', String(p + 1))
+    else u.searchParams.delete('strana')
+    window.history.replaceState(window.history.state, '', u)
+  }
+  const setLayout = (l: typeof layout) => {
+    setLayoutState(l)
+    syncUrl(l, page)
+  }
+  const setPage = (fn: (p: number) => number) =>
+    setPageState((p) => {
+      const next = fn(p)
+      syncUrl(layout, next)
+      return next
+    })
   const [state, setState] = useState(initial)
   // Filtr podle typu Pokémona (jen když karty v sadě typ mají).
   const [typeFilter, setTypeFilter] = useState<string | null>(null)

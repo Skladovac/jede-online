@@ -26,7 +26,7 @@ import { setDisplayName } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
-type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ tab?: string; rezim?: string; start?: string }> }
+type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ tab?: string; rezim?: string; start?: string; zobrazeni?: string; strana?: string }> }
 
 async function getSet(id: string) {
   return prisma.cardSet.findUnique({
@@ -82,6 +82,9 @@ export default async function SetPage({ params, searchParams }: Props) {
   // Z průvodce „Jakou sadu sbíráš?“: rovnou režim Mám a jednorázový tip.
   const initialMode = user && sp?.rezim === 'mam' ? 'owned' : 'view'
   const showTip = !!user && sp?.start === '1'
+  // Zobrazení mřížky a strana alba z adresy (SetGrid je tam zapisuje) — po „Zpět“ se stránka vykreslí stejně.
+  const initialLayout = sp?.zobrazeni === 'album' || sp?.zobrazeni === 'list' ? sp.zobrazeni : 'grid'
+  const initialPage = Math.max(0, (Number(sp?.strana) || 1) - 1)
   const products = await prisma.product.findMany({
     where: { setId: set.id },
     include: { set: { select: { logoUrl: true } } },
@@ -276,6 +279,8 @@ export default async function SetPage({ params, searchParams }: Props) {
       <SetGrid
         loggedIn={!!user}
         initialMode={initialMode}
+        initialLayout={initialLayout}
+        initialPage={initialPage}
         showTip={showTip}
         officialCount={set.officialCount || set.cardCount}
         setId={set.id}
