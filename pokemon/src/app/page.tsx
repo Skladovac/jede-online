@@ -260,10 +260,11 @@ async function UserDashboard({
   vitej: boolean
   t: TFunc
 }) {
-  const [items, wantCount, value] = await Promise.all([
+  const [items, wantCount, value, productCount] = await Promise.all([
     prisma.collectionItem.findMany({ where: { userId: user.id, quantity: { gt: 0 } }, select: { cardId: true, quantity: true, spareQty: true, card: { select: { setId: true } } } }),
     prisma.wantItem.count({ where: { userId: user.id } }),
     portfolio(user.id),
+    prisma.productItem.aggregate({ where: { userId: user.id, quantity: { gt: 0 } }, _sum: { quantity: true } }).then((r) => r._sum.quantity ?? 0),
   ])
   const distinct = new Set(items.map((i) => i.cardId)).size
   const pieces = items.reduce((s, i) => s + i.quantity, 0)
@@ -314,7 +315,12 @@ async function UserDashboard({
           </Link>
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard label={t('Sbírka')} value={num(distinct)} sub={t('{n} kusů celkem', { n: num(pieces) })} tone="positive" />
+          <StatCard
+            label={t('Sbírka')}
+            value={num(distinct)}
+            sub={productCount ? `${t('{n} kusů celkem', { n: num(pieces) })} · ${t('{n} produktů', { n: num(productCount) })}` : t('{n} kusů celkem', { n: num(pieces) })}
+            tone="positive"
+          />
           <StatCard label={t('Odhadovaná hodnota')} value={`${num(value.valueCzk)} Kč`} sub={`≈ ${value.valueEur.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })} €`} />
           <StatCard label={t('Chybí')} value={num(wantCount)} sub={t('karet na seznamu')} tone="warning" />
           <StatCard label={t('Navíc')} value={num(spare)} sub={t('kusů k výměně')} />
