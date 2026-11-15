@@ -7,7 +7,7 @@ from app.persona import ALEX
 from app.prompts import dynamic_context, humanize_delta, static_system_prompt
 from app.scheduler import MAX_UNANSWERED, ProactiveState, in_quiet_hours, pick_slot, slot_plan
 from app.storage import Message, Storage
-from app.texting import split_bubbles, typing_delay
+from app.texting import reading_delay, split_bubbles, typing_delay
 
 
 # --- texting --------------------------------------------------------------------------
@@ -24,8 +24,16 @@ def test_split_bubbles_caps_count():
 
 
 def test_typing_delay_bounds():
+    # před vynásobením DELAY_MULTIPLIER 1,5: 7,5 znaku/s = asi 5 znaků/s, strop 16 s = 24 s
     assert typing_delay("ok") == 1.0
-    assert typing_delay("x" * 1000) == 6.0
+    assert typing_delay("x" * 75) == 10.0
+    assert typing_delay("x" * 1000) == 16.0
+
+
+def test_reading_delay_bounds():
+    assert reading_delay("") == 0.0
+    assert reading_delay("x" * 40) == 1.0
+    assert reading_delay("x" * 1000) == 4.0
 
 
 # --- prompts --------------------------------------------------------------------------
@@ -144,13 +152,14 @@ def test_slot_plan_is_deterministic_and_chance_varies_by_day():
 
 # --- realistické zpoždění -------------------------------------------------------------------
 
-def test_typing_pause_keeps_indicator_alive_and_respects_multiplier(monkeypatch):
-    import asyncio
+class _NoJitter:
+    def uniform(self, a, b):
+        return 1.0
 
+
+def _typing_bot(monkeypatch, slept, actions):
     import app.telegram_bot as tb
     from app.config import Settings
-
-    slept, actions = [], []
 
     async def fake_sleep(s):
         slept.append(s)
@@ -165,14 +174,47 @@ def test_typing_pause_keeps_indicator_alive_and_respects_multiplier(monkeypatch)
     monkeypatch.setattr(tb.asyncio, "sleep", fake_sleep)
     settings = Settings(telegram_token="x", model="m", effort="low", db_path=":memory:",
                         reply_debounce_seconds=4, typing_simulation=True, delay_multiplier=1.5)
-    bot = tb.CompanionBot(settings, ALEX, Storage(":memory:"), brain=None)
-    long_text = "x" * 200  # typing_delay = 6 s -> druhá bublina 9 s
-    asyncio.run(bot._send_bubbles(FakeBot(), 1, ["ahoj", long_text]))
-    first = typing_delay("ahoj") * 0.4 * 1.5
-    assert abs(sum(slept) - (first + 9.0)) < 1e-9
+    st = Storage(":memory:")
+    st.get_or_create_user(1, "alex", 1, "U")
+    bot = tb.CompanionBot(settings, ALEX, st, brain=None)
+    bot._rng = _NoJitter()
+    return bot, FakeBot(), st.get_user(1, "alex")
+
+
+def test_typing_pause_keeps_indicator_alive_and_respects_multiplier(monkeypatch):
+    import asyncio
+
+    import app.telegram_bot as tb
+
+    slept, actions = [], []
+    bot, fake, user = _typing_bot(monkeypatch, slept, actions)
+    long_text = "x" * 200  # typing_delay = 16 s (strop) -> × 1,5 = 24 s
+    now = datetime(2026, 11, 18, 12, 0, tzinfo=TIMEZONE)
+    asyncio.run(bot._deliver(fake, user, "ahoj\n\n" + long_text, "proactive", now, photo_mode="off"))
+    assert abs(sum(slept) - (1.0 * 1.5 + 24.0)) < 1e-9  # sám od sebe: celé psaní, nic se neodečítá
     assert max(slept) <= tb.TYPING_REFRESH_SECONDS  # „píše…“ se obnovuje aspoň každé 4 s
-    assert actions.count("typing") == 1 + 3  # 1. bublina krátká, 2. bublina 9 s = 3 obnovení
+    assert actions.count("typing") == 1 + 6
     assert actions[-1] == ("msg", long_text)
+
+
+def test_first_reply_bubble_counts_time_already_waited(monkeypatch):
+    import asyncio
+    import time as clock
+
+    now = datetime(2026, 11, 18, 12, 0, tzinfo=TIMEZONE)
+    text = "x" * 75  # 10 s × 1,5 = 15 s psaní
+    question = "y" * 40  # 1 s × 1,5 = 1,5 s čtení
+    slept, actions = [], []
+    bot, fake, user = _typing_bot(monkeypatch, slept, actions)
+    asyncio.run(bot._deliver(fake, user, text, "chat", now, photo_mode="off",
+                             read_text=question, started=clock.monotonic() - 10))
+    assert abs(sum(slept) - (15.0 + 1.5 - 10)) < 0.5  # 10 s už uběhlo (čekání na další zprávy a model)
+
+    slept.clear()
+    bot, fake, user = _typing_bot(monkeypatch, slept, actions)
+    asyncio.run(bot._deliver(fake, user, text, "chat", now, photo_mode="off",
+                             read_text=question, started=clock.monotonic() - 60))
+    assert abs(sum(slept) - 1.5) < 1e-9  # i po dlouhém přemýšlení aspoň chvilku „píše…“
 
 
 # --- platby ---------------------------------------------------------------------------------
