@@ -1,0 +1,27 @@
+# Server jede.online:
+#   kód      /opt/jede/alex-src   (tahle složka)
+#   klíče    /opt/jede/alex.env   (chmod 600, .env v této složce na něj odkazuje)
+#   paměť    /opt/jede/alex-data  (SQLite databáze, vlastník uid 10001)
+# Nasazení z počítače:  sh alex/deploy.sh
+# Logy:                 docker compose logs -f --tail 100
+# Název projektu „alex“ a služba „bot“ musí zůstat, jinak by vedle běžel starý kontejner.
+name: alex
+services:
+  bot:
+    build: .
+    image: alex-bot:latest
+    restart: unless-stopped
+    env_file: [../alex.env]
+    environment:
+      DB_PATH: /data/alex.db
+    volumes:
+      - ../alex-data:/data
+    read_only: true          # zapisuje se jen do /data (databáze) a /tmp
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "2"}

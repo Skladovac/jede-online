@@ -1,0 +1,4 @@
+# Kód běží na Linuxu (server, Docker): konce řádků vždy LF, jinak by deploy.sh na serveru spadl.
+* text=auto eol=lf
+*.jpg binary
+*.png binary
