@@ -4,6 +4,7 @@ from dataclasses import replace
 from datetime import date, datetime, timedelta
 
 from app.config import TIMEZONE, Settings
+from app.calendar_cz import is_workday
 from app.persona import ALEX, family_lines, has_kids
 from app.prompts import dynamic_context, static_system_prompt
 from app.scheduler import ProactiveState, pick_slot, slot_plan
@@ -68,10 +69,43 @@ def test_week_with_kids_has_late_evening_slot_only():
     assert pick_slot(ALWAYS, _state(now), now, set()).name == "afternoon"
 
 
+def _active(day: date) -> set[str]:
+    return {
+        s.name for s in ALEX.slots
+        if (s.kids is None or s.kids == has_kids(ALEX, day)) and (s.workday is None or s.workday == is_workday(day))
+    }
+
+
 def test_writes_more_often_than_tereza():
-    for day in (date(2026, 11, 17), date(2026, 11, 24)):  # bez dětí i s dětmi
-        names = {s.name for s in ALEX.slots if s.kids is None or s.kids == has_kids(ALEX, day)}
-        assert len(names) >= 3 and "midday" in names
+    # všední den bez dětí, s dětmi, neděle s dětmi i bez nich, státní svátek
+    for day in (date(2026, 11, 18), date(2026, 11, 24), date(2026, 11, 15), date(2026, 11, 22), date(2026, 11, 17)):
+        names = _active(day)
+        assert len(names) >= 3 and ("midday" in names) != ("midday_off" in names)
+        assert ("morning" in names) != ("morning_off" in names)
+
+
+def test_not_at_work_on_weekend_or_public_holiday():
+    for day in (date(2026, 11, 15), date(2026, 11, 21), date(2026, 11, 17)):  # neděle, sobota, svátek
+        assert "midday" not in _active(day) and "morning" not in _active(day)
+        now = _at_slot(day, "midday_off")
+        assert pick_slot(ALWAYS, _state(now), now, set()).name == "midday_off"
+        now = _at_slot(day, "morning_off")
+        assert pick_slot(ALWAYS, _state(now), now, {"midday_off"}).name == "morning_off"
+    assert "midday_off" not in _active(date(2026, 11, 18))
+    off = {s.name: s.hint for s in ALEX.slots}
+    assert "nejsi v práci" in off["midday_off"] and "porad" not in off["midday_off"].replace("žádné porady", "")
+    assert "porad" not in off["morning_off"]
+    assert "z práce" not in off["afternoon"] or "pracovní den" in off["afternoon"]
+
+
+def test_family_lines_on_days_off_and_school_holidays():
+    kids_sat = datetime(2026, 11, 28, 10, 0, tzinfo=TIMEZONE)
+    assert any("škola ani školka" in x for x in family_lines(ALEX, kids_sat))
+    easter_mon = datetime(2027, 3, 29, 10, 0, tzinfo=TIMEZONE)  # předávací pondělí, ale svátek
+    lines = " ".join(family_lines(ALEX, easter_mon))
+    assert "volno" in lines and "ze školy" not in lines and "do školy a školky" not in lines.split("Dnes")[-1]
+    summer_kids = datetime(2027, 7, 20, 10, 0, tzinfo=TIMEZONE)
+    assert any("letní prázdniny" in x for x in family_lines(ALEX, summer_kids))
 
 
 def test_midday_slot():
@@ -96,6 +130,9 @@ def test_dynamic_context_contains_week_info():
     bot = CompanionBot(_settings(), ALEX, st, brain=None)
     assert "máš děti u sebe" in bot._dynamic(user, datetime(2026, 11, 24, 9, 0, tzinfo=TIMEZONE))
     assert "děti u mámy" in bot._dynamic(user, datetime(2026, 11, 17, 9, 0, tzinfo=TIMEZONE))
+    sunday = bot._dynamic(user, datetime(2026, 11, 15, 12, 0, tzinfo=TIMEZONE))
+    assert "Dnes je neděle, máš volno" in sunday
+    assert "Štědrý den za 9 dní" in bot._dynamic(user, datetime(2026, 12, 15, 12, 0, tzinfo=TIMEZONE))
 
 
 # --- zkušební provoz zdarma ------------------------------------------------------------------

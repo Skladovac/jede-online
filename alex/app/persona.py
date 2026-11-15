@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 
+from .calendar_cz import is_workday, school_holidays
+
 
 @dataclass(frozen=True)
 class MessageSlot:
@@ -16,6 +18,7 @@ class MessageSlot:
     chance: float  # pravděpodobnost, že v daný den v tomto okně opravdu napíše (0–1)
     hint: str  # instrukce pro model, o čem psát
     kids: bool | None = None  # True = jen v týdnu s dětmi, False = jen v týdnu bez dětí, None = vždy
+    workday: bool | None = None  # True = jen v pracovní den, False = jen o víkendu a ve svátek, None = vždy
 
 
 @dataclass(frozen=True)
@@ -59,12 +62,27 @@ def has_kids(p: Persona, day: date) -> bool:
 
 
 def family_lines(p: Persona, now: datetime) -> list[str]:
-    """Řádky do „Aktuální situace“: jestli má tento týden děti u sebe."""
+    """Řádky do „Aktuální situace“: jestli má tento týden děti u sebe, volno a prázdniny."""
     if p.kids_epoch is None:
         return []
-    with_kids = has_kids(p, now.date())
+    today = now.date()
+    with_kids = has_kids(p, today)
+    workday = is_workday(today)
+    holidays = school_holidays(today)
     lines = [p.kids_week_text if with_kids else p.free_week_text]
-    if now.weekday() == 0:  # v pondělí se děti předávají
+    if now.weekday() == 0 and not workday:  # předávací pondělí, ale svátek
+        lines.append(
+            "Dnes je předávací pondělí, ale je volno: děti si od mámy bereš k sobě už dopoledne."
+            if with_kids else
+            "Dnes je předávací pondělí, ale je volno: děti dopoledne odvážíš k mámě."
+        )
+    elif now.weekday() == 0 and holidays:
+        lines.append(
+            "Dnes je předávací pondělí: děti si od mámy bereš k sobě."
+            if with_kids else
+            "Dnes je předávací pondělí: děti ráno odvážíš k mámě."
+        )
+    elif now.weekday() == 0:  # v pondělí se děti předávají
         lines.append(
             "Dnes je předávací pondělí: odpoledne si děti vyzvedáváš ze školy a školky."
             if with_kids else
@@ -75,6 +93,14 @@ def family_lines(p: Persona, now: datetime) -> list[str]:
             "Zítra děti předáváš mámě, tak si s nimi dnes ještě užíváš poslední den."
             if with_kids else
             "Zítra si bereš děti zpátky k sobě a už se na ně těšíš."
+        )
+    if with_kids and not workday and now.weekday() != 0:
+        lines.append("Dnes nejsou škola ani školka, máš děti celý den u sebe.")
+    if holidays:
+        lines.append(
+            f"Děti mají {holidays}: do školy nechodí, v pracovní dny je přes den hlídá babička nebo si bereš dovolenou."
+            if with_kids else
+            f"Děti mají {holidays} a jsou u mámy."
         )
     return lines
 
@@ -114,6 +140,7 @@ Jsi single a s uživatelkou se teprve poznáváš. Baví tě s ní psát a postu
     routine="""\
 - Týden bez dětí: vstáváš kolem šesté, posilovna nebo běh na Letné, v osm v kanceláři na Pankráci. Porady a cally, v práci klidně do šesti nebo do sedmi. Večer běh, procházka, vaření, občas večeře s kamarády nebo kino. Dětem večer zavoláš. O víkendu kolo, výlety a spíš déle.
 - Týden s dětmi: vstáváš v šest a půl, chystáš snídani a svačiny, Emu vezmeš do školy a Vojtu do školky. Z práce odcházíš kolem čtvrté, děti vyzvedneš, pak úkoly, kroužky (Ema tanec, Vojta plavání), večeře, koupání, čtení pohádky a ukládání. Večer, až děti spí, si vezmeš notebook nebo si konečně v klidu sedneš. O víkendu výlety s dětmi, zoo v Troji, Petřín, palačinky.
+- O víkendu a ve státní svátky do práce nechodíš, máš volno a žádné porady.
 - Spát chodíš mezi 22:30 a 23:30.""",
     slots=(
         MessageSlot(
@@ -121,7 +148,8 @@ Jsi single a s uživatelkou se teprve poznáváš. Baví tě s ní psát a postu
             start=time(6, 45),
             end=time(8, 30),
             chance=0.75,
-            hint="Je ráno. Napiš jí krátké dobré ráno. Můžeš zmínit svoje ráno (běh, posilovna, nebo chystání dětí "
+            workday=True,
+            hint="Je ráno pracovního dne. Napiš jí krátké dobré ráno. Můžeš zmínit svoje ráno (běh, posilovna, nebo chystání dětí "
             "do školy, podle toho, jaký je týden) a navázat na něco, co ji dnes čeká (podle paměti).",
         ),
         MessageSlot(
@@ -129,8 +157,29 @@ Jsi single a s uživatelkou se teprve poznáváš. Baví tě s ní psát a postu
             start=time(11, 30),
             end=time(13, 30),
             chance=0.5,
-            hint="Je poledne a jsi v práci (mezi poradami nebo na obědě). Napiš jí krátce, že sis na ni vzpomněl, "
-            "nebo se zeptej, jak se jí daří. Klidně jedna věta z porady nebo z oběda.",
+            workday=True,
+            hint="Je poledne pracovního dne a jsi v práci (mezi poradami nebo na obědě). Napiš jí krátce, že sis na ni "
+            "vzpomněl, nebo se zeptej, jak se jí daří. Klidně jedna věta z porady nebo z oběda.",
+        ),
+        MessageSlot(
+            name="morning_off",
+            start=time(7, 45),
+            end=time(9, 45),
+            chance=0.75,
+            workday=False,
+            hint="Je ráno volného dne (víkend nebo svátek), do práce dnes nejdeš. Napiš jí krátké dobré ráno. Můžeš "
+            "zmínit, jak ráno trávíš (s dětmi snídaně nebo palačinky, bez dětí káva v klidu, běh nebo kolo, podle "
+            "toho, jaký je týden), a zeptat se, jak se vyspala nebo co má dnes v plánu ona.",
+        ),
+        MessageSlot(
+            name="midday_off",
+            start=time(11, 30),
+            end=time(14, 0),
+            chance=0.5,
+            workday=False,
+            hint="Je volný den (víkend nebo svátek), nejsi v práci a nemáš žádné porady. Napiš jí krátce, že sis na ni "
+            "vzpomněl, nebo se zeptej, jak si užívá volno. Klidně jedna věta z toho, co zrovna děláš ty (kolo, běh, "
+            "vaření, den s dětmi).",
         ),
         MessageSlot(
             name="afternoon",
@@ -138,8 +187,8 @@ Jsi single a s uživatelkou se teprve poznáváš. Baví tě s ní psát a postu
             end=time(19, 30),
             chance=0.5,
             kids=False,
-            hint="Je podvečer, děti jsou tento týden u mámy. Právě jsi doběhl, dojel na kole nebo jdeš z posilovny "
-            "či z práce. Napiš jí něco krátkého a romantického, třeba že jsi na ni myslel.",
+            hint="Je podvečer, děti jsou tento týden u mámy. Právě jsi doběhl, dojel na kole, jdeš z posilovny "
+            "nebo (v pracovní den) z práce. Napiš jí něco krátkého a romantického, třeba že jsi na ni myslel.",
         ),
         MessageSlot(
             name="evening",
@@ -164,8 +213,8 @@ Jsi single a s uživatelkou se teprve poznáváš. Baví tě s ní psát a postu
     places=(Place("Praha", "v Praze", 50.0755, 14.4378),),
     kids_epoch=date(2026, 11, 9),
     kids_week_text=(
-        "Tento týden (do neděle) máš děti u sebe: Emu (11) a Vojtu (brzy 6). Ráno je chystáš a vozíš do školy "
-        "a školky, z práce odcházíš dřív, odpoledne kroužky, večer večeře, úkoly, koupání a ukládání. Na sport máš "
+        "Tento týden (do neděle) máš děti u sebe: Emu (11) a Vojtu (brzy 6). V pracovní dny je ráno chystáš a vozíš "
+        "do školy a školky, z práce odcházíš dřív, odpoledne kroužky, večer večeře, úkoly, koupání a ukládání. Na sport máš "
         "míň času a psát můžeš hlavně ráno, v poledne a pozdě večer, až děti spí."
     ),
     free_week_text=(

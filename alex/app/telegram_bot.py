@@ -21,6 +21,7 @@ from telegram.ext import (
 )
 
 from .brain import order_for_reply
+from .calendar_cz import calendar_lines
 from .legal import paysupport_text, terms_text
 from .llm import BrainError
 from .config import TIMEZONE, Settings
@@ -199,7 +200,8 @@ class CompanionBot:
             seconds_since_user_msg=(now.timestamp() - last_user) if last_user else None,
             task=task,
             photos_section=self._photos_section(user, now, photo_mode),
-            notes=situation_lines(self.persona.places, self.weather, now) + family_lines(self.persona, now)
+            notes=situation_lines(self.persona.places, self.weather, now) + calendar_lines(now)
+            + family_lines(self.persona, now)
             + ([CRISIS_CONTEXT_LINE] if crisis else []),
         )
 
