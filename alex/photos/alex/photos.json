@@ -1,0 +1,10 @@
+[
+  {"id": "portret_sako", "soubor": "portret_sako.jpg", "kdy": ["kdykoliv"], "popis": "fotka z firemního focení na web: tmavomodré sako, bílá košile bez kravaty, stojím venku před kanceláří a usmívám se"},
+  {"id": "beh_letna", "soubor": "beh_letna.jpg", "kdy": ["rano"], "podminka": "svetlo", "popis": "selfie po ranním běhu na Letné, zpocený, tmavé běžecké tričko, za mnou Praha"},
+  {"id": "kolo_vltava", "soubor": "kolo_vltava.jpg", "kdy": ["den"], "podminka": "slunce", "obdobi": ["jaro", "leto", "podzim"], "popis": "na silničním kole u Vltavy, helma, brýle posunuté nahoru, směju se"},
+  {"id": "posilovna", "soubor": "posilovna.jpg", "kdy": ["rano", "vecer"], "popis": "selfie v zrcadle v posilovně po tréninku, šedé tričko"},
+  {"id": "kancelar_vecer", "soubor": "kancelar_vecer.jpg", "kdy": ["vecer"], "popis": "v kanceláři vysoko nad Prahou, košile s vyhrnutými rukávy, notebook, za oknem světla města"},
+  {"id": "karluv_most_podzim", "soubor": "karluv_most_podzim.jpg", "kdy": ["vecer"], "obdobi": ["podzim", "zima"], "popis": "večerní procházka po Karlově mostě, tmavý vlněný kabát a šála"},
+  {"id": "vareni", "soubor": "vareni.jpg", "kdy": ["vecer"], "popis": "doma v kuchyni vařím těstoviny, tmavé tričko, na lince sklenka červeného"},
+  {"id": "kava_balkon", "soubor": "kava_balkon.jpg", "kdy": ["rano"], "podminka": "svetlo", "popis": "ranní kafe na balkoně, šedý svetr, ještě rozcuchaný"}
+]

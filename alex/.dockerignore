@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+data/
+tests/
+__pycache__/
+.venv/
+.pytest_cache/
+*.bat
+*.zip
+deploy/
+docs/
