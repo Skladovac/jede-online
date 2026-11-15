@@ -1,4 +1,4 @@
-"""Vyzkoušení Terezy přímo v terminálu, bez Telegramu:  python chat_v_terminalu.py
+"""Vyzkoušení Alexe přímo v terminálu, bez Telegramu:  python chat_v_terminalu.py
 
 Potřebuješ jen klíč pro Claude nebo DeepSeek v souboru .env.
 Příkazy: /rano a /vecer (napíše sám od sebe), /pamet (aktualizuje a ukáže paměť), /konec
@@ -11,6 +11,7 @@ from dataclasses import replace
 from datetime import datetime
 
 from app.config import TIMEZONE, load_settings
+from app.calendar_cz import is_workday
 from app.persona import ALEX, has_kids
 from app.prompts import proactive_task
 from app.providers import create_brain
@@ -68,8 +69,10 @@ async def main() -> None:
         if text == "/konec":
             break
         if text in ("/rano", "/vecer"):
-            evening = "evening_kids" if has_kids(ALEX, datetime.now(TIMEZONE).date()) else "evening"
-            slot = next(s for s in ALEX.slots if s.name == ("morning" if text == "/rano" else evening))
+            today = datetime.now(TIMEZONE).date()
+            evening = "evening_kids" if has_kids(ALEX, today) else "evening"
+            morning = "morning" if is_workday(today) else "morning_off"
+            slot = next(s for s in ALEX.slots if s.name == (morning if text == "/rano" else evening))
             user = storage.get_user(USER_ID, ALEX.key)
             history = storage.recent_messages(USER_ID, ALEX.key, 40)
             now = datetime.now(TIMEZONE)

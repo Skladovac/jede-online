@@ -15,6 +15,7 @@ import random
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 
+from .calendar_cz import is_workday
 from .persona import MessageSlot, Persona, has_kids
 
 MAX_UNANSWERED = 2
@@ -77,10 +78,13 @@ def pick_slot(
 
     day = now.date().isoformat()
     kids = has_kids(p, now.date())
+    workday = is_workday(now.date())
     for slot in p.slots:
         if slot.name in already_sent:
             continue
         if slot.kids is not None and slot.kids != kids:  # okno jen pro týden s dětmi / bez dětí
+            continue
+        if slot.workday is not None and slot.workday != workday:  # okno jen pro pracovní den / volno
             continue
         if not (slot.start <= now.time() < slot.end):
             continue
