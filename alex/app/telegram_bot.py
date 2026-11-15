@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import random
 import time
 from datetime import datetime
 
@@ -36,7 +37,7 @@ from .safety import (
 from .prompts import FIRST_MESSAGE_TASK, dynamic_context, proactive_task
 from .scheduler import ProactiveState, pick_slot
 from .storage import Storage, User
-from .texting import typing_delay
+from .texting import reading_delay, typing_delay
 from .weather import CHECK_SECONDS as WEATHER_CHECK_SECONDS, WeatherService, conditions_for, situation_lines
 
 log = logging.getLogger(__name__)
@@ -75,6 +76,7 @@ class CompanionBot:
         self._last_limit_notice: dict[int, float] = {}
         self._invoice_link: str | None = None
         self.photos = PhotoLibrary.for_persona(persona.key)
+        self._rng = random.Random()  # mírná náhoda v rychlosti psaní
         self._photo_file_ids: dict[str, str] = {}  # fotka -> file_id v Telegramu (nahrává se jen jednou)
         self.telegram_base_url: str | None = None
         self.telegram_base_file_url: str | None = None
@@ -291,8 +293,16 @@ class CompanionBot:
             self._photo_file_ids[photo.id] = msg.photo[-1].file_id
         return True
 
-    async def _deliver(self, bot, user: User, text: str, kind: str, now: datetime, photo_mode: str = "auto") -> None:
-        """Pošle odpověď modelu (bubliny + případně fotku) a uloží ji do historie."""
+    async def _deliver(
+        self, bot, user: User, text: str, kind: str, now: datetime, photo_mode: str = "auto",
+        read_text: str = "", started: float | None = None,
+    ) -> None:
+        """Pošle odpověď modelu (bubliny + případně fotku) a uloží ji do historie.
+
+        Každou zprávu „píše“ úměrně její délce. U první zprávy odpovědi se započítá čtení jejích zpráv
+        a odečte čas, který už uběhl od její poslední zprávy (started = time.monotonic() v tu chvíli):
+        čekání na další její zprávy a přemýšlení modelu.
+        """
         plan = plan_reply(text, self.persona.name, self._allowed_photos(user, now, photo_mode))
         first = True
         for part_type, value in plan.parts:
@@ -302,9 +312,7 @@ class CompanionBot:
                     log.info("%s poslal fotku %s uživatelce %s", self.persona.name, value.id, user.user_id)
                 continue
             if self.settings.typing_simulation:
-                # první zprávu "píše" kratší dobu – model už nějakou chvíli přemýšlel
-                factor = 0.4 if first else 1.0
-                await self._typing_pause(bot, user.chat_id, typing_delay(value) * factor * self.settings.delay_multiplier)
+                await self._typing_pause(bot, user.chat_id, self._bubble_delay(value, first, read_text, started))
             await bot.send_message(user.chat_id, value)
             first = False
         self.storage.add_message(user.user_id, self.persona.key, "assistant", plan.history_text, kind)
@@ -318,13 +326,14 @@ class CompanionBot:
             await asyncio.sleep(step)
             remaining -= step
 
-    async def _send_bubbles(self, bot, chat_id: int, bubbles: list[str]) -> None:
-        for i, bubble in enumerate(bubbles):
-            if self.settings.typing_simulation:
-                # první zprávu "píše" kratší dobu – model už nějakou chvíli přemýšlel
-                delay = typing_delay(bubble) * (0.4 if i == 0 else 1.0) * self.settings.delay_multiplier
-                await self._typing_pause(bot, chat_id, delay)
-            await bot.send_message(chat_id, bubble)
+    def _bubble_delay(self, bubble: str, first: bool, read_text: str, started: float | None) -> float:
+        """Kolik sekund ukazovat „píše…“ před odesláním zprávy."""
+        m = self.settings.delay_multiplier
+        delay = typing_delay(bubble) * m * self._rng.uniform(0.85, 1.15)
+        if not first:
+            return delay
+        waited = time.monotonic() - started if started is not None else 0.0
+        return max(1.0 * m, delay + reading_delay(read_text) * m - waited)
 
     async def _gate(self, update: Update, user: User) -> bool:
         """Vrátí True, pokud uživatel smí psát. Jinak pošle ověření věku."""
@@ -550,18 +559,19 @@ class CompanionBot:
         self._pending[user_id] = asyncio.create_task(self._reply_later(bot, user_id))
 
     async def _reply_later(self, bot, user_id: int) -> None:
+        started = time.monotonic()  # její poslední zpráva (každá její další zpráva tenhle úkol zruší a založí znovu)
         await asyncio.sleep(self.settings.reply_debounce_seconds * self.settings.delay_multiplier)
         async with self._lock(user_id):
             task = asyncio.current_task()
             self._started.add(task)
             try:
-                await self._reply_now(bot, user_id)
+                await self._reply_now(bot, user_id, started)
             except Exception:
                 log.exception("Chyba při odpovídání uživateli %s", user_id)
             finally:
                 self._started.discard(task)
 
-    async def _reply_now(self, bot, user_id: int) -> None:
+    async def _reply_now(self, bot, user_id: int, started: float | None = None) -> None:
         user = self.storage.get_user(user_id, self.persona.key)
         if user is None:
             return
@@ -595,7 +605,7 @@ class CompanionBot:
             await bot.send_message(user.chat_id, ERROR_REPLY)
             return
 
-        await self._deliver(bot, user, text, "chat", now, photo_mode)
+        await self._deliver(bot, user, text, "chat", now, photo_mode, "\n".join(new_texts), started)
         user = self.storage.get_user(user_id, self.persona.key)
         self.storage.update_user(
             user_id, self.persona.key,

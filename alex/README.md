@@ -13,6 +13,7 @@ a tenhle kód se jí netýká. Zadání postavy a fotky: `C:\Users\tomas\Picture
 | Psaní sám od sebe | častěji: ráno, v poledne, podvečer (jen bez dětí), večer (s dětmi až po uložení). Pravidla proti spamu stejná |
 | Kalendář | víkendy a státní svátky (i Velikonoce) = volno, žádné porady; blížící se Vánoce, Silvestr, Valentýn a další dny; letní a vánoční prázdniny dětí – `app/calendar_cz.py` |
 | Setkání | nikdy nenabízí procházky, rande ani jiné setkání, ani jako představu (pravidlo 2 v `app/prompts.py`) |
+| Psaní | „píše…“ úměrně délce zprávy, asi 5 znaků za sekundu (nejvýš 24 s na zprávu), u první zprávy započítá čtení a odečte čas přemýšlení modelu – `app/texting.py` |
 | Počasí | Praha (MET Norway) |
 | Fotky | `photos/alex/` + `photos.json`. Bot posílá jen ty, jejichž soubor existuje. Zadání: `JAK_NA_FOTKY.md` ve složce ALEX |
 | Placení | `PAYMENTS_ENABLED=0` = zkušební provoz zdarma: bez limitu, v menu nic o platbách. `1` zapne limit a předplatné jako u Terezy |
