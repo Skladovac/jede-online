@@ -14,6 +14,7 @@ from openai import AsyncOpenAI
 import app.telegram_bot as tb
 from app.brain import build_api_messages
 from app.brain_deepseek import PHOTO_UNAVAILABLE, DeepSeekBrain, to_openai_messages
+from app.calendar_cz import is_workday
 from app.config import TIMEZONE, Settings
 from app.llm import REFUSAL_REPLY
 from app.persona import ALEX
@@ -193,7 +194,9 @@ async def scenario(monkeypatch):
         # zpráva sama od sebe
         bot.persona = replace(ALEX, slots=tuple(replace(s, chance=1.0) for s in ALEX.slots))
         tomorrow = (datetime.now(TIMEZONE) + timedelta(days=1)).date()
-        _, target = slot_plan(555, "alex", tomorrow.isoformat(), bot.persona.slots[0])
+        morning = "morning" if is_workday(tomorrow) else "morning_off"  # o víkendu a ve svátek jiné okno
+        slot = next(x for x in bot.persona.slots if x.name == morning)
+        _, target = slot_plan(555, "alex", tomorrow.isoformat(), slot)
         fake_now = datetime.combine(tomorrow, target, TIMEZONE) + timedelta(minutes=1)
         storage.db.execute("UPDATE messages SET created_at = ?", (fake_now.timestamp() - 36000,))
         storage.db.commit()
