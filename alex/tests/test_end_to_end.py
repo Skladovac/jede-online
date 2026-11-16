@@ -18,6 +18,7 @@ from anthropic import AsyncAnthropic
 
 import app.telegram_bot as tb
 from app.brain import FALLBACK_MODELS, REFUSAL_REPLY, Brain
+from app.calendar_cz import is_workday
 from app.config import TIMEZONE, Settings
 from app.persona import ALEX
 from app.scheduler import slot_plan
@@ -310,7 +311,9 @@ async def scenario(monkeypatch, model, effort):
         # 9) zpráva sama od sebe: posuneme čas na zítřejší ráno a historii o 10 h zpět
         bot.persona = replace(ALEX, slots=tuple(replace(s, chance=1.0) for s in ALEX.slots))
         tomorrow = (datetime.now(TIMEZONE) + timedelta(days=1)).date()
-        _, target = slot_plan(555, "alex", tomorrow.isoformat(), bot.persona.slots[0])
+        morning = "morning" if is_workday(tomorrow) else "morning_off"  # o víkendu a ve svátek jiné okno
+        slot = next(x for x in bot.persona.slots if x.name == morning)
+        _, target = slot_plan(555, "alex", tomorrow.isoformat(), slot)
         fake_now = datetime.combine(tomorrow, target, TIMEZONE) + timedelta(minutes=1)
         storage.db.execute("UPDATE messages SET created_at = ?", (fake_now.timestamp() - 36000,))
         storage.db.commit()
