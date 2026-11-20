@@ -45,7 +45,7 @@ async function getSet(id: string) {
           hasReverse: true,
           hasFirstEd: true,
           hasPokeball: true,
-          hasMasterball: true,
+          hasMasterball: true, hasCosmos: true,
         },
       },
     },

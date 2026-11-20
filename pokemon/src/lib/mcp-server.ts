@@ -21,7 +21,7 @@ async function write(fn: () => Promise<unknown>) {
   }
 }
 const cardPick = { cardId: z.string().optional().describe('id karty z katalogu, např. "sv03.5-199" (přednostně)'), query: z.string().min(2).max(60).optional().describe('místo cardId: kód sady a číslo z karty, např. "SVI 045", "CEL CC025", nebo "Charizard 199/165"') }
-const variantArg = z.enum(['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']).optional().describe('varianta; když ji neznáš a karta má víc variant, server vrátí needs_variant — zeptej se uživatele')
+const variantArg = z.enum(['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL', 'COSMOS']).optional().describe('varianta; když ji neznáš a karta má víc variant, server vrátí needs_variant — zeptej se uživatele')
 const conditionArg = z.enum(['MINT', 'LIGHT_PLAYED', 'DAMAGED']).optional().describe('stav, výchozí MINT')
 const languageArg = z.enum(['en', 'de', 'fr', 'it', 'es', 'ja', 'ko', 'zh', 'other']).optional().describe('jazyk karty, výchozí en')
 

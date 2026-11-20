@@ -6,7 +6,7 @@ import { getT } from '@/lib/i18n/server'
 import { BadgeIcon } from '@/components/Badges'
 import { EmptyState, panel } from '@/components/design'
 
-const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' } as const
+const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse', COSMOS: 'Cosmos holo' } as const
 const CONDITION = { MINT: 'Jako nová', LIGHT_PLAYED: 'Mírně hraná', DAMAGED: 'Poškozená' } as const
 // Pořadí: nejdřív dary, pak prodej od nejlevnějšího, nakonec výměny.
 const OFFER_ORDER = { GIFT: 0, SELL: 1, TRADE: 2 } as const

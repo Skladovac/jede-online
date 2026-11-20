@@ -6,7 +6,7 @@ import { type Goal, type Progress } from '@/lib/goal'
 export { isBaseCard }
 export type { Progress }
 
-type Flags = { hasNormal: boolean; hasHolo: boolean; hasReverse: boolean; hasFirstEd: boolean; hasPokeball: boolean; hasMasterball: boolean }
+type Flags = { hasNormal: boolean; hasHolo: boolean; hasReverse: boolean; hasFirstEd: boolean; hasPokeball: boolean; hasMasterball: boolean; hasCosmos: boolean }
 export const cardVariants = (c: Flags) => {
   const v = [
     c.hasNormal && 'NORMAL',
@@ -15,6 +15,7 @@ export const cardVariants = (c: Flags) => {
     c.hasFirstEd && 'FIRST_EDITION',
     c.hasPokeball && 'POKEBALL',
     c.hasMasterball && 'MASTERBALL',
+    c.hasCosmos && 'COSMOS',
   ].filter(
     (x): x is string => !!x,
   )
@@ -39,7 +40,7 @@ export async function setProgress(userId: string, setIds: string[]): Promise<Map
     prisma.cardSet.findMany({ where: { id: { in: setIds } }, select: { id: true, officialCount: true } }),
     prisma.card.findMany({
       where: { setId: { in: setIds } },
-      select: { id: true, setId: true, localId: true, hasNormal: true, hasHolo: true, hasReverse: true, hasFirstEd: true, hasPokeball: true, hasMasterball: true },
+      select: { id: true, setId: true, localId: true, hasNormal: true, hasHolo: true, hasReverse: true, hasFirstEd: true, hasPokeball: true, hasMasterball: true, hasCosmos: true },
     }),
     prisma.collectionItem.findMany({
       where: { userId, quantity: { gt: 0 }, card: { setId: { in: setIds } } },

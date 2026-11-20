@@ -136,7 +136,7 @@ export function SetGrid({
   const wantCount = cards.filter((c) => state[c.id]?.want).length
   const spareCount = cards.reduce((s, c) => s + (state[c.id]?.spare ?? 0), 0)
   // Sloupce zobrazení „Seznam“: varianty, které se v sadě vyskytují, v ustáleném pořadí.
-  const VARIANT_ORDER: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']
+  const VARIANT_ORDER: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL', 'COSMOS']
   const listColumns = VARIANT_ORDER.flatMap((k) => {
     const v = cards.flatMap((c) => c.variants).find((x) => x.key === k)
     return v ? [v] : []

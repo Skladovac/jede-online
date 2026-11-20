@@ -8,7 +8,7 @@ import { ensureEurCzk, eurCzkRate } from '@/lib/fx'
  * Stav karty se nezohledňuje. Investováno = nákupní cena za kus × kusy (jen kde ji majitel zadal).
  */
 
-const REVERSE_LIKE = new Set(['REVERSE', 'POKEBALL', 'MASTERBALL'])
+const REVERSE_LIKE = new Set(['REVERSE', 'POKEBALL', 'MASTERBALL', 'COSMOS'])
 
 /** Dnešní den v českém čase jako datum (pro denní snímky). */
 export function pragueDay(d = new Date()) {

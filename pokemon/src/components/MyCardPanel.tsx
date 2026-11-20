@@ -17,6 +17,7 @@ type CardVariants = {
   hasFirstEd: boolean
   hasPokeball: boolean
   hasMasterball: boolean
+  hasCosmos: boolean
 }
 
 /** "Moje sbírka" na detailu karty: kolik kusů mám, v jaké variantě a stavu, co nabízím. */
@@ -45,6 +46,7 @@ export async function MyCardPanel({ card }: { card: CardVariants }) {
     card.hasFirstEd && 'FIRST_EDITION',
     card.hasPokeball && 'POKEBALL',
     card.hasMasterball && 'MASTERBALL',
+    card.hasCosmos && 'COSMOS',
   ].filter(Boolean) as string[]
   if (!variants.length) variants.push('NORMAL')
 
