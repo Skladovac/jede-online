@@ -67,6 +67,8 @@ function logoPng(url: string | null) {
 // Hlavička (logo webu, název sady, logo sady) a patička (přezdívka, adresa webu) jsou u obou obrázků stejné.
 function Header({ siteLogo, setLogo, title, sub }: { siteLogo: string; setLogo: string | null; title: string; sub: string }) {
   return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ fontSize: 26, fontWeight: 800, color: YELLOW, letterSpacing: 1, marginBottom: 22 }}>pokemon.jede.online</div>
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -80,6 +82,7 @@ function Header({ siteLogo, setLogo, title, sub }: { siteLogo: string; setLogo: 
         // eslint-disable-next-line @next/next/no-img-element
         <img src={setLogo} alt="" style={{ maxWidth: 260, maxHeight: 120, objectFit: 'contain' }} />
       )}
+    </div>
     </div>
   )
 }
