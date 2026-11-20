@@ -141,6 +141,20 @@ export function SetGrid({
     const v = cards.flatMap((c) => c.variants).find((x) => x.key === k)
     return v ? [v] : []
   })
+  // Záhlaví seznamu (Normální / Holo / Reverse…) roluje přilepené těsně pod lištou s režimy (nebo pod hlavičkou webu),
+  // ať je u sto dvacáté karty pořád vidět, který sloupec je která varianta.
+  const toolbarRef = useRef<HTMLDivElement>(null)
+  const [listTop, setListTop] = useState(0)
+  useEffect(() => {
+    const measure = () => {
+      const bar = toolbarRef.current
+      if (bar) setListTop(parseFloat(getComputedStyle(bar).top) + bar.offsetHeight)
+      else setListTop(document.querySelector('header')?.getBoundingClientRect().bottom ?? 0)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [loggedIn, mode])
   // Postup podle zvoleného cíle: base = karty 1–oficiální počet, complete = všechny karty, master = všechny varianty.
   const goalCounts = (() => {
     if (goal === 'master') {
@@ -385,7 +399,7 @@ export function SetGrid({
         </div>
       )}
       {loggedIn ? (
-        <div className="sticky top-[119px] z-10 -mx-4 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_88%,transparent)] px-4 py-3.5 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-[67px] lg:top-[68px]">
+        <div ref={toolbarRef} className="sticky top-[119px] z-10 -mx-4 border-b border-line bg-[color-mix(in_srgb,var(--bg-primary)_88%,transparent)] px-4 py-3.5 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-[67px] lg:top-[68px]">
           <div className="inline-flex flex-wrap gap-1 rounded-xl bg-surface p-1 ring-1 ring-inset ring-line" role="group" aria-label={t('Režim')}>
             {MODES.map((m) => (
               <button
@@ -574,12 +588,12 @@ export function SetGrid({
       )}
 
       {layout === 'list' && (
-        <div className="mt-4 overflow-hidden rounded-panel border border-line bg-card">
+        <div className="mt-4 rounded-panel border border-line bg-card">
           {/* Seznam: miniatura, číslo a jméno, vpravo sloupec na každou variantu, která se v sadě vyskytuje —
               políčka jsou pod sebou v pevných sloupcích, ať se dá sada odškrtat shora dolů bez hledání. */}
           <div
-            className="hidden items-center gap-3 border-b border-line bg-surface px-3 py-2 text-[11px] font-semibold text-subtle sm:grid"
-            style={{ gridTemplateColumns: `44px minmax(0,1fr) repeat(${listColumns.length}, 7rem)` }}
+            className="sticky z-[5] hidden items-center gap-3 rounded-t-panel border-b border-line bg-surface px-3 py-2 text-[11px] font-semibold text-subtle sm:grid"
+            style={{ gridTemplateColumns: `44px minmax(0,1fr) repeat(${listColumns.length}, 7rem)`, top: listTop }}
           >
             <span />
             <span>{t('Karta')}</span>
