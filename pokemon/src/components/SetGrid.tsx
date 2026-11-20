@@ -328,7 +328,7 @@ export function SetGrid({
         }
       />
       {tip && loggedIn && (
-        <div className="mb-4 flex items-start gap-3 rounded-panel border border-line bg-[color-mix(in_srgb,var(--brand-yellow)_14%,transparent)] p-4 text-sm text-fg">
+        <div className="mb-4 flex items-start gap-3 rounded-panel border border-line bg-[color-mix(in_srgb,var(--pokemon-yellow)_14%,transparent)] p-4 text-sm text-fg">
           <p className="flex-1">
             <strong>{t('Tip:')}</strong> {t('Klepni na karty, které máš v ruce. Postup a hodnotu sbírky uvidíš nahoře. Až budeš hotový, přepni na „Chybí“ a označ, co sháníš.')}
           </p>
@@ -612,7 +612,7 @@ export function SetGrid({
                 return (
                   <li
                     key={c.id}
-                    className={`grid grid-cols-[44px_minmax(0,1fr)] items-center gap-x-3 gap-y-1 px-3 py-1.5 sm:gap-y-0 sm:[grid-template-columns:var(--list-cols)] odd:bg-card even:bg-[color-mix(in_srgb,var(--brand-yellow)_9%,var(--bg-card))] hover:bg-[color-mix(in_srgb,var(--brand-yellow)_18%,transparent)]`}
+                    className={`grid grid-cols-[44px_minmax(0,1fr)] items-center gap-x-3 gap-y-1 px-3 py-1.5 sm:gap-y-0 sm:[grid-template-columns:var(--list-cols)] odd:bg-card even:bg-[color-mix(in_srgb,var(--pokemon-yellow)_22%,var(--bg-card))] hover:bg-[color-mix(in_srgb,var(--pokemon-yellow)_36%,var(--bg-card))]`}
                     style={{ ['--list-cols' as string]: `44px minmax(0,1fr) repeat(${listColumns.length}, 7rem)` }}
                   >
                     <Link href={`/karta/${encodeURIComponent(c.id)}`} className="card-frame row-span-2 w-11 aspect-[63/88] sm:row-span-1">

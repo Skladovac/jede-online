@@ -231,7 +231,7 @@ export default async function SetPage({ params, searchParams }: Props) {
       </header>
 
       {cards.length > 0 && cards.every((c) => !c.imageUrl) && (
-        <p className="mt-6 flex items-start gap-3 rounded-panel border border-line bg-[color-mix(in_srgb,var(--brand-yellow)_14%,transparent)] p-4 text-sm text-fg">
+        <p className="mt-6 flex items-start gap-3 rounded-panel border border-line bg-[color-mix(in_srgb,var(--pokemon-yellow)_14%,transparent)] p-4 text-sm text-fg">
           <ImageOff className="mt-0.5 h-4.5 w-4.5 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
           <span>
             <strong>{t('Čekáme na oficiální obrázky karet.')}</strong>{' '}
