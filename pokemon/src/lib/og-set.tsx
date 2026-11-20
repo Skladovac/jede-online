@@ -6,6 +6,8 @@ import { byLocalId, setDisplayName } from '@/lib/format'
 import { isBaseCard } from '@/lib/card-number'
 import { setGoals, setProgress } from '@/lib/progress'
 import { defaultGoal, pickGoal } from '@/lib/goal'
+import { cardVariants } from '@/lib/progress'
+import { VARIANT_LABEL } from '@/lib/labels'
 import type { TFunc } from '@/lib/i18n/config'
 
 /**
@@ -13,6 +15,9 @@ import type { TFunc } from '@/lib/i18n/config'
  * „postup“ = mozaika sady s tím, co mám, „chybi“ = seznam chybějících karet s prosbou o pomoc.
  * Uživatel si je stáhne nebo pošle přes systémové sdílení; nejsou veřejné.
  */
+// Krátké názvy variant do seznamu chybějících (dlouhé „Reverse holo“ by se ve třech sloupcích ořezávaly).
+const SHORT_VARIANT: Record<string, string> = { NORMAL: 'normal', HOLO: 'holo', REVERSE: 'reverse', FIRST_EDITION: '1st ed.', POKEBALL: 'Poké Ball', MASTERBALL: 'Master Ball', COSMOS: 'cosmos' }
+
 export const SHARE_SIZE = { width: 1080, height: 1350 }
 export type ShareKind = 'postup' | 'chybi'
 
@@ -121,20 +126,33 @@ export async function setShareImage(user: { id: string; nickname: string }, setI
   const set = await prisma.cardSet.findUnique({ where: { id: setId }, select: { id: true, name: true, logoUrl: true, officialCount: true } })
   if (!set) return null
   const [cards, items] = await Promise.all([
-    prisma.card.findMany({ where: { setId }, select: { id: true, localId: true, name: true, imageUrl: true } }),
-    prisma.collectionItem.findMany({ where: { userId: user.id, quantity: { gt: 0 }, card: { setId } }, select: { cardId: true } }),
+    prisma.card.findMany({
+      where: { setId },
+      select: { id: true, localId: true, name: true, imageUrl: true, hasNormal: true, hasHolo: true, hasReverse: true, hasFirstEd: true, hasPokeball: true, hasMasterball: true, hasCosmos: true },
+    }),
+    prisma.collectionItem.findMany({ where: { userId: user.id, quantity: { gt: 0 }, card: { setId } }, select: { cardId: true, variant: true } }),
   ])
   // Postup se počítá na základní sadu (1–oficiální počet); u promo sad bez číslování na všechny karty.
   const base = (set.officialCount ? cards.filter((c) => isBaseCard(c.localId, set.officialCount)) : cards).sort(byLocalId)
   const ownedIds = new Set(items.map((i) => i.cardId))
   const owned = base.filter((c) => ownedIds.has(c.id))
-  const missing = base.filter((c) => !ownedIds.has(c.id))
   const total = base.length
   // Hlavní číslo podle cíle, který si uživatel u sady zvolil (base / complete / master); mozaika je vždy po kartách.
   const [progressMap, goals] = await Promise.all([setProgress(user.id, [setId]), setGoals(user.id, [setId])])
   const prog = progressMap.get(setId)!
   const goal = goals.get(setId) ?? defaultGoal(prog)
   const picked = pickGoal(prog, goal)
+  // Seznam chybějících podle cíle: Base = základní karty, Complete = všechny karty sady, Master = každá varianta zvlášť.
+  const allSorted = [...cards].sort(byLocalId)
+  const ownedVariants = new Set(items.map((i) => `${i.cardId}|${i.variant}`))
+  const missing: { id: string; localId: string; name: string }[] =
+    goal === 'master'
+      ? allSorted.flatMap((c) =>
+          cardVariants(c)
+            .filter((v) => !ownedVariants.has(`${c.id}|${v}`))
+            .map((v) => ({ id: `${c.id}|${v}`, localId: c.localId, name: `${c.name} · ${SHORT_VARIANT[v] ?? t(VARIANT_LABEL[v] ?? v)}` })),
+        )
+      : (goal === 'complete' ? allSorted : base).filter((c) => !ownedIds.has(c.id))
   const pct = picked.total ? Math.round((picked.owned / picked.total) * 100) : 0
   const name = setDisplayName(set)
   const [siteLogo, setLogo] = await Promise.all([ogLogo(), dataUri(logoPng(set.logoUrl))])
@@ -217,14 +235,15 @@ export async function setShareImage(user: { id: string; nickname: string }, setI
     )
   } else {
     // Seznam chybějících: nejvýš 60 položek ve sloupcích, zbytek „+ dalších N“.
-    const MAX = 60
+    const MAX = 75
     const shown = missing.slice(0, MAX)
-    const cols = shown.length <= 20 ? 1 : shown.length <= 40 ? 2 : 3
+    const cols = shown.length <= 25 ? 1 : shown.length <= 50 ? 2 : 3
     const perCol = Math.ceil(shown.length / cols)
     const columns = Array.from({ length: cols }, (_, i) => shown.slice(i * perCol, (i + 1) * perCol))
     const fontSize = cols === 1 ? 30 : cols === 2 ? 26 : 22
-    const title = t('Chybí mi {n} karet', { n: missing.length })
-    const sub = t('Mám {n} z {total} karet', { n: owned.length, total })
+    const title = goal === 'master' ? t('Chybí mi {n} variant', { n: missing.length }) : t('Chybí mi {n} karet', { n: missing.length })
+    const sub =
+      goal === 'master' ? t('Mám {n} z {total} variant', { n: picked.owned, total: picked.total }) : t('Mám {n} z {total} karet', { n: picked.owned, total: picked.total })
     const more = missing.length > MAX ? t('+ dalších {n}', { n: missing.length - MAX }) : ''
     const foot = t('Máš něco z toho? Napiš mi.')
     texts = name + title + sub + more + foot + user.nickname + shown.map((c) => `${c.localId} ${c.name}`).join('') + 'pokemon.jede.online/0123456789'

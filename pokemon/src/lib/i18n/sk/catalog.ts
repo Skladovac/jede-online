@@ -273,6 +273,7 @@ const dict: Record<string, string> = {
   'hotovo': 'hotovo',
   'Veď si sbírku a najdi, s kým měnit — zdarma.': 'Veď si zbierku a nájdi, s kým meniť — zadarmo.',
   'Chybí mi {n} karet': 'Chýba mi {n} kariet',
+  'Chybí mi {n} variant': 'Chýba mi {n} variantov',
   '+ dalších {n}': '+ ďalších {n}',
   'Máš něco z toho? Napiš mi.': 'Máš niečo z toho? Napíš mi.',
   'Sbírám:': 'Zbieram:',
