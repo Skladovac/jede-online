@@ -9,7 +9,7 @@ import { rateLimit } from '@/lib/rate-limit'
 import type { FormState } from '@/lib/validation'
 import { getT } from '@/lib/i18n/server'
 
-const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']
+const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL', 'COSMOS']
 const CONDITIONS: Condition[] = ['MINT', 'LIGHT_PLAYED', 'DAMAGED']
 const OFFERS: OfferType[] = ['TRADE', 'SELL', 'GIFT']
 const LANGS = ['en', 'de', 'fr', 'it', 'es', 'ja', 'ko', 'zh', 'other']

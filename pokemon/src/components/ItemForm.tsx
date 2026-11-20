@@ -20,7 +20,7 @@ export type ItemData = {
   purchasePriceCzk?: number | null
 }
 
-const VARIANT_LABEL: Record<string, string> = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' }
+const VARIANT_LABEL: Record<string, string> = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse', COSMOS: 'Cosmos holo' }
 const LANGS: [string, string][] = [
   ['en', 'angličtina'],
   ['de', 'němčina'],

@@ -13,7 +13,7 @@ import { notifyDeals } from '@/lib/deals'
 import { readCardPhoto, visionEnabled } from '@/lib/card-vision'
 import { rateLimit } from '@/lib/rate-limit'
 
-const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']
+const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL', 'COSMOS']
 const CONDITIONS: Condition[] = ['MINT', 'LIGHT_PLAYED', 'DAMAGED']
 const OFFERS: OfferType[] = ['TRADE', 'SELL', 'GIFT']
 const LANGS = ['en', 'de', 'fr', 'it', 'es', 'ja', 'ko', 'zh', 'other']

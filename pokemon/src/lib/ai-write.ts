@@ -19,11 +19,11 @@ const SITE = 'https://pokemon.jede.online'
 export const MAX_BATCH = 20
 export const WRITE_PER_MIN = 60
 
-const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL']
+const VARIANTS: Variant[] = ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL', 'COSMOS']
 const CONDITIONS: Condition[] = ['MINT', 'LIGHT_PLAYED', 'DAMAGED']
 const OFFERS: OfferType[] = ['TRADE', 'SELL', 'GIFT']
 const LANGS = ['en', 'de', 'fr', 'it', 'es', 'ja', 'ko', 'zh', 'other']
-export const VARIANT_LABEL: Record<Variant, string> = { NORMAL: 'normální', HOLO: 'holo', REVERSE: 'reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' }
+export const VARIANT_LABEL: Record<Variant, string> = { NORMAL: 'normální', HOLO: 'holo', REVERSE: 'reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse', COSMOS: 'Cosmos holo' }
 
 export type WriteError = { error: string; status?: number }
 export class WriteFail extends Error {
@@ -40,7 +40,7 @@ type CardRow = Awaited<ReturnType<typeof findCard>>
 async function findCard(cardId: string) {
   return prisma.card.findUnique({
     where: { id: cardId },
-    select: { id: true, name: true, localId: true, hasNormal: true, hasHolo: true, hasReverse: true, hasFirstEd: true, hasPokeball: true, hasMasterball: true, set: { select: { id: true, name: true, code: true, officialCount: true } } },
+    select: { id: true, name: true, localId: true, hasNormal: true, hasHolo: true, hasReverse: true, hasFirstEd: true, hasPokeball: true, hasMasterball: true, hasCosmos: true, set: { select: { id: true, name: true, code: true, officialCount: true } } },
   })
 }
 
@@ -52,6 +52,7 @@ function availableVariants(c: NonNullable<CardRow>): Variant[] {
   if (c.hasFirstEd) v.push('FIRST_EDITION')
   if (c.hasPokeball) v.push('POKEBALL')
   if (c.hasMasterball) v.push('MASTERBALL')
+  if (c.hasCosmos) v.push('COSMOS')
   return v.length ? v : ['NORMAL']
 }
 

@@ -13,7 +13,7 @@ import { str, type FormState } from '@/lib/validation'
 import { getT, tFor } from '@/lib/i18n/server'
 import { refreshBadgesSafe } from '@/lib/badges'
 
-const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' } as const
+const VARIANT = { NORMAL: 'Normální', HOLO: 'Holo', REVERSE: 'Reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse', COSMOS: 'Cosmos holo' } as const
 const CONDITION = { MINT: 'jako nová', LIGHT_PLAYED: 'mírně hraná', DAMAGED: 'poškozená' } as const
 const OFFER = { TRADE: 'výměna', SELL: 'prodej', GIFT: 'dar za poštovné' } as const
 const TAGS: RatingTag[] = ['FAST_SHIPPING', 'AS_DESCRIBED', 'FRIENDLY', 'SLOW', 'NOT_AS_DESCRIBED', 'NOT_SENT']

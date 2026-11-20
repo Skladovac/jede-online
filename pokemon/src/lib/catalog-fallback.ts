@@ -132,7 +132,12 @@ const TCGP_CDN = 'https://tcgplayer-cdn.tcgplayer.com/product/'
 type TcgpProduct = { productId: number; name: string; extendedData?: { name: string; value: string }[] }
 const tcgpField = (p: TcgpProduct, name: string) => p.extendedData?.find((e) => e.name === name)?.value
 // Název karty z názvu produktu: „Umbreon ex - 110 (30th Celebration)“ → „Umbreon ex“.
-const tcgpCardName = (s: string) => s.replace(/\s+-\s+[\w/]+.*$/, '').replace(/\s*\[[^\]]*\]/g, '').trim()
+const tcgpCardName = (s: string) =>
+  s
+    .replace(/\s+-\s+[\w/]+.*$/, '')
+    .replace(/\s+[A-Za-z]*\d+[a-z]?\/\d+.*$/, '') // „Dragonite 149/165 (Cosmos Holo)“ bez pomlčky
+    .replace(/\s*\[[^\]]*\]/g, '')
+    .trim()
 // „Card Type“ TCGplayeru: typ Pokémona (Grass, Fire…), nebo Trainer/Item/Supporter/Stadium/Tool, nebo Energy.
 const TRAINER_TYPES = new Set(['trainer', 'item', 'supporter', 'stadium', 'tool', 'pokémon tool', 'pokemon tool'])
 function tcgpCategory(type: string | undefined): { category: string; types: string[] } {
@@ -197,6 +202,7 @@ async function fillFromTcgplayer(log: (m: string) => void) {
   let fixed = 0
   let enriched = 0
   let created = 0
+  let cosmosFlagged = 0
   const usdEur = await usdToEurRate()
   const toEur = (usd: number | null) => (usd != null && usdEur ? Math.round(usd * usdEur * 100) / 100 : null)
   for (const [setId, cfg] of Object.entries(TCGPLAYER)) {
@@ -230,6 +236,13 @@ async function fillFromTcgplayer(log: (m: string) => void) {
         if (!prev || p.name.length < prev.name.length) byNum.set(numKey(num), p)
         const k = nameKey(p.name)
         byName.set(k, [...(byName.get(k) ?? []), p])
+      }
+      // Promo sady: „(Cosmos Holo)“ verze téhož čísla = další varianta karty.
+      if (cfg.match === 'number') {
+        for (const c of cards) {
+          const cosmos = (allByNum.get(numKey(c.localId)) ?? []).some((x) => /cosmos holo/i.test(x.name))
+          if (cosmos) await prisma.card.updateMany({ where: { id: c.id, hasCosmos: false }, data: { hasCosmos: true } }).then((r) => (cosmosFlagged += r.count))
+        }
       }
       for (const c of cards) {
         let p: TcgpProduct | undefined
@@ -319,7 +332,50 @@ async function fillFromTcgplayer(log: (m: string) => void) {
       log(`[catalog] obrázky z TCGplayeru pro ${setId} selhaly: ${(err as Error).message}`)
     }
   }
-  log(`[catalog] obrázky z TCGplayeru: ${fixed}, varianty/ceny: ${enriched}, nové karty: ${created}`)
+  cosmosFlagged += await fillCosmosHolo(log).catch((err) => (log(`[catalog] Cosmos holo selhalo: ${(err as Error).message}`), 0))
+  log(`[catalog] obrázky z TCGplayeru: ${fixed}, varianty/ceny: ${enriched}, nové karty: ${created}, cosmos holo: ${cosmosFlagged}`)
+}
+
+// Skupiny TCGplayeru, kde jsou „Cosmos Holo“ verze karet z běžných sad (blistry, boxy, různé).
+const COSMOS_GROUPS = [2289, 2374, 1938]
+
+/**
+ * Cosmos holo = karta sady s hvězdnou fólií, vydaná jen v blistrech/boxech. TCGplayer ji vede jako zvláštní produkt
+ * „Zarude - 056/084 (Cosmos Holo)“ mimo sadu; podle čísla, oficiálního počtu sady a jména ji přiřadíme k původní kartě.
+ */
+async function fillCosmosHolo(log: (m: string) => void) {
+  const sets = await prisma.cardSet.findMany({
+    where: { game: 'pokemon', language: 'en', officialCount: { gt: 0 } },
+    select: { id: true, officialCount: true },
+  })
+  const byTotal = new Map<number, string[]>()
+  for (const s of sets) byTotal.set(s.officialCount, [...(byTotal.get(s.officialCount) ?? []), s.id])
+  let flagged = 0
+  for (const group of COSMOS_GROUPS) {
+    const res = await fetch(`https://tcgcsv.com/tcgplayer/3/${group}/products`, {
+      headers: { 'User-Agent': 'pokemon.jede.online catalog sync' },
+      signal: AbortSignal.timeout(60_000),
+    })
+    if (!res.ok) throw new Error(`tcgcsv ${res.status}`)
+    const products = ((await res.json()) as { results: TcgpProduct[] }).results.filter((p) => /cosmos holo/i.test(p.name))
+    for (const p of products) {
+      const m = tcgpField(p, 'Number')?.match(/^\s*([A-Za-z]*\d+[a-z]?)\s*\/\s*(\d+)/)
+      if (!m) continue
+      const setIds = byTotal.get(Number(m[2]))
+      if (!setIds?.length) continue
+      const cards = await prisma.card.findMany({
+        where: { setId: { in: setIds }, hasCosmos: false },
+        select: { id: true, localId: true, name: true },
+      })
+      const hit = cards.filter((c) => numKey(c.localId) === numKey(m[1]) && nameKey(c.name) === nameKey(tcgpCardName(p.name)))
+      // Stejné číslo, počet i jméno ve dvou sadách — radši nic než špatně.
+      if (hit.length !== 1) continue
+      await prisma.card.update({ where: { id: hit[0].id }, data: { hasCosmos: true } })
+      flagged++
+    }
+  }
+  if (flagged) log(`[catalog] Cosmos holo: označeno ${flagged} karet`)
+  return flagged
 }
 
 // Loga a symboly sad, které TCGdex nemá (podsady, promo, energie, McDonald's).

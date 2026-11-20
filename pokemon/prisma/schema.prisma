@@ -56,6 +56,7 @@ model Card {
   hasFirstEd     Boolean  @default(false)
   hasPokeball    Boolean  @default(false)
   hasMasterball  Boolean  @default(false)
+  hasCosmos      Boolean  @default(false)
   // Orientační ceny z Cardmarketu v EUR (průměr prodejů), aktualizuje noční import.
   priceEur        Decimal? @db.Decimal(10, 2)
   priceReverseEur Decimal? @db.Decimal(10, 2) // reverse holo verze
@@ -223,6 +224,7 @@ enum Variant {
   FIRST_EDITION
   POKEBALL // reverse holo se vzorem Poké Ball (např. Prismatic Evolutions, 151 JP)
   MASTERBALL // reverse holo se vzorem Master Ball
+  COSMOS // „Cosmos holo“ — hvězdná fólie, běžná karta sady vydaná jen v blistrech a boxech (TCGplayer: Blister Exclusives)
 }
 
 enum Condition {

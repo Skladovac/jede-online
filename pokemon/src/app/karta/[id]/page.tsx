@@ -85,6 +85,7 @@ export default async function CardPage({ params }: Props) {
       card.hasFirstEd && { key: 'FIRST_EDITION', label: '1st edition' },
       card.hasPokeball && { key: 'POKEBALL', label: 'Poké Ball reverse' },
       card.hasMasterball && { key: 'MASTERBALL', label: 'Master Ball reverse' },
+      card.hasCosmos && { key: 'COSMOS', label: 'Cosmos holo' },
     ].filter(Boolean) as { key: string; label: string }[]
   ).map((v) => ({ ...v, owned: ownedOf(v.key) }))
   const price = formatEur(card.priceEur)

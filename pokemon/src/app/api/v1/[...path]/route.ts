@@ -110,7 +110,7 @@ function openapi() {
     },
   })
   const pick = { cardId: { type: 'string', description: 'id karty, např. sv03.5-199 (přednostně)' }, query: { type: 'string', description: 'místo cardId: kód sady a číslo, např. "SVI 045"' } }
-  const variant = { type: 'string', enum: ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL'], description: 'bez variant u karty s více variantami přijde status needs_variant s options' }
+  const variant = { type: 'string', enum: ['NORMAL', 'HOLO', 'REVERSE', 'FIRST_EDITION', 'POKEBALL', 'MASTERBALL', 'COSMOS'], description: 'bez variant u karty s více variantami přijde status needs_variant s options' }
   const condition = { type: 'string', enum: ['MINT', 'LIGHT_PLAYED', 'DAMAGED'] }
   const language = { type: 'string', enum: ['en', 'de', 'fr', 'it', 'es', 'ja', 'ko', 'zh', 'other'] }
   const items = (props: Record<string, unknown>) => ({ type: 'array', maxItems: 20, items: { type: 'object', properties: props } })

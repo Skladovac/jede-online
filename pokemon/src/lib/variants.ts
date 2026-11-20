@@ -7,6 +7,7 @@ export type CardVariantFlags = {
   hasFirstEd: boolean
   hasPokeball: boolean
   hasMasterball: boolean
+  hasCosmos: boolean
 }
 
 /** Varianty, ve kterých karta opravdu vyšla. Štítek „Normal“ se překládá až v komponentě. */
@@ -18,6 +19,7 @@ export function cardVariants(c: CardVariantFlags): { key: Variant; label: string
   if (c.hasFirstEd) out.push({ key: 'FIRST_EDITION', label: '1st edition' })
   if (c.hasPokeball) out.push({ key: 'POKEBALL', label: 'Poké Ball reverse' })
   if (c.hasMasterball) out.push({ key: 'MASTERBALL', label: 'Master Ball reverse' })
+  if (c.hasCosmos) out.push({ key: 'COSMOS', label: 'Cosmos holo' })
   // Karta bez údaje o variantách (promo, starší sady) — aspoň jedna, ať jde odkliknout.
   return out.length ? out : [{ key: 'NORMAL', label: 'Normal' }]
 }

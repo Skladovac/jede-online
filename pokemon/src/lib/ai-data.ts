@@ -12,7 +12,7 @@ import { auctionInclude } from '@/lib/auctions'
  * Ceny: EUR z Cardmarketu + orientační přepočet na Kč kurzem ČNB.
  */
 const SITE = 'https://pokemon.jede.online'
-const VARIANT_LABEL: Record<string, string> = { NORMAL: 'normální', HOLO: 'holo', REVERSE: 'reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse' }
+const VARIANT_LABEL: Record<string, string> = { NORMAL: 'normální', HOLO: 'holo', REVERSE: 'reverse holo', FIRST_EDITION: '1st edition', POKEBALL: 'Poké Ball reverse', MASTERBALL: 'Master Ball reverse', COSMOS: 'Cosmos holo' }
 const OFFER_LABEL: Record<string, string> = { SELL: 'prodej', TRADE: 'výměna', GIFT: 'zdarma za poštovné' }
 
 let rate = 25
@@ -72,7 +72,7 @@ export async function aiCollection(userId: string, setId?: string | null, limit 
     note: i.note,
     offer: i.offerType && i.spareQty > 0 ? { type: OFFER_LABEL[i.offerType], priceCzk: i.priceCzk } : null,
     purchasePriceCzk: i.purchasePriceCzk,
-    price: price(['REVERSE', 'POKEBALL', 'MASTERBALL'].includes(i.variant) ? (i.card.priceReverseEur ?? i.card.priceEur) : i.card.priceEur),
+    price: price(['REVERSE', 'POKEBALL', 'MASTERBALL', 'COSMOS'].includes(i.variant) ? (i.card.priceReverseEur ?? i.card.priceEur) : i.card.priceEur),
   }))
 }
 
@@ -126,7 +126,7 @@ export async function aiCard(id: string, userId?: string) {
     rarity: c.rarity,
     category: c.category,
     types: c.types,
-    variants: [c.hasNormal && 'normální', c.hasHolo && 'holo', c.hasReverse && 'reverse holo', c.hasFirstEd && '1st edition', c.hasPokeball && 'Poké Ball reverse', c.hasMasterball && 'Master Ball reverse'].filter(Boolean),
+    variants: [c.hasNormal && 'normální', c.hasHolo && 'holo', c.hasReverse && 'reverse holo', c.hasFirstEd && '1st edition', c.hasPokeball && 'Poké Ball reverse', c.hasMasterball && 'Master Ball reverse', c.hasCosmos && 'Cosmos holo'].filter(Boolean),
     price: price(c.priceEur),
     priceReverse: price(c.priceReverseEur),
     priceUpdatedAt: c.priceUpdatedAt,
