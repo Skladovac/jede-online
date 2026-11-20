@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Vasirm daily backup at 03:15 Prague time
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 Europe/Prague
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,9 @@
+[Unit]
+Description=Vasirm daily verified DB backup and media copy
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/jede/vasirm-src/vasirm/deploy/backup-vasirm.sh
+User=root
