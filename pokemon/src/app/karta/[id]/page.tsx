@@ -90,6 +90,7 @@ export default async function CardPage({ params }: Props) {
   ).map((v) => ({ ...v, owned: ownedOf(v.key) }))
   const price = formatEur(card.priceEur)
   const priceReverse = formatEur(card.priceReverseEur)
+  const priceCosmos = formatEur(card.priceCosmosEur)
   const setHref = `/sady/${encodeURIComponent(card.setId)}`
 
   return (
@@ -188,7 +189,7 @@ export default async function CardPage({ params }: Props) {
 
           <section className={`${panel} mt-8 p-6`}>
             <h2 className="eyebrow">{t('Orientační cena')}</h2>
-            {price || priceReverse ? (
+            {price || priceReverse || priceCosmos ? (
               <div className="mt-3 flex flex-wrap gap-8">
                 {price && (
                   <div>
@@ -200,6 +201,12 @@ export default async function CardPage({ params }: Props) {
                   <div>
                     <p className="font-display text-3xl font-semibold tabular-nums text-fg">≈ {priceReverse}</p>
                     <p className="text-xs text-subtle">reverse holo</p>
+                  </div>
+                )}
+                {priceCosmos && (
+                  <div>
+                    <p className="font-display text-3xl font-semibold tabular-nums text-fg">≈ {priceCosmos}</p>
+                    <p className="text-xs text-subtle">cosmos holo · TCGplayer</p>
                   </div>
                 )}
               </div>

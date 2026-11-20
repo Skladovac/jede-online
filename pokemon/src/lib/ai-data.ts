@@ -72,7 +72,7 @@ export async function aiCollection(userId: string, setId?: string | null, limit 
     note: i.note,
     offer: i.offerType && i.spareQty > 0 ? { type: OFFER_LABEL[i.offerType], priceCzk: i.priceCzk } : null,
     purchasePriceCzk: i.purchasePriceCzk,
-    price: price(['REVERSE', 'POKEBALL', 'MASTERBALL', 'COSMOS'].includes(i.variant) ? (i.card.priceReverseEur ?? i.card.priceEur) : i.card.priceEur),
+    price: price(i.variant === 'COSMOS' ? (i.card.priceCosmosEur ?? i.card.priceEur) : ['REVERSE', 'POKEBALL', 'MASTERBALL'].includes(i.variant) ? (i.card.priceReverseEur ?? i.card.priceEur) : i.card.priceEur),
   }))
 }
 
@@ -129,6 +129,7 @@ export async function aiCard(id: string, userId?: string) {
     variants: [c.hasNormal && 'normální', c.hasHolo && 'holo', c.hasReverse && 'reverse holo', c.hasFirstEd && '1st edition', c.hasPokeball && 'Poké Ball reverse', c.hasMasterball && 'Master Ball reverse', c.hasCosmos && 'Cosmos holo'].filter(Boolean),
     price: price(c.priceEur),
     priceReverse: price(c.priceReverseEur),
+    priceCosmos: price(c.priceCosmosEur),
     priceUpdatedAt: c.priceUpdatedAt,
     offersOnSite: offers,
     mine: mine.map((m) => ({ quantity: m.quantity, spare: m.spareQty, variant: VARIANT_LABEL[m.variant] ?? m.variant, condition: m.condition })),

@@ -237,11 +237,14 @@ async function fillFromTcgplayer(log: (m: string) => void) {
         const k = nameKey(p.name)
         byName.set(k, [...(byName.get(k) ?? []), p])
       }
-      // Promo sady: „(Cosmos Holo)“ verze téhož čísla = další varianta karty.
+      // Promo sady: „(Cosmos Holo)“ verze téhož čísla = další varianta karty (s vlastní cenou z TCGplayeru).
       if (cfg.match === 'number') {
         for (const c of cards) {
-          const cosmos = (allByNum.get(numKey(c.localId)) ?? []).some((x) => /cosmos holo/i.test(x.name))
-          if (cosmos) await prisma.card.updateMany({ where: { id: c.id, hasCosmos: false }, data: { hasCosmos: true } }).then((r) => (cosmosFlagged += r.count))
+          const cosmos = (allByNum.get(numKey(c.localId)) ?? []).find((x) => /cosmos holo/i.test(x.name))
+          if (!cosmos) continue
+          const cv = variants.get(cosmos.productId)
+          await prisma.card.update({ where: { id: c.id }, data: { hasCosmos: true, ...(cv?.any && { priceCosmosEur: toEur(cv.holo ?? cv.normal) }) } })
+          cosmosFlagged++
         }
       }
       for (const c of cards) {
@@ -344,6 +347,8 @@ const COSMOS_GROUPS = [2289, 2374, 1938]
  * „Zarude - 056/084 (Cosmos Holo)“ mimo sadu; podle čísla, oficiálního počtu sady a jména ji přiřadíme k původní kartě.
  */
 async function fillCosmosHolo(log: (m: string) => void) {
+  const usdEur = await usdToEurRate()
+  const toEur = (usd: number | null) => (usd != null && usdEur ? Math.round(usd * usdEur * 100) / 100 : null)
   const sets = await prisma.cardSet.findMany({
     where: { game: 'pokemon', language: 'en', officialCount: { gt: 0 } },
     select: { id: true, officialCount: true },
@@ -358,19 +363,18 @@ async function fillCosmosHolo(log: (m: string) => void) {
     })
     if (!res.ok) throw new Error(`tcgcsv ${res.status}`)
     const products = ((await res.json()) as { results: TcgpProduct[] }).results.filter((p) => /cosmos holo/i.test(p.name))
+    const prices = await tcgpVariants(group).catch(() => new Map<number, TcgpVariants>())
     for (const p of products) {
       const m = tcgpField(p, 'Number')?.match(/^\s*([A-Za-z]*\d+[a-z]?)\s*\/\s*(\d+)/)
       if (!m) continue
       const setIds = byTotal.get(Number(m[2]))
       if (!setIds?.length) continue
-      const cards = await prisma.card.findMany({
-        where: { setId: { in: setIds }, hasCosmos: false },
-        select: { id: true, localId: true, name: true },
-      })
+      const cards = await prisma.card.findMany({ where: { setId: { in: setIds } }, select: { id: true, localId: true, name: true } })
       const hit = cards.filter((c) => numKey(c.localId) === numKey(m[1]) && nameKey(c.name) === nameKey(tcgpCardName(p.name)))
       // Stejné číslo, počet i jméno ve dvou sadách — radši nic než špatně.
       if (hit.length !== 1) continue
-      await prisma.card.update({ where: { id: hit[0].id }, data: { hasCosmos: true } })
+      const v = prices.get(p.productId)
+      await prisma.card.update({ where: { id: hit[0].id }, data: { hasCosmos: true, ...(v?.any && { priceCosmosEur: toEur(v.holo ?? v.normal) }) } })
       flagged++
     }
   }
