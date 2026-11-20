@@ -60,6 +60,7 @@ model Card {
   // Orientační ceny z Cardmarketu v EUR (průměr prodejů), aktualizuje noční import.
   priceEur        Decimal? @db.Decimal(10, 2)
   priceReverseEur Decimal? @db.Decimal(10, 2) // reverse holo verze
+  priceCosmosEur  Decimal? @db.Decimal(10, 2) // Cosmos holo verze (z TCGplayeru, přepočet z USD)
   // Podrobnosti z Cardmarketu: { low, trend, avg1, avg7, avg30, reverse?: {…} } v EUR
   priceStats      Json?
   priceUpdatedAt  DateTime?

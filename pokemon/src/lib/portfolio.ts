@@ -35,6 +35,7 @@ export async function portfolio(userId: string) {
             imageUrl: true,
             priceEur: true,
             priceReverseEur: true,
+            priceCosmosEur: true,
             set: { select: { id: true, name: true } },
           },
         },
@@ -53,7 +54,9 @@ export async function portfolio(userId: string) {
   const cards: { id: string; name: string; localId: string; imageUrl: string | null; set: string; unitEur: number; qty: number }[] = []
 
   for (const i of items) {
-    const unit = Number((REVERSE_LIKE.has(i.variant) ? i.card.priceReverseEur ?? i.card.priceEur : i.card.priceEur) ?? 0)
+    const unit = Number(
+      (i.variant === 'COSMOS' ? i.card.priceCosmosEur ?? i.card.priceEur : REVERSE_LIKE.has(i.variant) ? i.card.priceReverseEur ?? i.card.priceEur : i.card.priceEur) ?? 0,
+    )
     const total = unit * i.quantity
     valueEur += total
     if (i.purchasePriceCzk != null) {
