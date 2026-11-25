@@ -1,0 +1,10 @@
+.next/
+node_modules/
+.env
+.env*.local
+*.tsbuildinfo
+next-env.d.ts
+# lokální databáze a nahraná média (vývoj)
+.pg-data/
+media/
+.credentials.local
