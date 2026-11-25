@@ -238,9 +238,10 @@ export async function setShareImage(user: { id: string; nickname: string }, setI
     )
   } else {
     // Seznam chybějících: nejvýš 60 položek ve sloupcích, zbytek „+ dalších N“.
-    const MAX = 75
+    // Na výšku se vejde ~20 řádků při 30 px, ~24 při 26 px, ~28 při 22 px; víc sloupců dřív než ořez.
+    const MAX = 84
     const shown = missing.slice(0, MAX)
-    const cols = shown.length <= 25 ? 1 : shown.length <= 50 ? 2 : 3
+    const cols = shown.length <= 20 ? 1 : shown.length <= 48 ? 2 : 3
     const perCol = Math.ceil(shown.length / cols)
     const columns = Array.from({ length: cols }, (_, i) => shown.slice(i * perCol, (i + 1) * perCol))
     const fontSize = cols === 1 ? 30 : cols === 2 ? 26 : 22
@@ -253,8 +254,8 @@ export async function setShareImage(user: { id: string; nickname: string }, setI
     body = (
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         <Header siteLogo={siteLogo} setLogo={setLogo} title={name} sub={sub} />
-        <div style={{ fontSize: 64, fontWeight: 800, color: '#fb923c', marginTop: 36, lineHeight: 1.05 }}>{title}</div>
-        <div style={{ display: 'flex', marginTop: 28, gap: 24 }}>
+        <div style={{ fontSize: 64, fontWeight: 800, color: '#fb923c', marginTop: 36, lineHeight: 1.05, flexShrink: 0 }}>{title}</div>
+        <div style={{ display: 'flex', marginTop: 28, gap: 24, overflow: 'hidden' }}>
           {columns.map((col, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
               {col.map((c) => (
